@@ -1,0 +1,10 @@
+<div>
+  <strong>Start Date:</strong> <%= @sprint_goal.start_date %>
+</div>
+
+<div>
+  <strong>End Date:</strong> <%= @sprint_goal.end_date %>
+</div>
+
+<%= link_to "Edit", edit_sprint_goal_path(@sprint_goal) %> |
+<%= link_to "Back", sprint_goals_path %>

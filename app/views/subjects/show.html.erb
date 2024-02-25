@@ -1,0 +1,13 @@
+<h1>Subject Details</h1>
+
+<p><strong>Name:</strong> <%= @subject.name %></p>
+<p><strong>Category:</strong> <%= @subject.category_long_form %></p>
+<p><strong>Exam Dates:</strong> <%= @subject.exam_dates%></p>
+
+<%= link_to 'Edit', edit_subject_path(@subject) %> |
+<%= link_to 'Back', subjects_path %>
+
+<h2>Topics</h2>
+<%= render @topics %>
+
+<%= link_to 'New Topic', new_subject_topic_path(@subject) %>

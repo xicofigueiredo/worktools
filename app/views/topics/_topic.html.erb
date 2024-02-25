@@ -1,0 +1,10 @@
+<!-- app/views/topics/_topic.html.erb -->
+<div>
+  <h3><%= topic.name %></h3>
+  <p><%= topic.subject.name %></p>
+  <p><%= topic.done %></p>
+  <p><%= topic.time %></p>
+  <%= link_to 'Edit', edit_subject_topic_path(subject_id: @subject.id, id: topic.id) %>
+  <%= link_to 'Show Topic', subject_topic_path(topic.subject, topic) %>
+  <%= link_to 'Delete', subject_topic_path(subject_id: @subject.id, id: topic.id), data: {turbo_method: :delete, turbo_confirm: "Are you sure?"}%>
+</div>

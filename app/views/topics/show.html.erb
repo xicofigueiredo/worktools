@@ -1,0 +1,9 @@
+<h1>Topic Details</h1>
+
+<p><strong>Name:</strong> <%= @topic.name %></p>
+<p><strong>Grade:</strong> <%= @topic.time %></p>
+<p><strong>Subject:</strong> <%= @topic.subject.name %></p>
+<p><strong>Done:</strong> <%= @topic.done %></p>
+
+<%= link_to 'Edit', edit_subject_topic_path(@subject, @topic) %> |
+<%= link_to 'Back', :back%>

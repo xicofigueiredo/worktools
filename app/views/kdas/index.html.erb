@@ -1,0 +1,9 @@
+<h1>Kdas</h1>
+
+<ul>
+  <% @kdas.each do |kda| %>
+    <li><%= link_to kda.title, kda %></li>
+  <% end %>
+</ul>
+
+<%= link_to 'New Kda', new_kda_path %>

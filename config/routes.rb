@@ -1,8 +1,23 @@
 Rails.application.routes.draw do
   devise_for :users
-  root to: "pages#home"
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  root to: "timelines#index"
 
-  # Defines the root path route ("/")
-  # root "articles#index"
+  get 'report', to: 'pages#report'
+  get 'dashboard_lc', to: 'pages#dashboard_lc'
+  get 'edit_profile', to: 'pages#edit_profile'
+  post '/update_profile', to: 'pages#update_profile', as: :update_profile
+  get '/get_topics', to: 'subjects#get_topics'
+
+
+  resources :subjects do
+    resources :topics, except: [:show, :index]
+  end
+
+  get 'profile', to: 'pages#profile'
+  resources :holidays, except: [:show, :index]
+  resources :timelines
+  resources :weekly_goals
+  resources :sprint_goals
+  resources :kdas
+
 end
