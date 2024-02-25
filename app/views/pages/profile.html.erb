@@ -1,0 +1,127 @@
+<div class="container">
+    <div class="main-body">
+
+          <!-- Breadcrumb -->
+          <nav aria-label="breadcrumb" class="main-breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item active" aria-current="page"></li>
+            </ol>
+          </nav>
+          <!-- /Breadcrumb -->
+
+          <div class="row gutters-sm">
+            <div class="col-md-4 mb-3">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex flex-column align-items-center text-center">
+                    <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "150" %>
+                    <div class="mt-3">
+                      <h4> <%= current_user.full_name %></h4>
+                      <p class="text-secondary mb-1"><%= @hub.country %></p>
+                      <p class="text-muted font-size-sm"><%= @hub.name%> Hub
+                      </p>
+                      <button class="btn btn-outline-primary">Message</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card mt-3">
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                  some info
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                  some info
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                  some info
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                  some info
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                  some info
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-8">
+              <div class="card mb-3">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <h6 class="mb-0">Full Name</h6>
+                    </div>
+                    <div class="col-sm-9 text-secondary">
+                      <%= current_user.full_name   %>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <h6 class="mb-0">Email</h6>
+                    </div>
+                    <div class="col-sm-9 text-secondary">
+                      <%= current_user.email   %>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <h6 class="mb-0">Year</h6>
+                    </div>
+                    <div class="col-sm-9 text-secondary">
+                      <%= @subject.category_long_form %>
+                    </div>
+                  </div>
+                  <hr>
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <%= link_to "Edit Profile", edit_profile_path, class: "btn btn-info" %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row gutters-sm">
+                <div class="col-sm-6 mb-3">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h6 class="d-flex align-items-center mb-3"><i class="material-icons text-info mr-2"></i>Timeline</h6>
+                        <% @timelines.each_with_index do |timeline, index| %>
+                          <div class="timeline">
+                            <small><%= timeline.subject.name %> (<%= (index + 1)* 30 - 21  %>%)</small>
+                            <div class="progress mb-3" style="height: 5px">
+                              <div class="progress-bar bg-primary" role="progressbar" style="width: <%= (index + 1)* 30 - 21  %>%" aria-valuenow="<%= (index + 1)* 30 - 21  %>" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                          </div>
+                        <% end %>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 mb-3">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h6 class="d-flex align-items-center mb-3"><i class="material-icons text-info mr-2"></i>Exam dates</h6>
+                        <% @timelines.each_with_index do |timeline, index| %>
+                          <% timeline.subject %>
+                          <% if index == 0 %>
+                            <p>June 2025</p>
+                          <% elsif index == 1 %>
+                            <p>May 2025</p>
+                          <% else %>
+                            <p>January 2026</p>
+                          <% end %>
+                        <% end %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+
+            </div>
+          </div>
+
+        </div>
+    </div>

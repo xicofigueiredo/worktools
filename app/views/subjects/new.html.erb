@@ -1,0 +1,31 @@
+<!-- app/views/subjects/new.html.erb -->
+
+<h1>New Subject</h1>
+
+<%= form_with(model: @subject, url: subjects_path, method: :post) do |form| %>
+  <% if @subject.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@subject.errors.count, "error") %> prohibited this subject from being saved:</h2>
+
+      <ul>
+        <% @subject.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :name %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div class="field">
+    <%= form.label :category %>
+    <%= form.select :category, options_for_select(Subject.category_options.map { |key, value| [Subject.new(category: key).category_long_form, key] }) %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>

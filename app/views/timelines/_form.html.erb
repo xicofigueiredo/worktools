@@ -1,0 +1,46 @@
+<section>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">New Timeline</h2>
+
+            <%= form_with(model: @timeline) do |form| %>
+              <% if @timeline.errors.any? %>
+                <div id="error_explanation" class="alert alert-danger">
+                  <h4><%= pluralize(@timeline.errors.count, "error") %> prohibited this timeline from being saved:</h4>
+                  <ul>
+                    <% @timeline.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+
+              <div class="form-group">
+                <%= form.label :subject_id %>
+                <%= form.collection_select :subject_id, Subject.all, :id, :name, { disabled: @subjects_with_timeline_ids }, { class: 'form-control' } %>
+              </div>
+
+              <div class="form-group">
+                <%= form.label :start_date %>
+                <%= form.date_field :start_date, class: 'form-control' %>
+              </div>
+
+              <div class="form-group">
+                <%= form.label :end_date %>
+                <%= form.date_field :end_date, class: 'form-control' %>
+              </div>
+
+              <div class="form-group text-center">
+                <%= form.submit class: "btn btn-primary btn-lg px-5" %>
+              </div>
+            <% end %>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

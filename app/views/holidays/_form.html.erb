@@ -1,0 +1,19 @@
+
+<%= simple_form_for(@holiday) do |f| %>
+  <%= f.error_notification %>
+
+ <div class="field">
+  <%= f.label :start_date %>
+  <%= f.date_field :start_date %>
+</div>
+
+
+  <div class="field">
+    <%= f.label :end_date %>
+    <%= f.date_field :end_date %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

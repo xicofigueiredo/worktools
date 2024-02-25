@@ -1,0 +1,29 @@
+<h1>Subjects</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Category</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @subjects.each do |subject| %>
+      <tr>
+        <td><%= subject.name %></td>
+        <td><%= subject.category_long_form %></td>
+        <td>
+          <%= link_to 'Show', subject %>
+          <%= link_to 'Edit', edit_subject_path(subject) %>
+          <%= link_to 'Delete', subject_path(subject), data: {turbo_method: :delete, turbo_confirm: "Are you sure?"} %>
+        </td>
+      </tr>
+    <% end %>
+
+
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Subject', new_subject_path %>

@@ -1,0 +1,75 @@
+<% link_to "New Weekly Goal", new_weekly_goal_path %>
+
+<% @weekly_goals.each do |weekly_goal| %>
+  <div>
+    <strong>Start Date:</strong> <%= weekly_goal.start_date %>
+  </div>
+
+  <div>
+    <strong>End Date:</strong> <%= weekly_goal.end_date %>
+  </div>
+
+  <%= link_to "Show", weekly_goal %>
+  <%= link_to "Edit", edit_weekly_goal_path(weekly_goal) %>
+  <%= link_to "Delete", weekly_goal_path(weekly_goal), data: {turbo_method: :delete, turbo_confirm: "Are you sure?"} %>
+<% end %>
+
+<div class="container">
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center">
+                        <thead>
+                            <tr class="bg-gray">
+                                <th class="text-uppercase">Time
+                                </th>
+                                <th class="text-uppercase">Monday</th>
+                                <th class="text-uppercase">Tuesday</th>
+                                <th class="text-uppercase">Wednesday</th>
+                                <th class="text-uppercase">Thursday</th>
+                                <th class="text-uppercase">Friday</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                          <% @time_slots.each do |time| %>
+                            <tr>
+                                <td class="align-middle"><%= time %></td>
+                                <!-- Early Morning, Monday -->
+                                <td id="11">
+                                  <!-- Your dropdowns here -->
+                                </td>
+                                <!-- Early Morning, Tuesday -->
+                                <td id="12">
+                                  <!-- Your dropdowns here -->
+                                </td>
+                                <!-- Early Morning, Wednesday -->
+                                <td id="13">
+                                  <!-- Your dropdowns here -->
+                                </td>
+                                <!-- Early Morning, Thursday -->
+                                <td id="14">
+                                  <!-- Your dropdowns here -->
+                                </td>
+                                <!-- Early Morning, Friday -->
+                                <td id="15">
+                                  <!-- Your dropdowns here -->
+                                </td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+<script>
+  $(document).ready(function() {
+    $('.subject-dropdown').change(function() {
+      var subjectId = $(this).val();
+      $.ajax({
+        url: '/get_topics',
+        method: 'GET',
+        data: { subject_id: subjectId },
+        success: function(data) {
+          $('.topic-dropdown').html(data);
+        }
+      });
+    });
+  });
+</script>

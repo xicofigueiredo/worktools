@@ -1,0 +1,7 @@
+<h1>New Holiday</h1>
+
+<%= simple_form_for(@holiday) do |f| %>
+  <%= render 'form', f: f %>
+<% end %>
+
+<%= link_to "Back", holidays_path %>

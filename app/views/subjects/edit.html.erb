@@ -1,0 +1,23 @@
+<h1>Edit Subject</h1>
+
+<%= form_with(model: @subject, local: true) do |form| %>
+  <div class="field">
+    <%= form.label :name %>
+    <%= form.text_field :name %>
+  </div>
+
+ <div class="field">
+  <%= form.label :category %>
+  <%= form.select :category, Subject.category_options.map { |key, value| [value, key] } %>
+</div>
+
+
+
+ <div class="field">
+  <%= form.label :exam_dates %>
+  <%= form.text_field :exam_dates, value: @subject.exam_dates.try(:join, ", ") %>
+</div>
+
+
+  <%= form.submit "Update Subject" %>
+<% end %>

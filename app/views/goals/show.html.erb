@@ -1,0 +1,8 @@
+<!-- app/views/goals/show.html.erb -->
+<h1><%= @goal.name %></h1>
+
+<p><strong>Description:</strong> <%= @goal.description %></p>
+<p><strong>Due Date:</strong> <%= @goal.due_date %></p>
+
+<%= link_to 'Edit', edit_weekly_goal_path(@goal) %> |
+<%= link_to 'Back', goals_path %>
