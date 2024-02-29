@@ -7,6 +7,8 @@ class Timeline < ApplicationRecord
   validates :start_date, presence: true
   validates :end_date, presence: true
 
+  enum exam_season: { jan: 'January', may_jun: 'May/June', oct_nov: 'October/November' }
+
   def calculate_total_time
     self.total_time = (self.end_date - self.start_date)
   end

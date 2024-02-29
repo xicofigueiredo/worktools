@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_02_24_182952) do
+ActiveRecord::Schema[7.0].define(version: 2024_02_29_155657) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -99,7 +99,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_02_24_182952) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "balance"
-    t.date "exam_date"
+    t.string "exam_season"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
   end
@@ -158,7 +158,19 @@ ActiveRecord::Schema[7.0].define(version: 2024_02_24_182952) do
     t.date "end_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "name"
     t.index ["user_id"], name: "index_weekly_goals_on_user_id"
+  end
+
+  create_table "weekly_slots", force: :cascade do |t|
+    t.bigint "weekly_goal_id", null: false
+    t.integer "day_of_week"
+    t.integer "time_slot"
+    t.string "subject_name"
+    t.string "topic_name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["weekly_goal_id"], name: "index_weekly_slots_on_weekly_goal_id"
   end
 
   add_foreign_key "answers", "questions"
@@ -175,4 +187,5 @@ ActiveRecord::Schema[7.0].define(version: 2024_02_24_182952) do
   add_foreign_key "users_hubs", "hubs"
   add_foreign_key "users_hubs", "users"
   add_foreign_key "weekly_goals", "users"
+  add_foreign_key "weekly_slots", "weekly_goals"
 end

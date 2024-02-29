@@ -1,18 +1,64 @@
-<%= simple_form_for(@weekly_goal) do |f| %>
-  <%= f.error_notification %>
+<%= form_with(model: @weekly_goal, local: true) do |form| %>
+  <% if @weekly_goal.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@weekly_goal.errors.count, "error") %> prohibited this weekly goal from being saved:</h2>
 
- <div class="field">
-  <%= f.label :start_date %>
-  <%= f.date_field :start_date %>
-</div>
-
+      <ul>
+        <% @weekly_goal.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
 
   <div class="field">
-    <%= f.label :end_date %>
-    <%= f.date_field :end_date %>
+    <%= form.label :name %>
+    <%= form.text_field :name %>
+  </div>
+
+  <div class="field">
+    <%= form.label :start_date %>
+    <%= form.date_field :start_date %>
+  </div>
+
+  <div class="field">
+    <%= form.label :end_date %>
+    <%= form.date_field :end_date %>
+  </div>
+
+  <div class="container">
+    <div class="table-responsive">
+      <table class="table table-bordered text-center">
+        <thead>
+          <tr class="bg-gray">
+            <th class="text-uppercase">Time</th>
+            <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+              <th class="text-uppercase"><%= day.capitalize %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% WeeklySlot.time_slots.keys.each do |time| %>
+            <tr>
+              <td class="align-middle"><%= time %></td>
+              <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                <td id="<%= time.downcase %>_<%= day.downcase %>">
+                  <div class="form-group">
+                    <%= form.collection_select "#{day}_#{time}_subject", @subject_names, :itself, :itself, { prompt: "Select subject" }, { class: "form-control" } %>
+
+                    <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself, { prompt: "" }, { class: "form-control" } %>
+
+                  </div>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div class="actions">
-    <%= f.submit %>
+    <%= form.submit class: 'btn btn-primary' %>
   </div>
 <% end %>

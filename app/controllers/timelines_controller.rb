@@ -23,6 +23,30 @@ class TimelinesController < ApplicationController
 
   def create
     @timeline = current_user.timelines.new(timeline_params)
+
+    case @timeline.exam_season.to_sym
+    when :jan
+      if @timeline.end_date.month > 10
+        @timeline.errors.add(:end_date, "cannot be after 31 November for January season")
+        render :new
+        return
+      end
+    when :may_jun
+      if @timeline.end_date.month > 2
+        @timeline.errors.add(:end_date, "cannot be after 28/29 February for May/June season")
+        render :new
+        return
+      end
+    when :oct_nov
+      if @timeline.end_date.month > 7
+        @timeline.errors.add(:end_date, "cannot be after 31 July for October/November season")
+        render :new
+        return
+      end
+    end
+
+
+
     if @timeline.save
       @timeline.subject.topics.each do |topic|
         user_topic = UserTopic.create(user_id: current_user.id, topic_id: topic.id)
@@ -60,7 +84,7 @@ class TimelinesController < ApplicationController
   end
 
   def timeline_params
-    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time)
+    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_season)
   end
 
   def generate_topic_deadlines(timeline)

@@ -1,31 +1,32 @@
-
-
 <div class="container mt-5">
-  <div class="row">
-    <div class="col-md-3">
-      <% @users.each do |user| %>
-      <div class="card">
-        <div class="card-body">
-          <div class="d-flex flex-column align-items-center text-center">
-            <%= image_tag "profile.jpeg", class: "rounded-circle", width: "150" %>
-            <div class="mt-3">
-              <h4> <%= user.full_name %></h4>
-              <p class="text-secondary mb-1">Weekly Goal done?</p>
-              <p class="text-secondary mb-1">Kda's done?</p>
-              <% if user.timelines.present? %>
-                <% user.timelines.each do |timeline| %>
-                  <p class="text-secondary mb-1"><%= timeline.subject.name %></p>
-                  <p class="text-secondary mb-1"><%= timeline.balance %></p>
-                <% end %>
-                <p class="text-secondary mb-1">Overall:<%= @total_balance %></p>
-              <% else %>
-                <p class="text-secondary mb-1"> Has no timelines yet! </p>
-              <% end %>
+  <% @users.each_slice(3) do |users_slice| %>
+    <div class="row">
+      <% users_slice.each do |user| %>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex flex-column align-items-center text-center">
+                <%= image_tag "profile.jpeg", class: "rounded-circle", width: "150" %>
+                <div class="mt-3">
+                  <h4> <%= user.full_name %></h4>
+                  <p class="text-secondary mb-1">Weekly Goal <i class="fa-regular fa-circle-check text-success"></i></p>
+                  <p class="text-secondary mb-1">Kda's <i class="fa-regular fa-circle-xmark text-danger"></i></p>
+                  <% if user.timelines.present? %>
+                    <% user.timelines.each do |timeline| %>
+                      <p class="text-secondary mb-1"><%= timeline.subject.name %></p>
+                      <%# <p class="text-secondary mb-1"><%= timeline.balance %></p>
+                      <p class="text-secondary mb-1"><span class="badge rounded-pill bg-success">+2 </span> </p>
+                    <% end %>
+                    <p class="text-secondary mb-1"><span class="badge rounded-pill bg-success">Overall: +<%= @total_balance + 6 %></p>
+                  <% else %>
+                    <p class="text-secondary mb-1"> Has no timelines yet! </p>
+                  <% end %>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       <% end %>
     </div>
-  </div>
+  <% end %>
 </div>

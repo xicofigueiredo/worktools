@@ -1,7 +1,6 @@
 <h1>New Weekly Goal</h1>
 
-<%= simple_form_for(@weekly_goal) do |f| %>
-  <%= render 'form', f: f %>
-<% end %>
+<%= render 'form', weekly_goal: @weekly_goal, weekly_slots: @weekly_slots %>
+
 
 <%= link_to "Back", weekly_goals_path %>

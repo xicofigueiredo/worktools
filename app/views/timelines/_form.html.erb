@@ -29,6 +29,12 @@
               </div>
 
               <div class="form-group">
+                <%= form.label :exam_season %>
+                <%= form.select :exam_season, options_for_select(Timeline.exam_seasons.map { |key, value| [value, key] }), {}, class: 'form-control' %>
+              </div>
+
+
+              <div class="form-group">
                 <%= form.label :end_date %>
                 <%= form.date_field :end_date, class: 'form-control' %>
               </div>

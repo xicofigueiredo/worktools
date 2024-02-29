@@ -12,7 +12,7 @@ class PagesController < ApplicationController
   end
 
   def profile
-    @hub = current_user.hub
+    @hub = current_user.users_hub.hub
     if current_user.timelines.count.positive?
       @subject = current_user.timelines.first.subject
       Subject.where(category: :tbe).destroy_all
@@ -24,7 +24,7 @@ class PagesController < ApplicationController
   end
 
   def edit_profile
-    @hub = current_user.hub
+    @hub = current_user.users_hub.hub
     @subject = current_user.timelines.first.subject
     @timelines = current_user.timelines
   end
