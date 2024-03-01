@@ -616,6 +616,13 @@ xico = User.create!(
   role: :admin
   )
 
+  brito = User.create!(
+  email: "britoefaro@gmail.com",
+  password: "123456",
+  full_name: "Luis Brito e Faro",
+  role: :admin
+  )
+
 joe = User.create!(
   email: "john@learner.com",
   password: "123456",

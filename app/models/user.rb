@@ -10,8 +10,6 @@ class User < ApplicationRecord
   has_many :user_topics
   has_many :topics, through: :user_topics
 
-  validates :full_name, presence: true, length: { maximum: 255 }
-  validates :role, presence: true
 
   enum role: [:learner, :lc, :admin]
 
