@@ -1,16 +1,4 @@
-<%= form_with(model: kda, local: true) do |form| %>
-  <% if kda.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(kda.errors.count, "error") %> prohibited this kda from being saved:</h2>
-
-      <ul>
-      <% kda.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-      </ul>
-    </div>
-  <% end %>
-
+<%= form_with(model: @kda, local: true) do |form| %>
   <div class="field">
     <%= form.label :start_date %>
     <%= form.date_field :start_date %>
@@ -20,6 +8,40 @@
     <%= form.label :end_date %>
     <%= form.date_field :end_date %>
   </div>
+
+  <% @questions.each do |question| %>
+    <h3><%= question.value %></h3>
+    <%= form.fields_for :kdas_questions, Kda.new.kdas_questions.build do |kda_question_fields| %>
+      <div class="nested-fields">
+        <%= kda_question_fields.hidden_field :question_id, value: question.id %>
+
+        <div class="field">
+          <%= kda_question_fields.label :sdl, "Self Directed Learning"%>
+          <%= kda_question_fields.text_field :sdl %>
+        </div>
+
+        <div class="field">
+          <%= kda_question_fields.label :ini, "Iniciative" %>
+          <%= kda_question_fields.text_field :ini %>
+        </div>
+
+        <div class="field">
+          <%= kda_question_fields.label :mot, "Motivation" %>
+          <%= kda_question_fields.text_field :mot %>
+        </div>
+
+        <div class="field">
+          <%= kda_question_fields.label :p2p, "P2P" %>
+          <%= kda_question_fields.text_field :p2p %>
+        </div>
+
+        <div class="field">
+          <%= kda_question_fields.label :hubp, "Hub Participation" %>
+          <%= kda_question_fields.text_field :hubp %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
 
   <div class="actions">
     <%= form.submit %>

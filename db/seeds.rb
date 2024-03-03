@@ -686,3 +686,59 @@ quim = User.create!(
       user: quim,
       hub: cascais
       )
+
+
+     Question.create!(
+        value: "How well did you do,
+          last week?",
+        kda: true,
+        sprint: false
+      )
+
+     Question.create!(
+        value: "Why did you give yourself that rating? Provide two arguments.",
+        kda: true,
+        sprint: false
+      )
+
+      Question.create!(
+        value: "How will you improve in each KDA, during this week? Give two strategies.",
+        kda: true,
+        sprint: false
+      )
+
+     Question.create!(
+        value: " sprint question 1?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: " sprint question 2?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: " sprint question 3?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: " sprint question 4?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: " sprint question 5?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: " sprint question 6?",
+        sprint: true,
+        kda: false
+      )

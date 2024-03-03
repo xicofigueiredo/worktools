@@ -1,5 +1,7 @@
 class KdasController < ApplicationController
+  before_action :authenticate_user!
   before_action :set_kda, only: [:show, :edit, :update, :destroy]
+  before_action :set_questions, only: [:new, :show, :edit, :create, :update]
 
   # GET /kdas
   def index
@@ -13,6 +15,10 @@ class KdasController < ApplicationController
   # GET /kdas/new
   def new
     @kda = Kda.new
+    @kda.user_id = current_user.id
+    @questions.each do |question|
+      @kda.kdas_questions.build(question: question)
+    end
   end
 
   # GET /kdas/1/edit
@@ -24,7 +30,7 @@ class KdasController < ApplicationController
     @kda = Kda.new(kda_params)
 
     if @kda.save
-      redirect_to @kda, notice: 'Kda was successfully created.'
+      redirect_to kdas, notice: 'Kda was successfully created.'
     else
       render :new
     end
@@ -33,7 +39,7 @@ class KdasController < ApplicationController
   # PATCH/PUT /kdas/1
   def update
     if @kda.update(kda_params)
-      redirect_to @kda, notice: 'Kda was successfully updated.'
+      redirect_to kda_path(@kda), notice: 'Kda was successfully updated.'
     else
       render :edit
     end
@@ -53,6 +59,10 @@ class KdasController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def kda_params
-      params.require(:kda).permit(:user_id, :start_date, :end_date)
+      params.require(:kda).permit(:user_id, :start_date, :end_date, kdas_questions_attributes: [:question_id, :sdl, :ini, :mot, :p2p, :hubp])
+    end
+
+    def set_questions
+      @questions = Question.where(kda: true)
     end
 end
