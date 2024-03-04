@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
-  demo-web:
+  server:
       build: .
       command: "./bin/rails server"
       environment:

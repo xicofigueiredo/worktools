@@ -22,7 +22,7 @@ RUN bundle exec bootsnap precompile --gemfile app/ lib/
 
 RUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile
 
-ENTRYPOINT ["bin/docker-entrypoint"]
+# ENTRYPOINT ["bin/docker-entrypoint"]
 
 EXPOSE 3000
 CMD ["./bin/rails", "server"]
