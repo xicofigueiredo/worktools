@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   get 'edit_profile', to: 'pages#edit_profile'
   post '/update_profile', to: 'pages#update_profile', as: :update_profile
   get '/get_topics', to: 'subjects#get_topics'
+  patch '/timelines/:id/update_done_topics', to: 'timelines#update_done_topics', as: 'update_done_topics'
 
 
   resources :subjects do
@@ -19,5 +20,10 @@ Rails.application.routes.draw do
   resources :weekly_goals
   resources :sprint_goals
   resources :kdas
+  resources :user_topics do
+    member do
+      patch :update_done
+    end
+  end
 
 end

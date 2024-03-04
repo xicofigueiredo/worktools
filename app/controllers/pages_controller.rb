@@ -3,12 +3,17 @@ class PagesController < ApplicationController
 
   def dashboard_lc
     @users = current_user.hub.users_hub.map(&:user)
-    @total_balance = 0
+    @total_balance = {}
     @users.each do |user|
-        user.timelines.each do |timeline|
-          @total_balance += timeline.balance
-        end
+      total_balance_for_user = 0
+      user.timelines.each do |timeline|
+        total_balance_for_user += timeline.balance
+      end
+      user.topics_balance = total_balance_for_user
+      user.save
     end
+
+    @users.sort_by! { |user| -user.topics_balance }
   end
 
   def profile

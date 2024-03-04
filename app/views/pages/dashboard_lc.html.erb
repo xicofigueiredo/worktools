@@ -13,13 +13,18 @@
                   <p class="text-secondary mb-1">Kda's <i class="fa-regular fa-circle-xmark text-danger"></i></p>
                   <% if user.timelines.present? %>
                     <% user.timelines.each do |timeline| %>
-                      <p class="text-secondary mb-1"><%= timeline.subject.name %></p>
-                      <%# <p class="text-secondary mb-1"><%= timeline.balance %></p>
-                      <p class="text-secondary mb-1"><span class="badge rounded-pill bg-success">+2 </span> </p>
+                      <p class="text-secondary mb-1"><%= timeline.subject.name %>
+                      <% if timeline.balance > 0 %>
+                        <span class="badge rounded-pill bg-success">+<%= timeline.balance %></span></p>
+                      <% else %>
+                        <span class="badge rounded-pill bg-danger"><%= timeline.balance %></span></p>
+                      <% end %>
                     <% end %>
-                    <p class="text-secondary mb-1"><span class="badge rounded-pill bg-success">Overall: +<%= @total_balance + 6 %></p>
+                  <% end %>
+                  <% if user.topics_balance > 0 %>
+                    <p class="text-secondary mb-1"><span class="badge rounded-pill bg-success">Overall: +<%= user.topics_balance %></p>
                   <% else %>
-                    <p class="text-secondary mb-1"> Has no timelines yet! </p>
+                    <p class="text-secondary mb-1"><span class="badge rounded-pill bg-danger">Overall: <%= user.topics_balance %></span></p>
                   <% end %>
                 </div>
               </div>
