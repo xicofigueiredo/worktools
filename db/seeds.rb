@@ -666,6 +666,10 @@ quim = User.create!(
       user: xico,
       hub: cascais
       )
+    brito_hub = UsersHub.create!(
+      user: brito,
+      hub: cascais
+    )
 
       joe_hub = UsersHub.create!(
         user: joe,
