@@ -132,19 +132,20 @@ class TimelinesController < ApplicationController
   end
 
   def calculate_balance(timeline)
-    balance = 0
     @timelines.each do |timeline|
+      balance = 0
       timeline.subject.topics.each do |topic|
         user_topic = current_user.user_topics.find_by(topic_id: topic.id)
         if user_topic.done && user_topic.deadline > Date.today
           balance += 1
-        elsif user_topic.done && user_topic.deadline > Date.today
+        elsif (user_topic.done == nil || user_topic.done) && user_topic.deadline < Date.today
           balance -= 1
         else
           balance += 0
         end
         timeline.balance = balance
       end
+      timeline.save
     end
   end
 end

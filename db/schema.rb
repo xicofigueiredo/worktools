@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_03_01_003007) do
+ActiveRecord::Schema[7.0].define(version: 2024_03_04_133100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -60,13 +60,22 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_01_003007) do
 
   create_table "kdas_questions", id: false, force: :cascade do |t|
     t.bigint "kda_id", null: false
+    t.string "sdl"
+    t.string "ini"
+    t.string "mot"
+    t.string "p2p"
+    t.string "hubp"
+    t.string "question_value"
     t.bigint "question_id", null: false
+    t.index ["question_id"], name: "index_kdas_questions_on_question_id"
   end
 
   create_table "questions", force: :cascade do |t|
     t.string "value"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "kda"
+    t.boolean "sprint"
   end
 
   create_table "questions_sprint_goals", force: :cascade do |t|
@@ -141,6 +150,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_01_003007) do
     t.datetime "updated_at", null: false
     t.string "full_name"
     t.string "role"
+    t.integer "topics_balance"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
@@ -179,6 +189,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_01_003007) do
   add_foreign_key "exam_dates", "subjects"
   add_foreign_key "holidays", "users"
   add_foreign_key "kdas", "users"
+  add_foreign_key "kdas_questions", "questions"
   add_foreign_key "questions_sprint_goals", "subjects"
   add_foreign_key "sprint_goals", "users"
   add_foreign_key "timelines", "subjects"
