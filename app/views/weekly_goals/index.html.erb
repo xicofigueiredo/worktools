@@ -1,59 +1,16 @@
-<%= link_to "New Weekly Goal", new_weekly_goal_path %>
-
-<% if @last_completed_weekly_goal.present? %>
-  <div class="last-weekly-goal">
-    <h2>Last Completed Weekly Goal</h2>
-    <div>
-      <strong>Name:</strong> <%= @last_completed_weekly_goal.name %>
-    </div>
-    <div>
-      <strong>Start Date:</strong> <%= @last_completed_weekly_goal.start_date %>
-    </div>
-    <div>
-      <strong>End Date:</strong> <%= @last_completed_weekly_goal.end_date %>
-    </div>
-    <div class="container">
-      <div class="table-responsive">
-        <table class="table table-bordered text-center">
-          <thead>
-            <tr class="bg-gray">
-              <th class="text-uppercase">Time</th>
-              <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                <th class="text-uppercase"><%= day.capitalize %></th>
-              <% end %>
-            </tr>
-          </thead>
-          <tbody>
-            <% WeeklySlot.time_slots.keys.each do |time| %>
-              <tr>
-                <td class="align-middle"><%= time %></td>
-                <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                  <td id="<%= time.downcase %>_<%= day.downcase %>">
-                    <div class="form-group">
-                      <%= last_weekly_subject_for_slot(day, time) %>
-                    </div>
-                  </td>
-                <% end %>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-<% end %>
+<%= link_to "New Weekly Goal", new_weekly_goal_path, class: "btn btn-primary" %>
 
 <% @weekly_goals.each do |weekly_goal| %>
-  <div class="weekly-goal">
-    <h2><%= weekly_goal.name %></h2>
-    <div>
-      <strong>Start Date:</strong> <%= weekly_goal.start_date %>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title"><%= weekly_goal.name %></h5>
+      <p class="card-text">
+        <strong>Start Date:</strong> <%= weekly_goal.start_date %><br>
+        <strong>End Date:</strong> <%= weekly_goal.end_date %>
+      </p>
+      <%= link_to "Show", weekly_goal_path(weekly_goal), class: "btn btn-primary" %>
+      <% link_to "Edit", edit_weekly_goal_path(weekly_goal), class: "btn btn-secondary" %>
+      <%= link_to "Delete", weekly_goal_path(weekly_goal), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger" %>
     </div>
-    <div>
-      <strong>End Date:</strong> <%= weekly_goal.end_date %>
-    </div>
-    <%= link_to "Show", weekly_goal_path(weekly_goal) %>
-    <%= link_to "Edit", edit_weekly_goal_path(weekly_goal) %>
-    <%= link_to "Delete", weekly_goal_path(weekly_goal), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } %>
   </div>
 <% end %>

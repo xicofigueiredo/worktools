@@ -1,8 +1,8 @@
 class WeeklyGoalsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_weekly_goal, only: [:show, :edit, :update, :destroy]
-  before_action :set_subject_names
-  before_action :set_topic_names
+  before_action :set_subject_names, only: [:new, :edit]
+  before_action :set_topic_names, only: [:new, :edit]
 
   def index
     @weekly_goals = current_user.weekly_goals.order(created_at: :desc)
@@ -30,7 +30,6 @@ class WeeklyGoalsController < ApplicationController
     if @weekly_goal.save
       save_weekly_slots
       redirect_to @weekly_goal, notice: 'Weekly goal was successfully created.'
-      raise
     else
       initialize_weekly_slots
       render :new
@@ -39,7 +38,7 @@ class WeeklyGoalsController < ApplicationController
 
   def update
     if @weekly_goal.update(weekly_goal_params)
-      redirect_to @weekly_goals, notice: 'Weekly goal was successfully updated.'
+      redirect_to @weekly_goal, notice: 'Weekly goal was successfully updated.'
     else
       initialize_weekly_slots
       render :edit
@@ -79,11 +78,31 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def save_weekly_slots
-    return unless params[:weekly_goal][:weekly_slots_attributes].present?
+    return unless params[:weekly_goal].present?
 
-    params[:weekly_goal][:weekly_slots_attributes].each do |_index, attributes|
-      @weekly_goal.weekly_slots.create(attributes)
+    WeeklySlot.day_of_weeks.keys.each do |day|
+      WeeklySlot.time_slots.keys.each do |time|
+        subject = params[:weekly_goal]["#{day.downcase}_#{time.downcase}_subject"]
+        topic = params[:weekly_goal]["#{day.downcase}_#{time.downcase}_topic"]
+
+        # If subject is not present, set it to an empty string
+        subject ||= ""
+
+        # Create weekly slot
+        @weekly_goal.weekly_slots.create(day_of_week: day, time_slot: time, subject_name: subject, topic_name: topic)
+      end
     end
+  end
+
+  def initialize_weekly_slots
+    @weekly_slots = []
+    WeeklySlot.time_slots.keys.each do |time_slot|
+      WeeklySlot.day_of_weeks.keys.each do |day_of_week|
+        @weekly_slots << @weekly_goal.weekly_slots.build(day_of_week: day_of_week, time_slot: time_slot)
+      end
+    end
+    @weekly_slots.uniq!
+    @weekly_slots.sort!
   end
 
   def subject_for_slot(day, time)
@@ -94,11 +113,6 @@ class WeeklyGoalsController < ApplicationController
     @weekly_goal.weekly_slots.find_by(day_of_week: day, time_slot: time)&.topic_name
   end
 
-  def last_weekly_subject_for_slot(day, time)
-    @last_completed_weekly_goal&.weekly_slots&.find_by(day_of_week: day, time_slot: time)&.subject_name
-  end
-
   helper_method :subject_for_slot
   helper_method :topic_for_slot
-  helper_method :last_weekly_subject_for_slot
 end
