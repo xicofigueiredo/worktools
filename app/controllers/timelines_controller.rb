@@ -4,7 +4,7 @@ class TimelinesController < ApplicationController
 
 
   def index
-    @timelines = current_user.timelines
+    @timelines = current_user.timelines.sort_by { |timeline| timeline.balance }
     @timelines.each do |timeline|
       timeline.calculate_total_time
       generate_topic_deadlines(timeline)

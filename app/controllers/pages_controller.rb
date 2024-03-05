@@ -13,7 +13,7 @@ class PagesController < ApplicationController
       user.save
     end
 
-    @users.sort_by! { |user| -user.topics_balance }
+    @users.sort_by! { |user| user.topics_balance }
   end
 
   def profile
