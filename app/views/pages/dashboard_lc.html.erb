@@ -9,7 +9,14 @@
                 <%= image_tag "profile.jpeg", class: "rounded-circle", width: "150" %>
                 <div class="mt-3">
                   <h4> <%= user.full_name %></h4>
-                  <p class="text-secondary mb-1">Weekly Goal <i class="fa-regular fa-circle-check text-success"></i></p>
+                  <p class="text-secondary mb-1">
+                    Weekly Goal
+                    <% if user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)) %>
+                      <i class="fa-regular fa-circle-check text-success"></i>
+                    <% else %>
+                      <i class="fa-regular fa-circle-xmark text-danger"></i>
+                    <% end %>
+                  </p>
                   <p class="text-secondary mb-1">Kda's <i class="fa-regular fa-circle-xmark text-danger"></i></p>
                   <% if user.timelines.present? %>
                   <% sorted_timelines = user.timelines.to_a.sort_by { |timeline| timeline.balance } %>
@@ -25,9 +32,11 @@
                     <% end %>
                   <% end %>
                   <% if user.topics_balance > 0 %>
-                    <p class="text-secondary mb-1"><span class="badge rounded-pill bg-success">Overall: +<%= user.topics_balance %></p>
+                    <p class="text-secondary mb-1"><span class="badge rounded-pill bg-success">In Total: <%= user.topics_balance %> Topics Ahead</p>
+                  <% elsif user.topics_balance == 0 %>
+                    <p class="text-secondary mb-1"><span class="badge rounded-pill bg-success"> On Time </p>
                   <% else %>
-                    <p class="text-secondary mb-1"><span class="badge rounded-pill bg-danger">Overall: <%= user.topics_balance %></span></p>
+                    <p class="text-secondary mb-1"><span class="badge rounded-pill bg-danger">In Total: <%= -user.topics_balance %> Topics Behind</span></p>
                   <% end %>
                 </div>
               </div>

@@ -1,8 +1,10 @@
 class WeeklyGoalsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_weekly_goal, only: [:show, :edit, :update, :destroy]
-  before_action :set_subject_names, only: [:new, :edit]
-  before_action :set_topic_names, only: [:new, :edit]
+  before_action :set_subject_names
+  before_action :set_topic_names
+  before_action :set_available_weeks, only: [:new, :edit]
+
 
   def index
     @weekly_goals = current_user.weekly_goals.order(created_at: :desc)
@@ -111,6 +113,15 @@ class WeeklyGoalsController < ApplicationController
 
   def topic_for_slot(day, time)
     @weekly_goal.weekly_slots.find_by(day_of_week: day, time_slot: time)&.topic_name
+  end
+
+  def weekly_goal_params
+    params.require(:weekly_goal).permit(:name, :week_id, :other, :permitted, :attributes)
+  end
+
+  def set_available_weeks
+    used_week_ids = current_user.weekly_goals.pluck(:week_id)
+    @available_weeks = Week.where.not(id: used_week_ids)
   end
 
   helper_method :subject_for_slot

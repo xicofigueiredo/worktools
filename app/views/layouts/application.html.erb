@@ -10,8 +10,18 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body><%= render "shared/navbar" %>
-  <%= render "shared/flashes" %>
+  <body>
+     <% if current_user.present? %>
+      <% if current_user.role == "lc" %>
+        <%= render "shared/lc_navbar" %>
+      <% elsif current_user.role == "admin" %>
+        <%= render "shared/admin_navbar" %>
+      <% else %>
+        <%= render "shared/navbar" %>
+      <% end %>
+    <% else %>
+      <%= render "shared/navbar" %>
+    <% end %>
 
     <%= yield %>
   </body>

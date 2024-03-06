@@ -4,13 +4,18 @@ class TimelinesController < ApplicationController
 
 
   def index
-    @timelines = current_user.timelines.sort_by { |timeline| timeline.balance }
-    @timelines.each do |timeline|
-      timeline.calculate_total_time
-      generate_topic_deadlines(timeline)
-      calculate_progress(timeline)
-      calculate_balance(timeline)
-      timeline.save
+
+    if current_user.role == "lc"
+      redirect_to dashboard_lc_path
+    else
+      @timelines = current_user.timelines_sorted_by_balance
+      @timelines.each do |timeline|
+        timeline.calculate_total_time
+        generate_topic_deadlines(timeline)
+        calculate_progress(timeline)
+        calculate_balance(timeline)
+        timeline.save
+      end
     end
 
     @holidays = current_user.holidays

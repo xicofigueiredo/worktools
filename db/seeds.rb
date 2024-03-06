@@ -613,42 +613,49 @@ xico = User.create!(
   email: "francisco-abf@hotmail.com",
   password: "123456",
   full_name: "Francisco Figueiredo",
-  role: :admin
+  role: "admin"
   )
 
   brito = User.create!(
   email: "britoefaro@gmail.com",
   password: "123456",
   full_name: "Luis Brito e Faro",
-  role: :admin
+  role: "admin"
   )
+
+  guest_lc = User.create!(
+    email: "guest@lc.com",
+    password: "123456",
+    full_name: "Guest LC",
+    role: "lc"
+    )
 
 joe = User.create!(
   email: "john@learner.com",
   password: "123456",
   full_name: "Joe King",
-  role: :learner
+  role: "learner"
   )
 
 mary = User.create!(
   email: "mary@learner.com",
   password: "123456",
   full_name: "Mary Queen",
-  role: :learner
+  role: "learner"
   )
 
 manel = User.create!(
   email: "manel@learner.com",
   password: "123456",
   full_name: "Manel Costa",
-  role: :learner
+  role: "learner"
   )
 
 quim = User.create!(
   email: "quim@learner.com",
   password: "123456",
   full_name: "Quim Barreiros",
-  role: :learner
+  role: "learner"
   )
 
 
@@ -661,6 +668,11 @@ quim = User.create!(
     name: "Cascais",
     country: "Portugal"
     )
+
+  guest_lc  = UsersHub.create!(
+    user: guest_lc,
+    hub: cascais
+  )
 
     xico_hub = UsersHub.create!(
       user: xico,
@@ -745,4 +757,49 @@ quim = User.create!(
         value: " sprint question 6?",
         sprint: true,
         kda: false
+      )
+
+
+      Week.create!(
+        name: "Week 8",
+        start_date: "04/03/2024",
+        end_date: "11/03/2024"
+      )
+      Week.create!(
+        name: "Week 9",
+        start_date: "11/03/2024",
+        end_date: "18/03/2024"
+      )
+      Week.create!(
+        name: "Week 10",
+        start_date: "18/03/2024",
+        end_date: "25/03/2024"
+      )
+
+      Week.create!(
+        name: "Week 11",
+        start_date: "01/04/2024",
+        end_date: "08/04/2024"
+      )
+
+      Week.create!(
+        name: "Week 12",
+        start_date: "08/04/2024",
+        end_date: "15/04/2024"
+      )
+
+      Week.create!(
+        name: "Week 13",
+        start_date: "15/04/2024",
+        end_date: "22/04/2024"
+      )
+      Week.create!(
+        name: "Week 14",
+        start_date: "22/04/2024",
+        end_date: "29/04/2024"
+      )
+      Week.create!(
+        name: "Week 15",
+        start_date: "29/04/2024",
+        end_date: "06/05/2024"
       )

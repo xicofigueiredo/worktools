@@ -1,16 +1,17 @@
-<%= link_to "New Weekly Goal", new_weekly_goal_path, class: "btn btn-primary" %>
+<%= link_to "New Weekly Goal", new_weekly_goal_path, class: "btn btn-primary mb-3" %>
 
 <% @weekly_goals.each do |weekly_goal| %>
-  <div class="card">
+  <div class="card mb-3">
     <div class="card-body">
       <h5 class="card-title"><%= weekly_goal.name %></h5>
       <p class="card-text">
-        <strong>Start Date:</strong> <%= weekly_goal.start_date %><br>
-        <strong>End Date:</strong> <%= weekly_goal.end_date %>
+        <strong></strong> <%= weekly_goal.week.name %><br>
+        <strong>Start Date:</strong> <%= weekly_goal.week.start_date %><br>
+        <strong>End Date:</strong> <%= weekly_goal.week.end_date %>
       </p>
-      <%= link_to "Show", weekly_goal_path(weekly_goal), class: "btn btn-primary" %>
-      <% link_to "Edit", edit_weekly_goal_path(weekly_goal), class: "btn btn-secondary" %>
-      <%= link_to "Delete", weekly_goal_path(weekly_goal), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger" %>
+      <%= link_to "Show", weekly_goal_path(weekly_goal), class: "btn btn-primary mr-2" %>
+      <% link_to "Edit", edit_weekly_goal_path(weekly_goal), class: "btn btn-secondary mr-2" %>
+      <%= link_to "Delete", weekly_goal_path(weekly_goal), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
     </div>
   </div>
 <% end %>

@@ -1,49 +1,91 @@
 <%= form_with(model: @kda, local: true) do |form| %>
-  <div class="field">
-    <%= form.label :start_date %>
-    <%= form.date_field :start_date %>
-  </div>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">New KDA</h2>
 
-  <div class="field">
-    <%= form.label :end_date %>
-    <%= form.date_field :end_date %>
-  </div>
+            <div class="field">
+              <%= form.label :start_date, class: "form-label" %>
+              <%= form.date_field :start_date, class: "form-control" %>
+            </div>
 
-  <% @questions.each do |question| %>
-    <h3><%= question.value %></h3>
-    <%= form.fields_for :kdas_questions, Kda.new.kdas_questions.build do |kda_question_fields| %>
-      <div class="nested-fields">
-        <%= kda_question_fields.hidden_field :question_id, value: question.id %>
+            <div class="field">
+              <%= form.label :end_date, class: "form-label" %>
+              <%= form.date_field :end_date, class: "form-control" %>
+            </div>
 
-        <div class="field">
-          <%= kda_question_fields.label :sdl, "Self Directed Learning"%>
-          <%= kda_question_fields.text_field :sdl %>
-        </div>
+            <hr>
 
-        <div class="field">
-          <%= kda_question_fields.label :ini, "Iniciative" %>
-          <%= kda_question_fields.text_field :ini %>
-        </div>
+            <% @questions.each do |question| %>
+              <h3><%= question.value %></h3>
+              <%= form.fields_for :kdas_questions, Kda.new.kdas_questions.build do |kda_question_fields| %>
+                <div class="nested-fields">
+                  <%= kda_question_fields.hidden_field :question_id, value: question.id %>
+                  <% if @questions.first == question %>
+                    <div class="field">
+                      <%= kda_question_fields.label :sdl, "Self Directed Learning (From 1 to 5)", class: "form-label" %>
+                      <%= kda_question_fields.number_field :sdl, class: "form-control", in: 1..5 %>
+                    </div>
 
-        <div class="field">
-          <%= kda_question_fields.label :mot, "Motivation" %>
-          <%= kda_question_fields.text_field :mot %>
-        </div>
+                    <div class="field">
+                      <%= kda_question_fields.label :ini, "Iniciative (From 1 to 5)", class: "form-label" %>
+                      <%= kda_question_fields.number_field :ini, class: "form-control", in: 1..5 %>
+                    </div>
 
-        <div class="field">
-          <%= kda_question_fields.label :p2p, "P2P" %>
-          <%= kda_question_fields.text_field :p2p %>
-        </div>
+                    <div class="field">
+                      <%= kda_question_fields.label :mot, "Motivation (From 1 to 5)", class: "form-label" %>
+                      <%= kda_question_fields.number_field :mot, class: "form-control", in: 1..5 %>
+                    </div>
 
-        <div class="field">
-          <%= kda_question_fields.label :hubp, "Hub Participation" %>
-          <%= kda_question_fields.text_field :hubp %>
+                    <div class="field">
+                      <%= kda_question_fields.label :p2p, "P2P (From 1 to 5)", class: "form-label" %>
+                      <%= kda_question_fields.number_field :p2p, class: "form-control", in: 1..5 %>
+                    </div>
+
+                    <div class="field">
+                      <%= kda_question_fields.label :hubp, "Hub Participation (From 1 to 5)", class: "form-label" %>
+                      <%= kda_question_fields.number_field :hubp, class: "form-control", in: 1..5 %>
+                    </div>
+                    <hr>
+                  <% else %>
+                    <div class="field">
+                      <%= kda_question_fields.label :sdl, "Self Directed Learning", class: "form-label" %>
+                      <%= kda_question_fields.text_area :sdl, class: "form-control" %>
+                    </div>
+
+                    <div class="field">
+                      <%= kda_question_fields.label :ini, "Iniciative", class: "form-label" %>
+                      <%= kda_question_fields.text_area :ini, class: "form-control" %>
+                    </div>
+
+                    <div class="field">
+                      <%= kda_question_fields.label :mot, "Motivation", class: "form-label" %>
+                      <%= kda_question_fields.text_area :mot, class: "form-control" %>
+                    </div>
+
+                    <div class="field">
+                      <%= kda_question_fields.label :p2p, "P2P", class: "form-label" %>
+                      <%= kda_question_fields.text_area :p2p, class: "form-control" %>
+                    </div>
+
+                    <div class="field">
+                      <%= kda_question_fields.label :hubp, "Hub Participation", class: "form-label" %>
+                      <%= kda_question_fields.text_area :hubp, class: "form-control" %>
+                    </div>
+                    <hr>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+
+            <div class="form-group text-center">
+              <%= form.submit class: "btn btn-primary" %>
+            </div>
+          </div>
         </div>
       </div>
-    <% end %>
-  <% end %>
-
-  <div class="actions">
-    <%= form.submit %>
+    </div>
   </div>
 <% end %>

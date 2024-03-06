@@ -1,9 +1,10 @@
 class PagesController < ApplicationController
-  skip_before_action :authenticate_user!, only: [ :home ]
+  skip_before_action :authenticate_user!
 
   def dashboard_lc
-    @users = current_user.hub.users_hub.map(&:user)
+    @users = current_user.hub.users_hub.map(&:user).reject { |user| user.role == "lc" }
     @total_balance = {}
+
     @users.each do |user|
       total_balance_for_user = 0
       user.timelines.each do |timeline|
@@ -11,6 +12,7 @@ class PagesController < ApplicationController
       end
       user.topics_balance = total_balance_for_user
       user.save
+
     end
 
     @users.sort_by! { |user| user.topics_balance }

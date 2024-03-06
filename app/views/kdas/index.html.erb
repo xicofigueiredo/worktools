@@ -1,9 +1,10 @@
-<h1>Kdas</h1>
-
+<h1 class="title" style="margin-top: 10px;">
+  KDAs
+</h1>
 <ul>
   <% @kdas.each do |kda| %>
     <li><%= link_to kda.title, kda %></li>
   <% end %>
 </ul>
 
-<%= link_to 'New Kda', new_kda_path %>
+<%= link_to 'New Kda', new_kda_path, class: "btn btn-primary" %>

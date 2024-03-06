@@ -1,51 +1,70 @@
-<!-- app/views/weekly_goals/show.html.erb -->
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-11">
+      <div class="card">
+        <div class="card-body">
+          <h1 class="card-title text-center"><%= @weekly_goal.week.name %></h1>
 
-<h1><%= @weekly_goal.name %></h1>
-
-<div>
-  <strong>Start Date:</strong> <%= @weekly_goal.start_date %>
-</div>
-
-<div>
-  <strong>End Date:</strong> <%= @weekly_goal.end_date %>
-</div>
-
-<div class="container">
-  <div class="table-responsive">
-    <table class="table table-bordered text-center">
-      <thead>
-        <tr class="bg-gray">
-          <th class="text-uppercase">Time</th>
-          <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-            <th class="text-uppercase"><%= day.capitalize %></th>
-          <% end %>
-        </tr>
-      </thead>
-      <tbody>
-        <% WeeklySlot.time_slots.keys.each do |time| %>
-          <tr>
-            <td class="align-middle"><%= time %></td>
-            <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-              <td id="<%= time.downcase %>_<%= day.downcase %>">
-                <div class="form-group">
-                  <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
-                  <% if slot %>
-                    <%= slot.subject_name %><br>
-                    <%= slot.topic_name %>
-                  <% else %>
-                    No subject<br>
-                    No topic
-                  <% end %>
+          <div class="container">
+              <div class="row">
+                <div class="col-md-2">
+                  <div class="form-group text-center">
+                    <strong>Start Date:</strong> <%= @weekly_goal.week.start_date %>
+                  </div>
                 </div>
-              </td>
-            <% end %>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+                <div class="col-md-8">
+                  <div class="form-group text-center">
+                    <strong>End Date:</strong> <%= @weekly_goal.week.end_date %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          <div class="pt-4">
+            <div class="container">
+              <div class="table-responsive">
+                <table class="table table-bordered text-center">
+                  <thead>
+                    <tr class="bg-gray">
+                      <th class="text-uppercase">Time</th>
+                      <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                        <th class="text-uppercase"><%= day.capitalize %></th>
+                      <% end %>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% WeeklySlot.time_slots.keys.each do |time| %>
+                      <tr>
+                        <td class="align-middle"><%= time %></td>
+                        <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                          <td id="<%= time.downcase %>_<%= day.downcase %>">
+                            <div class="form-group">
+                              <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
+                              <% if slot %>
+                                <%= slot.subject_name %><br>
+                                <%= slot.topic_name %>
+                              <% else %>
+                                No subject<br>
+                                No topic
+                              <% end %>
+                            </div>
+                          </td>
+                        <% end %>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <% link_to "Edit", edit_weekly_goal_path(@weekly_goal), class: "btn btn-primary mr-2" %>
+            <%= link_to "Back", weekly_goals_path, class: "btn btn-secondary" %>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 </div>
-
-
-<% link_to "Edit", edit_weekly_goal_path(@weekly_goal) %>
-<%= link_to "Back", weekly_goals_path, class: "btn btn-primary"%>

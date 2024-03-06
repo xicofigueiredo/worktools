@@ -1,6 +1,7 @@
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-7">
+        <h3>Timelines</h3>
       <% @timelines.each_with_index do |timeline, index| %>
         <div class="accordion" id="parentAccordion">
           <div class="accordion-item">
@@ -96,12 +97,13 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-5">
       <h3>Holidays</h3>
       <table class="table">
         <thead>
           <tr>
             <th>Start Date</th>
+            <th>Note</th>
             <th>End Date</th>
           </tr>
         </thead>
@@ -109,6 +111,7 @@
           <% current_user.holidays.each do |holiday| %>
             <tr>
               <td><%= holiday.start_date %></td>
+              <td><%= holiday.name %></td>
               <td><%= holiday.end_date %></td>
               <td><%= link_to 'Edit', edit_holiday_path(holiday) %></td>
               <td><%= link_to 'Delete', holiday_path(holiday), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } %></td>

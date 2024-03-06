@@ -1,63 +1,63 @@
 <%= form_with(model: @weekly_goal, local: true) do |form| %>
-  <% if @weekly_goal.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(@weekly_goal.errors.count, "error") %> prohibited this weekly goal from being saved:</h2>
-
-      <ul>
-        <% @weekly_goal.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
-
-  <div class="field">
-    <%= form.label :name %>
-    <%= form.text_field :name %>
-  </div>
-
-  <div class="field">
-    <%= form.label :start_date %>
-    <%= form.date_field :start_date %>
-  </div>
-
-  <div class="field">
-    <%= form.label :end_date %>
-    <%= form.date_field :end_date %>
-  </div>
-
-  <div class="container">
-    <div class="table-responsive">
-      <table class="table table-bordered text-center">
-        <thead>
-          <tr class="bg-gray">
-            <th class="text-uppercase">Time</th>
-            <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-              <th class="text-uppercase"><%= day.capitalize %></th>
-            <% end %>
-          </tr>
-        </thead>
-        <tbody>
-          <% WeeklySlot.time_slots.keys.each do |time| %>
-            <tr>
-              <td class="align-middle"><%= time %></td>
-              <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                <td id="<%= time.downcase %>_<%= day.downcase %>">
-                  <div class="form-group">
-                    <% filtered_subject_names = @subject_names.reject(&:empty?) %>
-                    <%= form.collection_select "#{day}_#{time}_subject", filtered_subject_names, :itself, :itself, { prompt: "Select subject" }, { class: "form-control" } %>
-                    <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself, { prompt: "" }, { class: "form-control" } %>
-                  </div>
-                </td>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-13">
+        <% if @weekly_goal.errors.any? %>
+          <div id="error_explanation" class="alert alert-danger">
+            <h2><%= pluralize(@weekly_goal.errors.count, "error") %> prohibited this weekly goal from being saved:</h2>
+            <ul>
+              <% @weekly_goal.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
               <% end %>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-  </div>
+            </ul>
+          </div>
+        <% end %>
 
-  <div class="actions">
-    <%= form.submit class: 'btn btn-primary' %>
+        <div class="card">
+          <div class="card-body">
+            <!-- Week Selection -->
+            <div class="field">
+              <%= form.label :week_id, 'Week' %>
+              <%= form.collection_select :week_id, @available_weeks, :id, :name, include_blank: true, class: 'form-select' %>
+            </div>
+
+            <!-- Schedule Table -->
+            <div class="table-responsive">
+              <table class="table table-bordered text-center">
+                <thead>
+                  <tr class="bg-gray">
+                    <th class="text-uppercase">Time</th>
+                    <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                      <th class="text-uppercase"><%= day.capitalize %></th>
+                    <% end %>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% WeeklySlot.time_slots.keys.each do |time| %>
+                    <tr>
+                      <td class="align-middle"><%= time %></td>
+                      <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                        <td id="<%= time.downcase %>_<%= day.downcase %>">
+                          <div class="form-group">
+                            <% filtered_subject_names = @subject_names.reject(&:empty?) %>
+                            <%= form.collection_select "#{day}_#{time}_subject", filtered_subject_names, :itself, :itself, { prompt: "" }, { class: "form-control" } %>
+                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself, { prompt: "" }, { class: "form-control" } %>
+                          </div>
+                        </td>
+                      <% end %>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="text-center mt-4">
+              <%= form.submit 'Save Weekly Goal', class: 'btn btn-primary' %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 <% end %>
