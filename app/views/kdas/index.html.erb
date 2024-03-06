@@ -1,10 +1,15 @@
-<h1 class="title" style="margin-top: 10px;">
-  KDAs
-</h1>
-<ul>
-  <% @kdas.each do |kda| %>
-    <li><%= link_to kda.title, kda %></li>
-  <% end %>
-</ul>
+<%= link_to "New KDA", new_kda_path, class: "btn btn-primary mb-3" %>
 
-<%= link_to 'New Kda', new_kda_path, class: "btn btn-primary" %>
+<% @kdas.each do |kda| %>
+  <div class="card mb-3">
+    <div class="card-body">
+
+      <p class="card-text">
+        <strong>KDA from <%= kda.week.name %></strong> <br>
+      </p>
+      <%= link_to "Show", kda_path(kda), class: "btn btn-primary mr-2" %>
+      <%= link_to "Edit", edit_kda_path(kda), class: "btn btn-secondary mr-2 disabled" %>
+      <%= link_to "Delete", kda_path(kda), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
+    </div>
+  </div>
+<% end %>

@@ -10,6 +10,8 @@ class User < ApplicationRecord
   has_many :user_topics
   has_many :topics, through: :user_topics
   attr_accessor :weekly_goal_completed
+  has_many :kdas
+
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable

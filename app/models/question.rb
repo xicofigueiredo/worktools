@@ -1,5 +1,5 @@
 class Question < ApplicationRecord
-  has_many :answers, dependent: :destroy
-  has_and_belongs_to_many :goals
-  belongs_to :subject, optional: true
+  has_many :kdas_questions
+  has_many :kdas, through: :kdas_questions
+  has_many :answers
 end

@@ -17,7 +17,14 @@
                       <i class="fa-regular fa-circle-xmark text-danger"></i>
                     <% end %>
                   </p>
-                  <p class="text-secondary mb-1">Kda's <i class="fa-regular fa-circle-xmark text-danger"></i></p>
+                  <p class="text-secondary mb-1">
+                    KDA's
+                    <% if user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)) %>
+                      <i class="fa-regular fa-circle-check text-success"></i>
+                    <% else %>
+                      <i class="fa-regular fa-circle-xmark text-danger"></i>
+                    <% end %>
+                  </p>
                   <% if user.timelines.present? %>
                   <% sorted_timelines = user.timelines.to_a.sort_by { |timeline| timeline.balance } %>
                     <% sorted_timelines.each do |timeline| %>

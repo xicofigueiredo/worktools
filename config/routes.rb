@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   devise_for :users
   root to: "timelines#index"
 
+  get 'profile', to: 'pages#profile'
   get 'report', to: 'pages#report'
   get 'dashboard_lc', to: 'pages#dashboard_lc'
   get 'edit_profile', to: 'pages#edit_profile'
@@ -9,12 +10,10 @@ Rails.application.routes.draw do
   get '/get_topics', to: 'subjects#get_topics'
   patch '/timelines/:id/update_done_topics', to: 'timelines#update_done_topics', as: 'update_done_topics'
 
-
   resources :subjects do
     resources :topics, except: [:show, :index]
   end
 
-  get 'profile', to: 'pages#profile'
   resources :holidays, except: [:show, :index]
   resources :timelines
   resources :weekly_goals

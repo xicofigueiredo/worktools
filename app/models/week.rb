@@ -4,5 +4,6 @@ class Week < ApplicationRecord
   validates :name, presence: true
 
   has_many :weekly_goals
+  has_many :kdas
 
 end

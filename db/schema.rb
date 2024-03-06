@@ -10,15 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_03_06_015328) do
+ActiveRecord::Schema[7.0].define(version: 2024_03_06_175601) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "answers", force: :cascade do |t|
     t.string "value"
-    t.bigint "question_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "kdas_question_id", null: false
+    t.string "answer_type"
+    t.bigint "question_id", null: false
+    t.index ["kdas_question_id"], name: "index_answers_on_kdas_question_id"
     t.index ["question_id"], name: "index_answers_on_question_id"
   end
 
@@ -55,17 +58,13 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_06_015328) do
     t.date "end_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "week_id", null: false
     t.index ["user_id"], name: "index_kdas_on_user_id"
+    t.index ["week_id"], name: "index_kdas_on_week_id"
   end
 
-  create_table "kdas_questions", id: false, force: :cascade do |t|
+  create_table "kdas_questions", force: :cascade do |t|
     t.bigint "kda_id", null: false
-    t.string "sdl"
-    t.string "ini"
-    t.string "mot"
-    t.string "p2p"
-    t.string "hubp"
-    t.string "question_value"
     t.bigint "question_id", null: false
     t.index ["question_id"], name: "index_kdas_questions_on_question_id"
   end
@@ -195,10 +194,12 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_06_015328) do
     t.datetime "updated_at", null: false
   end
 
+  add_foreign_key "answers", "kdas_questions"
   add_foreign_key "answers", "questions"
   add_foreign_key "exam_dates", "subjects"
   add_foreign_key "holidays", "users"
   add_foreign_key "kdas", "users"
+  add_foreign_key "kdas", "weeks"
   add_foreign_key "kdas_questions", "questions"
   add_foreign_key "questions_sprint_goals", "subjects"
   add_foreign_key "sprint_goals", "users"

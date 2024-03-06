@@ -623,6 +623,13 @@ xico = User.create!(
   role: "admin"
   )
 
+  tester = User.create!(
+    email: "tester@tester.com",
+    password: "123456",
+    full_name: "Bug Catcher",
+    role: "admin"
+    )
+
   guest_lc = User.create!(
     email: "guest@lc.com",
     password: "123456",

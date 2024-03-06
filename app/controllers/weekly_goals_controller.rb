@@ -23,7 +23,17 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def edit
-    initialize_weekly_slots
+    @weekly_goal = WeeklyGoal.find(params[:id])
+    set_available_weeks(@weekly_goal.week_id)
+
+    # Pre-populate or build missing slots if necessary
+    WeeklySlot.time_slots.keys.each do |time|
+      WeeklySlot.day_of_weeks.keys.each do |day|
+        unless @weekly_goal.weekly_slots.any? { |slot| slot.day_of_week == day && slot.time_slot == time }
+          @weekly_goal.weekly_slots.build(day_of_week: day, time_slot: time)
+        end
+      end
+    end
   end
 
   def create
@@ -40,6 +50,7 @@ class WeeklyGoalsController < ApplicationController
 
   def update
     if @weekly_goal.update(weekly_goal_params)
+      save_weekly_slots
       redirect_to @weekly_goal, notice: 'Weekly goal was successfully updated.'
     else
       initialize_weekly_slots
@@ -119,9 +130,18 @@ class WeeklyGoalsController < ApplicationController
     params.require(:weekly_goal).permit(:name, :week_id, :other, :permitted, :attributes)
   end
 
-  def set_available_weeks
+  def set_available_weeks(edit_week_id = nil)
     used_week_ids = current_user.weekly_goals.pluck(:week_id)
+
+    # Exclude the edit_week_id from used_week_ids if provided
+    used_week_ids.delete(edit_week_id) if edit_week_id.present?
+
     @available_weeks = Week.where.not(id: used_week_ids)
+
+    # Ensure the current week is included if we're editing
+    if edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
+      @available_weeks = @available_weeks.or(Week.where(id: edit_week_id))
+    end
   end
 
   helper_method :subject_for_slot
