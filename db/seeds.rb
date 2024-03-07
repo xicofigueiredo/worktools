@@ -609,6 +609,15 @@ english_a_level.topics.create!(name: "Topic 4: Comparative analysis Paper 1", ti
 english_a_level.topics.create!(name: "Topic 5: Comparative analysis Paper 2", time: 3, unit: "Unit 8: Exam Preparation")
 english_a_level.topics.create!(name: "Mock 100%", time: 3, unit: "Mock 100%", milestone: true, has_grade: true)
 
+porto = Hub.create!(
+  name: "porto",
+  country: "Portugal"
+  )
+
+cascais = Hub.create!(
+  name: "Cascais",
+  country: "Portugal"
+  )
 xico = User.create!(
   email: "francisco-abf@hotmail.com",
   password: "123456",
@@ -630,12 +639,73 @@ xico = User.create!(
     role: "admin"
     )
 
+  tester_hub = UsersHub.create!(
+    user: tester,
+    hub: cascais
+    )
+
   guest_lc = User.create!(
     email: "guest@lc.com",
     password: "123456",
     full_name: "Guest LC",
     role: "lc"
     )
+
+    UsersHub.create!(
+      user: guest_lc,
+      hub: cascais
+      )
+
+
+  cascais_lc = User.create!(
+    email: "cascais@lc.com",
+    password: "123456",
+    full_name: "Cascais LC",
+    role: "lc"
+    )
+
+  UsersHub.create!(
+    user: cascais_lc,
+    hub: cascais
+    )
+
+    porto_lc = User.create!(
+      email: "porto@lc.com",
+      password: "123456",
+      full_name: "Porto LC",
+      role: "lc"
+      )
+
+      UsersHub.create!(
+        user: porto_lc,
+        hub: porto
+        )
+
+      cascais_learner = User.create!(
+        email: "cascais@learner.com",
+        password: "123456",
+        full_name: "Guest 1",
+        role: "learner"
+        )
+
+        UsersHub.create!(
+          user: cascais_learner,
+          hub: cascais
+          )
+
+
+        porto_learner = User.create!(
+          email: "porto@learner.com",
+          password: "123456",
+          full_name: "Guest 2",
+          role: "learner"
+          )
+
+         UsersHub.create!(
+            user: porto_learner,
+            hub: porto
+            )
+
 
 joe = User.create!(
   email: "john@learner.com",
@@ -666,15 +736,6 @@ quim = User.create!(
   )
 
 
-  porto = Hub.create!(
-    name: "porto",
-    country: "Portugal"
-    )
-
-  cascais = Hub.create!(
-    name: "Cascais",
-    country: "Portugal"
-    )
 
   guest_lc  = UsersHub.create!(
     user: guest_lc,
@@ -809,4 +870,74 @@ quim = User.create!(
         name: "Week 15",
         start_date: "29/04/2024",
         end_date: "06/05/2024"
+      )
+
+      Holiday.create!(
+        name: "Easter Break 2024",
+        start_date: "2024/03/25",
+        end_date: "2024/04/01",
+        user: xico
+      )
+
+      Holiday.create!(
+        name: "Easter Break 2024",
+        start_date: "2024/03/25",
+        end_date: "2024/04/01",
+        user: brito
+      )
+
+      Holiday.create!(
+        name: "Easter Break 2024",
+        start_date: "2024/03/25",
+        end_date: "2024/04/01",
+        user: cascais_learner
+      )
+
+      Holiday.create!(
+        name: "Easter Break 2024",
+        start_date: "2024/03/25",
+        end_date: "2024/04/01",
+        user: porto_learner
+      )
+
+      Holiday.create!(
+        name: "Easter Break 2024",
+        start_date: "2024/03/25",
+        end_date: "2024/04/01",
+        user: tester
+      )
+
+      Holiday.create!(
+        name: "Christmas Break 2024",
+        start_date: "2024/12/16",
+        end_date: "2025/01/02",
+        user: tester
+      )
+
+      Holiday.create!(
+        name: "Christmas Break 2024",
+        start_date: "2024/12/16",
+        end_date: "2025/01/02",
+        user: porto_learner
+      )
+
+      Holiday.create!(
+        name: "Christmas Break 2024",
+        start_date: "2024/12/16",
+        end_date: "2025/01/02",
+        user: cascais_learner
+      )
+
+      Holiday.create!(
+        name: "Christmas Break 2024",
+        start_date: "2024/12/16",
+        end_date: "2025/01/02",
+        user: xico
+      )
+
+      Holiday.create!(
+        name: "Christmas Break 2024",
+        start_date: "2024/12/16",
+        end_date: "2025/01/02",
+        user: brito
       )

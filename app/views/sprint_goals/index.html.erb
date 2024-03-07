@@ -1,17 +1,18 @@
-<h1>Sprint Goals</h1>
+<%# <h1>Sprint Goals</h1>
 
 <%= link_to "New sprint Goal", new_sprint_goal_path %>
 
-<% @sprint_goals.each do |sprint_goal| %>
-  <div>
+<%# <% @sprint_goals.each do |sprint_goal| %>
+  <%# <div>
     <strong>Start Date:</strong> <%= sprint_goal.start_date %>
-  </div>
+  <%# </div> %>
 
-  <div>
+  <%# <div>
     <strong>End Date:</strong> <%= sprint_goal.end_date %>
-  </div>
+  <%# </div> %>
 
-  <%= link_to "Show", sprint_goal %>
-  <%= link_to "Edit", edit_sprint_goal_path(sprint_goal) %>
-  <%= link_to "Delete", sprint_goal_path(sprint_goal), data: {turbo_method: :delete, turbo_confirm: "Are you sure?"} %>
-<% end %>
+  <%# <%= link_to "Show", sprint_goal %>
+  <%# <%= link_to "Edit", edit_sprint_goal_path(sprint_goal) %>
+  <%# <%= link_to "Delete", sprint_goal_path(sprint_goal), data: {turbo_method: :delete, turbo_confirm: "Are you sure?"} %>
+<%# <% end %>
+<h2>Sprint Goals coming soon...</h2>

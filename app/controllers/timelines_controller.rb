@@ -17,7 +17,7 @@ class TimelinesController < ApplicationController
       calculate_progress_and_balance
     end
 
-    @holidays = current_user.holidays
+    @holidays = current_user.holidays.or(Holiday.where(bga: true))
   end
 
   def new
