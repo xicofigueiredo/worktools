@@ -1,7 +1,6 @@
 class Timeline < ApplicationRecord
   belongs_to :user
   belongs_to :subject
-  has_many :user_topics, dependent: :destroy
   after_create :create_user_topics
 
   validate :start_date_before_end_date

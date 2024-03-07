@@ -2,25 +2,26 @@
 
 # Define the subjects for each category along with exam dates
 # db/seeds.rb
+ActiveRecord::Base.transaction do
+  # Other seeding logic here, ensuring uniqueness where necessary
 
+  math_a_level = Subject.create!(
+    name: "Mathematics A Level",
+    category: :al,
+    )
 
-math_a_level = Subject.create!(
-  name: "Mathematics A Level",
-  category: :al,
-)
-
-  math_a_level.topics.create!(name: "Introduction to the Course", time: 1)
-  math_a_level.topics.create!(name: "Pre-course", time: 1)
-  math_a_level.topics.create!(name: "Topic 1.1 Introduction to Methods of proof", time: 4, unit: "Unit 1: Proof")
-  math_a_level.topics.create!(name: "Topic 1.2 - Proof by Contradiction", time: 3, unit: "Unit 1: Proof")
-  math_a_level.topics.create!(name: "Topic 2.1 Algebraic Expressions, Indices and Surds", time: 4, unit: "Unit 2: Algebra and Functions")
-  math_a_level.topics.create!(name: "Topic 2.2 Quadratics", time: 5, unit: "Unit 2: Algebra and Functions")
-  math_a_level.topics.create!(name: "Topic 2.3 -  Simultaneous Equations", time: 4, unit: "Unit 2: Algebra and Functions")
-  math_a_level.topics.create!(name: "Topic 2.4 - Inequalities", time: 6, unit: "Unit 2: Algebra and Functions")
-  math_a_level.topics.create!(name: "Topic 2.5 - Polynomial and Reciprocal Functions", time: 5, unit: "Unit 2: Algebra and Functions")
-  math_a_level.topics.create!(name: "Topic 2.6 - Transformations and Symmetries", time: 6, unit: "Unit 2: Algebra and Functions")
-  math_a_level.topics.create!(name: "Topic 2.7 - Algebraic Division", time: 4, unit: "Unit 2: Algebra and Functions")
-  math_a_level.topics.create!(name: "End of Unit Assessments", time: 3, unit: "Unit 2: Algebra and Functions", has_grade: true)
+    math_a_level.topics.create!(name: "Introduction to the Course", time: 1)
+    math_a_level.topics.create!(name: "Pre-course", time: 1)
+    math_a_level.topics.create!(name: "Topic 1.1 Introduction to Methods of proof", time: 4, unit: "Unit 1: Proof")
+    math_a_level.topics.create!(name: "Topic 1.2 - Proof by Contradiction", time: 3, unit: "Unit 1: Proof")
+    math_a_level.topics.create!(name: "Topic 2.1 Algebraic Expressions, Indices and Surds", time: 4, unit: "Unit 2: Algebra and Functions")
+    math_a_level.topics.create!(name: "Topic 2.2 Quadratics", time: 5, unit: "Unit 2: Algebra and Functions")
+    math_a_level.topics.create!(name: "Topic 2.3 -  Simultaneous Equations", time: 4, unit: "Unit 2: Algebra and Functions")
+    math_a_level.topics.create!(name: "Topic 2.4 - Inequalities", time: 6, unit: "Unit 2: Algebra and Functions")
+    math_a_level.topics.create!(name: "Topic 2.5 - Polynomial and Reciprocal Functions", time: 5, unit: "Unit 2: Algebra and Functions")
+    math_a_level.topics.create!(name: "Topic 2.6 - Transformations and Symmetries", time: 6, unit: "Unit 2: Algebra and Functions")
+    math_a_level.topics.create!(name: "Topic 2.7 - Algebraic Division", time: 4, unit: "Unit 2: Algebra and Functions")
+    math_a_level.topics.create!(name: "End of Unit Assessments", time: 3, unit: "Unit 2: Algebra and Functions", has_grade: true)
   math_a_level.topics.create!(name: "Topic 2.8 - Algebraic Fraction Manipulation", time: 2, unit: "Unit 2: Algebra and Functions")
   math_a_level.topics.create!(name: "Topic 2.9 - Partial Fractions", time: 4, unit: "Unit 2: Algebra and Functions")
   math_a_level.topics.create!(name: "Topic 2.10 - Composite and Inverse Functions", time: 4, unit: "Unit 2: Algebra and Functions")
@@ -936,3 +937,4 @@ quim = User.create!(
         end_date: "2025/01/02",
         user: brito
       )
+end

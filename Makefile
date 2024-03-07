@@ -15,3 +15,6 @@ migrate: ## Run database migrations.
 
 seed: ## Seed the database.
 	docker compose run server rails db:seed
+
+sync: ## Sync the application to the server
+	rsync -av -e "ssh" --exclude='.git' --exclude='*.log' --exclude='.tmp' --exclude='data' . worktools_server:~/worktools
