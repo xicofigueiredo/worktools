@@ -1,13 +1,22 @@
 class Timeline < ApplicationRecord
   belongs_to :user
   belongs_to :subject
+  has_many :user_topics, dependent: :destroy
+  after_create :create_user_topics
 
   validate :start_date_before_end_date
   validates :subject_id, presence: true
   validates :start_date, presence: true
   validates :end_date, presence: true
 
+
   enum exam_season: { jan: 'January', may_jun: 'May/June', oct_nov: 'October/November' }
+
+  def create_user_topics
+    self.subject.topics.find_each do |topic|
+      self.user.user_topics.create!(topic: topic, done: false)
+    end
+  end
 
   def calculate_total_time
     self.total_time = (self.end_date - self.start_date)

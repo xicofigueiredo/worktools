@@ -90,9 +90,9 @@
                       <h6 class="d-flex align-items-center mb-3"><i class="material-icons text-info mr-2"></i>Timeline</h6>
                         <% @timelines.each_with_index do |timeline, index| %>
                           <div class="timeline">
-                            <small><%= timeline.subject.name %> (<%= (index + 1)* 30 - 21  %>%)</small>
+                            <small><%= timeline.subject.name %> (<%= timeline.progress %>%)</small>
                             <div class="progress mb-3" style="height: 5px">
-                              <div class="progress-bar bg-primary" role="progressbar" style="width: <%= (index + 1)* 30 - 21  %>%" aria-valuenow="<%= (index + 1)* 30 - 21  %>" aria-valuemin="0" aria-valuemax="100"></div>
+                              <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.progress %>%" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                           </div>
                         <% end %>
@@ -105,13 +105,7 @@
                       <h6 class="d-flex align-items-center mb-3"><i class="material-icons text-info mr-2"></i>Exam dates</h6>
                         <% @timelines.each_with_index do |timeline, index| %>
                           <% timeline.subject %>
-                          <% if index == 0 %>
-                            <p>June 2025</p>
-                          <% elsif index == 1 %>
-                            <p>May 2025</p>
-                          <% else %>
-                            <p>January 2026</p>
-                          <% end %>
+                            <p><%= Timeline.exam_seasons[timeline.exam_season] %></p>
                         <% end %>
                     </div>
                   </div>

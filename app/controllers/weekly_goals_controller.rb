@@ -20,7 +20,20 @@ class WeeklyGoalsController < ApplicationController
   def new
     @weekly_goal = WeeklyGoal.new
     build_weekly_slots
+
+    # Assuming Topic has_many :user_topics and UserTopic belongs_to :topic
+    @not_done_topics = Topic.joins(:user_topics)
+                            .where(user_topics: { user_id: current_user.id, done: false })
+                            .order('user_topics.deadline ASC') # Order topics by their deadline
+                            .select('topics.*, user_topics.deadline') # Select topics and their deadline
+                            .distinct
+
+    # Exclude topics with empty names and order by deadline
+    @topic_names = @not_done_topics.map(&:name)
   end
+
+
+
 
   def edit
     @weekly_goal = WeeklyGoal.find(params[:id])

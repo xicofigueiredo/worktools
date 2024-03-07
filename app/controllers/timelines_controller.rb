@@ -52,10 +52,6 @@ class TimelinesController < ApplicationController
 
 
     if @timeline.save
-      @timeline.subject.topics.each do |topic|
-        user_topic = UserTopic.create(user_id: current_user.id, topic_id: topic.id)
-        user_topic.save
-      end
       generate_topic_deadlines(@timeline)
       redirect_to root_path, notice: 'Timeline was successfully created.'
     else
