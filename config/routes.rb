@@ -21,7 +21,7 @@ Rails.application.routes.draw do
   resources :kdas
   resources :user_topics do
     member do
-      patch :update_done
+      patch :toggle_done
     end
   end
 

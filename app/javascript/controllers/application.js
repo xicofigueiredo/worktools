@@ -1,5 +1,5 @@
 import { Application } from "@hotwired/stimulus"
-import   DoneController from "controllers/done_controller"
+import ToggleDoneController from "controllers/toggle_done_controller"
 
 const application = Application.start()
 
@@ -7,5 +7,5 @@ const application = Application.start()
 application.debug = false
 window.Stimulus   = application
 
-Stimulus.register("done", DoneController)
+Stimulus.register("toggle-done", ToggleDoneController);
 export { application }

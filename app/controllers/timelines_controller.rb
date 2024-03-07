@@ -12,10 +12,9 @@ class TimelinesController < ApplicationController
       @timelines.each do |timeline|
         timeline.calculate_total_time
         generate_topic_deadlines(timeline)
-        calculate_progress(timeline)
-        calculate_balance(timeline)
         timeline.save
       end
+      calculate_progress_and_balance
     end
 
     @holidays = current_user.holidays
@@ -124,33 +123,37 @@ class TimelinesController < ApplicationController
     end
   end
 
-  def calculate_progress(timeline)
-    @progress = 0
-    @timelines.each do |timeline|
-      timeline.user.user_topics.each do |user_topic|
-        if user_topic.done
-          @progress += user_topic.percentage
-        end
-      end
-    end
-    @progress = (@progress * 100 + 17).round
-  end
-
-  def calculate_balance(timeline)
+  def calculate_progress_and_balance
     @timelines.each do |timeline|
       balance = 0
-      timeline.subject.topics.each do |topic|
+      completed_topics_count = 0 # Count of completed topics for progress calculation
+
+      topics = timeline.subject.topics
+      total_topics = topics.count
+
+      topics.each do |topic|
         user_topic = current_user.user_topics.find_by(topic_id: topic.id)
-        if user_topic.done && user_topic.deadline > Date.today
+        next unless user_topic # Skip if no user_topic found
+
+        # Balance calculation
+        if user_topic.done && user_topic.deadline >= Date.today
           balance += 1
-        elsif (user_topic.done == nil || user_topic.done) && user_topic.deadline < Date.today
+        elsif !user_topic.done && user_topic.deadline < Date.today
           balance -= 1
-        else
-          balance += 0
         end
-        timeline.balance = balance
+
+        # Counting completed topics for progress calculation
+        completed_topics_count += 1 if user_topic.done
       end
-      timeline.save
+
+      # Calculate progress as an integer percentage of completed topics
+      progress = total_topics > 0 ? (completed_topics_count.to_f / total_topics * 100).round : 0
+
+      # Update timeline with both balance and progress
+      timeline.update(balance: balance, progress: progress)
     end
   end
+
+
+
 end

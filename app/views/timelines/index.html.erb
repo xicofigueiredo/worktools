@@ -24,9 +24,10 @@
                   <% end %>
               </div>
               </button>
-              <div class="progress" role="progressbar" aria-label="Progress bar" aria-valuenow="<%= (index + 1)* 30 - 21  %>" aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-bar" style="width:<%= (index + 1)* 30 - 21  %>%"><%= (index + 1)* 30 - 21  %>%</div>
-              </div>
+              <div class="progress" role="progressbar" aria-label="Progress bar" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar" style="width: <%= timeline.progress > 5 ? timeline.progress : 4 %>%;"> <%= timeline.progress %>% </div>
+</div>
+
             </h2>
             <div id="collapse<%= index %>" class="accordion-collapse collapse" aria-labelledby="heading<%= index %>" data-bs-parent="#parentAccordion">
               <div class="accordion-body">
@@ -58,6 +59,7 @@
                   </thead>
                   <tbody>
                     <% timeline.subject.topics.each_with_index do |topic, index| %>
+                    <% user_topic = current_user.user_topics.find_or_initialize_by(topic: topic) %>
                       <tr>
                         <td>
                           <% if index == 0 || topic.unit != timeline.subject.topics[index - 1].unit %>
@@ -68,13 +70,19 @@
                         <td class="d-flex justify-content-center align-items-center"><%= topic.time %></td>
                         <td><%= current_user.user_topics.find_by(topic_id: topic.id).deadline %></td>
                         <td>
-                          <div class="d-flex justify-content-center align-items-center">
-                            <%= form_with model: current_user.user_topics.find_by(topic_id: topic.id), url: timeline_path(timeline), method: :patch do |form| %>
+                          <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
+                            <%= form_with model: current_user.user_topics.find_by(topic_id: topic.id), url: timeline_path(timeline), method: :patch, local: true do |form| %>
                               <div class="form-check">
-                                <%= form.check_box :done, { class: "form-check-input", checked: current_user.user_topics.find_by(topic_id: topic.id).done } %>
+                                <%= form.check_box :done, class: "form-check-input",
+                                                        data: {
+                                                          action: "change->toggle-done#toggle",
+                                                          toggle_done_target: "checkbox",
+                                                          user_topic_id: user_topic.id
+                                                        } %>
                               </div>
                             <% end %>
                           </div>
+
                         </td>
                         <% (current_user.user_topics.find_by(topic_id: topic.id).calculate_percentage * 100).round(3)%>
                       </tr>
