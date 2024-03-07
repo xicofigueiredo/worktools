@@ -651,11 +651,6 @@ xico = User.create!(
     role: "lc"
     )
 
-    UsersHub.create!(
-      user: guest_lc,
-      hub: cascais
-      )
-
 
   cascais_lc = User.create!(
     email: "cascais@lc.com",
