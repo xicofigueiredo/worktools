@@ -10,18 +10,18 @@ ActiveRecord::Base.transaction do
     category: :al,
     )
 
-    math_a_level.topics.create!(name: "Introduction to the Course", time: 1)
-    math_a_level.topics.create!(name: "Pre-course", time: 1)
-    math_a_level.topics.create!(name: "Topic 1.1 Introduction to Methods of proof", time: 4, unit: "Unit 1: Proof")
-    math_a_level.topics.create!(name: "Topic 1.2 - Proof by Contradiction", time: 3, unit: "Unit 1: Proof")
-    math_a_level.topics.create!(name: "Topic 2.1 Algebraic Expressions, Indices and Surds", time: 4, unit: "Unit 2: Algebra and Functions")
-    math_a_level.topics.create!(name: "Topic 2.2 Quadratics", time: 5, unit: "Unit 2: Algebra and Functions")
-    math_a_level.topics.create!(name: "Topic 2.3 -  Simultaneous Equations", time: 4, unit: "Unit 2: Algebra and Functions")
-    math_a_level.topics.create!(name: "Topic 2.4 - Inequalities", time: 6, unit: "Unit 2: Algebra and Functions")
-    math_a_level.topics.create!(name: "Topic 2.5 - Polynomial and Reciprocal Functions", time: 5, unit: "Unit 2: Algebra and Functions")
-    math_a_level.topics.create!(name: "Topic 2.6 - Transformations and Symmetries", time: 6, unit: "Unit 2: Algebra and Functions")
-    math_a_level.topics.create!(name: "Topic 2.7 - Algebraic Division", time: 4, unit: "Unit 2: Algebra and Functions")
-    math_a_level.topics.create!(name: "End of Unit Assessments", time: 3, unit: "Unit 2: Algebra and Functions", has_grade: true)
+  math_a_level.topics.create!(name: "Introduction to the Course", time: 1)
+  math_a_level.topics.create!(name: "Pre-course", time: 1)
+  math_a_level.topics.create!(name: "Topic 1.1 Introduction to Methods of proof", time: 4, unit: "Unit 1: Proof")
+  math_a_level.topics.create!(name: "Topic 1.2 - Proof by Contradiction", time: 3, unit: "Unit 1: Proof")
+  math_a_level.topics.create!(name: "Topic 2.1 Algebraic Expressions, Indices and Surds", time: 4, unit: "Unit 2: Algebra and Functions")
+  math_a_level.topics.create!(name: "Topic 2.2 Quadratics", time: 5, unit: "Unit 2: Algebra and Functions")
+  math_a_level.topics.create!(name: "Topic 2.3 -  Simultaneous Equations", time: 4, unit: "Unit 2: Algebra and Functions")
+  math_a_level.topics.create!(name: "Topic 2.4 - Inequalities", time: 6, unit: "Unit 2: Algebra and Functions")
+  math_a_level.topics.create!(name: "Topic 2.5 - Polynomial and Reciprocal Functions", time: 5, unit: "Unit 2: Algebra and Functions")
+  math_a_level.topics.create!(name: "Topic 2.6 - Transformations and Symmetries", time: 6, unit: "Unit 2: Algebra and Functions")
+  math_a_level.topics.create!(name: "Topic 2.7 - Algebraic Division", time: 4, unit: "Unit 2: Algebra and Functions")
+  math_a_level.topics.create!(name: "End of Unit Assessments", time: 3, unit: "Unit 2: Algebra and Functions", has_grade: true)
   math_a_level.topics.create!(name: "Topic 2.8 - Algebraic Fraction Manipulation", time: 2, unit: "Unit 2: Algebra and Functions")
   math_a_level.topics.create!(name: "Topic 2.9 - Partial Fractions", time: 4, unit: "Unit 2: Algebra and Functions")
   math_a_level.topics.create!(name: "Topic 2.10 - Composite and Inverse Functions", time: 4, unit: "Unit 2: Algebra and Functions")
@@ -619,6 +619,195 @@ cascais = Hub.create!(
   name: "Cascais",
   country: "Portugal"
   )
+
+  Hub.create!(
+    name: "Aveiro",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Bangalore (Micro)",
+    country: "India"
+)
+Hub.create!(
+    name: "Boca Raton",
+    country: "USA"
+)
+Hub.create!(
+    name: "Braga",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Caldas da Rainha",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Campolide",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Cascais 1",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Cascais 2",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Cascais Baía 1",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Cascais Baía 2",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "CCB",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Coimbra (Espinhal)",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Ericeira 1",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Ericeira 2",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Expo",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Funchal",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Fundão",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Guincho",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Kilifi",
+    country: "Kenya"
+)
+Hub.create!(
+    name: "Lagoa",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Lagos 1",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Lagos 2",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Leiria",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Loulé",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Lumiar",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Marbella",
+    country: "Spain"
+)
+Hub.create!(
+    name: "Nelspruit",
+    country: "South Africa"
+)
+Hub.create!(
+    name: "Óbidos",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Ofir",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Online",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Parede",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Phuket",
+    country: "Thailand"
+)
+Hub.create!(
+    name: "Porto Anje",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Porto Foco",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Quinta da Marinha",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Restelo",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Santarém",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Setúbal",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Sommerschield",
+    country: "Mozambique"
+)
+Hub.create!(
+    name: "Tábua",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Tavira",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Tofo",
+    country: "Mozambique"
+)
+Hub.create!(
+    name: "Tygervalley",
+    country: "South Africa"
+)
+Hub.create!(
+    name: "Valencia",
+    country: "Spain"
+)
+Hub.create!(
+    name: "Vila Sol",
+    country: "Portugal"
+)
+Hub.create!(
+    name: "Walvis Bay",
+    country: "Namibia"
+)
+Hub.create!(
+    name: "Windhoek",
+    country: "Namibia"
+)
 xico = User.create!(
   email: "francisco-abf@hotmail.com",
   password: "123456",
@@ -788,41 +977,102 @@ quim = User.create!(
       )
 
      Question.create!(
-        value: " sprint question 1?",
+        value: "What courses are you aiming to complete?",
         sprint: true,
         kda: false
       )
 
       Question.create!(
-        value: " sprint question 2?",
+        value: "When are you planning on sitting the exams?",
         sprint: true,
         kda: false
       )
 
       Question.create!(
-        value: " sprint question 3?",
+        value: "When do you plan to finish the course?",
         sprint: true,
         kda: false
       )
 
       Question.create!(
-        value: " sprint question 4?",
+        value: "When do you plan to sit the 100% Mock?
+          (give yourself at least a 2 week buffer from the deadline)",
         sprint: true,
         kda: false
       )
 
       Question.create!(
-        value: " sprint question 5?",
+        value: "When do you plan to sit the 50% Mock?",
         sprint: true,
         kda: false
       )
 
       Question.create!(
-        value: " sprint question 6?",
+        value: "What Topic do you plan to have completed by the end of this sprint?",
         sprint: true,
         kda: false
       )
 
+
+      Question.create!(
+        value: "What difficulties do you expect to encounter with this target?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: "Explain your plan to achieve your goal in 3 steps or more. (include how you plan to overcome your difficulties)",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: "What extracurricular activities or MOOCs will you get involved in?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: "What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: "What difficulties do you expect to encounter with this target?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: "Explain your plan to achieve your goal in 3 steps or more. (include how you plan to overcome your difficulties)",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: "How do you plan to get involved in your community, are there any BGA Clubs, Hub Projects, or Volunteering that you want to get involved in?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: "What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: "What difficulties do you expect to encounter with this target?",
+        sprint: true,
+        kda: false
+      )
+
+      Question.create!(
+        value: "Explain your plan to achieve your goal in 3 steps or more. (include how you plan to overcome your difficulties)",
+        sprint: true,
+        kda: false
+      )
 
       Week.create!(
         name: "Week 8",
@@ -936,5 +1186,23 @@ quim = User.create!(
         start_date: "2024/12/16",
         end_date: "2025/01/02",
         user: brito
+      )
+
+      Sprint.create!(
+        name: "Sprint 1",
+        start_date: "22/04/2024",
+        end_date: "29/04/2024"
+      )
+
+      Sprint.create!(
+        name: "Sprint 2",
+        start_date: "22/04/2024",
+        end_date: "29/04/2024"
+      )
+
+      Sprint.create!(
+        name: "Sprint 4",
+        start_date: "22/04/2024",
+        end_date: "29/04/2024"
       )
 end
