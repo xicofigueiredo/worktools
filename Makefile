@@ -21,3 +21,6 @@ sync: ## Sync the application to the server
 
 connect: ## Connect to the server
 	ssh worktools_server
+
+replant:
+	docker compose run server rails db:seed:replant
