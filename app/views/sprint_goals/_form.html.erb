@@ -6,7 +6,6 @@
           <div class="card-body">
             <h2 class="card-title text-center mb-4">New Sprint Goal</h2>
 
-            <!-- Select Sprint -->
             <div class="field">
               <%= form.label :sprint_id, 'Select Sprint', class: "form-label" %>
               <%= form.collection_select :sprint_id, @available_sprints, :id, :name, { include_blank: "Please Select" }, class: "form-control" %>
@@ -14,21 +13,22 @@
 
             <hr>
 
-            <% @sprint_goal.questions_sprint_goals.each_with_index do |question_sprint_goal, index| %>
-              <div class="mb-3">
-                <h3><%= question_sprint_goal.question.value %></h3>
-                <%= form.hidden_field :questions_sprint_goals_attributes, name: "sprint_goal[questions_sprint_goals_attributes][#{index}][question_id]", value: question_sprint_goal.question_id %>
+            <%= form.fields_for :questions_sprint_goals do |sg_question_fields| %>
+              <% question = Question.find(sg_question_fields.object.question_id) %>
+              <h3><%= question.value %></h3>
+              <%= sg_question_fields.hidden_field :question_id, value: sg_question_fields.object.question_id %>
 
-                <%= form.fields_for :answers, question_sprint_goal.answers.build do |answer_fields| %>
+              <% ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].each do |answer_type| %>
+                <%= sg_question_fields.fields_for :answers, sg_question_fields.object.answers.build do |answer_fields| %>
                   <div class="field">
-                    <%= answer_fields.text_field :value, name: "sprint_goal[questions_sprint_goals_attributes][#{index}][answers_attributes][0][value]", class: "form-control" %>
+                    <%= answer_fields.text_area :value, class: "form-control" %>
+                    <%= answer_fields.hidden_field :answer_type, value: answer_type %>
                   </div>
                 <% end %>
-              </div>
+              <% end %>
               <hr>
             <% end %>
 
-            <!-- Submit Button -->
             <div class="form-group text-center">
               <%= form.submit "Submit", class: "btn btn-primary" %>
             </div>

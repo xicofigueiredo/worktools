@@ -1,15 +1,15 @@
-<%# <%= link_to "New sprint_goal", new_sprint_goal_path, class: "btn btn-primary mb-3" %>
- <h2>Sprint Goals coming soon...</h2>
-<%# <% @sprint_goals.each do |sprint_goal| %>
-  <%# <div class="card mb-3"> %>
-    <%# <div class="card-body"> %>
+<%= link_to "New sprint_goal", new_sprint_goal_path, class: "btn btn-primary mb-3" %>
 
-      <%# <p class="card-text">
-        <%# <strong><%= sprint_goal.sprint.name  Goals</strong> <br>%>
-      <%# </p> %>
-      <%# <%= link_to "Show", sprint_goal_path(sprint_goal), class: "btn btn-primary mr-2" %>
-      <%# <%= link_to "Edit", edit_sprint_goal_path(sprint_goal), class: "btn btn-secondary mr-2 disabled" %>
-      <%# <%= link_to "Delete", sprint_goal_path(sprint_goal), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
-    <%# </div> %>
-  <%# </div> %>
-<%# <% end %>
+<% @sprint_goals.each do |sprint_goal| %>
+  <div class="card mb-3">
+    <div class="card-body">
+
+      <p class="card-text">
+        <strong><%= sprint_goal.sprint.name %> Goals</strong> <br>
+      </p>
+      <%= link_to "Show", sprint_goal_path(sprint_goal), class: "btn btn-primary mr-2" %>
+      <%= link_to "Edit", edit_sprint_goal_path(sprint_goal), class: "btn btn-secondary mr-2 disabled" %>
+      <%= link_to "Delete", sprint_goal_path(sprint_goal), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
+    </div>
+  </div>
+<% end %>
