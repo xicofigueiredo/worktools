@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
-  devise_for :users
+  devise_for :users, controllers: {
+    registrations: 'users/registrations'
+  }
   root to: "timelines#index"
 
   get 'profile', to: 'pages#profile'
@@ -9,6 +11,7 @@ Rails.application.routes.draw do
   post '/update_profile', to: 'pages#update_profile', as: :update_profile
   get '/get_topics', to: 'subjects#get_topics'
   patch '/timelines/:id/update_done_topics', to: 'timelines#update_done_topics', as: 'update_done_topics'
+  get '/about', to: 'pages#about'
 
   resources :subjects do
     resources :topics, except: [:show, :index]

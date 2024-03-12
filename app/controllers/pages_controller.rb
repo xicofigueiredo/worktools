@@ -2,7 +2,7 @@ class PagesController < ApplicationController
   skip_before_action :authenticate_user!
 
   def dashboard_lc
-    @users = current_user.hub.users_hub.map(&:user).reject { |user| user.role == "lc" }
+    @users = current_user.hubs.first.users_hub.map(&:user).reject { |user| user.role == "lc" }
     @total_balance = {}
 
     @users.each do |user|
@@ -19,7 +19,7 @@ class PagesController < ApplicationController
   end
 
   def profile
-    @hub = current_user.users_hub.hub
+    @hub = current_user.hubs.first
     if current_user.timelines.count.positive?
       @subject = current_user.timelines.first.subject
       Subject.where(category: :tbe).destroy_all
