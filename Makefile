@@ -18,3 +18,6 @@ seed: ## Seed the database.
 
 sync: ## Sync the application to the server
 	rsync -av -e "ssh" --exclude='.git' --exclude='*.log' --exclude='.tmp' --exclude='data' . worktools_server:~/worktools
+
+connect: ## Connect to the server
+	ssh worktools_server
