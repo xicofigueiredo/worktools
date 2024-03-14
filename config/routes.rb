@@ -2,16 +2,19 @@ Rails.application.routes.draw do
   devise_for :users, controllers: {
     registrations: 'users/registrations'
   }
+  authenticate :user do
   root to: "timelines#index"
 
   get 'profile', to: 'pages#profile'
   get 'report', to: 'pages#report'
-  get 'dashboard_lc', to: 'pages#dashboard_lc'
   get 'edit_profile', to: 'pages#edit_profile'
   post '/update_profile', to: 'pages#update_profile', as: :update_profile
   get '/get_topics', to: 'subjects#get_topics'
   patch '/timelines/:id/update_done_topics', to: 'timelines#update_done_topics', as: 'update_done_topics'
   get '/about', to: 'pages#about'
+    get 'dashboard_admin', to: 'pages#dashboard_admin'
+    get 'dashboard_lc', to: 'pages#dashboard_lc'
+  end
 
   resources :subjects do
     resources :topics, except: [:show, :index]

@@ -6,22 +6,15 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
     command: "postgres -c 'max_connections=500'"
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file:
+      - .env.production
     ports:
       - "5432:5432"
   server:
       build: .
       command: "./bin/rails server"
-      environment:
-        RAILS_ENV: ${RAILS_ENV}
-        POSTGRES_HOST: ${POSTGRES_HOST}
-        POSTGRES_DB: ${POSTGRES_DB}
-        POSTGRES_USER: ${POSTGRES_USER}
-        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-        RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      env_file:
+        - .env.production
       volumes:
         - app-storage:/rails/storage
       depends_on:

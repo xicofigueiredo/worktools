@@ -1,6 +1,13 @@
 class PagesController < ApplicationController
   skip_before_action :authenticate_user!
 
+  def dashboard_admin
+    if current_user.role == "admin"
+      @users = User.all.order(:full_name)
+      @hubs = Hub.all
+    end
+  end
+
   def dashboard_lc
     get_mocks_dates
     @users = current_user.hubs.first.users_hub.map(&:user).reject { |user| user.role == "lc" }
@@ -44,6 +51,7 @@ class PagesController < ApplicationController
       @overall_progress_expected = 0
     end
 
+    get_mocks_dates
   end
 
   def edit_profile
@@ -60,6 +68,7 @@ class PagesController < ApplicationController
       render :edit_profile
     end
   end
+
 
   private
 
