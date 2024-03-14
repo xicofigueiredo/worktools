@@ -19,7 +19,9 @@ Rails.application.routes.draw do
 
   resources :holidays, except: [:show, :index]
   resources :timelines
-  resources :weekly_goals
+  resources :weekly_goals do
+    get 'topics_for_subject/:subject_id', on: :collection, to: 'weekly_goals#topics_for_subject'
+  end
   resources :sprint_goals
   resources :kdas
   resources :user_topics do

@@ -19,6 +19,7 @@ class WeeklyGoalsController < ApplicationController
 
   def new
     @weekly_goal = WeeklyGoal.new
+    @subjects = Subject.all
     build_weekly_slots
 
     # Assuming Topic has_many :user_topics and UserTopic belongs_to :topic
@@ -36,6 +37,7 @@ class WeeklyGoalsController < ApplicationController
 
 
   def edit
+    @subjects = Subject.all
     @weekly_goal = WeeklyGoal.find(params[:id])
     set_available_weeks(@weekly_goal.week_id)
 
@@ -50,6 +52,7 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def create
+    @subjects = Subject.all
     @weekly_goal = current_user.weekly_goals.new(weekly_goal_params)
 
     if @weekly_goal.save
@@ -62,6 +65,7 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def update
+    @subjects = Subject.all
     if @weekly_goal.update(weekly_goal_params)
       save_weekly_slots
       redirect_to @weekly_goal, notice: 'Weekly goal was successfully updated.'
@@ -77,6 +81,11 @@ class WeeklyGoalsController < ApplicationController
   end
 
   private
+
+  def topics
+    @topics = Topic.where(subject_id: params[:id]).order(:name)
+    render json: @topics
+  end
 
   def set_weekly_goal
     @weekly_goal = current_user.weekly_goals.find(params[:id])
@@ -156,6 +165,13 @@ class WeeklyGoalsController < ApplicationController
       @available_weeks = @available_weeks.or(Week.where(id: edit_week_id))
     end
   end
+
+  def topics_for_subject
+    subject = Subject.find(params[:subject_id])
+    topics = subject.topics.order(:name)
+    render json: topics
+  end
+
 
   helper_method :subject_for_slot
   helper_method :topic_for_slot

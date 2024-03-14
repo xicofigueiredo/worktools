@@ -84,7 +84,7 @@ ActiveRecord::Base.transaction do
   math_a_level.topics.create!(name: "Topic 10.3 - Vector Equation of the Line", time: 5, unit: "Unit 10: Vectors")
   math_a_level.topics.create!(name: "Topic 10.4 - Scalar Product", time: 5, unit: "Unit 10: Vectors")
   math_a_level.topics.create!(name: "End of Unit Assessments", time: 3, unit: "Unit 10: Vectors", has_grade: true)
-  math_a_level.topics.create!(name: "Pure Mathematics MOCK - Paper 1,2,3,4", time: 7, milestone: true, has_grade: true)
+  math_a_level.topics.create!(name: "Pure Mathematics MOCK - Paper 1,2,3,4", time: 7, milestone: true, has_grade: true, Mock50: true)
   math_a_level.topics.create!(name: "Topic 11.1 - Measures of Location and Variation", time: 5, unit: "Unit 11: Representing and Summarising Data")
   math_a_level.topics.create!(name: "Topic 11.2 - Representing and Comparing Data using Diagrams", time: 8, unit: "Unit 11: Representing and Summarising Data")
   math_a_level.topics.create!(name: "End of Unit Assessments", time: 1, unit: "Unit 11: Statistics", has_grade: true)
@@ -116,7 +116,7 @@ ActiveRecord::Base.transaction do
   math_a_level.topics.create!(name: "Topic 20.1 - Moment of a Force and Rotational Equilibrium", time: 7, unit: "Unit 20: Rotational Effects of Forces")
   math_a_level.topics.create!(name: "End of Unit Assessment 20", time: 1, unit: "Unit 20: Rotational Effects of Forces", has_grade: true)
   math_a_level.topics.create!(name: "Course Revision Assessment & Exam Preparation", time: 5, milestone: true, has_grade: true)
-  math_a_level.topics.create!(name: "Warm up mock", time: 3, milestone: true, has_grade: true)
+  math_a_level.topics.create!(name: "Warm up mock", time: 3, milestone: true, has_grade: true, Mock100: true)
   math_a_level.topics.create!(name: "Mechanics MOCK", time: 1, milestone: true, has_grade: true)
 
 
@@ -148,7 +148,7 @@ chemistry_a_level.topics.create!(name: "Topic 3: Mass Spectra and IR", time: 7, 
 chemistry_a_level.topics.create!(name: "Warm-up Mock II", time: 2, milestone: true, has_grade: true)
 chemistry_a_level.topics.create!(name: "Topic 1: Review of practical knowledge and understanding", time: 3, unit: "Unit 5: Practical Skills")
 chemistry_a_level.topics.create!(name: "Topic 2: Colours", time: 3, unit: "Unit 5: Practical Skills")
-chemistry_a_level.topics.create!(name: "Mock 50%", time: 3, milestone: true, has_grade: true)
+chemistry_a_level.topics.create!(name: "Mock 50%", time: 3, milestone: true, has_grade: true, Mock50: true)
 chemistry_a_level.topics.create!(name: "Topic 1: Kinetics", time: 12, unit: "Unit 6: Rates and Equilibria")
 chemistry_a_level.topics.create!(name: "Topic 2: Entropy and Energetics", time: 12, unit: "Unit 6: Rates and Equilibria")
 chemistry_a_level.topics.create!(name: "Topic 3: Chemical Equilibria", time: 12, unit: "Unit 6: Rates and Equilibria")
@@ -165,7 +165,7 @@ chemistry_a_level.topics.create!(name: "Topic 3: Organic Synthesis", time: 2, un
 chemistry_a_level.topics.create!(name: "Warm-up Mock V", time: 2, milestone: true, has_grade: true)
 chemistry_a_level.topics.create!(name: "Topic 1: Lab Techniques", time: 8, unit: "Unit 10: Exam Preparation")
 chemistry_a_level.topics.create!(name: "Topic 2: Chemical Analysis", time: 8, unit: "Unit 10: Exam Preparation")
-chemistry_a_level.topics.create!(name: "Mock 100%", time: 3, milestone: true, has_grade: true)
+chemistry_a_level.topics.create!(name: "Mock 100%", time: 3, milestone: true, has_grade: true, Mock100: true)
 
 physics_a_level = Subject.create!(
   name: "Physics A Level",
@@ -200,7 +200,7 @@ physics_a_level = Subject.create!(
   physics_a_level.topics.create!(name: "Topic 6.3: Magnetic Field and Magnetic Force", time: 6, unit: "Unit 6: Fields")
   physics_a_level.topics.create!(name: "Topic 6.4: Electromagnetic Induction", time: 11, unit: "Unit 6: Fields")
   physics_a_level.topics.create!(name: "Mock 50% Warm Up", time: 2, milestone: true, has_grade: true)
-  physics_a_level.topics.create!(name: "Mock 50%", time: 3, milestone: true, has_grade: true)
+  physics_a_level.topics.create!(name: "Mock 50%", time: 3, milestone: true, has_grade: true, Mock50: true)
   physics_a_level.topics.create!(name: "Practical Skills in Physics: Part 2", time: 4, unit: "Unit 0: Introduction to A-Level Physics")
   physics_a_level.topics.create!(name: "Unit 7: Topic 7.1: Nuclear Models of the Atom and Where We are Now", time: 4, unit: "Unit 7: Nuclear Physics")
   physics_a_level.topics.create!(name: "Topic 7.2: Exploring the Structure of Matter", time: 6, unit: "Unit 7: Nuclear Physics")
@@ -222,7 +222,7 @@ physics_a_level = Subject.create!(
   physics_a_level.topics.create!(name: "Topic 12.3: Oscilations", time: 13, unit: "Unit 12: Further Mechanics")
   physics_a_level.topics.create!(name: "Practical Skills in Physics II", time: 4, unit: "Unit 0: Introduction to A-Level Physics")
   physics_a_level.topics.create!(name: "Mock 100% Warm Up", time: 2, milestone: true, has_grade: true)
-  physics_a_level.topics.create!(name: "Mock 100%", time: 3, milestone: true, has_grade: true)
+  physics_a_level.topics.create!(name: "Mock 100%", time: 3, milestone: true, has_grade: true, Mock100: true)
 
 
   biology_a_level = Subject.create!(
@@ -238,7 +238,7 @@ physics_a_level = Subject.create!(
   biology_a_level.topics.create!(name: "Topic 4: Plant Structure and Function, Biodiversity and Conservation", time: 35, unit: "Unit 2: Cells, Development, Biodiversity and Conservation")
   biology_a_level.topics.create!(name: "Unit 3: Practical Skills in Biology I", time: 5, unit: "Unit 3: Practical Skills in Biology I")
   biology_a_level.topics.create!(name: "50% Mock Exam Preparation", time: 10, unit: "Unit 3: Practical Skills in Biology I")
-  biology_a_level.topics.create!(name: "50% Mock Exam", time: 2, unit: "Unit 3: Practical Skills in Biology I", milestone: true, has_grade: true)
+  biology_a_level.topics.create!(name: "50% Mock Exam", time: 2, unit: "Unit 3: Practical Skills in Biology I", milestone: true, has_grade: true, Mock50: true)
   biology_a_level.topics.create!(name: "Unit 4: Energy, Environment, Microbiology and Immunity", time: 5, unit: "Unit 4: Energy, Environment, Microbiology and Immunity")
   biology_a_level.topics.create!(name: "Topic 5: Energy Flow, Ecosystems and the Environment", time: 35, unit: "Unit 4: Energy, Environment, Microbiology and Immunity")
   biology_a_level.topics.create!(name: "Topic 6: Microbiology, Immunity and Forensics", time: 35, unit: "Unit 4: Energy, Environment, Microbiology and Immunity")
@@ -248,7 +248,7 @@ physics_a_level = Subject.create!(
   biology_a_level.topics.create!(name: "Unit 6: Practical Skills in Biology II", time: 5, unit: "Unit 6: Practical Skills in Biology II")
   biology_a_level.topics.create!(name: "Course Recap and Summaries", time: 5, unit: "Unit 6: Practical Skills in Biology II")
   biology_a_level.topics.create!(name: "100% Mock Exam Preparation", time: 10, unit: "Unit 6: Practical Skills in Biology II")
-  biology_a_level.topics.create!(name: "100% Mock Exam", time: 2, unit: "Unit 6: Practical Skills in Biology II", milestone: true, has_grade: true)
+  biology_a_level.topics.create!(name: "100% Mock Exam", time: 2, unit: "Unit 6: Practical Skills in Biology II", milestone: true, has_grade: true, Mock100: true)
 
 
 business_a_level = Subject.create!(
@@ -280,7 +280,7 @@ business_a_level = Subject.create!(
   business_a_level.topics.create!(name: "Topic 2.5 External Influences - Part I", time: 7, unit: "Unit 2: Managing Business Activities")
   business_a_level.topics.create!(name: "Topic 2.5 External Influences - Part II", time: 4, unit: "Unit 2: Managing Business Activities")
   business_a_level.topics.create!(name: "Unit 2 Assessment", time: 2, unit: "Unit 2: Managing Business Activities", has_grade: true)
-  business_a_level.topics.create!(name: "50% Mock Exam", time: 2, unit: "Unit 2: Managing Business Activities", milestone: true, has_grade: true)
+  business_a_level.topics.create!(name: "50% Mock Exam", time: 2, unit: "Unit 2: Managing Business Activities", milestone: true, has_grade: true, Mock50: true)
   business_a_level.topics.create!(name: "Unit 3: Business Decisions and Strategy", time: 5, unit: "Unit 3: Business Decisions and Strategy")
   business_a_level.topics.create!(name: "Topic 3.1 Business Objectives and Strategy - Part I", time: 7, unit: "Unit 3: Business Decisions and Strategy")
   business_a_level.topics.create!(name: "Topic 3.1 Business Objectives and Strategy - Part II", time: 8, unit: "Unit 3: Business Decisions and Strategy")
@@ -304,7 +304,7 @@ business_a_level = Subject.create!(
   business_a_level.topics.create!(name: "Topic 4.4 Global Industries and Companies - Part I", time: 6, unit: "Unit 4: Global Business")
   business_a_level.topics.create!(name: "Topic 4.4 Global Industries and Companies - Part II", time: 4, unit: "Unit 4: Global Business")
   business_a_level.topics.create!(name: "Unit 4 Assessment", time: 2, unit: "Unit 4: Global Business", has_grade: true)
-  business_a_level.topics.create!(name: "100% Mock Exam", time: 2, unit: "Unit 4: Global Business", milestone: true, has_grade: true)
+  business_a_level.topics.create!(name: "100% Mock Exam", time: 2, unit: "Unit 4: Global Business", milestone: true, has_grade: true, Mock100: true)
 
 
 economics_a_level = Subject.create!(
@@ -339,7 +339,7 @@ economics_a_level = Subject.create!(
   economics_a_level.topics.create!(name: "Topic 2.6 Macroeconomic Objectives and Policies: Part I", time: 6, unit: "Unit 2 - Macroeconomic Performance And Policiy")
   economics_a_level.topics.create!(name: "Topic 2.6 Macroeconomic Objectives and Policies: Part II", time: 6, unit: "Unit 2 - Macroeconomic Performance And Policiy")
   economics_a_level.topics.create!(name: "Unit 2 Assessments: Exam Preparation", time: 6, unit: "Unit 2 - Macroeconomic Performance And Policiy", has_grade: true)
-  economics_a_level.topics.create!(name: "Mock Exam 50%", time: 2, unit: "Unit 2 - Macroeconomic Performance And Policiy", milestone: true, has_grade: true)
+  economics_a_level.topics.create!(name: "Mock Exam 50%", time: 2, unit: "Unit 2 - Macroeconomic Performance And Policiy", milestone: true, has_grade: true, Mock50: true)
   economics_a_level.topics.create!(name: "Unit 3 - Business Behaviour", time: 5, unit: "Unit 3 - Business Behaviour")
   economics_a_level.topics.create!(name: "Topic 3.1 Types and Sizes of Business", time: 6, unit: "Unit 3 - Business Behaviour")
   economics_a_level.topics.create!(name: "Topic 3.2 Revenues, Costs and Profits: Part I", time: 6, unit: "Unit 3 - Business Behaviour")
@@ -360,7 +360,7 @@ economics_a_level = Subject.create!(
   economics_a_level.topics.create!(name: "Topic 4.5 Role of the State in the Macroeconomy - Part II", time: 4, unit: "Unit 4  - Developments in the Global Economy")
   economics_a_level.topics.create!(name: "Topic 4.6 Growth and Development in Developing, Emerging and Developed Economies", time: 8, unit: "Unit 4  - Developments in the Global Economy")
   economics_a_level.topics.create!(name: "Unit 4 Assessments", time: 6, unit: "Unit 4  - Developments in the Global Economy", has_grade: true)
-  economics_a_level.topics.create!(name: "Mock Exam 100%", time: 2, unit: "Unit 4  - Developments in the Global Economy", milestone: true, has_grade: true)
+  economics_a_level.topics.create!(name: "Mock Exam 100%", time: 2, unit: "Unit 4  - Developments in the Global Economy", milestone: true, has_grade: true, Mock100: true)
 
 
   psychology_a_level = Subject.create!(
@@ -390,7 +390,7 @@ economics_a_level = Subject.create!(
     psychology_a_level.topics.create!(name: "Topic D – Learning Theories & Development: Studies/Research  [Part 5]", time: 6, unit: "Unit 2: Biological Psychology, Learning theories & Development")
     psychology_a_level.topics.create!(name: "Topic D – Learning Theories & Development: Research Methods IV [Part 6]", time: 16, unit: "Unit 2: Biological Psychology, Learning theories & Development")
     psychology_a_level.topics.create!(name: "Topic D – Learning Theories & Development: Revision/ Assignments  [Part 7]", time: 11.5, unit: "Unit 2: Biological Psychology, Learning theories & Development")
-    psychology_a_level.topics.create!(name: "50% Mock Exam", time: 3.5, unit: "Unit 2: Biological Psychology, Learning theories & Development", milestone: true, has_grade: true)
+    psychology_a_level.topics.create!(name: "50% Mock Exam", time: 3.5, unit: "Unit 2: Biological Psychology, Learning theories & Development", milestone: true, has_grade: true, Mock50: true)
     psychology_a_level.topics.create!(name: "Topic E - Developmental Psychology - Attachment [Part 1]", time: 8.5, unit: "Unit 3: Applications of Psychology")
     psychology_a_level.topics.create!(name: "Topic E - Developmental Psychology: Cognitive and Language Development [Part 2]", time: 10, unit: "Unit 3: Applications of Psychology")
     psychology_a_level.topics.create!(name: "Topic E - Developmental Psychology: Social and Emotional Development [Part 3]", time: 6, unit: "Unit 3: Applications of Psychology")
@@ -414,7 +414,7 @@ economics_a_level = Subject.create!(
     psychology_a_level.topics.create!(name: "Topic H - Psychological Skills: Issues & Debates in Psychology [Part 2]", time: 24, unit: "Unit 4: Clinical Psychology & Psychological Skills")
     psychology_a_level.topics.create!(name: "Topic H - Psychological Skills: Summary of Research Methods [Part 3]", time: 18, unit: "Unit 4: Clinical Psychology & Psychological Skills")
     psychology_a_level.topics.create!(name: "Topic H - Psychological Skills: Assignments", time: 4, unit: "Unit 4: Clinical Psychology & Psychological Skills")
-    psychology_a_level.topics.create!(name: "100% Mock Exam", time: 8, unit: "Unit 4: Clinical Psychology & Psychological Skills", milestone: true, has_grade: true)
+    psychology_a_level.topics.create!(name: "100% Mock Exam", time: 8, unit: "Unit 4: Clinical Psychology & Psychological Skills", milestone: true, has_grade: true, Mock100: true)
 
 sociology_a_level = Subject.create!(
   name: "Sociology A Level",
@@ -435,7 +435,7 @@ sociology_a_level = Subject.create!(
   sociology_a_level.topics.create!(name: "Topic 4.3: Gender and the family", time: 10, unit: "Unit 4: The family")
   sociology_a_level.topics.create!(name: "Topic 4.4: Childhood and social change", time: 10, unit: "Unit 4: The family")
   sociology_a_level.topics.create!(name: "Topic 4.5: Changes in life expectancy and motherhood/fatherhood", time: 13, unit: "Unit 4: The family")
-  sociology_a_level.topics.create!(name: "50% Mock Exam", time: 3, unit: "50% Mock Exam", milestone: true, has_grade: true)
+  sociology_a_level.topics.create!(name: "50% Mock Exam", time: 3, unit: "50% Mock Exam", milestone: true, has_grade: true, Mock50: true)
   sociology_a_level.topics.create!(name: "Topic 5.1: Theories on the role of education", time: 8, unit: "Unit 5: Education")
   sociology_a_level.topics.create!(name: "Topic 5.2: The role of education on social mobility", time: 7, unit: "Unit 5: Education")
   sociology_a_level.topics.create!(name: "Topic 5.3: Influences on the curriculum", time: 8, unit: "Unit 5: Education")
@@ -460,7 +460,7 @@ sociology_a_level = Subject.create!(
   sociology_a_level.topics.create!(name: "Topic 8.4: Globalisation, poverty and inequality", time: 7, unit: "Unit 8: Globalisation")
   sociology_a_level.topics.create!(name: "Topic 8.5: Globalisation and migration", time: 8, unit: "Unit 8: Globalisation")
   sociology_a_level.topics.create!(name: "Topic 8.6: Globalisation and crime", time: 10, unit: "Unit 8: Globalisation")
-  sociology_a_level.topics.create!(name: "100% Mock Exam", time: 3, unit: "100% Mock Exam", milestone: true, has_grade: true)
+  sociology_a_level.topics.create!(name: "100% Mock Exam", time: 3, unit: "100% Mock Exam", milestone: true, has_grade: true, Mock100: true)
 
 history_a_level = Subject.create!(
   name: "History A Level",
@@ -478,7 +478,7 @@ history_a_level = Subject.create!(
   history_a_level.topics.create!(name: "Topic 2.3: Economic changes, 1900–76", time: 21, unit: "Unit 2: Breadth Study with Source Evaluation: China (1900-1976)")
   history_a_level.topics.create!(name: "Topic 2.4: Social and cultural changes, 1900–76", time: 2, unit: "Unit 2: Breadth Study with Source Evaluation: China (1900-1976)")
   history_a_level.topics.create!(name: "Unit 2 Assessment: Breadth Study with Source Evaluation: China (1900-1976)", time: 1, unit: "Unit 2: Breadth Study with Source Evaluation: China (1900-1976)")
-  history_a_level.topics.create!(name: "50% Mock Exam  (Comprising of Units 1 and 2)", time: 2, unit: "50% Mock Exam  (Comprising of Units 1 and 2)", milestone: true, has_grade: true)
+  history_a_level.topics.create!(name: "50% Mock Exam  (Comprising of Units 1 and 2)", time: 2, unit: "50% Mock Exam  (Comprising of Units 1 and 2)", milestone: true, has_grade: true, Mock50: true)
   history_a_level.topics.create!(name: "Topic 3.1: ‘Free at last’, 1865–77", time: 21, unit: "Unit 3: Thematic Study with Source Evaluation: Civil Rights and Race Relations in USA (1865-2005)")
   history_a_level.topics.create!(name: "Topic 3.2: The triumph of ‘Jim Crow’, 1883– c1900", time: 22, unit: "Unit 3: Thematic Study with Source Evaluation: Civil Rights and Race Relations in USA (1865-2005)")
   history_a_level.topics.create!(name: "Topic 3.3: Roosevelt and race relations, 1933–45", time: 21, unit: "Unit 3: Thematic Study with Source Evaluation: Civil Rights and Race Relations in USA (1865-2005)")
@@ -490,7 +490,7 @@ history_a_level = Subject.create!(
   history_a_level.topics.create!(name: "Topic 4.3: War in Indo-China, 1960–73", time: 20, unit: "Unit 4: International Study with Historical Interpretations: Option 1D: The Cold War and Hot War in Asia (1945-90)")
   history_a_level.topics.create!(name: "Topic 4.4: South-East Asia without the West: the fading of the Cold War, 1973–90", time: 21.5, unit: "Unit 4: International Study with Historical Interpretations: Option 1D: The Cold War and Hot War in Asia (1945-90)")
   history_a_level.topics.create!(name: "Unit 4 Assessment:  International Study with Historical Interpretations: Option 1D: The Cold War and Hot War in Asia (1945-90)", time: 1, unit: "Unit 4: International Study with Historical Interpretations: Option 1D: The Cold War and Hot War in Asia (1945-90)")
-  history_a_level.topics.create!(name: "100% Mock Exam  - Comprising of Units 3 and 4", time: 2, unit: "100% Mock Exam  - Comprising of Units 3 and 4", milestone: true, has_grade: true)
+  history_a_level.topics.create!(name: "100% Mock Exam  - Comprising of Units 3 and 4", time: 2, unit: "100% Mock Exam  - Comprising of Units 3 and 4", milestone: true, has_grade: true, Mock100: true)
 
 
 geography_a_level = Subject.create!(
@@ -533,7 +533,7 @@ geography_a_level.topics.create!(name: "Topic 6.2 - Urban Trends and Issues of U
 geography_a_level.topics.create!(name: "Topic 6.3 - The Changing Structure of Urban Settlements", time: 3, unit: "Unit 6 - Settlement Dynamics")
 geography_a_level.topics.create!(name: "Topic 6.4 - The Management of Urban Settlements - CASE STUDY", time: 5, unit: "Unit 6 - Settlement Dynamics")
 geography_a_level.topics.create!(name: "Unit 6 Assessment: Exam Preparation", time: 10, unit: "Unit 6 - Settlement Dynamics")
-geography_a_level.topics.create!(name: "Mock 50%", time: 3, unit: "Mock 50%", milestone: true, has_grade: true)
+geography_a_level.topics.create!(name: "Mock 50%", time: 3, unit: "Mock 50%", milestone: true, has_grade: true, Mock50: true)
 geography_a_level.topics.create!(name: "Topic 7.1 - Coastal Processes", time: 3, unit: "Unit 7 - Coastal Environments")
 geography_a_level.topics.create!(name: "Topic 7.2 - Sediment Budgets and Erosion", time: 3, unit: "Unit 7 - Coastal Environments")
 geography_a_level.topics.create!(name: "Topic 7.3 -Characteristics and Formation of Coastal Landforms", time: 3, unit: "Unit 7 - Coastal Environments")
@@ -559,7 +559,7 @@ geography_a_level.topics.create!(name: "Topic 10.2 - The Management of Energy Su
 geography_a_level.topics.create!(name: "Topic 10.3 - Environmental Degradation", time: 5, unit: "Unit 10 - Environmental Management")
 geography_a_level.topics.create!(name: "Topic 10.4 - The Management of Degraded Environments CASE STUDY", time: 10, unit: "Unit 10 - Environmental Management")
 geography_a_level.topics.create!(name: "Unit 10 Assessment: Exam Preparation", time: 10, unit: "Unit 10 - Environmental Management")
-geography_a_level.topics.create!(name: "Mock 100%", time: 3, unit: "Mock 100%", milestone: true, has_grade: true)
+geography_a_level.topics.create!(name: "Mock 100%", time: 3, unit: "Mock 100%", milestone: true, has_grade: true, Mock100: true)
 
 english_a_level = Subject.create!(
   name: "English A Level",
@@ -608,7 +608,7 @@ english_a_level.topics.create!(name: "Topic 2: How to annotate", time: 3, unit: 
 english_a_level.topics.create!(name: "Topic 3: How to analyse", time: 3, unit: "Unit 8: Exam Preparation")
 english_a_level.topics.create!(name: "Topic 4: Comparative analysis Paper 1", time: 3, unit: "Unit 8: Exam Preparation")
 english_a_level.topics.create!(name: "Topic 5: Comparative analysis Paper 2", time: 3, unit: "Unit 8: Exam Preparation")
-english_a_level.topics.create!(name: "Mock 100%", time: 3, unit: "Mock 100%", milestone: true, has_grade: true)
+english_a_level.topics.create!(name: "Mock 100%", time: 3, unit: "Mock 100%", milestone: true, has_grade: true, Mock100: true)
 
 porto = Hub.create!(
   name: "porto",

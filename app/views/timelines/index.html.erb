@@ -7,10 +7,8 @@
           <div class="accordion-item">
             <h2 class="accordion-header">
               <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>" aria-expanded="false" aria-controls="collapse<%= index %>">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-end" style="font-size: calc(1rem + 0.6vw);" >
                   <%= timeline.subject.name %>
-                </div>
-                <div class="d-flex justify-content-end" >
                   <% if timeline.balance.negative? %>
                       <span class="badge rounded-pill bg-danger">
                         <%= timeline.balance %>
@@ -20,14 +18,13 @@
                         +<%= timeline.balance %>
                       </span>
                   <% else %>
-                      <span class="badge rounded-pill bg-success"></span>
+                      <span class="badge rounded-pill bg-warning"></span>
                   <% end %>
-              </div>
+                </div>
               </button>
               <div class="progress" role="progressbar" aria-label="Progress bar" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
-    <div class="progress-bar" style="width: <%= timeline.progress > 5 ? timeline.progress : 4 %>%;"> <%= timeline.progress %>% </div>
-</div>
-
+                  <div class="progress-bar" style="width: <%= timeline.progress > 5 ? timeline.progress : 4 %>%;"> <%= timeline.progress %>% </div>
+              </div>
             </h2>
             <div id="collapse<%= index %>" class="accordion-collapse collapse" aria-labelledby="heading<%= index %>" data-bs-parent="#parentAccordion">
               <div class="accordion-body">
@@ -58,20 +55,34 @@
                     </tr>
                   </thead>
                   <tbody>
+                    <% def friday_of_this_week(date)
+                        date + ((5 - date.wday) % 7)
+                       end %>
                     <% timeline.subject.topics.each_with_index do |topic, index| %>
                     <% user_topic = current_user.user_topics.find_or_initialize_by(topic: topic) %>
-                      <tr>
+                      <% background_color = if !user_topic.done && user_topic.deadline < Date.today
+                         'background-color: lightcoral;'
+                       elsif !user_topic.done && Date.today.monday < user_topic.deadline && user_topic.deadline < friday_of_this_week(Date.today)
+                         'background-color: lightgrey;'
+                       elsif user_topic.done
+                         'background-color: lightgreen;'
+                       else
+                         ''
+                       end
+                      %>
+
+                      <tr style="<%= background_color %>">
                         <td>
                           <% if index == 0 || topic.unit != timeline.subject.topics[index - 1].unit %>
                             <%= topic.unit %>
                           <% end %>
                         </td>
-                        <td><%= topic.name %></td>
-                        <td class="d-flex justify-content-center align-items-center"><%= topic.time %></td>
-                        <td><%= current_user.user_topics.find_by(topic_id: topic.id).deadline %></td>
-                        <td>
+                        <td style="<%= background_color %>"><%= topic.name %></td>
+                        <td style="<%= background_color %>"><%= (timeline.total_time * 5 * user_topic.percentage * @total_progress).round %></td>
+                        <td style="<%= background_color %>"><%= user_topic.deadline %></td>
+                        <td style="<%= background_color %>">
                           <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
-                            <%= form_with model: current_user.user_topics.find_by(topic_id: topic.id), url: timeline_path(timeline), method: :patch, local: true do |form| %>
+                            <%= form_with model: user_topic, url: timeline_path(timeline), method: :patch, local: true do |form| %>
                               <div class="form-check">
                                 <%= form.check_box :done, class: "form-check-input",
                                                         data: {
@@ -82,9 +93,8 @@
                               </div>
                             <% end %>
                           </div>
-
                         </td>
-                        <% (current_user.user_topics.find_by(topic_id: topic.id).calculate_percentage * 100).round(3)%>
+                        <% (user_topic.calculate_percentage * 100).round(3)%>
                       </tr>
                     <% end %>
                   </tbody>
@@ -106,6 +116,30 @@
       </div>
     </div>
     <div class="col-md-5">
+      <h3><%= Date.today.strftime("%B")%> Goals</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Topic</th>
+            <th>Deadline</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @monthly_goals.each do |goal| %>
+            <tr>
+              <td><%= goal[:timeline].subject.name %></td>
+              <td><%= goal[:topic].name %></td>
+              <td><%= goal[:topic].user_topics.find_by(topic: goal[:topic], user: current_user).deadline %></td>
+              <% if goal[:topic].user_topics.find_by(topic: goal[:topic], user: current_user).done %>
+                <td> <i class="fa-regular fa-circle-check text-success"></i> </td>
+              <% else %>
+                <td> <i class="fa-regular fa-circle-xmark text-danger"></i> </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
       <h3>Holidays</h3>
       <table class="table">
         <thead>

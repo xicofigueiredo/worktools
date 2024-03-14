@@ -79,40 +79,85 @@
                   </div>
                 </div>
               </div>
-
               <div class="row gutters-sm">
                 <div class="col-sm-6 mb-3">
                   <div class="card h-100">
                     <div class="card-body">
-                      <h6 class="d-flex align-items-center mb-3"><i class="material-icons text-info mr-2"></i>Timeline</h6>
-                        <% @timelines.each_with_index do |timeline, index| %>
-                          <div class="timeline">
-                            <small><%= timeline.subject.name %> (<%= timeline.progress %>%)</small>
-                            <div class="progress mb-3" style="height: 5px">
-                              <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.progress %>%" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100"></div>
+                      <h6 class="d-flex align-items-center mb-3"><i class="material-icons text-info mr-2"></i>Progress Overview</h6>
+                      <% @timelines.each do |timeline| %>
+                        <div class="timeline">
+                          <small>
+                            <%= timeline.subject.name %><% Timeline.exam_seasons[timeline.exam_season]%>
+                          </small>
+                          <div class="progress mb-3" style="height: 20px;"> <!-- Increased height to accommodate text -->
+                            <!-- Current progress -->
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [timeline.progress, timeline.expected_progress].min %>%;" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
+                              <span class="progress-text"><%= timeline.expected_progress %>%</span> <!-- Display the actual progress percentage inside the bar -->
                             </div>
+                            <!-- Difference to expected progress -->
+                            <% if timeline.progress > timeline.expected_progress %>
+                              <div class="progress-bar bg-success" role="progressbar" style="width: <%= timeline.progress - timeline.expected_progress %>%;" aria-valuenow="<%= timeline.progress - timeline.expected_progress %>">
+                                <%= timeline.progress - timeline.expected_progress %>% <!-- Display the difference inside the bar -->
+                              </div>
+                            <% elsif timeline.progress < timeline.expected_progress %>
+                              <!-- Corrected to show red bar only when actual progress is less than expected -->
+                              <div class="progress-bar bg-danger" role="progressbar" style="width: <%= timeline.expected_progress - timeline.progress %>%;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
+                                <%= timeline.expected_progress - timeline.progress %>% <!-- Display the difference inside the bar -->
+                              </div>
+                            <% end %>
                           </div>
-                        <% end %>
+                        </div>
+                      <% end %>
+                      <div class="timeline">
+                        <h6 class="d-flex align-items-center mb-3">
+                          <i class="material-icons text-info mr-2"></i>Overall Progress
+                        </h6>
+                        <div class="progress mb-3" style="height: 20px;"> <!-- Increased height to accommodate text -->
+                          <!-- Current progress -->
+                          <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [@overall_progress, @overall_progress_expected].min %>%;" aria-valuenow="<%= @overall_progress %>" aria-valuemin="0" aria-valuemax="100">
+                            <span class="progress-text"><%= @overall_progress_expected %>%</span> <!-- Display the actual progress percentage inside the bar -->
+                          </div>
+                          <!-- Difference to expected progress -->
+                          <% if @overall_progress > @overall_progress_expected %>
+                            <div class="progress-bar bg-success" role="progressbar" style="width: <%= @overall_progress - @overall_progress_expected %>%;" aria-valuenow="<%= @overall_progress - @overall_progress_expected %>">
+                              <%= @overall_progress - @overall_progress_expected %>% <!-- Display the difference inside the bar -->
+                            </div>
+                          <% elsif @overall_progress < @overall_progress_expected %>
+                            <!-- Corrected to show red bar only when actual progress is less than expected -->
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: <%= @overall_progress_expected - @overall_progress %>%;" aria-valuenow="<%= @overall_progress_expected - @overall_progress %>">
+                              <%= @overall_progress_expected - @overall_progress %>% <!-- Display the difference inside the bar -->
+                            </div>
+                          <% end %>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 </div>
                 <div class="col-sm-6 mb-3">
                   <div class="card h-100">
                     <div class="card-body">
-                      <h6 class="d-flex align-items-center mb-3"><i class="material-icons text-info mr-2"></i>Exam dates</h6>
-                        <% @timelines.each_with_index do |timeline, index| %>
-                          <% timeline.subject %>
-                            <p><%= Timeline.exam_seasons[timeline.exam_season] %></p>
-                        <% end %>
+                      <div class="row mb-2 font-weight-bold"> <!-- Header Row for Titles -->
+                        <div class="col-md-6">50% Mock</div>
+                        <div class="col-md-6">100% Mock</div>
+                      </div>
+                      <% @timelines.each_with_index do |timeline, index| %>
+                        <div class="row">
+                                <div class="col-md-6 mt-4">
+                                  <%= @mock50[index] %>
+                                </div>
+                                <div class="col-md-6 mt-4">
+                                  <%= @mock100[index] %>
+                                </div>
+                        </div>
+                      <% end %>
                     </div>
                   </div>
                 </div>
               </div>
-
-
-
             </div>
           </div>
-
         </div>
     </div>
+  </div>
+</div>

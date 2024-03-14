@@ -7,15 +7,37 @@ class TimelinesController < ApplicationController
 
     if current_user.role == "lc"
       redirect_to dashboard_lc_path
-    else
-      @timelines = current_user.timelines_sorted_by_balance
-      @timelines.each do |timeline|
-        timeline.calculate_total_time
-        generate_topic_deadlines(timeline)
-        timeline.save
-      end
-      calculate_progress_and_balance
     end
+
+    @timelines = current_user.timelines_sorted_by_balance
+    @timelines.each do |timeline|
+      timeline.calculate_total_time
+      generate_topic_deadlines(timeline)
+      timeline.save
+    end
+    calculate_progress_and_balance
+
+    if @timelines.count.positive?
+      @total_progress = (@timelines.sum(&:progress).to_f / @timelines.count) / 100
+    else
+      @total_progress = 0
+    end
+
+    start_of_current_month = Date.today.beginning_of_month
+    end_of_current_month = Date.today.end_of_month
+
+    @monthly_goals = @timelines.map do |timeline|
+      last_relevant_topic = timeline.subject.topics.includes(:user_topics)
+                                    .where(user_topics: { user_id: current_user.id })
+                                    .select { |topic|
+                                      user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
+                                      user_topic && user_topic.deadline && user_topic.deadline >= start_of_current_month && user_topic.deadline <= end_of_current_month
+                                    }
+                                    .max_by { |topic|
+                                      topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline
+                                    }
+      { timeline: timeline, topic: last_relevant_topic } if last_relevant_topic.present?
+    end.compact
 
     @holidays = current_user.holidays.or(Holiday.where(bga: true))
   end
@@ -111,7 +133,7 @@ class TimelinesController < ApplicationController
       time_per_topic = (user_topic.calculate_percentage * total_time)
       index += time_per_topic
       deadline_date = working_days[index]
-      if index > working_days.count - 0.5
+      if index > total_time - 0.5
         deadline_date = timeline.end_date
       end
       user_topic.deadline = deadline_date
@@ -123,6 +145,8 @@ class TimelinesController < ApplicationController
     @timelines.each do |timeline|
       balance = 0
       completed_topics_count = 0 # Count of completed topics for progress calculation
+      progress = 0
+      expected_progress = 0
 
       topics = timeline.subject.topics
       total_topics = topics.count
@@ -140,13 +164,17 @@ class TimelinesController < ApplicationController
 
         # Counting completed topics for progress calculation
         completed_topics_count += 1 if user_topic.done
+        progress += user_topic.percentage if user_topic.done
+        expected_progress += user_topic.percentage if user_topic.deadline < Date.today
       end
 
       # Calculate progress as an integer percentage of completed topics
-      progress = total_topics > 0 ? (completed_topics_count.to_f / total_topics * 100).round : 0
+      progress = (progress.to_f * 100).round
+
+      expected_progress_percentage = (expected_progress.to_f * 100).round
 
       # Update timeline with both balance and progress
-      timeline.update(balance: balance, progress: progress)
+      timeline.update(balance: balance, progress: progress, expected_progress: expected_progress_percentage)
     end
   end
 

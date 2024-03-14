@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_03_08_173750) do
+ActiveRecord::Schema[7.0].define(version: 2024_03_13_235629) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -124,6 +124,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_08_173750) do
     t.datetime "updated_at", null: false
     t.integer "balance"
     t.string "exam_season"
+    t.integer "expected_progress"
     t.integer "progress"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
@@ -138,6 +139,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_08_173750) do
     t.datetime "updated_at", null: false
     t.boolean "milestone"
     t.string "unit"
+    t.boolean "Mock50"
+    t.boolean "Mock100"
     t.index ["subject_id"], name: "index_topics_on_subject_id"
   end
 
