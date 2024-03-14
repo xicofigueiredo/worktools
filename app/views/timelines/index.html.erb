@@ -78,7 +78,7 @@
                           <% end %>
                         </td>
                         <td style="<%= background_color %>"><%= topic.name %></td>
-                        <td style="<%= background_color %>"><%= (timeline.total_time * 5 * user_topic.percentage * @total_progress).round %></td>
+                        <td style="<%= background_color %>"><%= topic.time %></td>
                         <td style="<%= background_color %>"><%= user_topic.deadline %></td>
                         <td style="<%= background_color %>">
                           <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">

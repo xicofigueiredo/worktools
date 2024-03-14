@@ -91,16 +91,19 @@
                           </small>
                           <div class="progress mb-3" style="height: 20px;"> <!-- Increased height to accommodate text -->
                             <!-- Current progress -->
+                            <!-- Difference to expected progress -->
+                            <% if timeline.progress > timeline.expected_progress %>
                             <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [timeline.progress, timeline.expected_progress].min %>%;" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
                               <span class="progress-text"><%= timeline.expected_progress %>%</span> <!-- Display the actual progress percentage inside the bar -->
                             </div>
-                            <!-- Difference to expected progress -->
-                            <% if timeline.progress > timeline.expected_progress %>
                               <div class="progress-bar bg-success" role="progressbar" style="width: <%= timeline.progress - timeline.expected_progress %>%;" aria-valuenow="<%= timeline.progress - timeline.expected_progress %>">
                                 <%= timeline.progress - timeline.expected_progress %>% <!-- Display the difference inside the bar -->
                               </div>
                             <% elsif timeline.progress < timeline.expected_progress %>
                               <!-- Corrected to show red bar only when actual progress is less than expected -->
+                              <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [timeline.progress, timeline.expected_progress].min %>%;" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
+                                <span class="progress-text"><%= timeline.progress %>%</span> <!-- Display the actual progress percentage inside the bar -->
+                              </div>
                               <div class="progress-bar bg-danger" role="progressbar" style="width: <%= timeline.expected_progress - timeline.progress %>%;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
                                 <%= timeline.expected_progress - timeline.progress %>% <!-- Display the difference inside the bar -->
                               </div>
@@ -114,16 +117,19 @@
                         </h6>
                         <div class="progress mb-3" style="height: 20px;"> <!-- Increased height to accommodate text -->
                           <!-- Current progress -->
-                          <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [@overall_progress, @overall_progress_expected].min %>%;" aria-valuenow="<%= @overall_progress %>" aria-valuemin="0" aria-valuemax="100">
-                            <span class="progress-text"><%= @overall_progress_expected %>%</span> <!-- Display the actual progress percentage inside the bar -->
-                          </div>
                           <!-- Difference to expected progress -->
                           <% if @overall_progress > @overall_progress_expected %>
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [@overall_progress, @overall_progress_expected].min %>%;" aria-valuenow="<%= @overall_progress %>" aria-valuemin="0" aria-valuemax="100">
+                              <span class="progress-text"><%= @overall_progress_expected %>%</span> <!-- Display the actual progress percentage inside the bar -->
+                            </div>
                             <div class="progress-bar bg-success" role="progressbar" style="width: <%= @overall_progress - @overall_progress_expected %>%;" aria-valuenow="<%= @overall_progress - @overall_progress_expected %>">
                               <%= @overall_progress - @overall_progress_expected %>% <!-- Display the difference inside the bar -->
                             </div>
                           <% elsif @overall_progress < @overall_progress_expected %>
                             <!-- Corrected to show red bar only when actual progress is less than expected -->
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: <%= @overall_progress %> %>%;" aria-valuenow="<%= @overall_progress %>" aria-valuemin="0" aria-valuemax="100">
+                              <span class="progress-text"><%= @overall_progress %>%</span> <!-- Display the actual progress percentage inside the bar -->
+                            </div>
                             <div class="progress-bar bg-danger" role="progressbar" style="width: <%= @overall_progress_expected - @overall_progress %>%;" aria-valuenow="<%= @overall_progress_expected - @overall_progress %>">
                               <%= @overall_progress_expected - @overall_progress %>% <!-- Display the difference inside the bar -->
                             </div>

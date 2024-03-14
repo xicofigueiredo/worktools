@@ -35,7 +35,7 @@ class PagesController < ApplicationController
       @fake_subject = Subject.create(name: "No Subject", category: :tbe)
       @subject = @fake_subject
     end
-    @timelines = current_user.timelines
+    @timelines = current_user.timelines_sorted_by_balance
 
     @overall_progress = 0
     @overall_progress_expected = 0
