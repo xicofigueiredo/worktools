@@ -1,10 +1,87 @@
-<div>
-  <strong>Start Date:</strong> <%= @sprint_goal.start_date %>
+<p id="notice"><%= notice %></p>
+
+<h2>Sprint Goal Details</h2>
+
+<div class="mb-3">
+  <strong> <%= @sprint_goal.sprint.name %></strong>
+
 </div>
 
-<div>
-  <strong>End Date:</strong> <%= @sprint_goal.end_date %>
-</div>
+<h3>Knowledge Block</h3>
+<table>
+  <thead>
+    <tr>
+      <th>What courses are you aiming to complete?</th>
+      <th>When are you planning on sitting the exams?</th>
+      <th>When do you plan to finish the course?</th>
+      <th>When do you plan to sit the 50% Mock?</th>
+      <th>When do you plan to sit the 100% Mock?</th>
+      <th>What Topic do you plan to have completed by the end of this sprint?</th>
+      <th>What difficulties do you expect to encounter with this target?</th>
+      <th>Explain your plan to achieve your goal in 3 steps or more.</th>
+    </tr>
+  </thead>
+<tbody>
+  <% current_user.timelines.each do |timeline| %>
+    <% knowledge = @sprint_goal.knowledges.find_by(timeline: timeline) %>
+    <tr>
+      <td><%= timeline.subject.name %></td>
+      <td><%= timeline.exam_season %></td>
+      <td><%= timeline.end_date %></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td><%= knowledge&.difficulties %></td>
+      <td><%= knowledge&.plan %></td>
+    </tr>
+  <% end %>
+</tbody>
 
-<%= link_to "Edit", edit_sprint_goal_path(@sprint_goal) %> |
-<%= link_to "Back", sprint_goals_path %>
+</table>
+
+<h3>Skills Block</h3>
+<table>
+  <thead>
+    <tr>
+      <th>What extracurricular activities or MOOCs will you get involved in?</th>
+      <th>What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
+      <th>What difficulties do you expect to encounter with this target?</th>
+      <th>Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+    </tr>
+  </thead>
+  <tbody data-nested-form-target="skillsContainer">
+    <% @sprint_goal.skills.each do |skill, index| %>
+        <tr>
+          <td><%= skill.extracurricular %></td>
+          <td><%= skill.smartgoals %></td>
+          <td><%= skill.difficulties %></td>
+          <td><%= skill.plan %></td>
+        </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<h3>Community Block</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>How do you plan to get involved in your community, are there any BGA Clubs, Hub Projects, or Volunteering that you want to get involved in? </th>
+        <th>What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
+        <th>What difficulties do you expect to encounter with this target?</th>
+        <th>Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+      </tr>
+    </thead>
+    <tbody data-nested-form-target="communitiesContainer">
+      <% @sprint_goal.communities.each_with_index do |community, index| %>
+          <tr>
+            <td><%= community.involved %></td>
+            <td><%= community.smartgoals %></td>
+            <td><%= community.difficulties %></td>
+            <td><%= community.plan %></td>
+          </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+<%= link_to 'Edit Sprint Goal', edit_sprint_goal_path(@sprint_goal), class: "btn btn-primary" %>
+<%= link_to 'Back to Sprint Goals', sprint_goals_path, class: "btn btn-secondary" %>

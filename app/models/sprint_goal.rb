@@ -1,7 +1,12 @@
 class SprintGoal < ApplicationRecord
   belongs_to :user
   belongs_to :sprint
-  has_many :questions_sprint_goals
-  has_many :questions, through: :questions_sprint_goals
-  has_many :answers, through: :questions
+
+  has_many :knowledges, dependent: :destroy
+  has_many :skills, dependent: :destroy
+  has_many :communities, class_name: 'Community', dependent: :destroy
+
+  accepts_nested_attributes_for :knowledges, allow_destroy: true
+  accepts_nested_attributes_for :skills, allow_destroy: true
+  accepts_nested_attributes_for :communities, allow_destroy: true
 end

@@ -1,40 +1,157 @@
-<%= form_with(model: @sprint_goal, local: true) do |form| %>
-  <div class="container py-5">
+<%= form_with(model: sprint_goal, data: { controller: "nested-form" }, local: true) do |form| %>
+  <% if sprint_goal.errors.any? %>
+    <div class="alert alert-danger" role="alert">
+      <h4 class="alert-heading">Errors prevented this sprint_goal from being saved:</h4>
+      <ul>
+        <% sprint_goal.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+   <div class="form-group mb-3">
+    <%= form.collection_select :sprint_id, @available_sprints, :id, :name, prompt: 'Choose a Sprint', class: 'form-select' %>
+  </div>
+  <style>
+    .custom-font-size {
+      font-size: 13px;
+    }
+  </style>
+  <div class="container py-2">
     <div class="row justify-content-center">
-      <div class="col-md-8">
+      <div class="col-12"> <!-- Adjusted for full width -->
         <div class="card">
           <div class="card-body">
-            <h2 class="card-title text-center mb-4">New Sprint Goal</h2>
-
-            <div class="field">
-              <%= form.label :sprint_id, 'Select Sprint', class: "form-label" %>
-              <%= form.collection_select :sprint_id, @available_sprints, :id, :name, { include_blank: "Please Select" }, class: "form-control" %>
-            </div>
-
-            <hr>
-
-            <%= form.fields_for :questions_sprint_goals do |sg_question_fields| %>
-              <% question = Question.find(sg_question_fields.object.question_id) %>
-              <h3><%= question.value %></h3>
-              <%= sg_question_fields.hidden_field :question_id, value: sg_question_fields.object.question_id %>
-
-              <% ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].each do |answer_type| %>
-                <%= sg_question_fields.fields_for :answers, sg_question_fields.object.answers.build do |answer_fields| %>
-                  <div class="field">
-                    <%= answer_fields.text_area :value, class: "form-control" %>
-                    <%= answer_fields.hidden_field :answer_type, value: answer_type %>
-                  </div>
+            <h3 class="card-title text-center mb-4 mt-4">Knowledge Block</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th class="custom-font-size">Subjects</th>
+                  <th class="custom-font-size">Exam Season</th>
+                  <th class="custom-font-size">Finish Course</th>
+                  <th class="custom-font-size">50% Mock</th>
+                  <th class="custom-font-size">100% Mock</th>
+                  <th class="custom-font-size">Sprint deadline</th>
+                  <th class="custom-font-size">What difficulties do you expect to encounter with this target?</th>
+                  <th class="custom-font-size">Explain your plan to achieve your goal in 3 steps or more.</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% current_user.timelines.each_with_index do |timeline, index| %>
+                  <% knowledge = @sprint_goal.knowledges.find_or_initialize_by(timeline: timeline) %>
+                  <%= fields_for "sprint_goal[knowledges_attributes][]", knowledge do |knowledge_form| %>
+                    <tr>
+                      <td class="custom-font-size"><%= timeline.subject.name %></td>
+                      <td class="custom-font-size"><%= timeline.exam_season %></td>
+                      <td class="custom-font-size"><%= timeline.end_date %></td>
+                      <td></td> <!-- Mock data -->
+                      <td></td> <!-- Mock data -->
+                      <td></td> <!-- Additional data -->
+                      <!-- Hidden field to ensure the knowledge is associated with the correct timeline -->
+                      <%= knowledge_form.hidden_field :timeline_id, value: timeline.id %>
+                      <td class="custom-font-size"><%= knowledge_form.text_area :difficulties, class: 'form-control' %></td>
+                      <td class="custom-font-size"><%= knowledge_form.text_area :plan, class: 'form-control' %></td>
+                    </tr>
+                  <% end %>
                 <% end %>
-              <% end %>
-              <hr>
-            <% end %>
-
-            <div class="form-group text-center">
-              <%= form.submit "Submit", class: "btn btn-primary" %>
-            </div>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
+  </div>
+  <div class="container py-2">
+    <div class="row justify-content-center">
+      <div class="col-12"> <!-- Adjusted for full width -->
+        <div class="card">
+          <div class="card-body">
+            <h3 class="card-title text-center mb-4 mt-4">Skills Block</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th class="custom-font-size" >What extracurricular activities or MOOCs will you get involved in?</th>
+                  <th class="custom-font-size" >What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
+                  <th class="custom-font-size" >What difficulties do you expect to encounter with this target?</th>
+                  <th class="custom-font-size" >Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+                </tr>
+              </thead>
+              <tbody data-nested-form-target="skillsContainer">
+                <% @sprint_goal.skills.each_with_index do |skill, index| %>
+                  <%= form.fields_for :skills, skill, child_index: index do |skill_form| %>
+                    <tr>
+                      <td><%= skill_form.text_field :extracurricular, class: 'form-control'  %></td>
+                      <td><%= skill_form.text_area :smartgoals, class: 'form-control'  %></td>
+                      <td><%= skill_form.text_area :difficulties, class: 'form-control'  %></td>
+                      <td><%= skill_form.text_area :plan, class: 'form-control'  %></td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+            <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="skills">Add</button>
+            <template data-nested-form-target="template" data-kind="skills">
+              <%= form.fields_for :skills, Skill.new, child_index: "TEMPLATE_INDEX" do |skill_form| %>
+                <tr>
+                  <td><%= skill_form.text_field :extracurricular, class: 'form-control'  %></td>
+                  <td><%= skill_form.text_area :smartgoals, class: 'form-control'  %></td>
+                  <td><%= skill_form.text_area :difficulties, class: 'form-control'  %></td>
+                  <td><%= skill_form.text_area :plan, class: 'form-control'  %></td>
+                </tr>
+              <% end %>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ <div class="container py-2">
+    <div class="row justify-content-center">
+      <div class="col-12"> <!-- Adjusted for full width -->
+        <div class="card">
+          <div class="card-body">
+            <h3 class="card-title text-center mb-4 mt-4">Community Block</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th class="custom-font-size" >How do you plan to get involved in your community, are there any BGA Clubs, Hub Projects, or Volunteering that you want to get involved in? </th>
+                    <th class="custom-font-size" >What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
+                    <th class="custom-font-size" >What difficulties do you expect to encounter with this target?</th>
+                    <th class="custom-font-size" >Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+                  </tr>
+                </thead>
+                <tbody data-nested-form-target="communitiesContainer">
+                  <% @sprint_goal.communities.each_with_index do |community, index| %>
+                    <%= form.fields_for :communities, community, child_index: index do |community_form| %>
+                      <tr>
+                        <td><%= community_form.text_field :involved, class: 'form-control'  %></td>
+                        <td><%= community_form.text_area :smartgoals, class: 'form-control'  %></td>
+                        <td><%= community_form.text_area :difficulties, class: 'form-control'  %></td>
+                        <td><%= community_form.text_area :plan, class: 'form-control'  %></td>
+                      </tr>
+                    <% end %>
+                  <% end %>
+                </tbody>
+              </table>
+              <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="communities">Add</button>
+              <template data-nested-form-target="template" data-kind="communities">
+                <%= form.fields_for :communities, Community.new, child_index: "TEMPLATE_INDEX" do |community_form| %>
+                  <tr>
+                    <td><%= community_form.text_field :involved, class: 'form-control' %></td>
+                    <td><%= community_form.text_area :smartgoals, class: 'form-control' %></td>
+                    <td><%= community_form.text_area :difficulties, class: 'form-control' %></td>
+                    <td><%= community_form.text_area :plan, class: 'form-control' %></td>
+                  </tr>
+                <% end %>
+              </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group text-center">
+    <%= form.submit "Submit", class: "btn btn-primary" %>
   </div>
 <% end %>

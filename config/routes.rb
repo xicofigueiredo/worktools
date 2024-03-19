@@ -25,7 +25,12 @@ Rails.application.routes.draw do
   resources :weekly_goals do
     get 'topics_for_subject/:subject_id', on: :collection, to: 'weekly_goals#topics_for_subject'
   end
-  resources :sprint_goals
+  resources :sprint_goals do
+    resources :knowledges, only: [:create, :update, :destroy]
+    resources :skills, only: [:create, :update, :destroy]
+    resources :communities, only: [:create, :update, :destroy]
+  end
+
   resources :kdas
   resources :user_topics do
     member do

@@ -8,7 +8,7 @@
         <strong><%= sprint_goal.sprint.name %> Goals</strong> <br>
       </p>
       <%= link_to "Show", sprint_goal_path(sprint_goal), class: "btn btn-primary mr-2" %>
-      <%= link_to "Edit", edit_sprint_goal_path(sprint_goal), class: "btn btn-secondary mr-2 disabled" %>
+      <%= link_to "Edit", edit_sprint_goal_path(sprint_goal), class: "btn btn-secondary mr-2" %>
       <%= link_to "Delete", sprint_goal_path(sprint_goal), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
     </div>
   </div>

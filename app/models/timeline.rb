@@ -2,6 +2,7 @@ class Timeline < ApplicationRecord
   belongs_to :user
   belongs_to :subject
   after_create :create_user_topics
+  has_many :knowledges
 
   validate :start_date_before_end_date
   validates :subject_id, presence: true
