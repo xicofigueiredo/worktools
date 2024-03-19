@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_03_19_012651) do
+ActiveRecord::Schema[7.0].define(version: 2024_03_19_130951) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -25,6 +25,17 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_012651) do
     t.index ["kdas_question_id"], name: "index_answers_on_kdas_question_id"
     t.index ["question_id"], name: "index_answers_on_question_id"
     t.index ["questions_sprint_goal_id"], name: "index_answers_on_questions_sprint_goal_id"
+  end
+
+  create_table "communities", force: :cascade do |t|
+    t.bigint "sprint_goal_id", null: false
+    t.string "involved"
+    t.text "smartgoals"
+    t.text "difficulties"
+    t.text "plan"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sprint_goal_id"], name: "index_communities_on_sprint_goal_id"
   end
 
   create_table "exam_dates", force: :cascade do |t|
@@ -71,6 +82,17 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_012651) do
     t.index ["question_id"], name: "index_kdas_questions_on_question_id"
   end
 
+  create_table "knowledges", force: :cascade do |t|
+    t.bigint "sprint_goal_id", null: false
+    t.text "difficulties"
+    t.text "plan"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "timeline_id", null: false
+    t.index ["sprint_goal_id"], name: "index_knowledges_on_sprint_goal_id"
+    t.index ["timeline_id"], name: "index_knowledges_on_timeline_id"
+  end
+
   create_table "questions", force: :cascade do |t|
     t.string "value"
     t.datetime "created_at", null: false
@@ -88,6 +110,17 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_012651) do
     t.index ["question_id"], name: "index_questions_sprint_goals_on_question_id"
     t.index ["sprint_goal_id"], name: "index_questions_sprint_goals_on_sprint_goal_id"
     t.index ["subject_id"], name: "index_questions_sprint_goals_on_subject_id"
+  end
+
+  create_table "skills", force: :cascade do |t|
+    t.bigint "sprint_goal_id", null: false
+    t.string "extracurricular"
+    t.text "smartgoals"
+    t.text "difficulties"
+    t.text "plan"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sprint_goal_id"], name: "index_skills_on_sprint_goal_id"
   end
 
   create_table "sprint_goals", force: :cascade do |t|
@@ -215,14 +248,18 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_012651) do
   add_foreign_key "answers", "kdas_questions"
   add_foreign_key "answers", "questions"
   add_foreign_key "answers", "questions_sprint_goals"
+  add_foreign_key "communities", "sprint_goals"
   add_foreign_key "exam_dates", "subjects"
   add_foreign_key "holidays", "users"
   add_foreign_key "kdas", "users"
   add_foreign_key "kdas", "weeks"
   add_foreign_key "kdas_questions", "questions"
+  add_foreign_key "knowledges", "sprint_goals"
+  add_foreign_key "knowledges", "timelines"
   add_foreign_key "questions_sprint_goals", "questions"
   add_foreign_key "questions_sprint_goals", "sprint_goals"
   add_foreign_key "questions_sprint_goals", "subjects"
+  add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"
   add_foreign_key "timelines", "subjects"
