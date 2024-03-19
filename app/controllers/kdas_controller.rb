@@ -3,7 +3,7 @@ class KdasController < ApplicationController
   before_action :set_kda, only: [:show, :edit, :update, :destroy]
   before_action :set_questions, only: [:new, :show, :edit, :create, :update]
   before_action :set_weeks, only: [:new, :edit, :create, :update]
-  before_action :set_available_weeks, only: [:new, :edit]
+  before_action :set_available_weeks, only: [:new, :edit, :create, :update]
 
   # GET /kdas
   def index

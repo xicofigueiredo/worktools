@@ -41,7 +41,9 @@
                             <div class="form-group">
                               <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
                               <% if slot %>
-                                <%= slot.subject_name %><br>
+                                <% Subject.all.where(id: slot.subject_name.to_i).each do |name| %><br>
+                                <%= name.name  %>
+                                <% end %>
                                 <%= slot.topic_name %>
                               <% else %>
                                 No subject<br>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_03_13_235629) do
+ActiveRecord::Schema[7.0].define(version: 2024_03_19_012651) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -21,7 +21,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_13_235629) do
     t.bigint "kdas_question_id", null: false
     t.string "answer_type"
     t.bigint "question_id", null: false
-    t.bigint "questions_sprint_goal_id", null: false
+    t.bigint "questions_sprint_goal_id"
     t.index ["kdas_question_id"], name: "index_answers_on_kdas_question_id"
     t.index ["question_id"], name: "index_answers_on_question_id"
     t.index ["questions_sprint_goal_id"], name: "index_answers_on_questions_sprint_goal_id"

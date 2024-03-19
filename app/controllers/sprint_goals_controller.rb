@@ -16,12 +16,11 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals/new
   def new
-    @sprint_goal = SprintGoal.new
-    @sprint_goal.user_id = current_user.id
+    @sprint_goal = SprintGoal.new(user_id: current_user.id)
     @questions.each do |question|
-      questions_sprint_goals = @sprint_goal.questions_sprint_goals.build(question: question)
-      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].each do |type|
-        questions_sprint_goals.answers.build(answer_type: type)
+      questions_sprint_goal = @sprint_goal.questions_sprint_goals.build(question: question)
+      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16'].each do |type|
+        questions_sprint_goal.answers.build(answer_type: type)
       end
     end
   end
