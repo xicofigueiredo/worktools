@@ -40,15 +40,9 @@
                           <td id="<%= time.downcase %>_<%= day.downcase %>">
                             <div class="form-group">
                               <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
-                              <% if slot %>
-                                <% Subject.all.where(id: slot.subject_name.to_i).each do |name| %><br>
-                                <%= name.name  %>
-                                <% end %>
+                                <%= slot.subject_name  %>
+                                <br>
                                 <%= slot.topic_name %>
-                              <% else %>
-                                No subject<br>
-                                No topic
-                              <% end %>
                             </div>
                           </td>
                         <% end %>
@@ -64,7 +58,6 @@
             <% link_to "Edit", edit_weekly_goal_path(@weekly_goal), class: "btn btn-primary mr-2" %>
             <%= link_to "Back", weekly_goals_path, class: "btn btn-secondary" %>
           </div>
-
         </div>
       </div>
     </div>

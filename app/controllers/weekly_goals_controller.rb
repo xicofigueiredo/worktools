@@ -3,7 +3,7 @@ class WeeklyGoalsController < ApplicationController
   before_action :set_weekly_goal, only: [:show, :edit, :update, :destroy]
   before_action :set_subject_names
   before_action :set_topic_names
-  before_action :set_available_weeks, only: [:new, :edit]
+  before_action :set_available_weeks, only: [:new, :edit, :create, :update]
 
 
   def index

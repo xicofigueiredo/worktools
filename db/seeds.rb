@@ -1083,7 +1083,7 @@ quim = User.create!(
       )
 
       Sprint.create!(
-        name: "Sprint 4",
+        name: "Sprint 3",
         start_date: "22/04/2024",
         end_date: "29/04/2024"
       )

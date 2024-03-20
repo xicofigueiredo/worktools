@@ -1,5 +1,5 @@
 <%= form_with(model: @weekly_goal, local: true) do |form| %>
-  <div class="container py-5" data-controller="topics">
+  <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-md-13">
         <% if @weekly_goal.errors.any? %>
@@ -17,8 +17,8 @@
           <div class="card-body">
             <!-- Week Selection -->
             <div class="field">
-              <%= form.label :week_id, 'Week' %>
-              <%= form.collection_select :week_id, @available_weeks, :id, :name, include_blank: true, class: 'form-select' %>
+              <%= form.label :week_id, 'Select' %>
+              <%= form.collection_select :week_id, @available_weeks, :id, :name, include_blank: true, class: 'form-select', required: true %>
             </div>
 
             <!-- Schedule Table -->
@@ -37,25 +37,19 @@
                     <tr>
                       <td class="align-middle"><%= time %></td>
                       <% WeeklySlot.day_of_weeks.keys.each_with_index do |day, index| %>
-                        <%
-                        # Assuming you can fetch a weekly_slot here. This part needs to be adjusted based on your actual data structure.
-                        weekly_slot = @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time }
-                        subject_id = @subjects.find { |subject| subject.name == weekly_slot.subject_name }&.id
-                        %>
                         <td id="<%= time.downcase %>_<%= day.downcase %>">
                           <div class="form-group">
-                            <%= form.collection_select "#{day}_#{time}_subject", @subjects, :id, :name, { selected: subject_id, prompt: "" }, { class: "form-control", data: { action: "change->topics#updateTopics", topics_target: "subject" } } %>
-                            <%= form.collection_select "#{day}_#{time}_topic", [], :itself, :itself, { include_blank: 'Select a subject first' }, { class: "form-control", data: { topics_target: "topic" } } %>
+                            <% filtered_subject_names = @subject_names.reject(&:empty?) %>
+                            <%= form.collection_select "#{day}_#{time}_subject", filtered_subject_names, :itself, :itself, {  prompt: "" }, { class: "form-control" } %>
+                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself, { prompt: "" }, { class: "form-control" } %>
                           </div>
                         </td>
                       <% end %>
                     </tr>
                   <% end %>
-
                 </tbody>
               </table>
             </div>
-
             <!-- Form Actions -->
             <div class="text-center mt-4">
               <%= form.submit 'Save Weekly Goal', class: 'btn btn-primary' %>
