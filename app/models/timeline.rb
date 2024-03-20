@@ -3,6 +3,7 @@ class Timeline < ApplicationRecord
   belongs_to :subject
   after_create :create_user_topics
   has_many :knowledges
+  before_destroy :destroy_associated_user_topics
 
   validate :start_date_before_end_date
   validates :subject_id, presence: true
@@ -26,5 +27,9 @@ class Timeline < ApplicationRecord
     if start_date && end_date && start_date > end_date
       errors.add(:end_date, "must be after the start date")
     end
+  end
+
+  def destroy_associated_user_topics
+    user.user_topics.joins(:topic).where(topics: { subject_id: subject_id }).destroy_all
   end
 end

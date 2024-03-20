@@ -10,22 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_03_19_130951) do
+ActiveRecord::Schema[7.0].define(version: 2024_03_19_163859) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-
-  create_table "answers", force: :cascade do |t|
-    t.string "value"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "kdas_question_id", null: false
-    t.string "answer_type"
-    t.bigint "question_id", null: false
-    t.bigint "questions_sprint_goal_id"
-    t.index ["kdas_question_id"], name: "index_answers_on_kdas_question_id"
-    t.index ["question_id"], name: "index_answers_on_question_id"
-    t.index ["questions_sprint_goal_id"], name: "index_answers_on_questions_sprint_goal_id"
-  end
 
   create_table "communities", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
@@ -58,11 +45,31 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_130951) do
     t.index ["user_id"], name: "index_holidays_on_user_id"
   end
 
+  create_table "hubps", force: :cascade do |t|
+    t.integer "rating"
+    t.text "why"
+    t.text "improve"
+    t.bigint "kda_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kda_id"], name: "index_hubps_on_kda_id"
+  end
+
   create_table "hubs", force: :cascade do |t|
     t.string "name"
     t.string "country"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "inis", force: :cascade do |t|
+    t.integer "rating"
+    t.text "why"
+    t.text "improve"
+    t.bigint "kda_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kda_id"], name: "index_inis_on_kda_id"
   end
 
   create_table "kdas", force: :cascade do |t|
@@ -76,40 +83,45 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_130951) do
     t.index ["week_id"], name: "index_kdas_on_week_id"
   end
 
-  create_table "kdas_questions", force: :cascade do |t|
-    t.bigint "kda_id", null: false
-    t.bigint "question_id", null: false
-    t.index ["question_id"], name: "index_kdas_questions_on_question_id"
-  end
-
   create_table "knowledges", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
     t.text "difficulties"
     t.text "plan"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "timeline_id", null: false
+    t.bigint "timeline_id"
     t.index ["sprint_goal_id"], name: "index_knowledges_on_sprint_goal_id"
     t.index ["timeline_id"], name: "index_knowledges_on_timeline_id"
   end
 
-  create_table "questions", force: :cascade do |t|
-    t.string "value"
+  create_table "mots", force: :cascade do |t|
+    t.integer "rating"
+    t.text "why"
+    t.text "improve"
+    t.bigint "kda_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.boolean "kda"
-    t.boolean "sprint"
+    t.index ["kda_id"], name: "index_mots_on_kda_id"
   end
 
-  create_table "questions_sprint_goals", force: :cascade do |t|
+  create_table "p2ps", force: :cascade do |t|
+    t.integer "rating"
+    t.text "why"
+    t.text "improve"
+    t.bigint "kda_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "subject_id", null: false
-    t.bigint "question_id", null: false
-    t.bigint "sprint_goal_id", null: false
-    t.index ["question_id"], name: "index_questions_sprint_goals_on_question_id"
-    t.index ["sprint_goal_id"], name: "index_questions_sprint_goals_on_sprint_goal_id"
-    t.index ["subject_id"], name: "index_questions_sprint_goals_on_subject_id"
+    t.index ["kda_id"], name: "index_p2ps_on_kda_id"
+  end
+
+  create_table "sdls", force: :cascade do |t|
+    t.integer "rating"
+    t.text "why"
+    t.text "improve"
+    t.bigint "kda_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kda_id"], name: "index_sdls_on_kda_id"
   end
 
   create_table "skills", force: :cascade do |t|
@@ -245,20 +257,18 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_130951) do
     t.datetime "updated_at", null: false
   end
 
-  add_foreign_key "answers", "kdas_questions"
-  add_foreign_key "answers", "questions"
-  add_foreign_key "answers", "questions_sprint_goals"
   add_foreign_key "communities", "sprint_goals"
   add_foreign_key "exam_dates", "subjects"
   add_foreign_key "holidays", "users"
+  add_foreign_key "hubps", "kdas"
+  add_foreign_key "inis", "kdas"
   add_foreign_key "kdas", "users"
   add_foreign_key "kdas", "weeks"
-  add_foreign_key "kdas_questions", "questions"
   add_foreign_key "knowledges", "sprint_goals"
   add_foreign_key "knowledges", "timelines"
-  add_foreign_key "questions_sprint_goals", "questions"
-  add_foreign_key "questions_sprint_goals", "sprint_goals"
-  add_foreign_key "questions_sprint_goals", "subjects"
+  add_foreign_key "mots", "kdas"
+  add_foreign_key "p2ps", "kdas"
+  add_foreign_key "sdls", "kdas"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"

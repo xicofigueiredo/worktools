@@ -1,9 +1,8 @@
 class KdasController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_kda, only: [:show, :edit, :update, :destroy]
-  before_action :set_questions, only: [:new, :show, :edit, :create, :update]
-  before_action :set_weeks, only: [:new, :edit, :create, :update]
-  before_action :set_available_weeks, only: [:new, :edit, :create, :update]
+  before_action :set_kda, only: [:show, :edit, :update, :destroy, :show]
+  before_action :set_weeks, only: [:new, :edit, :create, :update, :show]
+  before_action :set_available_weeks, only: [:new, :edit, :create, :update, :show]
 
   # GET /kdas
   def index
@@ -12,28 +11,31 @@ class KdasController < ApplicationController
 
   # GET /kdas/1
   def show
+    @kda = current_user.kdas.find(params[:id])
   end
+
 
   # GET /kdas/new
   def new
     @kda = Kda.new
     @kda.user_id = current_user.id
-    @questions.each do |question|
-      kdas_question = @kda.kdas_questions.build(question: question)
-      ['sdl', 'ini', 'mot', 'p2p', 'hubp'].each do |type|
-        kdas_question.answers.build(answer_type: type)
-      end
-    end
+    @kda.build_sdl
+    @kda.build_ini
+    @kda.build_mot
+    @kda.build_p2p
+    @kda.build_hubp
   end
 
   # GET /kdas/1/edit
   def edit
+    @@kda = Kda.find(params[:id])
+    @available_weeks = Week.all
   end
 
   # POST /kdas
   def create
-    processed_params = process_kda_params(kda_params)
-    @kda = current_user.kdas.build(processed_params)
+    @kda = current_user.kdas.new(kda_params)
+
 
     if @kda.save
       redirect_to kdas_path, notice: 'Kda was successfully created.'
@@ -47,7 +49,7 @@ class KdasController < ApplicationController
   # PATCH/PUT /kdas/1
   def update
     if @kda.update(kda_params)
-      redirect_to kda_path(@kda), notice: 'Kda was successfully updated.'
+      redirect_to kdas_path, notice: 'Kda was successfully updated.'
     else
       set_weeks # Make sure @weeks is set for the form to render correctly
       flash.now[:alert] =  'KDA could not be updated. Please check your input.'
@@ -63,16 +65,6 @@ class KdasController < ApplicationController
 
   private
 
-    def process_kda_params(params)
-      params[:kdas_questions_attributes].each do |_, question_attributes|
-        question_id = question_attributes[:question_id]
-        question_attributes[:answers_attributes].each do |_, answer_attributes|
-          answer_attributes[:question_id] = question_id
-        end
-      end
-      params
-    end
-
     # Use callbacks to share common setup or constraints between actions.
     def set_kda
       @kda = Kda.find(params[:id])
@@ -83,11 +75,13 @@ class KdasController < ApplicationController
     end
 
     def kda_params
-      params.require(:kda).permit(:week_id, kdas_questions_attributes: [:question_id, answers_attributes: [:value, :answer_type]])
-    end
-
-    def set_questions
-      @questions = Question.where(kda: true).order(:created_at)
+      params.require(:kda).permit(
+                    :week_id, :user_id,
+                    sdl_attributes: [:id, :rating, :why, :improve, :_destroy],
+                    ini_attributes: [:id, :rating, :why, :improve, :_destroy],
+                    mot_attributes: [:id, :rating, :why, :improve, :_destroy],
+                    p2p_attributes: [:id, :rating, :why, :improve, :_destroy],
+                    hubp_attributes: [:id, :rating, :why, :improve, :_destroy])
     end
 
     def set_available_weeks

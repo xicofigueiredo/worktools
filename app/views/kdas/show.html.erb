@@ -1,35 +1,83 @@
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-body">
-          <h2 class="card-title text-center mb-4">KDA Details</h2>
+<%= form_with(model: @kda, local: true) do |form| %>
+  <% if @kda.errors.any? %>
+    <div class="alert alert-danger">
+      <h4>Could not save KDA:</h4>
+      <ul>
+        <% @kda.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
 
-          <div class="field">
-            <strong><%= @kda.week.name %></strong>
-          </div>
-
-          <hr>
-
-          <% @kda.kdas_questions.includes(:question, :answers).each do |kdas_question| %>
-            <br>
-            <h3><%= kdas_question.question.value %></h3>
-            <br>
-            <% kdas_question.answers.each do |answer| %>
-            <br>
-              <div class="field">
-                <strong><%= answer.readable_answer_type(answer.answer_type) %>:</strong> <%= answer.value %>
-              </div>
-            <% end %>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">KDA</h2>
+            <div class="col-md-3">
+              <%= @kda.week.name %>
+            </div>
             <hr>
-          <% end %>
-
-          <div class="text-center">
-            <%= link_to 'Edit', edit_kda_path(@kda), class: "btn btn-primary mr-2" %>
-            <%= link_to 'Back', kdas_path, class: "btn btn-secondary" %>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>How well did you do, last week?	</th>
+                  <th>Rating (0-5)</th>
+                  <th>Why did you give yourself that rating? Provide two arguments.</th>
+                  <th>How will you improve in each KDA, during this week? Give two strategies.</th>
+                </tr>
+              </thead>
+              <tbody>
+                <%= form.fields_for :sdl do |sdl_fields| %>
+                  <tr>
+                    <td>Self-Directed Learning</td>
+                    <td><%= sdl_fields.number_field :rating, min: 0, max: 5, class: "form-control", disabled: true %></td>
+                    <td><%= sdl_fields.text_area :why, rows: 6, class: "form-control", disabled: true %></td>
+                    <td><%= sdl_fields.text_area :improve, rows: 6, class: "form-control", disabled: true %></td>
+                  </tr>
+                <% end %>
+                <%= form.fields_for :ini do |ini_fields| %>
+                  <tr>
+                    <td>Initiative</td>
+                    <td><%= ini_fields.number_field :rating, min: 0, max: 5, class: "form-control", disabled: true %></td>
+                    <td><%= ini_fields.text_area :why, rows: 6, class: "form-control", disabled: true %></td>
+                    <td><%= ini_fields.text_area :improve, rows: 6, class: "form-control", disabled: true %></td>
+                  </tr>
+                <% end %>
+                <%= form.fields_for :mot do |mot_fields| %>
+                  <tr>
+                    <td>Motivation</td>
+                    <td><%= mot_fields.number_field :rating, min: 0, max: 5, class: "form-control", disabled: true %></td>
+                    <td><%= mot_fields.text_area :why, rows: 6, class: "form-control", disabled: true %></td>
+                    <td><%= mot_fields.text_area :improve, rows: 6, class: "form-control", disabled: true %></td>
+                  </tr>
+                <% end %>
+                <%= form.fields_for :p2p do |p2p_fields| %>
+                  <tr>
+                    <td>P2P</td>
+                    <td><%= p2p_fields
+                      .number_field :rating, min: 0, max: 5, class: "form-control", disabled: true %></td>
+                    <td><%= p2p_fields.text_area :why, rows: 6, class: "form-control", disabled: true %></td>
+                    <td><%= p2p_fields.text_area :improve, rows: 6, class: "form-control", disabled: true %></td>
+                  </tr>
+                <% end %>
+                <%= form.fields_for :hubp do |hubp_fields| %>
+                  <tr>
+                    <td>Hub Participation</td>
+                    <td><%= hubp_fields.number_field :rating, min: 0, max: 5, class: "form-control", disabled: true %></td>
+                    <td><%= hubp_fields.text_area :why, rows: 6, class: "form-control", disabled: true %></td>
+                    <td><%= hubp_fields.text_area :improve, rows: 6, class: "form-control", disabled: true %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+<% end %>
+
+<%= link_to 'Back', kdas_path %>

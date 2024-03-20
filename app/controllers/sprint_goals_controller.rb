@@ -10,6 +10,7 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals/1
   def show
+    @sprint = @sprint_goal.sprint
   end
 
   # GET /sprint_goals/new

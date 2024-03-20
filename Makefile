@@ -24,3 +24,6 @@ connect: ## Connect to the server
 
 replant:
 	docker compose run server rails db:seed:replant
+
+dangling:
+	docker rmi -f $(docker images -f "dangling=true" -q)

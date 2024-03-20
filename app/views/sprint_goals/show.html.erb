@@ -25,12 +25,13 @@
   <% current_user.timelines.each do |timeline| %>
     <% knowledge = @sprint_goal.knowledges.find_by(timeline: timeline) %>
     <tr>
-      <td><%= timeline.subject.name %></td>
-      <td><%= timeline.exam_season %></td>
-      <td><%= timeline.end_date %></td>
-      <td></td>
-      <td></td>
-      <td></td>
+      <td class="custom-font-size"><%= timeline.subject.name %></td>
+      <td class="custom-font-size"><%= timeline.exam_season %></td>
+      <td class="custom-font-size"><%= timeline.end_date %></td>
+      <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true)).deadline %></td>
+      <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true)).deadline %></td>
+      <td class="custom-font-size"></td>
+
       <td><%= knowledge&.difficulties %></td>
       <td><%= knowledge&.plan %></td>
     </tr>

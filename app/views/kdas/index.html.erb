@@ -8,7 +8,7 @@
         <strong>KDA from <%= kda.week.name %></strong> <br>
       </p>
       <%= link_to "Show", kda_path(kda), class: "btn btn-primary mr-2" %>
-      <%= link_to "Edit", edit_kda_path(kda), class: "btn btn-secondary mr-2 disabled" %>
+      <%= link_to "Edit", edit_kda_path(kda), class: "btn btn-secondary mr-2" %>
       <%= link_to "Delete", kda_path(kda), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
     </div>
   </div>
