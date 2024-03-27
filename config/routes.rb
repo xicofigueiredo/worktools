@@ -16,6 +16,8 @@ Rails.application.routes.draw do
     get 'dashboard_lc', to: 'pages#dashboard_lc'
   end
 
+  get '/weekly_goals/topics_for_subject', to: 'weekly_goals#topics_for_subject'
+
   resources :subjects do
     resources :topics, except: [:show, :index]
   end
@@ -23,8 +25,12 @@ Rails.application.routes.draw do
   resources :holidays, except: [:show, :index]
   resources :timelines
   resources :weekly_goals do
-    get 'topics_for_subject/:subject_id', on: :collection, to: 'weekly_goals#topics_for_subject'
+    resources :weekly_slots, except: [:index]
   end
+  resources :weekly_meetings do
+    resources :meetings, except: [:index]
+  end
+
   resources :sprint_goals do
     resources :knowledges, only: [:create, :update, :destroy]
     resources :skills, only: [:create, :update, :destroy]

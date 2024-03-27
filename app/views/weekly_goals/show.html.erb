@@ -40,9 +40,13 @@
                           <td id="<%= time.downcase %>_<%= day.downcase %>">
                             <div class="form-group">
                               <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
-                                <%= slot.subject_name  %>
-                                <br>
-                                <%= slot.topic_name %>
+                                <% if slot.present? %>
+                                  <%= slot.subject&.name || 'No Subject' %>
+                                  <br>
+                                  <%= slot.topic&.name || 'No Topic' %>
+                                <% else %>
+                                  <%= '' %>
+                                <% end %>
                             </div>
                           </td>
                         <% end %>

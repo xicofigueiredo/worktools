@@ -11,6 +11,8 @@ class User < ApplicationRecord
   has_many :topics, through: :user_topics
   attr_accessor :weekly_goal_completed
   has_many :kdas
+  has_many :weekly_meetings
+  has_many :meetings, through: :weekly_meetings
 
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner' }
 

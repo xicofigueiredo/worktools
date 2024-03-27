@@ -19,7 +19,7 @@ class SubjectsController < ApplicationController
     if @subject.save
       redirect_to @subject, notice: 'Subject was successfully created.'
     else
-      render :new
+      render :new, status: :unprocessable_entity
     end
   end
 
@@ -30,7 +30,7 @@ class SubjectsController < ApplicationController
     if @subject.update(subject_params)
       redirect_to subjects_path , notice: 'Subject was successfully updated.'
     else
-      render :edit
+      render :edit, status: :unprocessable_entity
     end
   end
 

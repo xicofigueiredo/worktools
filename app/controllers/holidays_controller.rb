@@ -14,7 +14,7 @@ class HolidaysController < ApplicationController
     if @holiday.save
       redirect_to root_path, notice: 'Holiday was successfully created.'
     else
-      render :new
+      render :new, status: :unprocessable_entity
     end
   end
 
@@ -22,7 +22,7 @@ class HolidaysController < ApplicationController
     if @holiday.update(holiday_params)
       redirect_to root_path, notice: 'Holiday was successfully updated.'
     else
-      render :edit
+      render :edit, status: :unprocessable_entity
     end
   end
 

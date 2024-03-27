@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_03_19_163859) do
+ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -92,6 +92,18 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_163859) do
     t.bigint "timeline_id"
     t.index ["sprint_goal_id"], name: "index_knowledges_on_sprint_goal_id"
     t.index ["timeline_id"], name: "index_knowledges_on_timeline_id"
+  end
+
+  create_table "meeting_slots", force: :cascade do |t|
+    t.bigint "weekly_meeting_id", null: false
+    t.bigint "lc_id"
+    t.bigint "learner_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "meeting_datetime"
+    t.index ["lc_id"], name: "index_meeting_slots_on_lc_id"
+    t.index ["learner_id"], name: "index_meeting_slots_on_learner_id"
+    t.index ["weekly_meeting_id"], name: "index_meeting_slots_on_weekly_meeting_id"
   end
 
   create_table "mots", force: :cascade do |t|
@@ -238,14 +250,25 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_163859) do
     t.index ["week_id"], name: "index_weekly_goals_on_week_id"
   end
 
+  create_table "weekly_meetings", force: :cascade do |t|
+    t.bigint "week_id", null: false
+    t.bigint "hub_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["hub_id"], name: "index_weekly_meetings_on_hub_id"
+    t.index ["week_id"], name: "index_weekly_meetings_on_week_id"
+  end
+
   create_table "weekly_slots", force: :cascade do |t|
     t.bigint "weekly_goal_id", null: false
     t.integer "day_of_week"
     t.integer "time_slot"
-    t.string "subject_name"
-    t.string "topic_name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "subject_id", null: false
+    t.bigint "topic_id", null: false
+    t.index ["subject_id"], name: "index_weekly_slots_on_subject_id"
+    t.index ["topic_id"], name: "index_weekly_slots_on_topic_id"
     t.index ["weekly_goal_id"], name: "index_weekly_slots_on_weekly_goal_id"
   end
 
@@ -266,6 +289,9 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_163859) do
   add_foreign_key "kdas", "weeks"
   add_foreign_key "knowledges", "sprint_goals"
   add_foreign_key "knowledges", "timelines"
+  add_foreign_key "meeting_slots", "users", column: "lc_id"
+  add_foreign_key "meeting_slots", "users", column: "learner_id"
+  add_foreign_key "meeting_slots", "weekly_meetings"
   add_foreign_key "mots", "kdas"
   add_foreign_key "p2ps", "kdas"
   add_foreign_key "sdls", "kdas"
@@ -281,5 +307,9 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_19_163859) do
   add_foreign_key "users_hubs", "users"
   add_foreign_key "weekly_goals", "users"
   add_foreign_key "weekly_goals", "weeks"
+  add_foreign_key "weekly_meetings", "hubs"
+  add_foreign_key "weekly_meetings", "weeks"
+  add_foreign_key "weekly_slots", "subjects"
+  add_foreign_key "weekly_slots", "topics"
   add_foreign_key "weekly_slots", "weekly_goals"
 end

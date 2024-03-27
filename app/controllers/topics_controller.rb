@@ -19,7 +19,7 @@ class TopicsController < ApplicationController
     if @topic.save
       redirect_to subject_path(@subject), notice: 'Topic was successfully created.'
     else
-      render :new
+      render :new, status: :unprocessable_entity
     end
   end
 

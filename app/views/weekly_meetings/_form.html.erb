@@ -1,0 +1,49 @@
+<%= form_with(model: @weekly_meeting, local: true) do |form| %>
+  <!-- Existing structure -->
+
+  <div class="table-responsive">
+    <table class="table table-bordered text-center">
+      <thead>
+        <tr class="bg-gray">
+          <th class="text-uppercase">Meeting Time</th>
+            <% start_date = @weekly_meeting.week.start_date %>
+            <% end_date = @weekly_meeting.week.end_date - 3 %>
+            <% (start_date..end_date).each do |day| %>
+          <th class="text-uppercase"><%= day.strftime("%A") %></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% @time_slots.each do |time_slot| %>
+          <tr>
+            <td class="align-middle"><%= time_slot %></td>
+<% (start_date..end_date).each do |day| %>
+  <% if day.strftime("%A") != 'Saturday' && day.strftime("%A") != 'Sunday' %>
+    <td data-controller="slot">
+  <%= button_tag 'Add Meeting Slot',
+                type: 'button',
+                data: {
+                  action: "click->slot#showDropdown",
+                  slot_day_value: day.strftime('%Y-%m-%d'),
+                  slot_time_value: time_slot
+                },
+                class: 'btn btn-info' %>
+
+
+
+      <!-- Placeholder for the dropdowns -->
+      <div id="slot-dropdowns-<%= day.strftime('%Y-%m-%d') %>-<%= time_slot.gsub(':', '-') %>"></div>
+    </td>
+  <% end %>
+<% end %>
+
+
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="text-center mt-4">
+    <%= form.submit 'Save Weekly Meetings', class: 'btn btn-primary' %>
+  </div>
+<% end %>

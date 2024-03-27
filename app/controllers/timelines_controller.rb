@@ -54,19 +54,19 @@ class TimelinesController < ApplicationController
     when :jan
       if @timeline.end_date.month > 10
         @timeline.errors.add(:end_date, "cannot be after 31 November for January season")
-        render :new
+        render :new, status: :unprocessable_entity
         return
       end
     when :may_jun
       if @timeline.end_date.month > 2
         @timeline.errors.add(:end_date, "cannot be after 28/29 February for May/June season")
-        render :new
+        render :new, status: :unprocessable_entity
         return
       end
     when :oct_nov
       if @timeline.end_date.month > 7
         @timeline.errors.add(:end_date, "cannot be after 31 July for October/November season")
-        render :new
+        render :new, status: :unprocessable_entity
         return
       end
     end
