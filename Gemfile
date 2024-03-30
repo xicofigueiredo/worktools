@@ -29,6 +29,9 @@ gem "jbuilder"
 
 gem "simple_calendar"
 
+gem 'roo', '~> 2.8.3'
+gem 'roo-xls'
+
 
 # Use Redis adapter to run Action Cable in production
 # gem "redis", "~> 4.0"

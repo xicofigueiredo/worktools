@@ -1,0 +1,4 @@
+<%= form_with model: @excel_import, local: true do |form| %>
+  <%= form.file_field :file %>
+  <%= form.submit "Upload" %>
+<% end %>

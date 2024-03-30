@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'excel_imports/new'
+  get 'excel_imports/create'
   devise_for :users, controllers: {
     registrations: 'users/registrations'
   }
@@ -47,5 +49,7 @@ Rails.application.routes.draw do
       patch :toggle_done
     end
   end
+
+  resources :excel_imports, only: [:new, :create]
 
 end
