@@ -22,6 +22,12 @@ Rails.application.routes.draw do
     resources :topics, except: [:show, :index]
   end
 
+  resources :users do
+    collection do
+      post :import
+    end
+  end
+
   resources :holidays, except: [:show, :index]
   resources :timelines
   resources :weekly_goals do
