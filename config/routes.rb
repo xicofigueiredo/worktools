@@ -28,7 +28,11 @@ Rails.application.routes.draw do
     resources :weekly_slots, except: [:index]
   end
   resources :weekly_meetings do
-    resources :meetings, except: [:index]
+    resources :monday_slots, except: [:index]
+    resources :tuesday_slots, except: [:index]
+    resources :wednesday_slots, except: [:index]
+    resources :thursday_slots, except: [:index]
+    resources :friday_slots, except: [:index]
   end
 
   resources :sprint_goals do

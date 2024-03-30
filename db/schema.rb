@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
+ActiveRecord::Schema[7.0].define(version: 2024_03_27_231258) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -31,6 +31,18 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["subject_id"], name: "index_exam_dates_on_subject_id"
+  end
+
+  create_table "friday_slots", force: :cascade do |t|
+    t.bigint "weekly_meeting_id", null: false
+    t.string "time_slot"
+    t.bigint "lc_id"
+    t.bigint "learner_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lc_id"], name: "index_friday_slots_on_lc_id"
+    t.index ["learner_id"], name: "index_friday_slots_on_learner_id"
+    t.index ["weekly_meeting_id"], name: "index_friday_slots_on_weekly_meeting_id"
   end
 
   create_table "holidays", force: :cascade do |t|
@@ -94,16 +106,16 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
     t.index ["timeline_id"], name: "index_knowledges_on_timeline_id"
   end
 
-  create_table "meeting_slots", force: :cascade do |t|
+  create_table "monday_slots", force: :cascade do |t|
     t.bigint "weekly_meeting_id", null: false
+    t.string "time_slot"
     t.bigint "lc_id"
     t.bigint "learner_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.datetime "meeting_datetime"
-    t.index ["lc_id"], name: "index_meeting_slots_on_lc_id"
-    t.index ["learner_id"], name: "index_meeting_slots_on_learner_id"
-    t.index ["weekly_meeting_id"], name: "index_meeting_slots_on_weekly_meeting_id"
+    t.index ["lc_id"], name: "index_monday_slots_on_lc_id"
+    t.index ["learner_id"], name: "index_monday_slots_on_learner_id"
+    t.index ["weekly_meeting_id"], name: "index_monday_slots_on_weekly_meeting_id"
   end
 
   create_table "mots", force: :cascade do |t|
@@ -171,6 +183,18 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "thursday_slots", force: :cascade do |t|
+    t.bigint "weekly_meeting_id", null: false
+    t.string "time_slot"
+    t.bigint "lc_id"
+    t.bigint "learner_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lc_id"], name: "index_thursday_slots_on_lc_id"
+    t.index ["learner_id"], name: "index_thursday_slots_on_learner_id"
+    t.index ["weekly_meeting_id"], name: "index_thursday_slots_on_weekly_meeting_id"
+  end
+
   create_table "timelines", force: :cascade do |t|
     t.bigint "subject_id", null: false
     t.bigint "user_id", null: false
@@ -199,6 +223,18 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
     t.boolean "Mock50"
     t.boolean "Mock100"
     t.index ["subject_id"], name: "index_topics_on_subject_id"
+  end
+
+  create_table "tuesday_slots", force: :cascade do |t|
+    t.bigint "weekly_meeting_id", null: false
+    t.string "time_slot"
+    t.bigint "lc_id"
+    t.bigint "learner_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lc_id"], name: "index_tuesday_slots_on_lc_id"
+    t.index ["learner_id"], name: "index_tuesday_slots_on_learner_id"
+    t.index ["weekly_meeting_id"], name: "index_tuesday_slots_on_weekly_meeting_id"
   end
 
   create_table "user_topics", force: :cascade do |t|
@@ -238,6 +274,18 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
     t.index ["user_id"], name: "index_users_hubs_on_user_id"
   end
 
+  create_table "wednesday_slots", force: :cascade do |t|
+    t.bigint "weekly_meeting_id", null: false
+    t.string "time_slot"
+    t.bigint "lc_id"
+    t.bigint "learner_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lc_id"], name: "index_wednesday_slots_on_lc_id"
+    t.index ["learner_id"], name: "index_wednesday_slots_on_learner_id"
+    t.index ["weekly_meeting_id"], name: "index_wednesday_slots_on_weekly_meeting_id"
+  end
+
   create_table "weekly_goals", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
@@ -265,10 +313,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
     t.integer "time_slot"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "subject_id", null: false
-    t.bigint "topic_id", null: false
-    t.index ["subject_id"], name: "index_weekly_slots_on_subject_id"
-    t.index ["topic_id"], name: "index_weekly_slots_on_topic_id"
+    t.string "subject_name"
+    t.string "topic_name"
     t.index ["weekly_goal_id"], name: "index_weekly_slots_on_weekly_goal_id"
   end
 
@@ -282,6 +328,9 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
 
   add_foreign_key "communities", "sprint_goals"
   add_foreign_key "exam_dates", "subjects"
+  add_foreign_key "friday_slots", "users", column: "lc_id"
+  add_foreign_key "friday_slots", "users", column: "learner_id"
+  add_foreign_key "friday_slots", "weekly_meetings"
   add_foreign_key "holidays", "users"
   add_foreign_key "hubps", "kdas"
   add_foreign_key "inis", "kdas"
@@ -289,27 +338,34 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_085206) do
   add_foreign_key "kdas", "weeks"
   add_foreign_key "knowledges", "sprint_goals"
   add_foreign_key "knowledges", "timelines"
-  add_foreign_key "meeting_slots", "users", column: "lc_id"
-  add_foreign_key "meeting_slots", "users", column: "learner_id"
-  add_foreign_key "meeting_slots", "weekly_meetings"
+  add_foreign_key "monday_slots", "users", column: "lc_id"
+  add_foreign_key "monday_slots", "users", column: "learner_id"
+  add_foreign_key "monday_slots", "weekly_meetings"
   add_foreign_key "mots", "kdas"
   add_foreign_key "p2ps", "kdas"
   add_foreign_key "sdls", "kdas"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"
+  add_foreign_key "thursday_slots", "users", column: "lc_id"
+  add_foreign_key "thursday_slots", "users", column: "learner_id"
+  add_foreign_key "thursday_slots", "weekly_meetings"
   add_foreign_key "timelines", "subjects"
   add_foreign_key "timelines", "users"
   add_foreign_key "topics", "subjects"
+  add_foreign_key "tuesday_slots", "users", column: "lc_id"
+  add_foreign_key "tuesday_slots", "users", column: "learner_id"
+  add_foreign_key "tuesday_slots", "weekly_meetings"
   add_foreign_key "user_topics", "topics"
   add_foreign_key "user_topics", "users"
   add_foreign_key "users_hubs", "hubs"
   add_foreign_key "users_hubs", "users"
+  add_foreign_key "wednesday_slots", "users", column: "lc_id"
+  add_foreign_key "wednesday_slots", "users", column: "learner_id"
+  add_foreign_key "wednesday_slots", "weekly_meetings"
   add_foreign_key "weekly_goals", "users"
   add_foreign_key "weekly_goals", "weeks"
   add_foreign_key "weekly_meetings", "hubs"
   add_foreign_key "weekly_meetings", "weeks"
-  add_foreign_key "weekly_slots", "subjects"
-  add_foreign_key "weekly_slots", "topics"
   add_foreign_key "weekly_slots", "weekly_goals"
 end

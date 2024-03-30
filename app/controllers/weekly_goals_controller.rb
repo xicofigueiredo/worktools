@@ -92,7 +92,7 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def weekly_goal_params
-    params.require(:weekly_goal).permit(:start_date, :end_date, :user_id, :name, weekly_slots_attributes: [:id, :day_of_week, :time_slot, :subject_name, :topic_name])
+    params.require(:weekly_goal).permit(:start_date, :end_date, :user_id, :name, :week_id, weekly_slots_attributes: [:id, :day_of_week, :time_slot, :subject_name, :topic_name])
   end
 
   def build_weekly_slots

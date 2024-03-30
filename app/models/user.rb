@@ -12,7 +12,16 @@ class User < ApplicationRecord
   attr_accessor :weekly_goal_completed
   has_many :kdas
   has_many :weekly_meetings
-  has_many :meetings, through: :weekly_meetings
+  has_many :monday_slots_as_lc, class_name: 'MondaySlot', foreign_key: 'lc_id'
+  has_many :tuesday_slots_as_lc, class_name: 'TuesdaySlot', foreign_key: 'lc_id'
+  has_many :wednesday_slots_as_lc, class_name: 'WednesdaySlot', foreign_key: 'lc_id'
+  has_many :thursday_slots_as_lc, class_name: 'ThursdaySlot', foreign_key: 'lc_id'
+  has_many :friday_slots_as_lc, class_name: 'FridaySlot', foreign_key: 'lc_id'
+  has_many :monday_slots_as_learner, class_name: 'MondaySlot', foreign_key: 'learner_id'
+  has_many :tuesday_slots_as_learner, class_name: 'TuesdaySlot', foreign_key: 'learner_id'
+  has_many :wednesday_slots_as_learner, class_name: 'WednesdaySlot', foreign_key: 'learner_id'
+  has_many :thursday_slots_as_learner, class_name: 'ThursdaySlot', foreign_key: 'learner_id'
+  has_many :friday_slots_as_learner, class_name: 'FridaySlot', foreign_key: 'learner_id'
 
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner' }
 

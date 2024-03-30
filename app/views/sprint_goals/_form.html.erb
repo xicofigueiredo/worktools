@@ -31,7 +31,6 @@
                   <th class="custom-font-size">Finish Course</th>
                   <th class="custom-font-size">50% Mock</th>
                   <th class="custom-font-size">100% Mock</th>
-                  <th class="custom-font-size">Sprint deadline</th>
                   <th class="custom-font-size">What difficulties do you expect to encounter with this target?</th>
                   <th class="custom-font-size">Explain your plan to achieve your goal in 3 steps or more.</th>
                 </tr>
@@ -46,7 +45,6 @@
                       <td class="custom-font-size"><%= timeline.end_date %></td>
                       <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true)).deadline %></td>
                       <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true)).deadline %></td>
-                      <td class="custom-font-size"></td>
                       <!-- Hidden field to ensure the knowledge is associated with the correct timeline -->
                       <%= knowledge_form.hidden_field :timeline_id, value: timeline.id %>
                       <td class="custom-font-size"><%= knowledge_form.text_area :difficulties, class: 'form-control' %></td>

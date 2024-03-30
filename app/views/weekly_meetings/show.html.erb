@@ -14,9 +14,9 @@
               </div>
               <div class="col-md-8">
                 <div class="form-group text-center">
-                  <strong>Week Start Date:</strong> <%= @weekly_meeting.week.start_date %>
+                  <strong>Week Start Date:</strong> <%= @weekly_meeting.week.start_date.strftime("%B %e, %Y") %>
                   <br>
-                  <strong>Week End Date:</strong> <%= @weekly_meeting.week.end_date %>
+                  <strong>Week End Date:</strong> <%= @weekly_meeting.week.end_date.strftime("%B %e, %Y") %>
                 </div>
               </div>
             </div>
@@ -28,32 +28,31 @@
                 <table class="table table-bordered text-center">
                   <thead>
                     <tr class="bg-gray">
-                      <th class="text-uppercase">Meeting Time</th>
+                      <th class="text-uppercase">Time</th>
                       <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].each do |day| %>
                         <th class="text-uppercase"><%= day %></th>
                       <% end %>
                     </tr>
                   </thead>
                   <tbody>
-                    <% @meeting_times.each do |meeting_time| %>
+                    <% @time_slots.each do |time_slot| %>
                       <tr>
-                        <td class="align-middle"><%= meeting_time %></td>
+                        <td class="align-middle"><%= time_slot %></td>
                         <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].each do |day| %>
                           <td>
-                            <% meeting = @weekly_meeting.meetings.find { |m| m.day_of_week == day && m.meeting_time == meeting_time } %>
-                            <% if meeting %>
-                          <% if meeting.lc.present? %>
-                            LC: <%= meeting.lc.full_name %><br>
-                          <% end %>
-                          <% if meeting.learner.present? %>
-                            Learner: <%= meeting.learner.full_name %>
-                          <% end %>
-                          <% if meeting.lc.blank? && meeting.learner.blank? %>
-                            <%= '' %>
-                          <% end %>
-                        <% else %>
-                          <%= '' %>
-                        <% end %>
+                            <% day_method = "#{day.downcase}_slots" %>
+                            <% day_slots = @weekly_meeting.send(day_method).select { |slot| slot.time_slot == time_slot } %>
+                            <% day_slot = day_slots.first %>
+                            <% if day_slot %>
+                              <% if day_slot.lc.present? %>
+                                LC: <%= day_slot.lc.full_name %><br>
+                              <% end %>
+                              <% if day_slot.learner.present? %>
+                                Learner: <%= day_slot.learner.full_name %>
+                              <% end %>
+                            <% else %>
+                              <%= '' %>
+                            <% end %>
                           </td>
                         <% end %>
                       </tr>
@@ -64,9 +63,9 @@
             </div>
           </div>
 
-          <div class="text-center">
-            <%= link_to "Edit", edit_weekly_meeting_path(@weekly_meeting), class: "btn btn-primary mr-2" %>
-            <%= link_to "Back", weekly_meetings_path, class: "btn btn-secondary" %>
+          <div class="text-center mt-3">
+            <%= link_to 'Edit', edit_weekly_meeting_path(@weekly_meeting), class: "btn btn-primary mr-2" %>
+            <%= link_to 'Back', weekly_meetings_path, class: "btn btn-secondary" %>
           </div>
         </div>
       </div>

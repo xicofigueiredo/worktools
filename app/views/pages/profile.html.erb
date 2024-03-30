@@ -144,16 +144,20 @@
                   <div class="card h-100">
                     <div class="card-body">
                       <div class="row mb-2 font-weight-bold"> <!-- Header Row for Titles -->
-                        <div class="col-md-6">50% Mock</div>
-                        <div class="col-md-6">100% Mock</div>
+                        <div class="col-md-4">50% Mock</div>
+                        <div class="col-md-4">100% Mock</div>
+                        <div class="col-md-4">Exam Season</div>
                       </div>
                       <% @timelines.each_with_index do |timeline, index| %>
                         <div class="row">
-                                <div class="col-md-6 mt-4">
+                                <div class="col-md-4 mt-4">
                                   <%= @mock50[index] %>
                                 </div>
-                                <div class="col-md-6 mt-4">
+                                <div class="col-md-4 mt-4">
                                   <%= @mock100[index] %>
+                                </div>
+                                <div class="col-md-4 mt-4">
+                                  <%= Timeline.exam_seasons[timeline.exam_season] %>
                                 </div>
                         </div>
                       <% end %>

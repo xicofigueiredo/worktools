@@ -1,49 +1,71 @@
 <%= form_with(model: @weekly_meeting, local: true) do |form| %>
-  <!-- Existing structure -->
-
-  <div class="table-responsive">
-    <table class="table table-bordered text-center">
-      <thead>
-        <tr class="bg-gray">
-          <th class="text-uppercase">Meeting Time</th>
-            <% start_date = @weekly_meeting.week.start_date %>
-            <% end_date = @weekly_meeting.week.end_date - 3 %>
-            <% (start_date..end_date).each do |day| %>
-          <th class="text-uppercase"><%= day.strftime("%A") %></th>
-          <% end %>
-        </tr>
-      </thead>
-      <tbody>
-        <% @time_slots.each do |time_slot| %>
-          <tr>
-            <td class="align-middle"><%= time_slot %></td>
-<% (start_date..end_date).each do |day| %>
-  <% if day.strftime("%A") != 'Saturday' && day.strftime("%A") != 'Sunday' %>
-    <td data-controller="slot">
-  <%= button_tag 'Add Meeting Slot',
-                type: 'button',
-                data: {
-                  action: "click->slot#showDropdown",
-                  slot_day_value: day.strftime('%Y-%m-%d'),
-                  slot_time_value: time_slot
-                },
-                class: 'btn btn-info' %>
-
-
-
-      <!-- Placeholder for the dropdowns -->
-      <div id="slot-dropdowns-<%= day.strftime('%Y-%m-%d') %>-<%= time_slot.gsub(':', '-') %>"></div>
-    </td>
-  <% end %>
-<% end %>
-
-
-          </tr>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-13">
+        <% if @weekly_meeting.errors.any? %>
+          <div id="error_explanation" class="alert alert-danger">
+            <h2><%= pluralize(@weekly_meeting.errors.count, "error") %> prohibited this weekly meeting from being saved:</h2>
+            <ul>
+              <% @weekly_meeting.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
         <% end %>
-      </tbody>
-    </table>
-  </div>
-  <div class="text-center mt-4">
-    <%= form.submit 'Save Weekly Meetings', class: 'btn btn-primary' %>
+
+        <div class="card">
+          <div class="card-body">
+            <!-- Week Selection -->
+            <div class="field">
+              <%= form.label :week_id, 'Select Week' %>
+              <%= form.collection_select :week_id, @available_weeks, :id, :name, include_blank: true, class: 'form-select', required: true %>
+            </div>
+
+            <!-- Schedule Table -->
+            <div class="table-responsive">
+              <table class="table table-bordered text-center">
+                <thead>
+                  <tr class="bg-gray">
+                    <th class="text-uppercase">Time</th>
+                    <% %w[Monday Tuesday Wednesday Thursday Friday].each do |day| %>
+                      <th class="text-uppercase"><%= day %></th>
+                    <% end %>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @time_slots.each do |time| %>
+                    <tr>
+                      <td class="align-middle"><%= time %></td>
+                      <% %w[monday tuesday wednesday thursday friday].each do |day| %>
+                        <td>
+                          <%# Assuming each day slot has a similar structure %>
+                          <% @weekly_meeting.send("#{day}_slots").each do |slot| %>
+                            <div class="form-group">
+                              <%= form.fields_for "#{day}_slots[]", slot do |slot_form| %>
+
+                                <%= slot_form.label :lc_id, 'Select Learning Coach', class: "visually-hidden" %>
+                                <%= slot_form.collection_select :lc_id, @lc_users, :id, :full_name, include_blank: true, class: 'form-select' %>
+
+                                <%= slot_form.label :learner_id, 'Select Learner', class: "visually-hidden" %>
+                                <%= slot_form.collection_select :learner_id, @learner_users, :id, :full_name, include_blank: true, class: 'form-select' %>
+                              <% end %>
+                            </div>
+                          <% end %>
+                        </td>
+                      <% end %>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="text-center mt-4">
+              <%= form.submit 'Save Weekly Meeting', class: 'btn btn-primary' %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 <% end %>
