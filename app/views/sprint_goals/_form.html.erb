@@ -41,7 +41,7 @@
                   <%= fields_for "sprint_goal[knowledges_attributes][]", knowledge do |knowledge_form| %>
                     <tr>
                       <td class="custom-font-size"><%= timeline.subject.name %></td>
-                      <td class="custom-font-size"><%= timeline.exam_season %></td>
+                      <td class="custom-font-size"><%= timeline.exam_date.date.strftime("%B %Y") %></td>
                       <td class="custom-font-size"><%= timeline.end_date %></td>
                       <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true)).deadline %></td>
                       <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true)).deadline %></td>

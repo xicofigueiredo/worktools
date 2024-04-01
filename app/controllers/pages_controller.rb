@@ -52,6 +52,21 @@ class PagesController < ApplicationController
     end
 
     get_mocks_dates
+
+    @activities = []
+    current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+    current_user.sprint_goals.all.where(sprint: current_sprint).each do |sprint|
+      if sprint.skills.count.positive?
+        sprint.skills.each do |skill|
+          @activities << skill.extracurricular
+        end
+      end
+      if sprint.communities.count.positive?
+        sprint.communities.each do |community|
+          @activities << community.involved
+        end
+      end
+    end
   end
 
   def edit_profile

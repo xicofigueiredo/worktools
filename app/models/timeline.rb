@@ -4,14 +4,12 @@ class Timeline < ApplicationRecord
   after_create :create_user_topics
   has_many :knowledges, dependent: :destroy
   before_destroy :destroy_associated_user_topics
+  belongs_to :exam_date, optional: true
 
   validate :start_date_before_end_date
   validates :subject_id, presence: true
   validates :start_date, presence: true
   validates :end_date, presence: true
-
-
-  enum exam_season: { jan: 'January', may_jun: 'May/June', oct_nov: 'October/November' }
 
   def create_user_topics
     self.subject.topics.find_each do |topic|

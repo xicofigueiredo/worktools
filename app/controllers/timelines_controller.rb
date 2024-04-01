@@ -4,7 +4,6 @@ class TimelinesController < ApplicationController
 
 
   def index
-
     if current_user.role == "lc"
       redirect_to dashboard_lc_path
     end
@@ -45,32 +44,13 @@ class TimelinesController < ApplicationController
   def new
     @timeline = Timeline.new
     @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
+    set_exam_dates
+
   end
 
   def create
     @timeline = current_user.timelines.new(timeline_params)
-
-    case @timeline.exam_season.to_sym
-    when :jan
-      if @timeline.end_date.month > 10
-        @timeline.errors.add(:end_date, "cannot be after 31 November for January season")
-        render :new, status: :unprocessable_entity
-        return
-      end
-    when :may_jun
-      if @timeline.end_date.month > 2
-        @timeline.errors.add(:end_date, "cannot be after 28/29 February for May/June season")
-        render :new, status: :unprocessable_entity
-        return
-      end
-    when :oct_nov
-      if @timeline.end_date.month > 7
-        @timeline.errors.add(:end_date, "cannot be after 31 July for October/November season")
-        render :new, status: :unprocessable_entity
-        return
-      end
-    end
-
+    set_exam_dates
 
 
     if @timeline.save
@@ -82,10 +62,14 @@ class TimelinesController < ApplicationController
   end
 
   def edit
+    set_exam_dates
+
   end
 
   def update
     if @timeline.update(timeline_params)
+      set_exam_dates
+
       @timeline.save
       generate_topic_deadlines(@timeline)
       redirect_to root_path, notice: 'Timeline was successfully updated.'
@@ -101,12 +85,25 @@ class TimelinesController < ApplicationController
 
   private
 
+  def set_exam_dates
+    @exam_dates = ExamDate.where('date >= ?', Date.today).order(:date).map do |exam_date|
+      result = if exam_date.date.month == 5 || exam_date.date.month == 6
+                 exam_date.date.strftime("May/June %Y")
+               elsif exam_date.date.month == 11 || exam_date.date.month == 12
+                 exam_date.date.strftime("Nov/Dec %Y")
+               else
+                 exam_date.date.strftime("%B %Y")
+               end
+      [result, exam_date.id]
+    end
+  end
+
   def set_timeline
     @timeline = Timeline.find(params[:id])
   end
 
   def timeline_params
-    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_season)
+    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_date_id)
   end
 
   def generate_topic_deadlines(timeline)
@@ -177,7 +174,4 @@ class TimelinesController < ApplicationController
       timeline.update(balance: balance, progress: progress, expected_progress: expected_progress_percentage)
     end
   end
-
-
-
 end

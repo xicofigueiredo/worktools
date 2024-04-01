@@ -150,7 +150,7 @@
           </tr>
         </thead>
         <tbody>
-          <% current_user.holidays.each do |holiday| %>
+          <% @holidays.each do |holiday| %>
             <tr>
               <td><%= holiday.start_date %></td>
               <td><%= holiday.name %></td>

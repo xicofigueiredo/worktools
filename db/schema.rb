@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_03_27_231258) do
+ActiveRecord::Schema[7.0].define(version: 2024_04_01_031418) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "communities", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
@@ -33,6 +61,11 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_231258) do
     t.index ["subject_id"], name: "index_exam_dates_on_subject_id"
   end
 
+  create_table "excel_imports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "friday_slots", force: :cascade do |t|
     t.bigint "weekly_meeting_id", null: false
     t.string "time_slot"
@@ -46,7 +79,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_231258) do
   end
 
   create_table "holidays", force: :cascade do |t|
-    t.bigint "user_id", null: false
+    t.bigint "user_id"
     t.date "start_date"
     t.date "end_date"
     t.datetime "created_at", null: false
@@ -204,9 +237,10 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_231258) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "balance"
-    t.string "exam_season"
     t.integer "expected_progress"
     t.integer "progress"
+    t.bigint "exam_date_id"
+    t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
   end
@@ -324,8 +358,12 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_231258) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "sprint_id"
+    t.index ["sprint_id"], name: "index_weeks_on_sprint_id"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "communities", "sprint_goals"
   add_foreign_key "exam_dates", "subjects"
   add_foreign_key "friday_slots", "users", column: "lc_id"
@@ -350,6 +388,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_231258) do
   add_foreign_key "thursday_slots", "users", column: "lc_id"
   add_foreign_key "thursday_slots", "users", column: "learner_id"
   add_foreign_key "thursday_slots", "weekly_meetings"
+  add_foreign_key "timelines", "exam_dates"
   add_foreign_key "timelines", "subjects"
   add_foreign_key "timelines", "users"
   add_foreign_key "topics", "subjects"
@@ -368,4 +407,5 @@ ActiveRecord::Schema[7.0].define(version: 2024_03_27_231258) do
   add_foreign_key "weekly_meetings", "hubs"
   add_foreign_key "weekly_meetings", "weeks"
   add_foreign_key "weekly_slots", "weekly_goals"
+  add_foreign_key "weeks", "sprints"
 end

@@ -17,7 +17,7 @@
           <div class="card-body">
             <!-- Week Selection -->
             <div class="field">
-              <%= form.label :week_id, 'Select' %>
+              <%= form.label :week_id, 'Select Week' %>
               <%= form.collection_select :week_id, @available_weeks, :id, :name, include_blank: true, class: 'form-select', required: true %>
             </div>
 
@@ -33,15 +33,16 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <% WeeklySlot.time_slots.keys.each do |time| %>
+                  <%= form.fields_for :weekly_slots do |slot_form| %>
+                    <% day = slot_form.object.day_of_week.capitalize %>
+                    <% time = slot_form.object.time_slot.capitalize %>
                     <tr>
                       <td class="align-middle"><%= time %></td>
-                      <% WeeklySlot.day_of_weeks.keys.each_with_index do |day, index| %>
-                        <td id="<%= time.downcase %>_<%= day.downcase %>">
-                          <div class="form-group">
-                            <% filtered_subject_names = @subject_names.reject(&:empty?) %>
-                            <%= form.collection_select "#{day}_#{time}_subject", filtered_subject_names, :itself, :itself, {  prompt: "" }, { class: "form-control" } %>
-                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself, { prompt: "" }, { class: "form-control" } %>
+                      <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                        <td class="align-middle">
+                          <div class="form-group" data-controller="selects">
+                            <%= slot_form.collection_select :subject_name, @subjects || [], :id, :name, {prompt: "Select a subject"}, {class: "form-control", "data-action": "change->selects#updateTopics", "data-selects-target": "subject"} %>
+                            <%= slot_form.collection_select :topic_name, [], :id, :name, {prompt: ""}, {class: "form-control", "data-selects-target": "topic"} %>
                           </div>
                         </td>
                       <% end %>

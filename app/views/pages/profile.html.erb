@@ -27,18 +27,11 @@
               </div>
               <div class="card mt-3">
                 <ul class="list-group list-group-flush">
-                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                  Guitar
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                  Chess
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                  Vet Internship
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                  Surf
-                  </li>
+                  <% @activities.each do |activity| %>
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                    <%= activity  %>
+                    </li>
+                  <% end %>
                 </ul>
               </div>
             </div>
@@ -87,7 +80,7 @@
                       <% @timelines.each do |timeline| %>
                         <div class="timeline">
                           <small>
-                            <%= timeline.subject.name %><% Timeline.exam_seasons[timeline.exam_season]%>
+                            <%= timeline.subject.name %>
                           </small>
                           <div class="progress mb-3" style="height: 20px;"> <!-- Increased height to accommodate text -->
                             <!-- Current progress -->
@@ -141,28 +134,36 @@
                   </div>
                 </div>
                 <div class="col-sm-6 mb-3">
-                  <div class="card h-100">
-                    <div class="card-body">
-                      <div class="row mb-2 font-weight-bold"> <!-- Header Row for Titles -->
-                        <div class="col-md-4">50% Mock</div>
-                        <div class="col-md-4">100% Mock</div>
-                        <div class="col-md-4">Exam Season</div>
-                      </div>
-                      <% @timelines.each_with_index do |timeline, index| %>
-                        <div class="row">
-                                <div class="col-md-4 mt-4">
-                                  <%= @mock50[index] %>
-                                </div>
-                                <div class="col-md-4 mt-4">
-                                  <%= @mock100[index] %>
-                                </div>
-                                <div class="col-md-4 mt-4">
-                                  <%= Timeline.exam_seasons[timeline.exam_season] %>
-                                </div>
+                    <% @timelines.each_with_index do |timeline, index| %>
+                      <% if timeline.exam_date.present? %>
+                        <div class="card h-100">
+                          <div class="card-body">
+                            <div class="row mb-2 font-weight-bold"> <!-- Header Row for Titles -->
+                              <div class="col-md-4">50% Mock</div>
+                              <div class="col-md-4">100% Mock</div>
+                              <div class="col-md-4">Exam Season</div>
+                            </div>
+                            <div class="row">
+                              <div class="col-md-4 mt-4">
+                                <%= @mock50[index] %>
+                              </div>
+                              <div class="col-md-4 mt-4">
+                                <%= @mock100[index] %>
+                              </div>
+                              <div class="col-md-4 mt-4">
+                                <% if timeline.exam_date.date.month == 5 || timeline.exam_date.date.month == 6 %>
+                                  <%= "May/June"%> <br> <%= timeline.exam_date.date.strftime("%Y") %>
+                                <% elsif timeline.exam_date.date.month == 10 || timeline.exam_date.date.month == 11 %>
+                                  <%= "Oct/Nov" %> <br> <%= timeline.exam_date.date.strftime("%Y") %>
+                                <% else %>
+                                  <%= timeline.exam_date.date.strftime("%B %Y") %>
+                                <% end %>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       <% end %>
-                    </div>
-                  </div>
+                    <% end %>
                 </div>
               </div>
             </div>
