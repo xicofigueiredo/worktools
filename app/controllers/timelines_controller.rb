@@ -89,8 +89,8 @@ class TimelinesController < ApplicationController
     @exam_dates = ExamDate.where('date >= ?', Date.today).order(:date).map do |exam_date|
       result = if exam_date.date.month == 5 || exam_date.date.month == 6
                  exam_date.date.strftime("May/June %Y")
-               elsif exam_date.date.month == 11 || exam_date.date.month == 12
-                 exam_date.date.strftime("Nov/Dec %Y")
+               elsif exam_date.date.month == 10 || exam_date.date.month == 11
+                 exam_date.date.strftime("Oct/Nov %Y")
                else
                  exam_date.date.strftime("%B %Y")
                end
