@@ -26,17 +26,26 @@ class TimelinesController < ApplicationController
     end_of_current_month = Date.today.end_of_month
 
     @monthly_goals = @timelines.map do |timeline|
-      last_relevant_topic = timeline.subject.topics.includes(:user_topics)
-                                    .where(user_topics: { user_id: current_user.id })
-                                    .select { |topic|
-                                      user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
-                                      user_topic && user_topic.deadline && user_topic.deadline >= start_of_current_month && user_topic.deadline <= end_of_current_month
-                                    }
-                                    .max_by { |topic|
-                                      topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline
-                                    }
+      # Group topics by their deadlines within the current month
+      topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
+                                            .where(user_topics: { user_id: current_user.id })
+                                            .select { |topic|
+                                              user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
+                                              user_topic && user_topic.deadline && user_topic.deadline >= start_of_current_month && user_topic.deadline <= end_of_current_month
+                                            }
+                                            .group_by { |topic|
+                                              topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline
+                                            }
+
+      # Find the latest deadline
+      latest_deadline = topics_grouped_by_deadline.keys.max
+
+      # Select the last topic with the latest deadline
+      last_relevant_topic = topics_grouped_by_deadline[latest_deadline]&.last
+
       { timeline: timeline, topic: last_relevant_topic } if last_relevant_topic.present?
     end.compact
+
 
     @holidays = current_user.holidays.or(Holiday.where(bga: true))
   end
