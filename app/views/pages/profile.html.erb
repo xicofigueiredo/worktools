@@ -151,12 +151,14 @@
                                 <%= @mock100[index] %>
                               </div>
                               <div class="col-md-4 mt-4">
-                                <% if timeline.exam_date.date.month == 5 || timeline.exam_date.date.month == 6 %>
-                                  <%= "May/June"%> <br> <%= timeline.exam_date.date.strftime("%Y") %>
-                                <% elsif timeline.exam_date.date.month == 10 || timeline.exam_date.date.month == 11 %>
-                                  <%= "Oct/Nov" %> <br> <%= timeline.exam_date.date.strftime("%Y") %>
-                                <% else %>
-                                  <%= timeline.exam_date.date.strftime("%B %Y") %>
+                                <% if timeline.exam_date.present? %>
+                                  <% if timeline.exam_date.date.month == 5 || timeline.exam_date.date.month == 6 %>
+                                    <%= "May/June"%> <br> <%= timeline.exam_date.date.strftime("%Y") %>
+                                  <% elsif timeline.exam_date.date.month == 10 || timeline.exam_date.date.month == 11 %>
+                                    <%= "Oct/Nov" %> <br> <%= timeline.exam_date.date.strftime("%Y") %>
+                                  <% else %>
+                                    <%= timeline.exam_date.date.strftime("%B %Y") %>
+                                  <% end %>
                                 <% end %>
                               </div>
                             </div>
