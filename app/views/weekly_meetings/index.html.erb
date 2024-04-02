@@ -1,22 +1,23 @@
-<%= form_with url: new_weekly_meeting_path, method: :get, local: true, class: "mb-3" do |form| %>
-  <%= form.select :week_id,
-                  Week.all.collect { |w| [w.name, w.id] },
+<%# <%= form_with url: new_weekly_meeting_path, method: :get, local: true, class: "mb-3" do |form| %>
+  <%# <%= form.select :week_id, %>
+                  <%# Week.all.collect { |w| [w.name, w.id] },
                   { include_blank: true },
                   { onchange: 'this.form.submit();', class: "form-select d-inline-block w-auto" } %>
-  <%= form.submit "New Weekly Meetings Schedule", class: "btn btn-primary" %>
-<% end %>
+  <%# <%= form.submit "New Weekly Meetings Schedule", class: "btn btn-primary" %>
+<%# <% end %>
 
-<% @weekly_meetings.each do |weekly_meeting| %>
-  <div class="card mb-3">
-    <div class="card-body">
-      <p class="card-text">
-        <strong><%= weekly_meeting.week.name%></strong><br>
-        <strong>Start Date:</strong> <%= weekly_meeting.week.start_date %><br>
-        <strong>End Date:</strong> <%= weekly_meeting.week.end_date %>
-      </p>
-      <%= link_to "Show", weekly_meeting_path(weekly_meeting), class: "btn btn-primary mr-2" %>
-      <%= link_to "Edit", edit_weekly_meeting_path(weekly_meeting), class: "btn btn-secondary mr-2" %>
-      <%= link_to "Delete", weekly_meeting_path(weekly_meeting), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
-    </div>
-  </div>
-<% end %>
+<%# <% @weekly_meetings.each do |weekly_meeting| %>
+  <%# <div class="card mb-3"> %>
+    <%# <div class="card-body">
+      <p class="card-text"> %>
+        <%# <strong><%= weekly_meeting.week.name</strong><br>  %>
+        <%# <strong>Start Date:</strong> <%= weekly_meeting.week.start_date <br> %>
+        <%# <strong>End Date:</strong> <%= weekly_meeting.week.end_date %>
+      <%# </p> %>
+      <%# <%= link_to "Show", weekly_meeting_path(weekly_meeting), class: "btn btn-primary mr-2" %>
+      <%# <%= link_to "Edit", edit_weekly_meeting_path(weekly_meeting), class: "btn btn-secondary mr-2" %>
+      <%# <%= link_to "Delete", weekly_meeting_path(weekly_meeting), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
+    <%# </div> %>
+  <%# </div> %>
+<%# <% end %>
+<h2>Weekly Meetings cooming soon...</h2>

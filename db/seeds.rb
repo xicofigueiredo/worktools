@@ -2478,7 +2478,6 @@ quim = User.create!(
   )
 
 
-
   guest_lc  = UsersHub.create!(
     user: guest_lc,
     hub: testhub
@@ -2810,5 +2809,7 @@ quim = User.create!(
       end_date: "20/12/2024",
       sprint_id: sprint3
       )
+
+
 
 end

@@ -134,8 +134,7 @@
                   </div>
                 </div>
                 <div class="col-sm-6 mb-3">
-                    <% @timelines.each_with_index do |timeline, index| %>
-                      <% if timeline.exam_date.present? %>
+                      <% if @timelines.present? %>
                         <div class="card h-100">
                           <div class="card-body">
                             <div class="row mb-2 font-weight-bold"> <!-- Header Row for Titles -->
@@ -143,6 +142,7 @@
                               <div class="col-md-4">100% Mock</div>
                               <div class="col-md-4">Exam Season</div>
                             </div>
+                            <% @timelines.each_with_index do |timeline, index| %>
                             <div class="row">
                               <div class="col-md-4 mt-4">
                                 <%= @mock50[index] %>
@@ -160,10 +160,10 @@
                                 <% end %>
                               </div>
                             </div>
+                            <% end %>
                           </div>
                         </div>
                       <% end %>
-                    <% end %>
                 </div>
               </div>
             </div>

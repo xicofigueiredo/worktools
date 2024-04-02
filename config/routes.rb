@@ -25,7 +25,7 @@ Rails.application.routes.draw do
   resources :holidays, except: [:show, :index]
   resources :timelines
   resources :weekly_goals do
-    resources :weekly_slots, except: [:index]
+    resources :weekly_slots
   end
   resources :weekly_meetings do
     resources :monday_slots, except: [:index]

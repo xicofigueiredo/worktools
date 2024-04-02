@@ -1,7 +1,9 @@
 class WeeklyGoalsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_weekly_goal, only: [:show, :edit, :update, :destroy]
-  before_action :set_available_weeks, only: [:new, :edit, :create, :update]
+  before_action :set_subject_names
+  before_action :set_topic_names
+  before_action :set_available_weeks, only: [:new, :edit]
 
 
   def index
@@ -10,34 +12,17 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def show
-    @subjects = @weekly_goal.weekly_slots.includes(:subject).map(&:subject).map(&:name).uniq
-    @topics = @weekly_goal.weekly_slots.includes(:topic).map(&:topic).map(&:name).uniq
+    @subjects = @weekly_goal.weekly_slots&.pluck(:subject_name)&.uniq || []
+    @topics = @weekly_goal.weekly_slots&.pluck(:topic_name)&.uniq || []
     @weekly_slots = @weekly_goal.weekly_slots
   end
 
   def new
     @weekly_goal = WeeklyGoal.new
-    WeeklySlot.day_of_weeks.each_key do |day|
-      WeeklySlot.time_slots.each_key do |time|
-        @weekly_goal.weekly_slots.build(day_of_week: day, time_slot: time)
-      end
-    end
-    @subjects = []
-    current_user.timelines.each do |timeline|
-      @subjects << timeline.subject
-    end
-
-    # Assuming Topic has_many :user_topics and UserTopic belongs_to :topic
-    @topics = Topic.joins(:user_topics)
-                            .where(user_topics: { user_id: current_user.id, done: false })
-                            .order('user_topics.deadline ASC') # Order topics by their deadline
-                            .select('topics.*, user_topics.deadline') # Select topics and their deadline
-                            .distinct
-
+    build_weekly_slots
   end
 
   def edit
-
     @weekly_goal = WeeklyGoal.find(params[:id])
     set_available_weeks(@weekly_goal.week_id)
 
@@ -49,22 +34,9 @@ class WeeklyGoalsController < ApplicationController
         end
       end
     end
-    @subjects = []
-    current_user.timelines.each do |timeline|
-      @subjects << timeline.subject
-    end
-
-    # Assuming Topic has_many :user_topics and UserTopic belongs_to :topic
-    @topics = Topic.joins(:user_topics)
-                            .where(user_topics: { user_id: current_user.id, done: false })
-                            .order('user_topics.deadline ASC') # Order topics by their deadline
-                            .select('topics.*, user_topics.deadline') # Select topics and their deadline
-                            .distinct
-
   end
 
   def create
-    @subjects = Subject.all
     @weekly_goal = current_user.weekly_goals.new(weekly_goal_params)
 
     if @weekly_goal.save
@@ -77,7 +49,6 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def update
-    @subjects = Subject.all
     if @weekly_goal.update(weekly_goal_params)
       save_weekly_slots
       redirect_to @weekly_goal, notice: 'Weekly goal was successfully updated.'
@@ -93,37 +64,25 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def topics_for_subject
-    subject = Subject.find_by(id: params[:subject_id])
-    topics = subject ? subject.topics : []
-    render json: topics
-  end
+    subject_name = params[:subject_name]
+    # Fetch the topics based on the subject name
+    # This logic will depend on your application's associations and structure
+    topics = Topic.where(subject_name: subject_name)
 
-  def show_calendar
-    # Assuming `params[:start_date]` holds the week's start date; otherwise, default to the current week
-    start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : Date.current.beginning_of_week
-    end_date = start_date.end_of_week
-
-    # Fetch meetings within the week. Adjust according to your application's logic.
-    @meeting_slots = MeetingSlot.where('timeslot >= ? AND timeslot < ?', start_date, end_date)
+    respond_to do |format|
+      format.json { render json: topics }
+    end
   end
 
   private
-
-  def topics
-    @topics = Topic.where(subject_id: params[:id]).order(:name)
-    render json: @topics
-  end
 
   def set_weekly_goal
     @weekly_goal = current_user.weekly_goals.find(params[:id])
   end
 
   def weekly_goal_params
-    params.require(:weekly_goal).permit(
-      :start_date, :end_date, :user_id, :name,
-      weekly_slots_attributes: [:id, :day_of_week, :time_slot, :subject_id, :topic_id, :_destroy])
+    params.require(:weekly_goal).permit(:week_id, :start_date, :end_date, :user_id, :name, weekly_slots_attributes: [:id, :day_of_week, :time_slot, :subject_name, :topic_name])
   end
-
 
   def build_weekly_slots
     @weekly_slots = []
@@ -134,23 +93,35 @@ class WeeklyGoalsController < ApplicationController
     end
   end
 
+  def set_subject_names
+    @subject_names = current_user.timelines.map(&:subject).uniq.pluck(:name)
+  end
+
+  def set_topic_names
+    topics = Topic.joins(:user_topics)
+                  .where(user_topics: { user_id: current_user.id, done: false })
+                  .select('topics.id, topics.name, user_topics.deadline')
+
+    # Use 'map' to extract the name and 'uniq' to remove duplicates
+    @topic_names = topics.map(&:name).uniq
+  end
+
   def save_weekly_slots
     return unless params[:weekly_goal].present?
 
     WeeklySlot.day_of_weeks.keys.each do |day|
       WeeklySlot.time_slots.keys.each do |time|
-        subject_id = params[:weekly_goal]["#{day.downcase}_#{time.downcase}_subject_id"]
-        topic_id = params[:weekly_goal]["#{day.downcase}_#{time.downcase}_topic_id"]
+        subject = params[:weekly_goal]["#{day.downcase}_#{time.downcase}_subject"]
+        topic = params[:weekly_goal]["#{day.downcase}_#{time.downcase}_topic"]
 
-        # Skip creation if subject_id or topic_id is not present
-        next if subject_id.blank? || topic_id.blank?
+        # If subject is not present, set it to an empty string
+        subject ||= ""
 
         # Create weekly slot
-        @weekly_goal.weekly_slots.create(day_of_week: day, time_slot: time, subject_id: subject_id, topic_id: topic_id)
+        @weekly_goal.weekly_slots.create(day_of_week: day, time_slot: time, subject_name: subject, topic_name: topic)
       end
     end
   end
-
 
   def initialize_weekly_slots
     @weekly_slots = []
@@ -161,6 +132,14 @@ class WeeklyGoalsController < ApplicationController
     end
     @weekly_slots.uniq!
     @weekly_slots.sort!
+  end
+
+  def subject_for_slot(day, time)
+    @weekly_goal.weekly_slots.find_by(day_of_week: day, time_slot: time)&.subject_name
+  end
+
+  def topic_for_slot(day, time)
+    @weekly_goal.weekly_slots.find_by(day_of_week: day, time_slot: time)&.topic_name
   end
 
   def set_available_weeks(edit_week_id = nil)
@@ -177,4 +156,7 @@ class WeeklyGoalsController < ApplicationController
     end
   end
 
+
+  helper_method :subject_for_slot
+  helper_method :topic_for_slot
 end

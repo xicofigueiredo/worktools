@@ -27,12 +27,12 @@
                 <%= form.label :start_date %>
                 <%= form.date_field :start_date, class: 'form-control' %>
               </div>
-
+              <br>
               <div class="form-group">
                 <%= form.label :exam_date %>
                 <%= form.collection_select :exam_date_id, @exam_dates, :last, :first, include_blank: true, class: 'form-control' %>
               </div>
-
+              <br>
 
               <div class="form-group">
                 <%= form.label :end_date %>
