@@ -49,7 +49,9 @@
                     <tr>
                       <th>Unit</th>
                       <th>Topic</th>
-                      <th>Hours</th>
+                      <% if timeline.subject.category != 'lws' %>
+                        <th>Hours</th>
+                      <% end %>
                       <th width = "120px" >Date</th>
                       <th>Done</th>
                     </tr>
@@ -78,7 +80,9 @@
                           <% end %>
                         </td>
                         <td style="<%= background_color %>"><%= topic.name %></td>
-                        <td style="<%= background_color %>"><%= topic.time %></td>
+                        <% if timeline.subject.category != 'lws' %>
+                          <td style="<%= background_color %>"><%= topic.time %></td>
+                        <% end %>
                         <td style="<%= background_color %>"><%= user_topic.deadline %></td>
                         <td style="<%= background_color %>">
                           <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
