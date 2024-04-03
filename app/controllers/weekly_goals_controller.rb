@@ -134,14 +134,6 @@ class WeeklyGoalsController < ApplicationController
     @weekly_slots.sort!
   end
 
-  def subject_for_slot(day, time)
-    @weekly_goal.weekly_slots.find_by(day_of_week: day, time_slot: time)&.subject_name
-  end
-
-  def topic_for_slot(day, time)
-    @weekly_goal.weekly_slots.find_by(day_of_week: day, time_slot: time)&.topic_name
-  end
-
   def set_available_weeks(edit_week_id = nil)
     used_week_ids = current_user.weekly_goals.pluck(:week_id)
 
@@ -156,7 +148,4 @@ class WeeklyGoalsController < ApplicationController
     end
   end
 
-
-  helper_method :subject_for_slot
-  helper_method :topic_for_slot
 end

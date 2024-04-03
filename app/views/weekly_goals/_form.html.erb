@@ -39,8 +39,7 @@
                       <% WeeklySlot.day_of_weeks.keys.each_with_index do |day, index| %>
                         <td id="<%= time.downcase %>_<%= day.downcase %>">
                           <div class="form-group">
-                            <% filtered_subject_names = @subject_names.reject(&:empty?) %>
-                            <%= form.collection_select "#{day}_#{time}_subject", filtered_subject_names, :itself, :itself, {  prompt: "" }, { class: "form-control" } %>
+                            <%= form.collection_select "#{day}_#{time}_subject", @subject_names, :itself, :itself, {  prompt: "" }, { class: "form-control" } %>
                             <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself, { prompt: "" }, { class: "form-control" } %>
                           </div>
                         </td>
