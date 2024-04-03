@@ -35,12 +35,19 @@
                 <tbody>
                   <% WeeklySlot.time_slots.keys.each do |time| %>
                     <tr>
-                      <td class="align-middle"><%= time %></td>
+                      <td class="align-middle"><%= time.to_s.humanize.titleize %></td>
                       <% WeeklySlot.day_of_weeks.keys.each_with_index do |day, index| %>
                         <td id="<%= time.downcase %>_<%= day.downcase %>">
                           <div class="form-group" data-controller="selects">
-                            <%= form.collection_select "#{day}_#{time}_subject", @subject_names, :itself, :itself, {  prompt: "" },{ data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control" } %>
-                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself, { prompt: "" }, { data: { selects_target: "topic" }, class: "form-control" } %>
+                            <% selected_subject = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:subject_name) %>
+                            <%= form.collection_select "#{day}_#{time}_subject", @subject_names, :itself, :itself,
+                                { selected: selected_subject, prompt: "" },
+                                { data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control" } %>
+
+                            <% selected_topic = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:topic_name) %>
+                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself,
+                                { selected: selected_topic, prompt: "" },
+                                { data: { selects_target: "topic" }, class: "form-control" } %>
                           </div>
                         </td>
                       <% end %>
@@ -53,6 +60,7 @@
             <!-- Form Actions -->
             <div class="text-center mt-4">
               <%= form.submit 'Save Weekly Goal', class: 'btn btn-primary' %>
+              <%= link_to "Back", weekly_goals_path, class: "btn btn-secondary" %>
             </div>
           </div>
         </div>

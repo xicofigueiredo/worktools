@@ -28,9 +28,6 @@ class WeeklyGoalsController < ApplicationController
     render json: { error: "Internal Server Error" }, status: :internal_server_error
   end
 
-
-
-
   def index
     @weekly_goals = current_user.weekly_goals.order(created_at: :desc)
     @last_completed_weekly_goal = @weekly_goals.first
@@ -68,7 +65,6 @@ class WeeklyGoalsController < ApplicationController
       save_weekly_slots
       redirect_to @weekly_goal, notice: 'Weekly goal was successfully created.'
     else
-      initialize_weekly_slots
       render :new
     end
   end
@@ -78,7 +74,6 @@ class WeeklyGoalsController < ApplicationController
       save_weekly_slots
       redirect_to @weekly_goal, notice: 'Weekly goal was successfully updated.'
     else
-      initialize_weekly_slots
       render :edit
     end
   end
@@ -138,28 +133,22 @@ class WeeklyGoalsController < ApplicationController
     end
   end
 
-  def initialize_weekly_slots
-    @weekly_slots = []
-    WeeklySlot.time_slots.keys.each do |time_slot|
-      WeeklySlot.day_of_weeks.keys.each do |day_of_week|
-        @weekly_slots << @weekly_goal.weekly_slots.build(day_of_week: day_of_week, time_slot: time_slot)
-      end
-    end
-    @weekly_slots.uniq!
-    @weekly_slots.sort!
-  end
-
   def set_available_weeks(edit_week_id = nil)
     used_week_ids = current_user.weekly_goals.pluck(:week_id)
+    current_sprint = nil
+    Sprint.all.each do |sprint|
+      if sprint.start_date <= Date.today && sprint.end_date >= Date.today
+        current_sprint = sprint
+        break
+      end
+    end
 
     # Exclude the edit_week_id from used_week_ids if provided
     used_week_ids.delete(edit_week_id) if edit_week_id.present?
-
-    @available_weeks = Week.where.not(id: used_week_ids)
-
+    @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
     # Ensure the current week is included if we're editing
     if edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
-      @available_weeks = @available_weeks.or(Week.where(id: edit_week_id))
+      @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
     end
   end
 

@@ -84,8 +84,25 @@ class KdasController < ApplicationController
                     hubp_attributes: [:id, :rating, :why, :improve, :_destroy])
     end
 
-    def set_available_weeks
+    def set_available_weeks(edit_week_id = nil)
       used_week_ids = current_user.kdas.pluck(:week_id)
       @available_weeks = Week.where.not(id: used_week_ids)
+
+      used_week_ids = current_user.kdas.pluck(:week_id)
+      current_sprint = nil
+      Sprint.all.each do |sprint|
+        if sprint.start_date <= Date.today && sprint.end_date >= Date.today
+          current_sprint = sprint
+          break
+        end
+      end
+
+      # Exclude the edit_week_id from used_week_ids if provided
+      used_week_ids.delete(edit_week_id) if edit_week_id.present?
+      @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
+      # Ensure the current week is included if we're editing
+      if edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
+        @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
+      end
     end
 end

@@ -35,7 +35,7 @@
                   <tbody>
                     <% WeeklySlot.time_slots.keys.each do |time| %>
                       <tr>
-                        <td class="align-middle"><%= time %></td>
+                        <td class="align-middle"><%= time.to_s.humanize.titleize %></td>
                         <% WeeklySlot.day_of_weeks.keys.each do |day| %>
                           <td id="<%= time.downcase %>_<%= day.downcase %>">
                             <div class="form-group">
@@ -59,7 +59,7 @@
           </div>
 
           <div class="text-center">
-            <%= link_to "Edit", edit_weekly_goal_path(@weekly_goal), class: "btn btn-primary mr-2 disabled" %>
+            <%= link_to "Edit", edit_weekly_goal_path(@weekly_goal), class: "btn btn-primary mr-2", target: "_blank" %>
             <%= link_to "Back", weekly_goals_path, class: "btn btn-secondary" %>
           </div>
 

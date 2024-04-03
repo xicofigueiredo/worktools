@@ -4,4 +4,5 @@ class Sprint < ApplicationRecord
   validates :name, presence: true
 
   has_many :sprint_goals
+  has_many :weeks
 end

@@ -5,4 +5,5 @@ class Week < ApplicationRecord
 
   has_many :weekly_goals
   has_many :kdas
+  belongs_to :sprint
 end

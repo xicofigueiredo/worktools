@@ -2545,269 +2545,269 @@ quim = User.create!(
         name: "Week 8",
         start_date: "04/03/2024",
         end_date: "11/03/2024",
-        sprint_id: sprint1
+        sprint: sprint1
       )
       Week.create!(
         name: "Week 9",
         start_date: "11/03/2024",
         end_date: "18/03/2024",
-        sprint_id: sprint1
+        sprint: sprint1
       )
       Week.create!(
         name: "Week 10",
         start_date: "18/03/2024",
         end_date: "25/03/2024",
-        sprint_id: sprint1
+        sprint: sprint1
       )
 
       Week.create!(
         name: "Week 11",
         start_date: "01/04/2024",
         end_date: "08/04/2024",
-        sprint_id: sprint1
+        sprint: sprint1
       )
 
       Week.create!(
         name: "Week 12",
         start_date: "08/04/2024",
         end_date: "15/04/2024",
-        sprint_id: sprint1
+        sprint: sprint1
       )
 
       Week.create!(
         name: "Week 13",
         start_date: "15/04/2024",
         end_date: "22/04/2024",
-        sprint_id: sprint1
+        sprint: sprint1
       )
       Week.create!(
         name: "Week 14",
         start_date: "22/04/2024",
         end_date: "29/04/2024",
-        sprint_id: sprint1
+        sprint: sprint1
       )
       Week.create!(
         name: "Week 15",
         start_date: "29/04/2024",
         end_date: "06/05/2024",
-        sprint_id: sprint1
+        sprint: sprint1
       )
 
       Week.create!(
       name: "Week 16",
       start_date: "15/04/2024",
       end_date: "19/04/2024",
-      sprint_id: sprint1
+      sprint: sprint1
       )
       Week.create!(
       name: "Week 17",
       start_date: "22/04/2024",
       end_date: "26/04/2024",
-      sprint_id: sprint1
+      sprint: sprint1
       )
       Week.create!(
       name: "Week 18",
       start_date: "29/04/2024",
       end_date: "03/05/2024",
-      sprint_id: sprint1
+      sprint: sprint1
       )
       Week.create!(
       name: "Week 1",
       start_date: "06/05/2024",
       end_date: "10/05/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 2",
       start_date: "13/05/2024",
       end_date: "17/05/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 3",
       start_date: "20/05/2024",
       end_date: "24/05/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 4",
       start_date: "27/05/2024",
       end_date: "31/05/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 5",
       start_date: "03/06/2024",
       end_date: "07/06/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 6",
       start_date: "10/06/2024",
       end_date: "14/06/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 7",
       start_date: "17/06/2024",
       end_date: "21/06/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 8",
       start_date: "24/06/2024",
       end_date: "28/06/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 9",
       start_date: "01/07/2024",
       end_date: "05/07/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 10",
       start_date: "08/07/2024",
       end_date: "12/07/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 11",
       start_date: "15/07/2024",
       end_date: "19/07/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 12",
       start_date: "22/07/2024",
       end_date: "26/07/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 13",
       start_date: "29/07/2024",
       end_date: "02/08/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 14",
       start_date: "05/08/2024",
       end_date: "09/08/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 15",
       start_date: "12/08/2024",
       end_date: "16/08/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 16",
       start_date: "19/08/2024",
       end_date: "23/08/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 17",
       start_date: "26/08/2024",
       end_date: "30/08/2024",
-      sprint_id: sprint2
+      sprint: sprint2
       )
       Week.create!(
       name: "Week 1",
       start_date: "02/09/2024",
       end_date: "06/09/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 2",
       start_date: "09/09/2024",
       end_date: "13/09/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 3",
       start_date: "16/09/2024",
       end_date: "20/09/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 4",
       start_date: "23/09/2024",
       end_date: "27/09/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 5",
       start_date: "30/09/2024",
       end_date: "04/10/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 6",
       start_date: "07/10/2024",
       end_date: "11/10/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 7",
       start_date: "14/10/2024",
       end_date: "18/10/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 8",
       start_date: "21/10/2024",
       end_date: "25/10/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 9",
       start_date: "28/10/2024",
       end_date: "01/11/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 10",
       start_date: "04/11/2024",
       end_date: "08/11/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 11",
       start_date: "11/11/2024",
       end_date: "15/11/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 12",
       start_date: "18/11/2024",
       end_date: "22/11/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 13",
       start_date: "25/11/2024",
       end_date: "29/11/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 14",
       start_date: "02/12/2024",
       end_date: "06/12/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 15",
       start_date: "09/12/2024",
       end_date: "13/12/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
       Week.create!(
       name: "Week 16",
       start_date: "16/12/2024",
       end_date: "20/12/2024",
-      sprint_id: sprint3
+      sprint: sprint3
       )
 
 
