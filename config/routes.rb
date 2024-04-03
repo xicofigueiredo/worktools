@@ -16,7 +16,7 @@ Rails.application.routes.draw do
     get 'dashboard_lc', to: 'pages#dashboard_lc'
   end
 
-  get '/weekly_goals/topics_for_subject', to: 'weekly_goals#topics_for_subject'
+  get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'
 
   resources :subjects do
     resources :topics, except: [:show, :index]

@@ -38,9 +38,9 @@
                       <td class="align-middle"><%= time %></td>
                       <% WeeklySlot.day_of_weeks.keys.each_with_index do |day, index| %>
                         <td id="<%= time.downcase %>_<%= day.downcase %>">
-                          <div class="form-group">
-                            <%= form.collection_select "#{day}_#{time}_subject", @subject_names, :itself, :itself, {  prompt: "" }, { class: "form-control" } %>
-                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself, { prompt: "" }, { class: "form-control" } %>
+                          <div class="form-group" data-controller="selects">
+                            <%= form.collection_select "#{day}_#{time}_subject", @subject_names, :itself, :itself, {  prompt: "" },{ data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control" } %>
+                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself, { prompt: "" }, { data: { selects_target: "topic" }, class: "form-control" } %>
                           </div>
                         </td>
                       <% end %>
