@@ -5,6 +5,31 @@ class WeeklyGoalsController < ApplicationController
   before_action :set_topic_names
   before_action :set_available_weeks, only: [:new, :edit]
 
+  def topics_for_subject
+    # Assume subject_name is passed correctly and you find the subject by its name
+    subject = Subject.find_by(name: params[:subject_name])
+
+    if subject.present?
+      # Fetch the topics based on the found subject's id
+      topics = Topic.joins(:user_topics)
+      .where(user_topics: { user_id: current_user.id, done: false })
+      .where(subject_id: subject.id)
+      .select(:id, :name)
+
+
+      render json: topics
+    else
+      # If no subject is found, respond with an error message
+      render json: { error: "Subject not found" }, status: :not_found
+    end
+  rescue => e
+    # Log the error and respond with a generic 500 error message
+    Rails.logger.error "Error in topics_for_subject: #{e.message}"
+    render json: { error: "Internal Server Error" }, status: :internal_server_error
+  end
+
+
+
 
   def index
     @weekly_goals = current_user.weekly_goals.order(created_at: :desc)
@@ -63,16 +88,6 @@ class WeeklyGoalsController < ApplicationController
     redirect_to weekly_goals_url, notice: 'Weekly goal was successfully destroyed.'
   end
 
-  def topics_for_subject
-    subject_name = params[:subject_name]
-    # Fetch the topics based on the subject name
-    # This logic will depend on your application's associations and structure
-    topics = Topic.where(subject_name: subject_name)
-
-    respond_to do |format|
-      format.json { render json: topics }
-    end
-  end
 
   private
 
