@@ -4,7 +4,7 @@ class PagesController < ApplicationController
   def dashboard_admin
     if current_user.role == "admin"
       @users = User.all.order(:full_name)
-      @hubs = Hub.all
+      @hubs = Hub.all.order(:name)
     end
   end
 

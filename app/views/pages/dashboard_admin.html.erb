@@ -1,6 +1,6 @@
 <div class="container mt-5">
   <% @hubs.each do |hub| %>
-    <h2><%= hub.name.capitalize %> Hub</h2>
+    <h2><%= hub.name.capitalize %> Hub (<%= hub.users.count %>)</h2>
     <% hub.users.each_slice(3) do |users_slice| %>
       <div class="row">
         <% users_slice.each do |user| %>

@@ -52,9 +52,9 @@ class TimelinesController < ApplicationController
 
   def new
     @timeline = Timeline.new
-    @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
     set_exam_dates
-
+    @subjects = Subject.all.order(:category, :name)
+    @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
   end
 
   def create
@@ -71,7 +71,9 @@ class TimelinesController < ApplicationController
   end
 
   def edit
+    @edit = true
     set_exam_dates
+    @subjects = Subject.all.order(:category, :name)
 
   end
 

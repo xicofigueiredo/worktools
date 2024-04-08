@@ -17,11 +17,17 @@
                   </ul>
                 </div>
               <% end %>
-
-              <div class="form-group">
-                <%= form.label :subject_id %>
-                <%= form.collection_select :subject_id, Subject.all, :id, :name, { disabled: @subjects_with_timeline_ids }, { class: 'form-control' } %>
-              </div>
+              <% if @edit != true %>
+                <div class="form-group">
+                  <%= form.label :subject_id %>
+                  <%= form.collection_select :subject_id, @subjects, :id, :name, { disabled: @subjects_with_timeline_ids }, { class: 'form-control' } %>
+                </div>
+              <% else %>
+                <div class="form-group">
+                  <%= form.label :subject_id %>
+                  <%= form.collection_select :subject_id, @subjects, :id, :name, { disabled: @subjects_with_timeline_ids }, { class: 'form-control', disabled: true } %>
+                </div>
+              <% end %>
 
               <div class="form-group">
                 <%= form.label :start_date %>

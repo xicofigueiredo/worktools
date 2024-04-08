@@ -1,4 +1,5 @@
 <div class="container mt-5">
+  <h2><%=  current_user.users_hubs.first.hub.name %>(<%=  current_user.users_hubs.first.hub.users.where(role: 'learner').count%>)</h2>
   <% @users.each_slice(3) do |users_slice| %>
     <div class="row">
       <% users_slice.each do |user| %>
