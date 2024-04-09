@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_04_01_031418) do
+ActiveRecord::Schema[7.0].define(version: 2024_04_09_160648) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -240,6 +240,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_01_031418) do
     t.integer "expected_progress"
     t.integer "progress"
     t.bigint "exam_date_id"
+    t.boolean "anulado"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
@@ -295,6 +296,11 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_01_031418) do
     t.string "full_name"
     t.string "role"
     t.integer "topics_balance", default: 0
+    t.string "level"
+    t.date "birthday"
+    t.string "nationality"
+    t.string "native_language"
+    t.string "profile_pic"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
