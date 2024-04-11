@@ -1,0 +1,65 @@
+
+<div class="mx-5 mt-3">
+  <h1>Attendance</h1>
+
+
+  <table class="table">
+    <thead>
+      <tr class="table-primary">
+        <th scope="col">Learner Name</th>
+        <th scope="col">Date</th>
+        <th scope="col">Start Time</th>
+        <th scope="col">End Time</th>
+        <th scope="col">Comments</th>
+        <th scope="col">Present</th>
+        <th scope="col">I/O</th>
+      </tr>
+    </thead>
+    <tbody>
+  <% @learners.each do |learner|%>
+    <% attendance = learner.attendances.last %>
+      <tr>
+        <td>
+          <p><%= link_to learner.full_name, learner_attendances_path(learner_id: learner.id) %>
+          </p>
+        </td>
+        <td><p><%= attendance.attendance_date%></p></td>
+        <td><p><%= attendance.start_time.strftime("%H:%M")%>H</p></td>
+        <td><p><%= attendance.end_time.strftime("%H:%M")%>H</p></td>
+        <td>
+          <textarea rows="3" cols="40"></textarea>
+        </td>
+        <td>
+        <% if attendance.present? %>
+          <i class="fa-solid fa-check"></i>
+        <% else %>
+          <i class="fa-solid fa-x"></i>
+        <% end %>
+        </td>
+        <td>
+          <% if attendance.start_time.present? %>
+            <% if attendance.end_time.blank? %>
+              <%= link_to update_attendance_path(learner_id: learner.id, attendance_date: attendance.attendance_date), data: {"turbo-method": :put} do %>
+                <button class="btn btn-danger">
+                 <i class="fa-solid fa-stop"></i>
+                </button>
+              <% end %>
+            <% else %>
+              <!-- End time is already set -->
+              <!-- You can add your desired action here, like displaying the end time -->
+              <button class="btn btn-secondary" style="cursor: not-allowed;"><i class="fa-solid fa-play"></i></button>
+            <% end %>
+          <% else %>
+            <!-- Start time is not set -->
+            <%= link_to update_attendance_path(learner_id: learner.id, attendance_date: attendance.attendance_date), data: {"turbo-method": :put}  do %>
+              <button class="btn btn-success">
+                <i class="fa-solid fa-play"></i>
+              </button>
+            <% end %>
+          <% end  %>
+        </td>
+      </tr>
+  <% end%>
+    </tbody>
+  </table>
+</div>

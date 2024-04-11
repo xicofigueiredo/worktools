@@ -14,6 +14,14 @@ Rails.application.routes.draw do
   get '/about', to: 'pages#about'
     get 'dashboard_admin', to: 'pages#dashboard_admin'
     get 'dashboard_lc', to: 'pages#dashboard_lc'
+
+  # Attendances Routes
+  get '/attendance', to: 'attendances#attendance'
+  get '/attendance/:learner_id', to: 'attendances#learner_attendances', as: 'learner_attendances'
+  # Used to create attendance manually until daily attendance is generated automatically
+  get '/attendance/create_daily_attendance', to: 'attendances#create_daily_attendance'
+  put '/attendances/update_attendance', to: 'attendances#update_attendance', as: :update_attendance
+
   end
 
   get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'

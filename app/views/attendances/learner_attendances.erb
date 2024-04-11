@@ -1,0 +1,35 @@
+<div class="mx-5 mt-3">
+  <h1><%= @learner.full_name %></h1>
+
+  <table class="table">
+    <thead>
+      <tr class="table-primary">
+        <th scope="col">Date</th>
+        <th scope="col">Start Time</th>
+        <th scope="col">End Time</th>
+        <th scope="col">Comments</th>
+        <th scope="col">Present</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @attendances.each do |attendance|%>
+        <tr>
+          <td><p><%= attendance.attendance_date%></p></td>
+          <td><p><%= attendance.start_time.strftime("%H:%M")%>H</p></td>
+          <td><p><%= attendance.end_time.strftime("%H:%M")%>H</p></td>
+          <td>
+            <textarea rows="3" cols="40"></textarea>
+          </td>
+          <td>
+          <% if attendance.present? %>
+            <i class="fa-solid fa-check"></i>
+          <% else %>
+            <i class="fa-solid fa-x"></i>
+          <% end %>
+          </td>
+        </tr>
+      <% end%>
+    </tbody>
+  </table>
+  <%= link_to 'Back', attendance_path() %>
+</div>
