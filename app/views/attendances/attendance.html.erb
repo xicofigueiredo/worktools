@@ -45,12 +45,9 @@
                 </button>
               <% end %>
             <% else %>
-              <!-- End time is already set -->
-              <!-- You can add your desired action here, like displaying the end time -->
               <button class="btn btn-secondary" style="cursor: not-allowed;"><i class="fa-solid fa-play"></i></button>
             <% end %>
           <% else %>
-            <!-- Start time is not set -->
             <%= link_to update_attendance_path(learner_id: learner.id, attendance_date: attendance.attendance_date), data: {"turbo-method": :put}  do %>
               <button class="btn btn-success">
                 <i class="fa-solid fa-play"></i>
