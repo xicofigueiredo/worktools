@@ -17,8 +17,7 @@
           <div class="card-body">
             <!-- Week Selection -->
             <div class="field">
-              <%= form.label :week_id, 'Week' %>
-              <%= form.collection_select :week_id, @available_weeks, :id, :name, include_blank: true, class: 'form-select' %>
+              <%= form.collection_select :week_id, @available_weeks, :id, :name, { include_blank: "Please select a Week"}, { class: 'form-select', required: true } %>
             </div>
 
             <!-- Schedule Table -->

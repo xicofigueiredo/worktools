@@ -9,9 +9,6 @@
       </ul>
     </div>
   <% end %>
-   <div class="form-group mb-3">
-    <%= form.collection_select :sprint_id, @available_sprints, :id, :name, prompt: 'Choose a Sprint', class: 'form-select' %>
-  </div>
   <style>
     .custom-font-size {
       font-size: 13px;
@@ -22,6 +19,9 @@
       <div class="col-12"> <!-- Adjusted for full width -->
         <div class="card">
           <div class="card-body">
+              <div class="form-group">
+                <%= form.collection_select :sprint_id, @available_sprints, :id, :name, { include_blank: "Please select a Sprint"}, { class: 'form-select', required: true } %>
+              </div>
             <h3 class="card-title text-center mb-4 mt-4">Knowledge Block</h3>
             <table>
               <thead>
