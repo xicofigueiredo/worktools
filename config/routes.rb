@@ -17,9 +17,9 @@ Rails.application.routes.draw do
 
   # Attendances Routes
   get '/attendance', to: 'attendances#attendance'
-  get '/attendance/:learner_id', to: 'attendances#learner_attendances', as: 'learner_attendances'
   # Used to create attendance manually until daily attendance is generated automatically
   get '/attendance/create_daily_attendance', to: 'attendances#create_daily_attendance'
+  get '/attendance/:learner_id', to: 'attendances#learner_attendances', as: 'learner_attendances'
   put '/attendances/update_attendance', to: 'attendances#update_attendance', as: :update_attendance
 
   end

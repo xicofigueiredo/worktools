@@ -15,8 +15,20 @@
       <% @attendances.each do |attendance|%>
         <tr>
           <td><p><%= attendance.attendance_date%></p></td>
-          <td><p><%= attendance.start_time.strftime("%H:%M")%>H</p></td>
-          <td><p><%= attendance.end_time.strftime("%H:%M")%>H</p></td>
+          <td>
+            <% if attendance.start_time? %>
+              <p><%= attendance.start_time.strftime("%H:%M")%>H</p>
+            <% else %>
+              <p>N/A</p>
+            <% end %>
+          </td>
+          <td>
+            <% if attendance.end_time? %>
+              <p><%= attendance.end_time.strftime("%H:%M")%>H</p>
+            <% else %>
+              <p>N/A</p>
+            <% end %>
+          </td>
           <td>
             <textarea rows="3" cols="40"></textarea>
           </td>
