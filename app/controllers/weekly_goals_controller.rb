@@ -108,13 +108,13 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def set_topic_names
-    topics = Topic.joins(:user_topics)
+    @topics = Topic.joins(:user_topics)
                   .where(user_topics: { user_id: current_user.id, done: false })
-                  .select('topics.id, topics.name, user_topics.deadline')
-                  .order('user_topics.deadline ASC')
+                  .select('topics.id, topics.name, user_topics.deadline, topics.unit')
+                  .order('topics.unit ASC, user_topics.deadline ASC')
 
     # Use 'map' to extract the name and 'uniq' to remove duplicates
-    @topic_names = topics.map(&:name).uniq
+    @topic_names = @topics.map(&:name).uniq
   end
 
   def save_weekly_slots
