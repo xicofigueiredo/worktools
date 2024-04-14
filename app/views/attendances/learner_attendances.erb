@@ -30,7 +30,10 @@
             <% end %>
           </td>
           <td>
-            <textarea rows="3" cols="40"></textarea>
+            <%= form_with(model: attendance, url: patch_attendance_comment_path(attendance), local: true, method: :patch) do |form| %>
+              <%= form.text_area :comments, class: "form-control", rows: 3, id: "comment-field" %>
+              <%= form.submit "Save Comment", class: "btn btn-primary" %>
+            <% end %>
           </td>
           <td>
           <% if attendance.present? %>

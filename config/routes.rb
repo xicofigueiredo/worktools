@@ -17,11 +17,11 @@ Rails.application.routes.draw do
 
   # Attendances Routes
   get '/attendance', to: 'attendances#attendance'
-  # Used to create attendance manually until daily attendance is generated automatically
-  get '/attendance/create_daily_attendance', to: 'attendances#create_daily_attendance'
+  get '/attendances/:time_frame', to: 'attendances#index', as: :attendances_by_time_frame
   get '/attendance/:learner_id', to: 'attendances#learner_attendances', as: 'learner_attendances'
   put '/attendances/update_attendance', to: 'attendances#update_attendance', as: :update_attendance
-
+  patch '/attendances/:id/save_comment', to: 'attendances#save_comment', as: :patch_attendance_comment
+  patch '/attendances/:id/update_absence', to: 'attendances#update_absence', as: :update_absence_attendance
   end
 
   get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'

@@ -1,6 +1,12 @@
-
 <div class="mx-5 mt-3">
-  <h1>Attendance</h1>
+  <div class="d-flex d-flex justify-content-between mb-3">
+    <h1>Today's attendance</h1>
+    <div>
+        <%= link_to 'Daily', attendances_by_time_frame_path(time_frame: 'daily') %>
+        <%= link_to 'Weekly', attendances_by_time_frame_path(time_frame: 'weekly') %>
+        <%= link_to 'Monthly', attendances_by_time_frame_path(time_frame: 'monthly') %>
+    </div>
+  </div>
 
 
   <table class="table">
@@ -12,6 +18,7 @@
         <th scope="col">End Time</th>
         <th scope="col">Comments</th>
         <th scope="col">Present</th>
+        <th scope="col">Absence</th>
         <th scope="col">I/O</th>
       </tr>
     </thead>
@@ -39,14 +46,26 @@
           <% end %>
         </td>
         <td>
-          <textarea rows="3" cols="40"></textarea>
+          <%= form_with(model: attendance, url: patch_attendance_comment_path(attendance), local: true, method: :patch) do |form| %>
+            <%= form.text_area :comments, class: "form-control", rows: 3 %>
+            <%= form.submit "Save Comment", class: "btn btn-primary" %>
+          <% end %>
         </td>
         <td>
-        <% if attendance.present? %>
-          <i class="fa-solid fa-check"></i>
-        <% else %>
-          <i class="fa-solid fa-x"></i>
-        <% end %>
+          <% if attendance.present? %>
+            <i class="fa-solid fa-check"></i>
+          <% else %>
+            <i class="fa-solid fa-x"></i>
+          <% end %>
+        </td>
+        <td>
+          <% if attendance.present? %>
+            <p>Present</p>
+          <% else %>
+            <%= form_tag(update_absence_attendance_path(attendance), method: :patch) do %>
+              <%= select_tag 'absence', options_for_select(['Justified Leave', 'Unjustified Leave', 'Holiday'], attendance.absence), class: 'form-control', onchange: 'this.form.submit()' %>
+            <% end %>
+          <% end %>
         </td>
         <td>
           <% if attendance.start_time.present? %>
