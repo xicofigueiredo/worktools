@@ -106,8 +106,8 @@ class WeeklyGoalsController < ApplicationController
   def set_subject_names
     @subject_names = current_user.timelines.map(&:subject).uniq.pluck(:name)
     current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
-    skill_names = current_sprint.sprint_goals.where(user: current_user).map(&:skills).flatten.uniq.pluck(:extracurricular)
-    communities_names = current_sprint.sprint_goals.where(user: current_user).map(&:communities).flatten.uniq.pluck(:involved)
+    skill_names = current_sprint.sprint_goals.where(user: current_user).map(&:skills).flatten.uniq.pluck(:extracurricular).reject(&:blank?)
+    communities_names = current_sprint.sprint_goals.where(user: current_user).map(&:communities).flatten.uniq.pluck(:involved).reject(&:blank?)
 
     # Combine subjects and skills, prefixing each for clarity
     @combined_options = @subject_names.map { |name| name} +
