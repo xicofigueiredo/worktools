@@ -22,6 +22,7 @@ Rails.application.routes.draw do
   put '/attendances/update_attendance', to: 'attendances#update_attendance', as: :update_attendance
   patch '/attendances/:id/save_comment', to: 'attendances#save_comment', as: :patch_attendance_comment
   patch '/attendances/:id/update_absence', to: 'attendances#update_absence', as: :update_absence_attendance
+  patch '/attendances/:id/update_time', to: 'attendances#update_time', as: :update_time_attendance
   end
 
   get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'

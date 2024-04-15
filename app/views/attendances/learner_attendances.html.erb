@@ -15,20 +15,15 @@
       <% @attendances.each do |attendance|%>
         <tr>
           <td><p><%= attendance.attendance_date%></p></td>
-          <td>
-            <% if attendance.start_time? %>
-              <p><%= attendance.start_time.strftime("%H:%M")%>H</p>
-            <% else %>
-              <p>N/A</p>
-            <% end %>
-          </td>
-          <td>
-            <% if attendance.end_time? %>
-              <p><%= attendance.end_time.strftime("%H:%M")%>H</p>
-            <% else %>
-              <p>N/A</p>
-            <% end %>
-          </td>
+          <%= form_tag update_time_attendance_path(attendance), method: :patch, class: "time-edit-form" do %>
+            <td>
+                <%= time_field_tag :start_time, attendance.start_time&.strftime("%H:%M"), class: "form-control" %>
+            </td>
+            <td>
+                <%= time_field_tag :end_time, attendance.end_time&.strftime("%H:%M"), class: "form-control" %>
+                <%= submit_tag "Update Times", class: "btn btn-info mt-2" %>
+            </td>
+          <% end %>
           <td>
             <%= form_with(model: attendance, url: patch_attendance_comment_path(attendance), local: true, method: :patch) do |form| %>
               <%= form.text_area :comments, class: "form-control", rows: 3, id: "comment-field" %>
