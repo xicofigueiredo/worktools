@@ -91,7 +91,7 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def weekly_goal_params
-    params.require(:weekly_goal).permit(:week_id, :start_date, :end_date, :user_id, :name, weekly_slots_attributes: [:id, :day_of_week, :time_slot, :subject_name, :topic_name])
+    params.require(:weekly_goal).permit(:week_id, :start_date, :end_date, :user_id, :name, :subject_skill, weekly_slots_attributes: [:id, :day_of_week, :time_slot, :subject_name, :topic_name])
   end
 
   def build_weekly_slots
@@ -105,6 +105,14 @@ class WeeklyGoalsController < ApplicationController
 
   def set_subject_names
     @subject_names = current_user.timelines.map(&:subject).uniq.pluck(:name)
+    current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+    skill_names = current_sprint.sprint_goals.where(user: current_user).map(&:skills).flatten.uniq.pluck(:extracurricular)
+    communities_names = current_sprint.sprint_goals.where(user: current_user).map(&:communities).flatten.uniq.pluck(:involved)
+
+    # Combine subjects and skills, prefixing each for clarity
+    @combined_options = @subject_names.map { |name| name} +
+                        skill_names.map { |name| name} +
+                        communities_names.map { |name| name}
   end
 
   def set_topic_names
@@ -114,7 +122,7 @@ class WeeklyGoalsController < ApplicationController
                   .order('topics.unit ASC, user_topics.deadline ASC')
 
     # Use 'map' to extract the name and 'uniq' to remove duplicates
-    @topic_names = @topics.map(&:name).uniq
+    @topic_names = @topics.map { |topic| ["#{topic.name} (#{topic.unit})"] }
   end
 
   def save_weekly_slots
