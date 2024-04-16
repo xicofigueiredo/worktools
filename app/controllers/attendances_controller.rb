@@ -11,14 +11,11 @@ class AttendancesController < ApplicationController
   end
 
   def index
-    # Set the current date to the parameter or default to today if none is provided
     current_date = params[:date] ? Date.parse(params[:date]) : Date.today
-
     @prev_date = calculate_prev_date(current_date, 'weekly')
     @next_date = calculate_next_date(current_date, 'weekly')
     @time_frame = 'Weekly'
     @daily_grouped_attendances = fetch_weekly_attendances(current_date)
-
   end
 
   def update_attendance
@@ -50,15 +47,31 @@ class AttendancesController < ApplicationController
     redirect_back(fallback_location: attendance_path, notice: "Absence updated successfully")
   end
 
-  def update_time_and_comments
+  def update_start_time
     attendance = Attendance.find(params[:id])
-    if attendance.update(attendance_params)
-      update_absence_status(attendance)
-      raise
-      redirect_back(fallback_location: attendance_path, notice: "Attendance updated successfully")
+    if attendance.update(start_time: params[:attendance][:start_time])
+      attendance.update(absence: 'Present')
+      redirect_back(fallback_location: attendance_path, notice: "Attendance start time updated successfully")
     else
-      raise
-      redirect_back(fallback_location: attendance_path, alert: "Failed to update attendance")
+      redirect_back(fallback_location: attendance_path, alert: "Failed to update attendance start time")
+    end
+  end
+
+  def update_end_time
+    attendance = Attendance.find(params[:id])
+    if attendance.update(end_time: params[:attendance][:end_time])
+      redirect_back(fallback_location: attendance_path, notice: "Attendance end time updated successfully")
+    else
+      redirect_back(fallback_location: attendance_path, alert: "Failed to update attendance end time")
+    end
+  end
+
+  def update_comments
+    attendance = Attendance.find(params[:id])
+    if attendance.update(comments: params[:attendance][:comments])
+      redirect_back(fallback_location: attendance_path, notice: "Attendance comments updated successfully")
+    else
+      redirect_back(fallback_location: attendance_path, alert: "Failed to update attendance comments")
     end
   end
 
@@ -86,14 +99,6 @@ class AttendancesController < ApplicationController
       if attendance.nil?
         learner.attendances.create(attendance_date: current_date, absence: 'Unjustified Leave')
       end
-    end
-  end
-
-  def update_absence_status(attendance)
-    if attendance.start_time.present?
-      attendance.update(absence: 'Present')
-    else
-      attendance.update(absence: 'Unjustified Leave')
     end
   end
 
@@ -139,12 +144,11 @@ class AttendancesController < ApplicationController
     weekly_attendances = Attendance.joins(user: :hubs)
                                     .where(users: { hubs: { id: current_user.hubs.first.id } },
                                            attendance_date: start_of_week..end_of_week)
-                                    .order(:attendance_date)
+                                    .order('attendance_date, users.full_name ASC')
 
     weekly_attendances.group_by { |attendance| attendance.attendance_date }
   end
 
-  # In progress
   def calculate_prev_date(current_date, time_frame)
     case time_frame
     when 'daily'
@@ -156,7 +160,6 @@ class AttendancesController < ApplicationController
     end
   end
 
-  # In progress
   def calculate_next_date(current_date, time_frame)
     case time_frame
     when 'daily'
