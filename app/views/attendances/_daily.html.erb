@@ -2,10 +2,10 @@
     <thead>
       <tr class="table-primary">
         <th scope="col">Learner Name</th>
-        <th scope="col">Date</th>
         <th scope="col">Start Time</th>
         <th scope="col">End Time</th>
         <th scope="col">Comments</th>
+        <th scope="col">Save Time & Comments</th>
         <th scope="col">Presence</th>
         <% if @is_today %>
           <th scope="col">I/O</th>
@@ -19,24 +19,20 @@
             <p><%= link_to attendance.user.full_name, learner_attendances_path(learner_id: attendance.user.id) %>
             </p>
           </td>
-          <td>
-            <p><%= attendance.attendance_date%></p>
-          </td>
-          <%= form_tag update_time_attendance_path(attendance), method: :patch, class: "time-edit-form" do %>
+          <%= form_with(model: attendance, url: update_time_and_comments_path(attendance), local: true, method: :patch, class: "attendance-form") do |form| %>
             <td>
-                <%= time_field_tag :start_time, attendance.start_time&.strftime("%H:%M"), class: "form-control" %>
+              <%= form.time_field :start_time, value: attendance.start_time&.strftime("%H:%M"), class: "form-control" %>
             </td>
             <td>
-                <%= time_field_tag :end_time, attendance.end_time&.strftime("%H:%M"), class: "form-control" %>
-                <%= submit_tag "Update Times", class: "btn btn-info mt-2" %>
+              <%= form.time_field :end_time, value: attendance.end_time&.strftime("%H:%M"), class: "form-control" %>
+            </td>
+            <td>
+              <%= form.text_area :comments, class: "form-control", rows: 3 %>
+            </td>
+            <td>
+              <%= form.submit "Save Changes", class: "btn btn-primary mt-2" %>
             </td>
           <% end %>
-          <td>
-            <%= form_with(model: attendance, url: patch_attendance_comment_path(attendance), local: true, method: :patch) do |form| %>
-              <%= form.text_area :comments, class: "form-control", rows: 3 %>
-              <%= form.submit "Save Comment", class: "btn btn-primary" %>
-            <% end %>
-          </td>
           <td>
             <%= form_tag(update_absence_attendance_path(attendance), method: :patch) do %>
               <%= select_tag 'absence', options_for_select(['Justified Leave', 'Unjustified Leave', 'Holiday', 'Present'], attendance.absence), class: 'form-control', onchange: 'this.form.submit()' %>

@@ -3,17 +3,21 @@ require 'date'
 class AttendancesController < ApplicationController
   def attendance
     create_daily_attendance()
-    @attendances = fetch_daily_attendances
+    @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @prev_date = calculate_prev_date(@current_date, 'daily')
+    @next_date = calculate_next_date(@current_date, 'daily')
+    @attendances = fetch_daily_attendances(@current_date)
     @is_today = @attendances.first.attendance_date == Date.today
-    @learners = current_user.hubs.first.users_hub.map(&:user).select { |user| user.role == "learner" }
   end
 
   def index
-    current_date = Date.today
-    @prev_date = calculate_prev_date(current_date, params[:time_frame])
-    @next_date = calculate_next_date(current_date, params[:time_frame])
+    # Set the current date to the parameter or default to today if none is provided
+    current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+
+    @prev_date = calculate_prev_date(current_date, 'weekly')
+    @next_date = calculate_next_date(current_date, 'weekly')
     @time_frame = 'Weekly'
-    @daily_grouped_attendances = fetch_weekly_attendances
+    @daily_grouped_attendances = fetch_weekly_attendances(current_date)
 
   end
 
@@ -34,14 +38,7 @@ class AttendancesController < ApplicationController
       end
     end
 
-    redirect_to attendance_path, notice: "Attendance updated successfully"
-  end
-
-  def save_comment
-    attendance = Attendance.find(params[:id])
-    attendance.update(comment_params)
-
-    redirect_back(fallback_location: root_path, notice: "Comment saved successfully")
+    redirect_back(fallback_location: attendance_path, notice: "Attendance updated successfully")
   end
 
   def update_absence
@@ -53,29 +50,27 @@ class AttendancesController < ApplicationController
     redirect_back(fallback_location: attendance_path, notice: "Absence updated successfully")
   end
 
-  def update_time
+  def update_time_and_comments
     attendance = Attendance.find(params[:id])
-    if attendance.update(time_params)
-      attendance.update(absence: 'Present')
-      redirect_back(fallback_location: attendance_path, notice: "Times updated successfully")
+    if attendance.update(attendance_params)
+      update_absence_status(attendance)
+      raise
+      redirect_back(fallback_location: attendance_path, notice: "Attendance updated successfully")
     else
-      redirect_back(fallback_location: attendance_path, alert: "Failed to update times")
+      raise
+      redirect_back(fallback_location: attendance_path, alert: "Failed to update attendance")
     end
   end
 
   def learner_attendances
     @learner = User.find(params[:learner_id])
-    @attendances = @learner.attendances
+    @attendances = @learner.attendances.where("attendance_date <= ?", Date.today).order(attendance_date: :desc)
   end
 
   private
 
-  def comment_params
-    params.require(:attendance).permit(:comments)
-  end
-
-  def time_params
-    params.permit(:start_time, :end_time)
+  def attendance_params
+    params.require(:attendance).permit(:start_time, :end_time, :comments)
   end
 
   def create_daily_attendance
@@ -89,8 +84,16 @@ class AttendancesController < ApplicationController
 
       # If not, create one
       if attendance.nil?
-        learner.attendances.create(attendance_date: current_date)
+        learner.attendances.create(attendance_date: current_date, absence: 'Unjustified Leave')
       end
+    end
+  end
+
+  def update_absence_status(attendance)
+    if attendance.start_time.present?
+      attendance.update(absence: 'Present')
+    else
+      attendance.update(absence: 'Unjustified Leave')
     end
   end
 
@@ -102,20 +105,35 @@ class AttendancesController < ApplicationController
 
       learners.each do |learner|
         unless learner.attendances.exists?(attendance_date: date)
-          learner.attendances.create(attendance_date: date)
+          learner.attendances.create(attendance_date: date, absence: 'Unjustified Leave')
         end
       end
     end
   end
 
-  def fetch_daily_attendances
-    date = Date.today
-    Attendance.joins(user: :hubs).where(users: { hubs: { id: current_user.hubs } }, attendance_date: date)
+  def ensure_daily_attendance_records(date)
+    learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner')
+    learners.each do |learner|
+      unless learner.attendances.exists?(attendance_date: date)
+        learner.attendances.create(attendance_date: date, absence: 'Unjustified Leave')
+      end
+    end
   end
 
-  def fetch_weekly_attendances
-    start_of_week = Date.today.beginning_of_week
-    end_of_week = Date.today.end_of_week
+  def fetch_daily_attendances(date)
+    ensure_daily_attendance_records(date)
+
+    daily_attendances = Attendance.joins(user: :hubs)
+                                   .where(users: { hubs: { id: current_user.hubs.first.id } },
+                                          attendance_date: date)
+                                   .order(:created_at)
+
+    daily_attendances
+  end
+
+  def fetch_weekly_attendances(date)
+    start_of_week = date.beginning_of_week
+    end_of_week = date.end_of_week
     ensure_weekly_attendance_records(start_of_week, end_of_week)
 
     weekly_attendances = Attendance.joins(user: :hubs)
@@ -124,12 +142,6 @@ class AttendancesController < ApplicationController
                                     .order(:attendance_date)
 
     weekly_attendances.group_by { |attendance| attendance.attendance_date }
-  end
-
-  def fetch_monthly_attendances
-    start_of_month = Date.today.beginning_of_month
-    end_of_month = Date.today.end_of_month
-    Attendance.joins(user: :hubs).where(users: { hubs: { id: current_user.hubs } }, attendance_date: start_of_month..end_of_month)
   end
 
   # In progress

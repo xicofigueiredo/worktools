@@ -17,12 +17,11 @@ Rails.application.routes.draw do
 
   # Attendances Routes
   get '/attendance', to: 'attendances#attendance'
-  get '/attendances/:time_frame', to: 'attendances#index', as: :attendances_by_time_frame
+  get '/attendances/:time_frame', to: 'attendances#index', as: :attendances
   get '/attendance/:learner_id', to: 'attendances#learner_attendances', as: 'learner_attendances'
   put '/attendances/update_attendance', to: 'attendances#update_attendance', as: :update_attendance
-  patch '/attendances/:id/save_comment', to: 'attendances#save_comment', as: :patch_attendance_comment
   patch '/attendances/:id/update_absence', to: 'attendances#update_absence', as: :update_absence_attendance
-  patch '/attendances/:id/update_time', to: 'attendances#update_time', as: :update_time_attendance
+  patch '/attendance/:id/update_time_and_comments', to: 'attendances#update_time_and_comments', as: :update_time_and_comments
   end
 
   get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'
