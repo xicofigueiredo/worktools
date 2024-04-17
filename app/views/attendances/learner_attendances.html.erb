@@ -1,0 +1,47 @@
+<div class="mx-5 mt-3">
+  <div class="d-flex justify-content-between mb-3 align-items-center">
+    <h1><%= @learner.full_name %></h1>
+    <%= link_to 'Back', attendance_path() %>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead>
+        <tr class="table-primary">
+          <th scope="col">Date</th>
+          <th scope="col">Start Time</th>
+          <th scope="col">End Time</th>
+          <th scope="col">Comments</th>
+          <th scope="col">Presence</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @attendances.each do |attendance|%>
+          <tr>
+            <td><p><%= attendance.attendance_date%></p></td>
+            <td>
+              <%= form_tag(update_start_time_attendance_path(attendance), method: :patch, remote: true) do %>
+                <%= time_field_tag "attendance[start_time]", attendance.start_time&.strftime("%H:%M"), class: "form-control", onblur: 'this.form.submit()' %>
+              <% end %>
+            </td>
+            <td>
+              <%= form_tag(update_end_time_attendance_path(attendance), method: :patch, remote: true) do %>
+                <%= time_field_tag "attendance[end_time]", attendance.end_time&.strftime("%H:%M"), class: "form-control", onblur: 'this.form.submit()' %>
+              <% end %>
+            </td>
+            <td>
+              <%= form_tag(update_comments_attendance_path(attendance), method: :patch, remote: true) do %>
+                <%= text_area_tag "attendance[comments]", attendance.comments, class: "form-control", rows: 3, onblur: 'this.form.submit()' %>
+              <% end %>
+            </td>
+            <td>
+              <%= form_tag(update_absence_attendance_path(attendance), method: :patch) do %>
+                <%= select_tag 'absence', options_for_select(['Justified Leave', 'Unjustified Leave', 'Holiday', 'Present'], attendance.absence), class: 'form-control', onchange: 'this.form.submit()' %>
+              <% end %>
+            </td>
+          </tr>
+        <% end%>
+      </tbody>
+    </table>
+  </div>
+</div>

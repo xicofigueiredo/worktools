@@ -22,7 +22,7 @@ class User < ApplicationRecord
   has_many :wednesday_slots_as_learner, class_name: 'WednesdaySlot', foreign_key: 'learner_id'
   has_many :thursday_slots_as_learner, class_name: 'ThursdaySlot', foreign_key: 'learner_id'
   has_many :friday_slots_as_learner, class_name: 'FridaySlot', foreign_key: 'learner_id'
-
+  has_many :attendances
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner' }
 
   after_create :associate_with_hubs
