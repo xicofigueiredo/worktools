@@ -16,8 +16,9 @@
         <div class="card">
           <div class="card-body">
             <h2 class="card-title text-center mb-4">New KDA</h2>
-            <div class="col-md-3">
-            <%= form.collection_select :week_id, @available_weeks, :id, :name, { include_blank: "Please Select" }, { class: "form-control", selected: @kda.week_id } %>
+            <!-- Week Selection -->
+            <div class="field">
+              <%= form.collection_select :week_id, @available_weeks, :id, :name, { include_blank: "Please select a Week" }, { class: 'form-select', required: true } %>
             </div>
             <hr>
             <table class="table">

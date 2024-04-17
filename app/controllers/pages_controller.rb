@@ -27,14 +27,7 @@ class PagesController < ApplicationController
   end
 
   def profile
-    @hub = current_user.hubs.first
-    if current_user.timelines.count.positive?
-      @subject = current_user.timelines.first.subject
-      Subject.where(category: :tbe).destroy_all
-    else
-      @fake_subject = Subject.create(name: "No Subject", category: :tbe)
-      @subject = @fake_subject
-    end
+    @hubs = current_user.hubs
     @timelines = current_user.timelines_sorted_by_balance
 
     @overall_progress = 0
@@ -58,12 +51,12 @@ class PagesController < ApplicationController
     current_user.sprint_goals.all.where(sprint: current_sprint).each do |sprint|
       if sprint.skills.count.positive?
         sprint.skills.each do |skill|
-          @activities << skill.extracurricular
+          @activities << [skill.extracurricular, skill.smartgoals]
         end
       end
       if sprint.communities.count.positive?
         sprint.communities.each do |community|
-          @activities << community.involved
+          @activities << [community.involved, community.smartgoals]
         end
       end
     end

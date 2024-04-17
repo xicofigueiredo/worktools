@@ -26,6 +26,9 @@ class User < ApplicationRecord
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner' }
 
   after_create :associate_with_hubs
+  # after_commit :send_welcome_email, on: :create
+  # after_commit :post_create_actions, on: :create
+
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
@@ -45,5 +48,14 @@ class User < ApplicationRecord
       UsersHub.create(user: self, hub_id: hub_id) unless hub_id.blank?
     end
   end
+
+  def send_welcome_email
+    UserMailer.welcome_email(self).deliver_now
+  end
+
+  # def post_create_actions
+  #   associate_with_hubs
+  #   send_welcome_email
+  # end
 
 end

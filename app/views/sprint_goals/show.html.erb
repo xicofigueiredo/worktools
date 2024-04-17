@@ -26,10 +26,25 @@
     <% knowledge = @sprint_goal.knowledges.find_by(timeline: timeline) %>
     <tr>
       <td class="custom-font-size"><%= timeline.subject.name %></td>
-      <td class="custom-font-size"><%= timeline.exam_date.date.strftime("%B %Y") %></td>
+      <% if timeline.exam_date != nil %>
+        <td class="custom-font-size"><%= timeline.exam_date.date.strftime("%B %Y") %></td>
+      <% else %>
+        <td class="custom-font-size">N/A</td>
+      <% end %>
       <td class="custom-font-size"><%= timeline.end_date %></td>
-      <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true)).deadline %></td>
-      <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true)).deadline %></td>
+      <% mock50_topic = current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true)) %>
+      <% if mock50_topic %>
+        <td class="custom-font-size"><%= mock50_topic.deadline %></td>
+      <% else %>
+        <td class="custom-font-size">N/A</td>
+      <% end %>
+
+      <% mock100_topic = current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true)) %>
+      <% if mock100_topic %>
+        <td class="custom-font-size"><%= mock100_topic.deadline %></td>
+      <% else %>
+        <td class="custom-font-size">N/A</td>
+      <% end %>
       <td class="custom-font-size"></td>
 
       <td><%= knowledge&.difficulties %></td>

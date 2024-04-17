@@ -9,9 +9,6 @@
       </ul>
     </div>
   <% end %>
-   <div class="form-group mb-3">
-    <%= form.collection_select :sprint_id, @available_sprints, :id, :name, prompt: 'Choose a Sprint', class: 'form-select' %>
-  </div>
   <style>
     .custom-font-size {
       font-size: 13px;
@@ -22,6 +19,9 @@
       <div class="col-12"> <!-- Adjusted for full width -->
         <div class="card">
           <div class="card-body">
+              <div class="form-group">
+                <%= form.collection_select :sprint_id, @available_sprints, :id, :name, { include_blank: "Please select a Sprint"}, { class: 'form-select', required: true } %>
+              </div>
             <h3 class="card-title text-center mb-4 mt-4">Knowledge Block</h3>
             <table>
               <thead>
@@ -36,10 +36,10 @@
               </thead>
               <tbody>
                 <% current_user.timelines.each_with_index do |timeline, index| %>
-                  <% knowledge = @sprint_goal.knowledges.find_or_initialize_by(timeline: timeline) %>
+                  <% knowledge = @sprint_goal.knowledges.find_or_initialize_by(subject_name: timeline.subject.name) %>
                   <%= fields_for "sprint_goal[knowledges_attributes][]", knowledge do |knowledge_form| %>
                     <tr>
-                      <td class="custom-font-size"><%= timeline.subject.name %></td>
+                      <td class="custom-font-size"><%= knowledge_form.text_field :subject_name, value: timeline.subject.name, readonly: true, class: 'form-control' %></td>
                       <td class="custom-font-size"><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A'%></td>
                       <% if timeline.subject.category == 'lws' || timeline.subject.category == 'up' %>
                         <td>N/A</td>

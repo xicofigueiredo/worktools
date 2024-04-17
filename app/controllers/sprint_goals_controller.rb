@@ -1,7 +1,7 @@
 class SprintGoalsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_sprint_goal, only: [:show, :edit, :update, :destroy]
-  before_action :set_available_sprints, only: [:new, :edit]
+  before_action :set_available_sprints, only: [:new]
 
   # GET /sprint_goals
   def index
@@ -16,10 +16,9 @@ class SprintGoalsController < ApplicationController
   # GET /sprint_goals/new
   def new
     @sprint_goal = current_user.sprint_goals.build
-    @sprint_goal = current_user.sprint_goals.build
     current_user.timelines.each do |timeline|
       knowledge = @sprint_goal.knowledges.build
-      knowledge.timeline = timeline
+      knowledge.subject_name = timeline.subject.name
     end
     @sprint_goal.skills.build
     @sprint_goal.communities.build
@@ -27,10 +26,12 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals/1/edit
   def edit
+    @edit = true
+    set_available_sprints
     @sprint_goal = current_user.sprint_goals.find(params[:id])
     # If the @sprint_goal doesn't have associated knowledges for each timeline, you need to build them here
     current_user.timelines.each do |timeline|
-      @sprint_goal.knowledges.find_or_initialize_by(timeline: timeline)
+      @sprint_goal.knowledges.find_or_initialize_by(subject_name: timeline.subject.name)
     end
     @sprint_goal.skills.build if @sprint_goal.skills.empty?
     @sprint_goal.communities.build if @sprint_goal.communities.empty?
@@ -71,12 +72,16 @@ class SprintGoalsController < ApplicationController
 
   def set_available_sprints
     used_sprints = current_user.sprint_goals.pluck(:sprint_id)
-    @available_sprints = Sprint.where.not(id: used_sprints)
+    if @edit == true
+      @available_sprints = Sprint.all
+    else
+      @available_sprints = Sprint.where.not(id: used_sprints)
+    end
   end
 
   def sprint_goal_params
     params.require(:sprint_goal).permit(:name, :start_date, :end_date, :sprint_id,
-                                        knowledges_attributes: [:id, :difficulties, :plan, :_destroy, :timeline_id],
+                                        knowledges_attributes: [:id, :difficulties, :plan, :_destroy, :subject_name],
                                         skills_attributes: [:id, :extracurricular, :smartgoals, :difficulties, :plan, :_destroy],
                                         communities_attributes: [:id, :involved, :smartgoals, :difficulties, :plan, :_destroy])
   end

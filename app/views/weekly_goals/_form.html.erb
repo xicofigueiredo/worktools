@@ -17,8 +17,7 @@
           <div class="card-body">
             <!-- Week Selection -->
             <div class="field">
-              <%= form.label :week_id, 'Week' %>
-              <%= form.collection_select :week_id, @available_weeks, :id, :name, include_blank: true, class: 'form-select' %>
+              <%= form.collection_select :week_id, @available_weeks, :id, :name, { include_blank: "Please select a Week"}, { class: 'form-select', required: true } %>
             </div>
 
             <!-- Schedule Table -->
@@ -40,14 +39,11 @@
                         <td id="<%= time.downcase %>_<%= day.downcase %>">
                           <div class="form-group" data-controller="selects">
                             <% selected_subject = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:subject_name) %>
-                            <%= form.collection_select "#{day}_#{time}_subject", @subject_names, :itself, :itself,
+                            <%= form.collection_select "#{day}_#{time}_subject", @combined_options, :itself, :itself,
                                 { selected: selected_subject, prompt: "" },
                                 { data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control" } %>
-
-                            <% selected_topic = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:topic_name) %>
-                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself,
-                                { selected: selected_topic, prompt: "" },
-                                { data: { selects_target: "topic" }, class: "form-control" } %>
+                            <% selected_topic_id = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:topic_id) %>
+                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :last, :first, { selected: selected_topic_id, prompt: "" }, { data: { selects_target: "topic" }, class: "form-control" } %>
                           </div>
                         </td>
                       <% end %>
