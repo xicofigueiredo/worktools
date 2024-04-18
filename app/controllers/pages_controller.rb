@@ -77,6 +77,13 @@ class PagesController < ApplicationController
     end
   end
 
+  def learner_profile
+    @learner = User.find_by(id: params[:id])
+    unless @learner
+      redirect_to some_fallback_path, alert: "Learner not found."
+    end
+  end
+
 
   private
 

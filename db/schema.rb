@@ -153,19 +153,6 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
     t.index ["timeline_id"], name: "index_knowledges_on_timeline_id"
   end
 
-  create_table "lws_timelines", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.date "start_date"
-    t.date "end_date"
-    t.integer "year"
-    t.integer "balance"
-    t.float "blocks_per_day"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "level"
-    t.index ["user_id"], name: "index_lws_timelines_on_user_id"
-  end
-
   create_table "monday_slots", force: :cascade do |t|
     t.bigint "weekly_meeting_id", null: false
     t.string "time_slot"
@@ -268,9 +255,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
     t.integer "progress"
     t.bigint "exam_date_id"
     t.boolean "anulado"
-    t.bigint "lws_timeline_id"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
-    t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
   end
@@ -399,8 +384,6 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
     t.index ["sprint_id"], name: "index_weeks_on_sprint_id"
   end
 
-  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "attendances", "users"
   add_foreign_key "communities", "sprint_goals"
   add_foreign_key "exam_dates", "subjects"
@@ -414,7 +397,6 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
   add_foreign_key "kdas", "weeks"
   add_foreign_key "knowledges", "sprint_goals"
   add_foreign_key "knowledges", "timelines", on_delete: :cascade
-  add_foreign_key "lws_timelines", "users"
   add_foreign_key "monday_slots", "users", column: "lc_id"
   add_foreign_key "monday_slots", "users", column: "learner_id"
   add_foreign_key "monday_slots", "weekly_meetings"

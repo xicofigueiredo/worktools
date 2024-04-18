@@ -12,8 +12,10 @@ Rails.application.routes.draw do
   get '/get_topics', to: 'subjects#get_topics'
   patch '/timelines/:id/update_done_topics', to: 'timelines#update_done_topics', as: 'update_done_topics'
   get '/about', to: 'pages#about'
-    get 'dashboard_admin', to: 'pages#dashboard_admin'
-    get 'dashboard_lc', to: 'pages#dashboard_lc'
+  get 'dashboard_admin', to: 'pages#dashboard_admin'
+  get 'dashboard_lc', to: 'pages#dashboard_lc'
+  get 'learner_profile/:id', to: 'pages#learner_profile', as: 'learner_profile'
+
 
   # Attendances Routes
   get '/attendance', to: 'attendances#attendance'
