@@ -5,6 +5,7 @@ class Timeline < ApplicationRecord
   has_many :knowledges, dependent: :destroy
   before_destroy :destroy_associated_user_topics
   belongs_to :exam_date, optional: true
+  belongs_to :lws_timeline, optional: true
 
   validate :start_date_before_end_date
   validates :subject_id, presence: true

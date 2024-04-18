@@ -1,0 +1,13 @@
+<%= link_to "New Lws Timeline", new_lws_timeline_path, class: "btn btn-primary mb-3" %>
+
+<% @lws_timelines.each do |lws_timeline| %>
+  <div class="card mb-3">
+    <div class="card-body">
+
+      <p class="card-text">
+        <strong><%= lws_timeline.start_date %> <%= lws_timeline.end_date %> </strong> <br>
+      </p>
+      <%= link_to "Delete", lws_timeline_path(lws_timeline), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
+    </div>
+  </div>
+<% end %>

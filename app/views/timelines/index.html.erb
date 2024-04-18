@@ -2,6 +2,10 @@
   <div class="row">
     <div class="col-md-7">
         <h3>Timelines</h3>
+        <% if current_user.level == 'lws' && current_user.lws_timelines.count == 0 %>
+          <h2>Lower Secundary</h2>
+          <%= link_to "New Lws Timeline", new_lws_timeline_path, class: "btn btn-primary mb-3" %>
+        <% end %>
       <% @timelines.each_with_index do |timeline, index| %>
         <div class="accordion" id="parentAccordion">
           <div class="accordion-item">
@@ -49,22 +53,19 @@
                     <tr>
                       <th>Unit</th>
                       <th>Topic</th>
-                      <% if timeline.subject.category != 'lws' %>
+                      <% if current_user.level!= 'lws' %>
                         <th>Hours</th>
+                        <th width = "120px" >Date</th>
                       <% end %>
-                      <th width = "120px" >Date</th>
                       <th>Done</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <% def friday_of_this_week(date)
-                        date + ((5 - date.wday) % 7)
-                       end %>
                     <% timeline.subject.topics.each_with_index do |topic, index| %>
                     <% user_topic = current_user.user_topics.find_or_initialize_by(topic: topic) %>
-                      <% background_color = if !user_topic.done && user_topic.deadline < Date.today
+                      <% background_color = if !user_topic.done && user_topic.deadline < Date.today && current_user.level != 'lws'
                          'background-color: lightcoral;'
-                       elsif !user_topic.done && Date.today.monday < user_topic.deadline && user_topic.deadline < friday_of_this_week(Date.today)
+                       elsif !user_topic.done && Date.today.monday < user_topic.deadline && user_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && current_user.level != 'lws'
                          'background-color: lightgrey;'
                        elsif user_topic.done
                          'background-color: lightgreen;'
@@ -80,10 +81,10 @@
                           <% end %>
                         </td>
                         <td style="<%= background_color %>"><%= topic.name %></td>
-                        <% if timeline.subject.category != 'lws' %>
+                        <% if current_user.level != 'lws'%>
                           <td style="<%= background_color %>"><%= topic.time %></td>
+                          <td style="<%= background_color %>"><%= user_topic.deadline %></td>
                         <% end %>
-                        <td style="<%= background_color %>"><%= user_topic.deadline %></td>
                         <td style="<%= background_color %>">
                           <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
                             <%= form_with model: user_topic, url: timeline_path(timeline), method: :patch, local: true do |form| %>
@@ -111,9 +112,11 @@
       <div class="container">
         <div class="row">
           <div class="col text-end mt-3 mb-3">
-            <%= link_to new_timeline_path, class: 'btn btn-primary' do %>
-              <i class="fas fa-plus"></i>
-              New Timeline
+            <% if current_user.level != 'lws' %>
+              <%= link_to new_timeline_path, class: 'btn btn-primary' do %>
+                <i class="fas fa-plus"></i>
+                New Timeline
+              <% end %>
             <% end %>
           </div>
         </div>

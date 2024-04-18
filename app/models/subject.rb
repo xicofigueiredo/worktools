@@ -6,7 +6,7 @@ class Subject < ApplicationRecord
   has_many :timelines
   validates :category, presence: true
 
-  enum category: [:lws, :igcse, :as, :al, :up, :tbe]
+  enum category: [:lws8, :lws9, :igcse, :as, :al, :up]
 
   def category_long_form
     self.class.category_options[category.to_sym]
@@ -14,12 +14,12 @@ class Subject < ApplicationRecord
 
   def self.category_options
     {
-      lws: "Lower Secondary",
+      lws8: "Lower Secondary Year 8",
+      lws9: "Lower Secondary Year 9",
       igcse: "IGCSE",
       as: "AS Level",
       al: "A Level",
       up: "UP",
-      tbe: "To be enrolled"
     }
   end
 end

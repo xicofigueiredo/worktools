@@ -119,35 +119,45 @@ class TimelinesController < ApplicationController
 
   def generate_topic_deadlines(timeline)
     subject = timeline.subject
-
-    user_topics = []
-    subject.topics.each do |topic|
-      user_topic = current_user.user_topics.find_by(topic_id: topic.id)
-      user_topics << user_topic
+    user_topics = subject.topics.map do |topic|
+      current_user.user_topics.find_or_initialize_by(topic: topic)
     end
 
-    @holidays_array = []
-    current_user.holidays.each do |holiday|
-      @holidays_array = @holidays_array + (holiday.start_date..holiday.end_date).to_a
-    end
+    calculate_holidays_array
+    working_days = calculate_working_days(timeline)
 
-    timeline_array = (timeline.start_date...timeline.end_date).to_a
-    working_days = timeline_array.reject { |date| @holidays_array.include?(date) || date.saturday? || date.sunday?}
+    distribute_deadlines(user_topics, working_days)
+  end
 
-    total_time = working_days.count
+  def calculate_holidays_array
+    @holidays_array ||= current_user.holidays.flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
+  end
 
-    index = 0
-    user_topics.each_with_index do |user_topic, i|
-      time_per_topic = (user_topic.calculate_percentage * total_time)
-      index += time_per_topic
-      deadline_date = working_days[index]
-      if index > total_time - 0.5
-        deadline_date = timeline.end_date
-      end
-      user_topic.deadline = deadline_date
-      user_topic.save
+  def calculate_working_days(timeline)
+    (timeline.start_date...timeline.end_date).to_a.reject do |date|
+      @holidays_array.include?(date) || date.saturday? || date.sunday?
     end
   end
+
+  def distribute_deadlines(user_topics, working_days)
+    total_time = working_days.count
+    index = 0
+
+    user_topics.each do |user_topic|
+      time_per_topic = (user_topic.calculate_percentage * total_time).round
+      deadline_date = calculate_deadline_date(index, time_per_topic, working_days, total_time)
+      user_topic.deadline = deadline_date
+      user_topic.save if user_topic.changed?
+      index += time_per_topic
+    end
+  end
+
+  def calculate_deadline_date(index, time_per_topic, working_days, total_time)
+    # Ensure index does not exceed the bounds of working days
+    final_index = [index + time_per_topic, total_time - 1].min
+    working_days[final_index] || working_days.last
+  end
+
 
   def calculate_progress_and_balance
     @timelines.each do |timeline|

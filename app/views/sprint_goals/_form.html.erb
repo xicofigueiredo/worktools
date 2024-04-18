@@ -41,7 +41,7 @@
                     <tr>
                       <td class="custom-font-size"><%= knowledge_form.text_field :subject_name, value: timeline.subject.name, readonly: true, class: 'form-control' %></td>
                       <td class="custom-font-size"><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A'%></td>
-                      <% if timeline.subject.category == 'lws' || timeline.subject.category == 'up' %>
+                      <% if current_user.level == 'lws' || timeline.subject.category == 'up' %>
                         <td>N/A</td>
                         <td>N/A</td>
                       <% else %>

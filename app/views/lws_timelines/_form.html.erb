@@ -1,0 +1,16 @@
+<%= form_with(model: @lws_timeline, local: true) do |form| %>
+  <div>
+    <%= form.label :start_date %>
+    <%= form.date_field :start_date %>
+  </div>
+  <div>
+    <%= form.label :end_date %>
+    <%= form.date_field :end_date %>
+  </div>
+  <div>
+    <%= form.label :level, "Category" %>
+    <%= form.select :level, Subject.category_options.map { |key, value| [value, key] }, { include_blank: 'Select Category' } %>
+  </div>
+
+  <%= form.submit "Create LwsTimeline" %>
+<% end %>
