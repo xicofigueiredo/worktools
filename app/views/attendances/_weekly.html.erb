@@ -1,4 +1,6 @@
-<% @daily_grouped_attendances.each do |date, attendances| %>
+<% if @has_learners %>
+
+  <% @daily_grouped_attendances.each do |date, attendances| %>
   <h3><%= date.strftime("%A, %B %e") %></h3>
   <table class="table">
     <thead>
@@ -38,4 +40,13 @@
       <% end %>
     </tbody>
   </table>
+  <% end %>
+
+<% else %>
+
+  <div class="d-flex flex-column text-center justify-content-center mt-5">
+    <h1>There are no Learners in this hub yet...</h1>
+    <p>Please help learners in your hub sign up to use this feature.</p>
+  </div>
+
 <% end %>
