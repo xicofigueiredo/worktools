@@ -112,7 +112,7 @@
       <div class="container">
         <div class="row">
           <div class="col text-end mt-3 mb-3">
-            <% if current_user.level != 'lws' %>
+            <% if current_user.level != 'lws' && current_user.role != 'admin' %>
               <%= link_to new_timeline_path, class: 'btn btn-primary' do %>
                 <i class="fas fa-plus"></i>
                 New Timeline

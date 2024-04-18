@@ -174,16 +174,27 @@ class TimelinesController < ApplicationController
         next unless user_topic # Skip if no user_topic found
 
         # Balance calculation
-        if user_topic.done && user_topic.deadline >= Date.today
-          balance += 1
-        elsif !user_topic.done && user_topic.deadline < Date.today
-          balance -= 1
+        if timeline.lws_timeline != nil
+          expected = (timeline.lws_timeline.blocks_per_day * (Date.today - timeline.start_date).to_f).to_i
+          actual = current_user.user_topics.where(topic_id: topic.id, done: true).count
+          balance = actual - expected
+
+          completed_topics_count += 1 if user_topic.done
+          progress += user_topic.percentage if user_topic.done
+          expected_progress = (expected / total_topics)
+
+        else
+          if user_topic.done && user_topic.deadline >= Date.today
+            balance += 1
+          elsif !user_topic.done && user_topic.deadline < Date.today
+            balance -= 1
+          end
+          # Counting completed topics for progress calculation
+          completed_topics_count += 1 if user_topic.done
+          progress += user_topic.percentage if user_topic.done
+          expected_progress += user_topic.percentage if user_topic.deadline < Date.today
         end
 
-        # Counting completed topics for progress calculation
-        completed_topics_count += 1 if user_topic.done
-        progress += user_topic.percentage if user_topic.done
-        expected_progress += user_topic.percentage if user_topic.deadline < Date.today
       end
 
       # Calculate progress as an integer percentage of completed topics
