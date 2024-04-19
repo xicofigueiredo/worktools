@@ -4,6 +4,7 @@ class Subject < ApplicationRecord
   has_many :questions
   has_many :user_topics
   has_many :timelines
+  has_many :users, through: :timelines
   validates :category, presence: true
 
   enum category: [:lws8, :lws9, :igcse, :as, :al, :up]

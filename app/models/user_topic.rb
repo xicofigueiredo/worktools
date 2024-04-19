@@ -1,6 +1,7 @@
 class UserTopic < ApplicationRecord
   belongs_to :user
   belongs_to :topic
+  belongs_to :timeline, optional: true
 
   validates :user, :topic, presence: true
 

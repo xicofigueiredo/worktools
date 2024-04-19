@@ -5,6 +5,18 @@
         <% if current_user.level == 'lws' && current_user.lws_timelines.count == 0 %>
           <h2>Lower Secundary</h2>
           <%= link_to "New Lws Timeline", new_lws_timeline_path, class: "btn btn-primary mb-3" %>
+          <% elsif current_user.level == 'lws' && current_user.lws_timelines.count > 0 && current_user.timelines.count > 0%>
+            <div class="card mb-3">
+              <div class="card-body">
+                <p class="card-text">
+                  <strong><%= current_user.timelines.first.subject.category_long_form %></strong><br>
+                  <strong>Start Date:</strong> <%= current_user.lws_timelines.first.start_date %><br>
+                  <strong>End Date:</strong> <%= current_user.lws_timelines.first.end_date %>
+                </p>
+                <%= link_to "Edit", edit_lws_timeline_path(current_user.lws_timelines.first), class: "btn btn-secondary mr-2" %>
+                <%= link_to "Delete", lws_timeline_path(current_user.lws_timelines.first), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
+              </div>
+            </div>
         <% end %>
       <% @timelines.each_with_index do |timeline, index| %>
         <div class="accordion" id="parentAccordion">

@@ -6,6 +6,10 @@ class Timeline < ApplicationRecord
   before_destroy :destroy_associated_user_topics
   belongs_to :exam_date, optional: true
   belongs_to :lws_timeline, optional: true
+  has_many :user_topics
+  has_many :topics, through: :user_topics
+
+
 
   validate :start_date_before_end_date
   validates :subject_id, presence: true

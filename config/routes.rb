@@ -29,7 +29,7 @@ Rails.application.routes.draw do
 
   get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'
 
-  resources :lws_timelines, only: [:new, :create, :index, :destroy]
+  resources :lws_timelines
 
   resources :subjects do
     resources :topics, except: [:show, :index]
