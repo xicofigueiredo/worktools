@@ -7,8 +7,10 @@ class AttendancesController < ApplicationController
     @prev_date = calculate_prev_date(@current_date, 'daily')
     @next_date = calculate_next_date(@current_date, 'daily')
     @attendances = fetch_daily_attendances(@current_date)
-    @is_today = @attendances ? @attendances.first.attendance_date == Date.today : false;
     @has_learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner').exists?
+    if @has_learners == true
+      @is_today = @attendances ? @attendances.first.attendance_date == Date.today : false;
+    end
   end
 
   def index

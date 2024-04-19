@@ -1,75 +1,75 @@
 <% if @has_learners %>
-<table class="table">
-  <thead>
-    <tr class="table-primary">
-      <th scope="col">Learner Name</th>
-      <th scope="col">Start Time</th>
-      <th scope="col">End Time</th>
-      <th scope="col">Comments</th>
-      <th scope="col">Presence</th>
-      <% if @is_today %>
-        <th scope="col">I/O</th>
-      <% end %>
-    </tr>
-  </thead>
-  <tbody>
-    <% @attendances.each do |attendance| %>
-      <tr>
-        <td>
-          <p><%= link_to attendance.user.full_name, learner_attendances_path(learner_id: attendance.user.id) %>
-          </p>
-        </td>
-        <td>
-          <%= form_tag(update_start_time_attendance_path(attendance), method: :patch, remote: true) do %>
-            <%= time_field_tag "attendance[start_time]", attendance.start_time&.strftime("%H:%M"), class: "form-control", onblur: 'this.form.submit()' %>
-          <% end %>
-        </td>
-        <td>
-          <%= form_tag(update_end_time_attendance_path(attendance), method: :patch, remote: true) do %>
-            <%= time_field_tag "attendance[end_time]", attendance.end_time&.strftime("%H:%M"), class: "form-control", onblur: 'this.form.submit()' %>
-          <% end %>
-        </td>
-        <td>
-          <%= form_tag(update_comments_attendance_path(attendance), method: :patch, remote: true) do %>
-            <%= text_area_tag "attendance[comments]", attendance.comments, class: "form-control", rows: 3, onblur: 'this.form.submit()' %>
-          <% end %>
-        </td>
-        <td>
-          <%= form_tag(update_absence_attendance_path(attendance), method: :patch) do %>
-            <%= select_tag 'absence', options_for_select(['Justified Leave', 'Unjustified Leave', 'Holiday', 'Present'], attendance.absence), class: 'form-control', onchange: 'this.form.submit()' %>
-          <% end %>
-        </td>
+  <table class="table">
+    <thead>
+      <tr class="table-primary">
+        <th scope="col">Learner Name</th>
+        <th scope="col">Start Time</th>
+        <th scope="col">End Time</th>
+        <th scope="col">Comments</th>
+        <th scope="col">Presence</th>
         <% if @is_today %>
-          <td>
-            <% if attendance.start_time.present? %>
-              <% if attendance.end_time.blank? %>
-                <%= link_to update_attendance_path(learner_id: attendance.user.id, attendance_date: attendance.attendance_date), data: {"turbo-method": :put} do %>
-                  <button class="btn btn-danger">
-                  <i class="fa-solid fa-stop"></i>
-                  </button>
-                <% end %>
-              <% else %>
-                <button class="btn btn-secondary" style="cursor: not-allowed;"><i class="fa-solid fa-play"></i></button>
-              <% end %>
-            <% else %>
-              <%= link_to update_attendance_path(learner_id: attendance.user.id, attendance_date: attendance.attendance_date), data: {"turbo-method": :put}  do %>
-                <button class="btn btn-success">
-                  <i class="fa-solid fa-play"></i>
-                </button>
-              <% end %>
-            <% end  %>
-          </td>
+          <th scope="col">I/O</th>
         <% end %>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <% @attendances.each do |attendance| %>
+        <tr>
+          <td>
+            <p><%= link_to attendance.user.full_name, learner_attendances_path(learner_id: attendance.user.id) %>
+            </p>
+          </td>
+          <td>
+            <%= form_tag(update_start_time_attendance_path(attendance), method: :patch, remote: true) do %>
+              <%= time_field_tag "attendance[start_time]", attendance.start_time&.strftime("%H:%M"), class: "form-control", onblur: 'this.form.submit()' %>
+            <% end %>
+          </td>
+          <td>
+            <%= form_tag(update_end_time_attendance_path(attendance), method: :patch, remote: true) do %>
+              <%= time_field_tag "attendance[end_time]", attendance.end_time&.strftime("%H:%M"), class: "form-control", onblur: 'this.form.submit()' %>
+            <% end %>
+          </td>
+          <td>
+            <%= form_tag(update_comments_attendance_path(attendance), method: :patch, remote: true) do %>
+              <%= text_area_tag "attendance[comments]", attendance.comments, class: "form-control", rows: 3, onblur: 'this.form.submit()' %>
+            <% end %>
+          </td>
+          <td>
+            <%= form_tag(update_absence_attendance_path(attendance), method: :patch) do %>
+              <%= select_tag 'absence', options_for_select(['Justified Leave', 'Unjustified Leave', 'Holiday', 'Present'], attendance.absence), class: 'form-control', onchange: 'this.form.submit()' %>
+            <% end %>
+          </td>
+          <% if @is_today %>
+            <td>
+              <% if attendance.start_time.present? %>
+                <% if attendance.end_time.blank? %>
+                  <%= link_to update_attendance_path(learner_id: attendance.user.id, attendance_date: attendance.attendance_date), data: {"turbo-method": :put} do %>
+                    <button class="btn btn-danger">
+                    <i class="fa-solid fa-stop"></i>
+                    </button>
+                  <% end %>
+                <% else %>
+                  <button class="btn btn-secondary" style="cursor: not-allowed;"><i class="fa-solid fa-play"></i></button>
+                <% end %>
+              <% else %>
+                <%= link_to update_attendance_path(learner_id: attendance.user.id, attendance_date: attendance.attendance_date), data: {"turbo-method": :put}  do %>
+                  <button class="btn btn-success">
+                    <i class="fa-solid fa-play"></i>
+                  </button>
+                <% end %>
+              <% end  %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 
 <% else %>
 
-<div class="d-flex flex-column text-center justify-content-center mt-5">
-  <h1>There are no Learners in this hub yet...</h1>
-  <p>Please help learners in your hub sign up to use this feature.</p>
-</div>
+  <div class="d-flex flex-column text-center justify-content-center mt-5">
+    <h1>There are no Learners in this hub yet...</h1>
+    <p>Please help learners in your hub sign up to use this feature.</p>
+  </div>
 
 <% end %>
