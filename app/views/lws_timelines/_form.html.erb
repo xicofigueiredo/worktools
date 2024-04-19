@@ -1,16 +1,43 @@
-<%= form_with(model: @lws_timeline, local: true) do |form| %>
-  <div>
-    <%= form.label :start_date %>
-    <%= form.date_field :start_date %>
+<section>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">New LWS Timeline</h2>
+            <%= form_with(model: @lws_timeline, local: true) do |form| %>
+              <% if @lws_timeline.errors.any? %>
+                <div id="error_explanation" class="alert alert-danger">
+                  <h4><%= pluralize(@lws_timeline.errors.count, "error") %> prohibited this timeline from being saved:</h4>
+                  <ul>
+                    <% @lws_timeline.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+                <div class="form-group">
+                  <%= form.label :start_date %>
+                  <%= form.date_field :start_date, class: 'form-control' %>
+                </div>
+              <br>
+              <div class="form-group">
+                <%= form.label :end_date %>
+                <%= form.date_field :end_date, class: 'form-control' %>
+              </div>
+              <br>
+              <div class="form-group">
+                <%= form.label :level, "Category" %>
+                <%= form.select :level, Subject.category_options.map { |key, value| [value, key] }, { include_blank: 'Select Category' }, class: 'form-control' %>
+              </div>
+              <br>
+              <div class="form-group text-center">
+                <%= form.submit class: "btn btn-primary btn-lg px-5" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div>
-    <%= form.label :end_date %>
-    <%= form.date_field :end_date %>
-  </div>
-  <div>
-    <%= form.label :level, "Category" %>
-    <%= form.select :level, Subject.category_options.map { |key, value| [value, key] }, { include_blank: 'Select Category' } %>
-  </div>
-
-  <%= form.submit "Create LwsTimeline" %>
-<% end %>
+</section>
