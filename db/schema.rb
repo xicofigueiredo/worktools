@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_04_16_162356) do
+ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -310,6 +310,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_16_162356) do
     t.datetime "updated_at", null: false
     t.date "deadline"
     t.float "percentage"
+    t.bigint "timeline_id"
+    t.index ["timeline_id"], name: "index_user_topics_on_timeline_id"
     t.index ["topic_id"], name: "index_user_topics_on_topic_id"
     t.index ["user_id"], name: "index_user_topics_on_user_id"
   end
@@ -432,6 +434,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_16_162356) do
   add_foreign_key "tuesday_slots", "users", column: "lc_id"
   add_foreign_key "tuesday_slots", "users", column: "learner_id"
   add_foreign_key "tuesday_slots", "weekly_meetings"
+  add_foreign_key "user_topics", "timelines"
   add_foreign_key "user_topics", "topics"
   add_foreign_key "user_topics", "users"
   add_foreign_key "users_hubs", "hubs"
