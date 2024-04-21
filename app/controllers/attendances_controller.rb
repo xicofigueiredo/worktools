@@ -19,6 +19,7 @@ class AttendancesController < ApplicationController
     @next_date = calculate_next_date(current_date, 'weekly')
     @time_frame = 'Weekly'
     @daily_grouped_attendances = fetch_weekly_attendances(current_date)
+    @has_learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner').exists?
   end
 
   def update_attendance
