@@ -1,41 +1,29 @@
+<%= turbo_page_requires_reload %>
 <div class="container">
-  <div class="d-flex gap-3 align-items-center mb-3">
+  <div class="d-flex gap-3 align-items-center mb-3 mt-3">
     <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
     <h4><%= @learner.full_name %>'s Profile</h4>
   </div>
 
   <div class="d-flex row gap-3 mb-5">
-    <div class="card p-2 shadow-sm bg-body-tertiary rounded col">
-      <div></div>
-      <p><%= @learner.full_name %></p>
-      <p><%= @learner.hubs.first.name %></p>
-      <p><%= @learner.email %></p>
-      <p>LC_1</p>
-      <p>LC_2</p>
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <p>Name: <%= @learner.full_name %></p>
+      <p>Hub: <%= @learner.hubs.first.name %></p>
+      <p>Email: <%= @learner.email %></p>
+      <% @hub_lcs.first(2).each do |lc| %>
+        <p>LC: <%= lc.full_name %></p>
+      <% end %>
     </div>
-    <div class="card p-2 shadow-sm bg-body-tertiary rounded col">
-      <div class="d-flex justify-content-between">
-        <p>Self-Directed Learning</p>
-        <p>4</p>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Motivation</p>
-        <p>3.5</p>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Initiative</p>
-        <p>5</p>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Hub Participation</p>
-        <p>4.5</p>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Peer-to-Peer Learning</p>
-        <p>4</p>
-      </div>
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <% @average_items.each do |average_item| %>
+        <div class="d-flex justify-content-between">
+          <p><%= average_item[:title] %></p>
+          <p><%= average_item[:average] %></p>
+        </div>
+      <% end %>
     </div>
-    <div class="card p-2 shadow-sm bg-body-tertiary rounded col">
+    <%# FIXME add dynamic numbers when attendance is ready %>
+    <%# <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
       <div class="d-flex justify-content-between">
         <p>Attendance</p>
         <p>80%</p>
@@ -52,36 +40,40 @@
         <p>Progress/Week</p>
         <p>2%</p>
       </div>
-    </div>
-    <div class="card p-2 shadow-sm bg-body-tertiary rounded col">
-      <div class="d-flex justify-content-between">
-        <p>Asks for Help</p>
-        <i class="fa-regular fa-square-check" style="color: green"></i>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Takes notes</p>
-        <i class="fa-regular fa-square-check" style="color: green"></i>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Goes to live lessons?</p>
-        <i class="fa-solid fa-x" style="color: red"></i>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Does Peer to Peer?</p>
-        <i class="fa-regular fa-square-check" style="color: green"></i>
-      </div>
+    </div> %>
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <%= form_with(model: @learner_flag, local: true) do |form| %>
+        <div class="d-flex justify-content-between align-items-center">
+          <p>Asks for Help</p>
+          <%= form.check_box :asks_for_help, onchange: "this.form.submit();" %>
+        </div>
+        <div class="d-flex justify-content-between">
+          <p>Takes notes</p>
+          <%= form.check_box :takes_notes, onchange: "this.form.submit();" %>
+        </div>
+        <div class="d-flex justify-content-between">
+          <p>Goes to live lessons?</p>
+          <%= form.check_box :goes_to_live_lessons, onchange: "this.form.submit();" %>
+        </div>
+        <div class="d-flex justify-content-between">
+          <p>Does Peer to Peer?</p>
+          <%= form.check_box :does_p2p, onchange: "this.form.submit();" %>
+        </div>
+      <% end %>
       <div class="d-flex justify-content-between">
         <p>Action Plan</p>
-        <i class="fa-solid fa-pencil"></i>
+        <%= link_to edit_learner_flag_path(@learner_flag), data: { turbo_frame: "modal" } do %>
+          <i class="fa-solid fa-pencil"></i>
+        <% end %>
       </div>
     </div>
   </div>
 
   <div class="mb-3">
     <h2>Notes</h2>
-    <p>Crearte and save your notes below</p>
-    <div class="card mb-2" style="border-radius: 10px">
-      <div class="px-1">
+    <p>Create and save your notes below</p>
+    <div class="card mb-2 shadow-sm" style="border-radius: 10px">
+      <div class="px-2">
         <table class="table">
           <thead>
             <tr>
@@ -94,149 +86,151 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Behavior</td>
-              <td>Strike 3 of disruption in the hub</td>
-              <td>12/01/2024</td>
-              <td>Arrange Meeting with parents.</td>
-              <td>
-                <select name="status" id="status">
-                  <option value="volvo">Not done</option>
-                  <option value="saab">In progress</option>
-                  <option value="mercedes">Resolved</option>
-                </select>
-              </td>
-              <td><i class="fa-solid fa-pencil"></i></td>
-            </tr>
-            <tr>
-              <td>Behavior</td>
-              <td>Strike 3 of disruption in the hub</td>
-              <td>12/01/2024</td>
-              <td>Arrange Meeting with parents.</td>
-              <td>
-                <select name="status" id="status">
-                  <option value="volvo">Not done</option>
-                  <option value="saab">In progress</option>
-                  <option value="mercedes">Resolved</option>
-                </select>
-              </td>
-              <td><i class="fa-solid fa-pencil"></i></td>
-            </tr>
-            <tr>
-              <td>Behavior</td>
-              <td>Strike 3 of disruption in the hub</td>
-              <td>12/01/2024</td>
-              <td>Arrange Meeting with parents.</td>
-              <td>
-                <select name="status" id="status">
-                  <option value="volvo">Not done</option>
-                  <option value="saab">In progress</option>
-                  <option value="mercedes">Resolved</option>
-                </select>
-              </td>
-              <td><i class="fa-solid fa-pencil"></i></td>
-            </tr>
+            <% if @notes.exists? %>
+              <% @notes.each do |note| %>
+              <tr>
+                <td><%= note.category %></td>
+                <td><%= note.topic %></td>
+                <td><%= note.date.strftime("%d/%m/%Y") %></td>
+                <td style="max-width: 250px;"><%= note.follow_up_action %></td>
+                <td>
+                  <%= form_with model: [note.user, note], remote: true do |f| %>
+                    <%= f.select :status, ['Not Done', 'In Progress', 'Completed'], {}, { onchange: "this.form.submit();" } %>
+                  <% end %>
+                </td>
+                <td>
+                  <%= link_to edit_user_note_path(@learner, note), data: { turbo_frame: "modal" } do %>
+                    <i class="fa-solid fa-pencil"></i>
+                  <% end %>
+                </td>
+              </tr>
+              <% end %>
+            <% else %>
+            <td colspan="6">
+              <div class="text-center py-5">
+                <h2>No Notes available...</h2>
+              </div>
+            </td>
+            <% end %>
           </tbody>
         </table>
       </div>
     </div>
     <div style="width: 100%" class="d-flex justify-content-end">
-      <button type="button" class="btn btn-primary py-1" style="border-radius: 7px">Create note</button>
+      <%= link_to 'Create New Note', new_user_note_path(@learner), data: { turbo_frame: "modal" }, class: 'btn btn-primary', style: 'border-radius: 10px;' %>
     </div>
   </div>
 
   <h2>Knowledge</h2>
   <p>Check your academic goals below</p>
-  <div class="card mb-5">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Subject</th>
-          <th>Progress</th>
-          <th>Mock 50%</th>
-          <th>Mock 100%</th>
-          <th>Exam Season</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>A-Levels Mathematics</td>
-          <td>
-            <div class="progress-bar bg-primary" role="progressbar" style="width: 60%;" aria-valuenow="60%" aria-valuemin="0" aria-valuemax="100">
-              <span class="progress-text">60%</span> <!-- Display the actual progress percentage inside the bar -->
-            </div>
-          </td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-        </tr>
-        <tr>
-          <td>A-Levels Mathematics</td>
-          <td>
-            <div class="progress-bar bg-primary" role="progressbar" style="width: 60%;" aria-valuenow="60%" aria-valuemin="0" aria-valuemax="100">
-              <span class="progress-text">60%</span> <!-- Display the actual progress percentage inside the bar -->
-            </div>
-          </td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-        </tr>
-        <tr>
-          <td>A-Levels Mathematics</td>
-          <td>
-            <div class="progress-bar bg-primary" role="progressbar" style="width: 60%;" aria-valuenow="60%" aria-valuemin="0" aria-valuemax="100">
-              <span class="progress-text">60%</span> <!-- Display the actual progress percentage inside the bar -->
-            </div>
-          </td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-          <td>12/01/2024</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="card mb-5" style="border-radius: 10px">
+    <div class="px-2">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Progress</th>
+            <th>Mock 50%</th>
+            <th>Mock 100%</th>
+            <% if @has_exam_date %>
+              <th>Exam Season</th>
+            <% end %>
+            <th>Start Date</th>
+            <th>End Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @timelines.exists? %>
+            <% @timelines.each_with_index do |timeline, index| %>
+              <tr>
+                <td><%= timeline.subject.name %></td>
+                <td style="width: 200px;">
+                  <div style="background-color: rgb(220,220,220); border-radius: 10px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.progress%>%; border-radius: 10px;" aria-valuenow="<%= timeline.progress%>" aria-valuemin="0" aria-valuemax="100">
+                      <span class="progress-text text-white"><%= timeline.progress %>%</span> <!-- Display the actual progress percentage inside the bar -->
+                    </div>
+                  </div>
+                </td>
+                <td><%= @mock50[index].strftime("%d/%m/%Y") %></td>
+                <td><%= @mock100[index].strftime("%d/%m/%Y") %></td>
+                <% if @has_exam_date %>
+                  <td>
+                    <% if timeline.exam_date.present? %>
+                      <% if timeline.exam_date.date.month == 5 || timeline.exam_date.date.month == 6 %>
+                        <p>May/ Jun <%= timeline.exam_date.date.strftime("%Y") %></p>
+                      <% elsif timeline.exam_date.date.month == 10 || timeline.exam_date.date.month == 11 %>
+                        <p>Oct/ Nov <%= timeline.exam_date.date.strftime("%Y") %></p>
+                      <% else %>
+                        <%= timeline.exam_date.date.strftime("%B %Y") %>
+                      <% end %>
+                    <% else %>
+                      <p>N/A</p>
+                    <% end %>
+                  </td>
+                <% end %>
+                <td><%= timeline.start_date.strftime("%d/%m/%Y") %></td>
+                <td><%= timeline.end_date.strftime("%d/%m/%Y") %></td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="7">
+                <div class="text-center py-5">
+                  <h2>No Timelines available...</h2>
+                  <p>Please help <%= @learner.full_name %> set up their timelines.</p>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <h2>Skills & Community</h2>
   <p>Check your skills and community goals for the sprint below.</p>
-  <div class="card mb-5">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Activity</th>
-          <th>Your Goals for this Activity</th>
-          <th>The challenges you might encounter.</th>
-          <th>The plan to overcome the challenges</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Rugby</td>
-          <td>Make it to the first team by May 2024</td>
-          <td>Not strong enough</td>
-          <td>Go to the club gym 3x a week, change my diet, sleep well</td>
-        </tr>
-        <tr>
-          <td>Rugby</td>
-          <td>Make it to the first team by May 2024</td>
-          <td>Not strong enough</td>
-          <td>Go to the club gym 3x a week, change my diet, sleep well</td>
-        </tr>
-        <tr>
-          <td>Rugby</td>
-          <td>Make it to the first team by May 2024</td>
-          <td>Not strong enough</td>
-          <td>Go to the club gym 3x a week, change my diet, sleep well</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="card mb-5" style="border-radius: 10px">
+    <div class="px-2">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Activity</th>
+            <th>Your Goals for this Activity</th>
+            <th>The challenges you might encounter.</th>
+            <th>The plan to overcome the challenges</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @skills && @communities %>
+            <% @skills.each do |skill| %>
+              <tr>
+                <td><%= skill.extracurricular %></td>
+                <td><%= skill.smartgoals %></td>
+                <td><%= skill.difficulties %></td>
+                <td><%= skill.plan %></td>
+              </tr>
+            <% end %>
+            <% @communities.each do |community| %>
+              <tr>
+                <td><%= community.involved %></td>
+                <td><%= community.smartgoals %></td>
+                <td><%= community.difficulties %></td>
+                <td><%= community.plan %></td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="4">
+                <div class="text-center py-5">
+                  <h2>No Sprint Goals yet...</h2>
+                  <p>Please help <%= @learner.full_name %> fill out their sprint goals.</p>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
 
 </div>

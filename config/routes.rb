@@ -29,6 +29,11 @@ Rails.application.routes.draw do
 
   end
 
+  resources :users do
+    resources :notes, except: [:show, :index]
+  end
+  resources :learner_flags, only: [:edit, :update]
+
   get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'
 
   resources :lws_timelines

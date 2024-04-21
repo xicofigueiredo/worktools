@@ -10,37 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
+ActiveRecord::Schema[7.0].define(version: 2024_04_20_124926) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-
-  create_table "active_storage_attachments", force: :cascade do |t|
-    t.string "name", null: false
-    t.string "record_type", null: false
-    t.bigint "record_id", null: false
-    t.bigint "blob_id", null: false
-    t.datetime "created_at", null: false
-    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
-    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
-  end
-
-  create_table "active_storage_blobs", force: :cascade do |t|
-    t.string "key", null: false
-    t.string "filename", null: false
-    t.string "content_type"
-    t.text "metadata"
-    t.string "service_name", null: false
-    t.bigint "byte_size", null: false
-    t.string "checksum"
-    t.datetime "created_at", null: false
-    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
-  end
-
-  create_table "active_storage_variant_records", force: :cascade do |t|
-    t.bigint "blob_id", null: false
-    t.string "variation_digest", null: false
-    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
-  end
 
   create_table "attendances", force: :cascade do |t|
     t.bigint "user_id"
@@ -72,11 +44,6 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["subject_id"], name: "index_exam_dates_on_subject_id"
-  end
-
-  create_table "excel_imports", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
   end
 
   create_table "friday_slots", force: :cascade do |t|
@@ -153,6 +120,31 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
     t.index ["timeline_id"], name: "index_knowledges_on_timeline_id"
   end
 
+  create_table "learner_flags", force: :cascade do |t|
+    t.boolean "asks_for_help", default: false
+    t.boolean "takes_notes", default: false
+    t.boolean "goes_to_live_lessons", default: false
+    t.boolean "does_p2p", default: false
+    t.text "action_plan", default: "", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_learner_flags_on_user_id"
+  end
+
+  create_table "lws_timelines", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.date "start_date"
+    t.date "end_date"
+    t.integer "year"
+    t.integer "balance"
+    t.float "blocks_per_day"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "level"
+    t.index ["user_id"], name: "index_lws_timelines_on_user_id"
+  end
+
   create_table "monday_slots", force: :cascade do |t|
     t.bigint "weekly_meeting_id", null: false
     t.string "time_slot"
@@ -173,6 +165,18 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["kda_id"], name: "index_mots_on_kda_id"
+  end
+
+  create_table "notes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "category"
+    t.string "topic"
+    t.date "date"
+    t.text "follow_up_action"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_notes_on_user_id"
   end
 
   create_table "p2ps", force: :cascade do |t|
@@ -397,10 +401,13 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_19_004638) do
   add_foreign_key "kdas", "weeks"
   add_foreign_key "knowledges", "sprint_goals"
   add_foreign_key "knowledges", "timelines", on_delete: :cascade
+  add_foreign_key "learner_flags", "users"
+  add_foreign_key "lws_timelines", "users"
   add_foreign_key "monday_slots", "users", column: "lc_id"
   add_foreign_key "monday_slots", "users", column: "learner_id"
   add_foreign_key "monday_slots", "weekly_meetings"
   add_foreign_key "mots", "kdas"
+  add_foreign_key "notes", "users"
   add_foreign_key "p2ps", "kdas"
   add_foreign_key "sdls", "kdas"
   add_foreign_key "skills", "sprint_goals"

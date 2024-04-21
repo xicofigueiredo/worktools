@@ -1,0 +1,11 @@
+<%= simple_form_for(@learner_flag, html: { data: { turbo_visit_control: "reload" } }) do |f| %>
+
+  <div class="form-inputs mb-4">
+   <%= f.text_area :action_plan, class: 'form-control', rows: 4 %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit, "Update Action Plan", class: 'btn btn-primary' %>
+  </div>
+
+<% end %>
