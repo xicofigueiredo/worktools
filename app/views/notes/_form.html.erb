@@ -11,10 +11,13 @@
       <%= f.select :category, ['Behaviour', 'Knowledge', 'Skills & Community', 'Parents'], {}, { class: 'form-control' } %>
     </div>
 
-    <%= f.input :topic %>
+    <div class="mb-3">
+      <%= f.label :topic %>
+      <%= f.text_area :topic, class: 'form-control', rows: 3 %>
+    </div>
 
     <%= f.label :follow_up_action %>
-    <%= f.text_area :follow_up_action, class: 'form-control', rows: 3 %>
+    <%= f.text_area :follow_up_action, class: 'form-control', rows: 2 %>
 
   </div>
 
