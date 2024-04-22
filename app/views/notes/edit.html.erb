@@ -1,0 +1,48 @@
+<%= turbo_frame_tag "modal" do %>
+  <div class="modal-backdrop">
+    <div class="custom-modal-edit">
+      <div class="d-flex justify-content-between mb-3" style="width: 32rem">
+        <h1>Editing note</h1>
+        <div>
+          <%= link_to 'X', '#', data: {
+              controller: "modals",
+              action: "modals#close"
+            }, class: "btn btn-secondary" %>
+        </div>
+      </div>
+
+      <%= simple_form_for([@learner, @note]) do |f| %>
+        <%= f.error_notification %>
+        <%= f.error_notification message: f.object.errors[:base].to_sentence if f.object.errors[:base].present? %>
+
+        <div class="form-inputs mb-3">
+          <div class="mb-3">
+            <div class="mb-2">
+              <%= f.label :category %>
+            </div>
+            <%= f.select :category, ['Behaviour', 'Proactivity', 'Mood'], {}, { class: 'form-control' } %>
+          </div>
+
+          <%= f.input :topic %>
+
+          <%= f.label :follow_up_action %>
+          <%= f.text_area :follow_up_action, class: 'form-control', rows: 3 %>
+
+        </div>
+
+        <div class="form-actions pt-2">
+          <%= f.button :submit, class: 'btn btn-primary' %>
+        </div>
+      <% end %>
+
+      <div class="d-flex justify-content-end">
+        <%= form_with url: user_note_path(@learner, @note), method: :delete do %>
+          <div style="margin-top: -38px">
+            <%= submit_tag 'Delete Note', data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+          </div>
+        <% end %>
+      </div>
+
+    </div>
+  </div>
+<% end %>

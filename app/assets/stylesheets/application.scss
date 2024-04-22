@@ -11,3 +11,51 @@
 // Your CSS partials
 @import "components/index";
 @import "pages/index";
+
+.custom-modal {
+  position: fixed;
+  z-index: 20;
+  padding: 2em;
+
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  overflow: auto;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.19);
+}
+
+.custom-modal-edit {
+  position: fixed;
+  z-index: 20;
+  padding: 2em 2em 2em 2em;
+
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  overflow: auto;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.19);
+}
+
+.modal-backdrop {
+  position: fixed;
+  z-index: 19;
+  background-color: rgba(0, 0, 0, 0.19);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.on-card-hover {
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.on-card-hover:hover {
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.19);
+}

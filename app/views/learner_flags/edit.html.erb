@@ -1,0 +1,18 @@
+<%= turbo_frame_tag "modal" do %>
+  <div class="modal-backdrop">
+    <div class="custom-modal">
+      <div class="d-flex justify-content-between mb-3" style="width: 32rem">
+        <h1>Action Plan</h1>
+        <div>
+          <%= link_to 'X', '#', data: {
+              controller: "modals",
+              action: "modals#close"
+            }, class: "btn btn-secondary" %>
+        </div>
+      </div>
+
+      <%= render "form", learner_flag: @learner_flag %>
+
+    </div>
+  </div>
+<% end %>

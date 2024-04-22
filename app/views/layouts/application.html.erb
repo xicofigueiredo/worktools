@@ -22,7 +22,7 @@
     <% else %>
       <%= render "shared/navbar" %>
     <% end %>
-
+    <%= turbo_frame_tag "modal" %>
     <%= yield %>
   </body>
 </html>

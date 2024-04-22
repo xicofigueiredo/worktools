@@ -12,8 +12,10 @@ Rails.application.routes.draw do
   get '/get_topics', to: 'subjects#get_topics'
   patch '/timelines/:id/update_done_topics', to: 'timelines#update_done_topics', as: 'update_done_topics'
   get '/about', to: 'pages#about'
-    get 'dashboard_admin', to: 'pages#dashboard_admin'
-    get 'dashboard_lc', to: 'pages#dashboard_lc'
+  get 'dashboard_admin', to: 'pages#dashboard_admin'
+  get 'dashboard_lc', to: 'pages#dashboard_lc'
+  get 'learner_profile/:id', to: 'pages#learner_profile', as: 'learner_profile'
+
 
   # Attendances Routes
   get '/attendance', to: 'attendances#attendance'
@@ -26,6 +28,11 @@ Rails.application.routes.draw do
   patch 'attendance/:id/update_comments', to: 'attendances#update_comments', as: :update_comments_attendance
 
   end
+
+  resources :users do
+    resources :notes, except: [:show, :index]
+  end
+  resources :learner_flags, only: [:edit, :update]
 
   get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'
 

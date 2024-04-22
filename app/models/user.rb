@@ -23,10 +23,12 @@ class User < ApplicationRecord
   has_many :thursday_slots_as_learner, class_name: 'ThursdaySlot', foreign_key: 'learner_id', dependent: :destroy
   has_many :friday_slots_as_learner, class_name: 'FridaySlot', foreign_key: 'learner_id', dependent: :destroy
   has_many :lws_timelines, dependent: :destroy
-  has_many :attendances
+  has_many :attendances, dependent: :destroy
+  has_many :notes, dependent: :destroy
+  has_one :learner_flag, dependent: :destroy
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner' }
 
-  after_create :associate_with_hubs
+  after_create :associate_with_hubs, :create_learner_flag
   # after_commit :send_welcome_email, on: :create
   # after_commit :post_create_actions, on: :create
 
@@ -52,6 +54,11 @@ class User < ApplicationRecord
 
   def send_welcome_email
     UserMailer.welcome_email(self).deliver_now
+  end
+
+  def create_learner_flag
+    #FIXME adjust to create only for learners later
+    build_learner_flag.save
   end
 
   # def post_create_actions
