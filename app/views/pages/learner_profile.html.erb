@@ -130,8 +130,12 @@
           <tr>
             <th>Subject</th>
             <th>Progress</th>
-            <th>Mock 50%</th>
-            <th>Mock 100%</th>
+            <% if @has_mock50 %>
+              <th>Mock 50%</th>
+            <% end %>
+            <% if @has_mock100 %>
+              <th>Mock 100%</th>
+            <% end %>
             <% if @has_exam_date %>
               <th>Exam Season</th>
             <% end %>
@@ -151,8 +155,12 @@
                     </div>
                   </div>
                 </td>
-                <td><%= @mock50[index].strftime("%d/%m/%Y") %></td>
-                <td><%= @mock100[index].strftime("%d/%m/%Y") %></td>
+                <% if @has_mock50 %>
+                  <td><%= @mock50[index].strftime("%d/%m/%Y") %></td>
+                <% end %>
+                <% if @has_mock50 %>
+                  <td><%= @mock100[index].strftime("%d/%m/%Y") %></td>
+                <% end %>
                 <% if @has_exam_date %>
                   <td>
                     <% if timeline.exam_date.present? %>

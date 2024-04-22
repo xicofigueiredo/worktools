@@ -91,6 +91,9 @@ class PagesController < ApplicationController
     @has_exam_date = @timelines.any? { |timeline| timeline.exam_date.present? }
 
     get_mocks_dates(@learner)
+    @has_mock50 = !@mock50.empty?
+    @has_mock100 = !@mock100.empty?
+
     get_kda_averages(@learner.kdas)
     unless @learner
       redirect_to some_fallback_path, alert: "Learner not found."
