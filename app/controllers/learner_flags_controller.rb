@@ -18,7 +18,7 @@ class LearnerFlagsController < ApplicationController
   private
 
   def set_learner_flag
-    @learner_flag = LearnerFlag.find(params[:id])  # Assuming that the form correctly passes the LearnerFlag's ID
+    @learner_flag = LearnerFlag.find(params[:id])
   end
 
   def learner_flag_params
