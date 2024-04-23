@@ -94,15 +94,6 @@ class WeeklyGoalsController < ApplicationController
     params.require(:weekly_goal).permit(:week_id, :start_date, :end_date, :user_id, :name, :subject_skill, weekly_slots_attributes: [:id, :day_of_week, :time_slot, :subject_name, :topic_name])
   end
 
-  def build_weekly_slots
-    @weekly_slots = []
-    WeeklySlot.time_slots.keys.each do |time_slot|
-      WeeklySlot.day_of_weeks.keys.each do |day_of_week|
-        @weekly_slots << @weekly_goal.weekly_slots.build(day_of_week: day_of_week, time_slot: time_slot)
-      end
-    end
-  end
-
   def set_subject_names
     @subject_names = current_user.timelines.map(&:subject).uniq.pluck(:name)
     current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
@@ -125,22 +116,38 @@ class WeeklyGoalsController < ApplicationController
     @topic_names = @topics.map { |topic| ["#{topic.name} (#{topic.unit})"] }
   end
 
+  def build_weekly_slots
+    WeeklySlot.day_of_weeks.keys.each do |day_of_week|
+      WeeklySlot.time_slots.keys.each do |time_slot|
+        unless @weekly_goal.weekly_slots.exists?(day_of_week: day_of_week, time_slot: time_slot)
+          @weekly_goal.weekly_slots.build(day_of_week: day_of_week, time_slot: time_slot)
+        end
+      end
+    end
+  end
+
   def save_weekly_slots
     return unless params[:weekly_goal].present?
 
     WeeklySlot.day_of_weeks.keys.each do |day|
       WeeklySlot.time_slots.keys.each do |time|
-        subject = params[:weekly_goal]["#{day.downcase}_#{time.downcase}_subject"]
-        topic = params[:weekly_goal]["#{day.downcase}_#{time.downcase}_topic"]
+        # Build keys for subject and topic
+        subject_key = "#{day.downcase}_#{time.downcase}_subject"
+        topic_key = "#{day.downcase}_#{time.downcase}_topic"
 
-        # If subject is not present, set it to an empty string
-        subject ||= ""
+        # Find existing slot or initialize a new one
+        slot = @weekly_goal.weekly_slots.find_or_initialize_by(day_of_week: day, time_slot: time)
 
-        # Create weekly slot
-        @weekly_goal.weekly_slots.create(day_of_week: day, time_slot: time, subject_name: subject, topic_name: topic)
+        # Assign new values from parameters
+        slot.subject_name = params[:weekly_goal][subject_key].presence || ""
+        slot.topic_name = params[:weekly_goal][topic_key].presence || ""
+
+        # Check if the slot is new or has changes and save it
+        slot.save if slot.new_record? || slot.changed?
       end
     end
   end
+
 
   def set_available_weeks(edit_week_id = nil)
     used_week_ids = current_user.weekly_goals.pluck(:week_id)
@@ -159,6 +166,17 @@ class WeeklyGoalsController < ApplicationController
     if edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
       @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
     end
+  end
+
+  def dynamic_slot_params
+    allowed_params = []
+    WeeklySlot.day_of_weeks.keys.each do |day|
+      WeeklySlot.time_slots.keys.each do |time|
+        allowed_params << "#{day.downcase}_#{time.downcase}_subject"
+        allowed_params << "#{day.downcase}_#{time.downcase}_topic"
+      end
+    end
+    allowed_params
   end
 
 end

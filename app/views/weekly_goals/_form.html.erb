@@ -42,8 +42,10 @@
                             <%= form.collection_select "#{day}_#{time}_subject", @combined_options, :itself, :itself,
                                 { selected: selected_subject, prompt: "" },
                                 { data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control" } %>
-                            <% selected_topic_id = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:topic_id) %>
-                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :last, :first, { selected: selected_topic_id, prompt: "" }, { data: { selects_target: "topic" }, class: "form-control" } %>
+                            <% selected_topic = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:topic_name) %>
+                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :last, :first,
+                                { selected: selected_topic, prompt: "" },
+                                { data: { selects_target: "topic" }, class: "form-control" } %>
                           </div>
                         </td>
                       <% end %>
