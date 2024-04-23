@@ -44,6 +44,8 @@ Rails.application.routes.draw do
 
   resources :holidays, except: [:show, :index]
   resources :timelines
+
+  get 'weekly_goals/week/:date', to: 'weekly_goals#navigator', as: :weekly_goals_navigator
   resources :weekly_goals do
     resources :weekly_slots
   end
