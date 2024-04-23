@@ -161,7 +161,7 @@ class WeeklyGoalsController < ApplicationController
 
     # Exclude the edit_week_id from used_week_ids if provided
     used_week_ids.delete(edit_week_id) if edit_week_id.present?
-    @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
+    @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids).order(:start_date)
     # Ensure the current week is included if we're editing
     if edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
       @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
