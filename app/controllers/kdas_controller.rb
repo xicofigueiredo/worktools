@@ -1,7 +1,6 @@
 class KdasController < ApplicationController
   before_action :authenticate_user!
   before_action :set_kda, only: [:show, :edit, :update, :destroy, :show]
-  before_action :set_weeks, only: [:new, :edit, :create, :update, :show]
   before_action :set_available_weeks, only: [:new, :edit, :create, :update, :show]
 
   # GET /kdas
@@ -28,8 +27,7 @@ class KdasController < ApplicationController
 
   # GET /kdas/1/edit
   def edit
-    @@kda = Kda.find(params[:id])
-    @available_weeks = Week.all
+    @kda = Kda.find(params[:id])
   end
 
   # POST /kdas
@@ -40,7 +38,6 @@ class KdasController < ApplicationController
     if @kda.save
       redirect_to kdas_path, notice: 'Kda was successfully created.'
     else
-      set_weeks # Ensures @weeks is set for the form
       flash.now[:alert] = 'KDA could not be created. Please check your input.'
       render :new, status: :unprocessable_entity
     end
@@ -51,7 +48,6 @@ class KdasController < ApplicationController
     if @kda.update(kda_params)
       redirect_to kdas_path, notice: 'Kda was successfully updated.'
     else
-      set_weeks # Make sure @weeks is set for the form to render correctly
       flash.now[:alert] =  'KDA could not be updated. Please check your input.'
       render :new, status: :unprocessable_entity
     end
@@ -70,10 +66,6 @@ class KdasController < ApplicationController
       @kda = Kda.find(params[:id])
     end
 
-    def set_weeks
-      @weeks = Week.all.order(:start_date)
-    end
-
     def kda_params
       params.require(:kda).permit(
                     :week_id, :user_id,
@@ -86,9 +78,8 @@ class KdasController < ApplicationController
 
     def set_available_weeks(edit_week_id = nil)
       used_week_ids = current_user.kdas.pluck(:week_id)
-      @available_weeks = Week.where.not(id: used_week_ids)
+      @available_weeks = Week.where.not(id: used_week_ids).order(start_date: :asc)
 
-      used_week_ids = current_user.kdas.pluck(:week_id)
       current_sprint = nil
       Sprint.all.each do |sprint|
         if sprint.start_date <= Date.today && sprint.end_date >= Date.today
