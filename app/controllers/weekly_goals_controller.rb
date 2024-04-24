@@ -33,6 +33,14 @@ class WeeklyGoalsController < ApplicationController
     @last_completed_weekly_goal = @weekly_goals.first
   end
 
+  def navigator
+    @current_date = Date.parse(params[:date])
+    @user_goals = current_user.weekly_goals
+    @weekly_goal = current_user.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
+    @weekly_slots = @weekly_goal&.weekly_slots
+    @current_week = Week.find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
+  end
+
   def show
     @subjects = @weekly_goal.weekly_slots&.pluck(:subject_name)&.uniq || []
     @topics = @weekly_goal.weekly_slots&.pluck(:topic_name)&.uniq || []
@@ -40,12 +48,16 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def new
-    @weekly_goal = WeeklyGoal.new
+    @date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @current_week = Week.where("start_date <= ? AND end_date >= ?", @date, @date).first
+    @weekly_goal = current_user.weekly_goals.build(week: @current_week)
+    @is_edit = false
     build_weekly_slots
   end
 
   def edit
     @weekly_goal = WeeklyGoal.find(params[:id])
+    @is_edit = true
     set_available_weeks(@weekly_goal.week_id)
 
     # Pre-populate or build missing slots if necessary
@@ -60,10 +72,9 @@ class WeeklyGoalsController < ApplicationController
 
   def create
     @weekly_goal = current_user.weekly_goals.new(weekly_goal_params)
-
     if @weekly_goal.save
       save_weekly_slots
-      redirect_to @weekly_goal, notice: 'Weekly goal was successfully created.'
+      redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date), notice: 'Weekly goal was successfully created.'
     else
       render :new
     end
@@ -72,7 +83,7 @@ class WeeklyGoalsController < ApplicationController
   def update
     if @weekly_goal.update(weekly_goal_params)
       save_weekly_slots
-      redirect_to @weekly_goal, notice: 'Weekly goal was successfully updated.'
+      redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date), notice: 'Weekly goal was successfully updated.'
     else
       render :edit
     end

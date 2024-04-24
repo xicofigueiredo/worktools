@@ -1,3 +1,6 @@
-<h1>Edit Weekly Goal</h1>
-
-<%= render 'form', weekly_goal: @weekly_goal, weekly_slots: @weekly_slots %>
+<div class="container mt-3">
+  <div class="mb-3">
+    <h1>Edit Weekly Goal for <%= @weekly_goal.week.sprint.name %> - <%= @weekly_goal.week.name %></h1>
+  </div>
+  <%= render 'form', weekly_goal: @weekly_goal, weekly_slots: @weekly_slots %>
+</div>
