@@ -56,7 +56,7 @@
                         <tr class="bg-gray">
                           <th class="text-uppercase">Time</th>
                           <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                            <th class="text-uppercase"><%= day.capitalize %></th>
+                            <th class="text-uppercase"><%= day.split('_').first.capitalize %></th>
                           <% end %>
                         </tr>
                       </thead>
@@ -71,9 +71,6 @@
                                   <% if slot %>
                                     <%= slot.subject_name %><br>
                                     <%= slot.topic_name %>
-                                  <% else %>
-                                    No subject<br>
-                                    No topic
                                   <% end %>
                                 </div>
                               </td>

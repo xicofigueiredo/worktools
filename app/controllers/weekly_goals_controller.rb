@@ -34,6 +34,7 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def navigator
+    ensure_weekly_goal_exists
     @current_date = Date.parse(params[:date])
     @user_goals = current_user.weekly_goals
     @weekly_goal = current_user.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
@@ -82,6 +83,7 @@ class WeeklyGoalsController < ApplicationController
 
   def update
     if @weekly_goal.update(weekly_goal_params)
+      Rails.logger.debug "Updated Weekly Goal Week Start Date: #{@weekly_goal.week.start_date}"
       save_weekly_slots
       redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date), notice: 'Weekly goal was successfully updated.'
     else
@@ -96,6 +98,17 @@ class WeeklyGoalsController < ApplicationController
 
 
   private
+
+  def ensure_weekly_goal_exists
+    @date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+    return if @current_week.nil?
+
+    @weekly_goal = current_user.weekly_goals.find_or_create_by(week: @current_week) do |wg|
+      wg.week = @current_week
+      build_weekly_slots(wg)
+    end
+  end
 
   def set_weekly_goal
     @weekly_goal = current_user.weekly_goals.find(params[:id])
@@ -118,20 +131,26 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def set_topic_names
-    @topics = Topic.joins(:user_topics)
+    @topics = Topic.joins(:subject)
+                  .joins(:user_topics)
                   .where(user_topics: { user_id: current_user.id, done: false })
-                  .select('topics.id, topics.name, user_topics.deadline, topics.unit')
+                  .select('topics.id, topics.name, user_topics.deadline, topics.unit, subjects.category as subject_category')
                   .order('topics.unit ASC, user_topics.deadline ASC')
 
-    # Use 'map' to extract the name and 'uniq' to remove duplicates
-    @topic_names = @topics.map { |topic| ["#{topic.name} (#{topic.unit})"] }
+    @topic_names = @topics.map do |topic|
+      if topic.subject_category == 'lws'
+        "#{topic.unit} - #{topic.name}"
+      else
+        topic.name
+      end
+    end.uniq
   end
 
-  def build_weekly_slots
+  def build_weekly_slots(weekly_goal)
     WeeklySlot.day_of_weeks.keys.each do |day_of_week|
       WeeklySlot.time_slots.keys.each do |time_slot|
-        unless @weekly_goal.weekly_slots.exists?(day_of_week: day_of_week, time_slot: time_slot)
-          @weekly_goal.weekly_slots.build(day_of_week: day_of_week, time_slot: time_slot)
+        unless weekly_goal.weekly_slots.exists?(day_of_week: day_of_week, time_slot: time_slot)
+          weekly_goal.weekly_slots.build(day_of_week: day_of_week, time_slot: time_slot)
         end
       end
     end

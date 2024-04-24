@@ -25,7 +25,7 @@
                   <tr class="bg-gray">
                     <th class="text-uppercase">Time</th>
                     <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                      <th class="text-uppercase"><%= day.capitalize %></th>
+                      <th class="text-uppercase"><%= day.split('_').first.capitalize %></th>
                     <% end %>
                   </tr>
                 </thead>
@@ -41,7 +41,7 @@
                                 { selected: selected_subject, prompt: "" },
                                 { data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control" } %>
                             <% selected_topic = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:topic_name) %>
-                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :last, :first,
+                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself,
                                 { selected: selected_topic, prompt: "" },
                                 { data: { selects_target: "topic" }, class: "form-control" } %>
                           </div>
