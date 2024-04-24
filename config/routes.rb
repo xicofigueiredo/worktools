@@ -4,7 +4,7 @@ Rails.application.routes.draw do
   }
   authenticate :user do
   root to: "timelines#index"
-  get '*path', to: redirect('/'), constraints: lambda { |req| req.path != "/" }
+
   get 'profile', to: 'pages#profile'
   get 'report', to: 'pages#report'
   get 'edit_profile', to: 'pages#edit_profile'
@@ -71,5 +71,8 @@ Rails.application.routes.draw do
       patch :toggle_done
     end
   end
+
+  match '*path', via: :all, to: 'pages#not_found'
+
 
 end

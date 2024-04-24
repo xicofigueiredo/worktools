@@ -102,6 +102,10 @@ class PagesController < ApplicationController
     end
   end
 
+  def not_found
+    render 'not_found', status: :not_found
+  end
+
 
   private
 
