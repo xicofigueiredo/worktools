@@ -38,7 +38,6 @@ class WeeklyGoalsController < ApplicationController
     @user_goals = current_user.weekly_goals
     @weekly_goal = current_user.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
     @weekly_slots = @weekly_goal&.weekly_slots
-
     @current_week = Week.find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
   end
 
@@ -62,13 +61,13 @@ class WeeklyGoalsController < ApplicationController
     set_available_weeks(@weekly_goal.week_id)
 
     # Pre-populate or build missing slots if necessary
-    # WeeklySlot.time_slots.keys.each do |time|
-    #   WeeklySlot.day_of_weeks.keys.each do |day|
-    #     unless @weekly_goal.weekly_slots.any? { |slot| slot.day_of_week == day && slot.time_slot == time }
-    #       @weekly_goal.weekly_slots.build(day_of_week: day, time_slot: time)
-    #     end
-    #   end
-    # end
+    WeeklySlot.time_slots.keys.each do |time|
+      WeeklySlot.day_of_weeks.keys.each do |day|
+        unless @weekly_goal.weekly_slots.any? { |slot| slot.day_of_week == day && slot.time_slot == time }
+          @weekly_goal.weekly_slots.build(day_of_week: day, time_slot: time)
+        end
+      end
+    end
   end
 
   def create
@@ -84,7 +83,7 @@ class WeeklyGoalsController < ApplicationController
   def update
     if @weekly_goal.update(weekly_goal_params)
       save_weekly_slots
-      redirect_to @weekly_goal, notice: 'Weekly goal was successfully updated.'
+      redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date), notice: 'Weekly goal was successfully updated.'
     else
       render :edit
     end

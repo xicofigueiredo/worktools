@@ -2,9 +2,9 @@
   <% unless @is_edit %>
     <%= form.hidden_field :week_id, value: @current_week.id %>
   <% end %>
-  <div class="container py-5">
+  <div class="container">
     <div class="row justify-content-center">
-      <div class="col-md-13">
+      <div class="col-md-12 p-0">
         <% if @weekly_goal.errors.any? %>
           <div id="error_explanation" class="alert alert-danger">
             <h2><%= pluralize(@weekly_goal.errors.count, "error") %> prohibited this weekly goal from being saved:</h2>
@@ -55,8 +55,8 @@
 
             <!-- Form Actions -->
             <div class="text-center mt-4">
+              <%= link_to "Back", weekly_goals_navigator_path(@weekly_goal.week.start_date), class: "btn btn-secondary" %>
               <%= form.submit 'Save Weekly Goal', class: 'btn btn-primary' %>
-              <%= link_to "Back", weekly_goals_path, class: "btn btn-secondary" %>
             </div>
           </div>
         </div>

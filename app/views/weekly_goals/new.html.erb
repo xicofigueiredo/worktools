@@ -1,6 +1,6 @@
-<h1>New Weekly Goal for <%= @current_week&.sprint&.name %> - <%= @current_week&.name %></h1>
-
-<%= render 'form', weekly_goal: @weekly_goal, weekly_slots: @weekly_slots %>
-
-
-<%= link_to "Back", weekly_goals_path %>
+<div class="container mt-3">
+  <div class="mb-3">
+    <h1>New Weekly Goal for <%= @current_week&.sprint&.name %> - <%= @current_week&.name %></h1>
+  </div>
+  <%= render 'form', weekly_goal: @weekly_goal, weekly_slots: @weekly_slots %>
+</div>
