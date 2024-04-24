@@ -4,7 +4,7 @@ Rails.application.routes.draw do
   }
   authenticate :user do
   root to: "timelines#index"
-  get '*path', to: redirect('/')
+  get '*path', to: redirect('/'), constraints: lambda { |req| req.path != "/" }
   get 'profile', to: 'pages#profile'
   get 'report', to: 'pages#report'
   get 'edit_profile', to: 'pages#edit_profile'
