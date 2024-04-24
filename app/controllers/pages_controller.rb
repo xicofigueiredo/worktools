@@ -1,5 +1,7 @@
 class PagesController < ApplicationController
   skip_before_action :authenticate_user!
+  before_action :check_admin_role, only: [:dashboard_admin]
+  before_action :check_lc_role, only: [:dashboard_lc, :learner_profile, :attendance, :attendances, :learner_attendances, :update_attendance, :update_absence_attendance, :update_start_time_attendance, :update_end_time_attendance, :update_comments_attendance]
 
   def dashboard_admin
     if current_user.role == "admin"
@@ -158,6 +160,18 @@ class PagesController < ApplicationController
         end
       end
       @closest_future_deadline_by_timeline[timeline.id] = closest_future_deadline
+    end
+  end
+
+  def check_admin_role
+    unless current_user.role == "admin"
+      redirect_to root_path, alert: "You are not authorized to access this page."
+    end
+  end
+
+  def check_lc_role
+    unless current_user.role == "lc"
+      redirect_to root_path, alert: "You are not authorized to access this page."
     end
   end
 end
