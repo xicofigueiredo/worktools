@@ -6,14 +6,18 @@
   <div class="container mt-3">
     <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
 
-      <div class="d-flex">
-        <h1><%= @current_week.sprint.name %> - <%= @current_week.name %></h1>
+      <div>
+        <h1><%= @current_week.name %></h1>
       </div>
 
       <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
         <%= link_to '<i class="fa-solid fa-chevron-left"></i>'.html_safe, weekly_goals_navigator_path(@current_date - 7), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
         <%= link_to 'This Week', weekly_goals_navigator_path(Date.today), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
         <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe, weekly_goals_navigator_path(@current_date + 7), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+      </div>
+
+      <div>
+        <h1><%= @current_week.sprint.name %></h1>
       </div>
     </div>
 
@@ -31,7 +35,7 @@
 
       <div class="row justify-content-center">
         <div class="col-md-12">
-          <div class="card">
+          <div class="card shadow-sm" style="border-radius: 10px;">
             <div class="card-body">
               <div class="container">
                   <div class="row">
@@ -84,7 +88,7 @@
               </div>
 
               <div class="text-center">
-                <%= link_to "Edit", edit_weekly_goal_path(@weekly_goal), class: "btn btn-primary mr-2" %>
+                <%= link_to "Edit", edit_weekly_goal_path(@weekly_goal), class: "btn btn-primary mr-2", style: 'border-radius: 10px;' %>
               </div>
 
             </div>
