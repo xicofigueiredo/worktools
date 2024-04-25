@@ -174,7 +174,7 @@ class PagesController < ApplicationController
   end
 
   def check_lc_role
-    unless current_user.role == "lc"
+    unless current_user.role != "learner"
       redirect_to root_path, alert: "You are not authorized to access this page."
     end
   end
