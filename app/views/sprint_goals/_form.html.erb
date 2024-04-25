@@ -14,67 +14,81 @@
       font-size: 13px;
     }
   </style>
-  <div class="container py-2">
-    <div class="row justify-content-center">
-      <div class="col-12"> <!-- Adjusted for full width -->
-        <div class="card">
-          <div class="card-body">
-              <div class="form-group">
-                <%= form.collection_select :sprint_id, @available_sprints, :id, :name, { include_blank: "Please select a Sprint"}, { class: 'form-select', required: true } %>
-              </div>
-            <h3 class="card-title text-center mb-4 mt-4">Knowledge Block</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th class="custom-font-size">Subject</th>
-                  <th class="custom-font-size">Exam Season</th>
-                  <th class="custom-font-size">50% Mock</th>
-                  <th class="custom-font-size">100% Mock</th>
-                  <th class="custom-font-size">What difficulties do you expect to encounter with this target?</th>
-                  <th class="custom-font-size">Explain your plan to achieve your goal in 3 steps or more.</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% current_user.timelines.each_with_index do |timeline, index| %>
-                  <% knowledge = @sprint_goal.knowledges.find_or_initialize_by(subject_name: timeline.subject.name) %>
-                  <%= fields_for "sprint_goal[knowledges_attributes][]", knowledge do |knowledge_form| %>
-                    <tr>
-                      <td class="custom-font-size"><%= knowledge_form.text_field :subject_name, value: timeline.subject.name, readonly: true, class: 'form-control' %></td>
-                      <td class="custom-font-size"><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A'%></td>
-                      <% if current_user.level == 'lws' || timeline.subject.category == 'up' %>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                      <% else %>
-                        <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A' %></td>
-                        <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'%></td>
-                      <% end %>
-                      <!-- Hidden field to ensure the knowledge is associated with the correct timeline -->
-                      <%= knowledge_form.hidden_field :timeline_id, value: timeline.id %>
-                      <td class="custom-font-size"><%= knowledge_form.text_area :difficulties, class: 'form-control' %></td>
-                      <td class="custom-font-size"><%= knowledge_form.text_area :plan, class: 'form-control' %></td>
-                    </tr>
-                  <% end %>
+  <div class="py-2">
+    <div class="mb-4">
+      <h2 class="mb-3">Knowledge Block</h2>
+      <div class="card mb-2 shadow-sm" style="border-radius: 10px">
+        <div class="px-2">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="custom-font-size vertical-mid" style="vertical-align: middle;">
+                  Subject
+                </th>
+                <th class="custom-font-size" style="vertical-align: middle;">
+                  Exam Season
+                </th>
+                <th class="custom-font-size" style="vertical-align: middle;">
+                  50% Mock
+                </th>
+                <th class="custom-font-size" style="vertical-align: middle;">
+                  100% Mock
+                </th>
+                <th class="custom-font-size" style="vertical-align: middle;">
+                  What difficulties do you expect to encounter with this target?
+                </th>
+                <th class="custom-font-size" style="vertical-align: middle;">
+                  Explain your plan to achieve your goal in 3 steps or more.
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <% current_user.timelines.each_with_index do |timeline, index| %>
+                <% knowledge = @sprint_goal.knowledges.find_or_initialize_by(subject_name: timeline.subject.name) %>
+                <%= fields_for "sprint_goal[knowledges_attributes][]", knowledge do |knowledge_form| %>
+                  <tr>
+                    <td class="custom-font-size"><%= knowledge_form.text_field :subject_name, value: timeline.subject.name, readonly: true, class: 'form-control' %></td>
+                    <td class="custom-font-size"><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A'%></td>
+                    <% if current_user.level == 'lws' || timeline.subject.category == 'up' %>
+                      <td>N/A</td>
+                      <td>N/A</td>
+                    <% else %>
+                      <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A' %></td>
+                      <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'%></td>
+                    <% end %>
+                    <!-- Hidden field to ensure the knowledge is associated with the correct timeline -->
+                    <%= knowledge_form.hidden_field :timeline_id, value: timeline.id %>
+                    <td class="custom-font-size"><%= knowledge_form.text_area :difficulties, class: 'form-control' %></td>
+                    <td class="custom-font-size"><%= knowledge_form.text_area :plan, class: 'form-control' %></td>
+                  </tr>
                 <% end %>
-              </tbody>
-            </table>
-          </div>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
-  <div class="container py-2">
-    <div class="row justify-content-center">
-      <div class="col-12"> <!-- Adjusted for full width -->
-        <div class="card">
-          <div class="card-body">
-            <h3 class="card-title text-center mb-4 mt-4">Skills Block</h3>
-            <table>
+  <div class="py-2">
+      <div class="mb-4">
+        <h2 class="mb-3">Skills Block</h2>
+        <div class="card mb-2 shadow-sm" style="border-radius: 10px">
+          <div class="px-2">
+            <table class="table">
               <thead>
                 <tr>
-                  <th class="custom-font-size" >What extracurricular activities or MOOCs will you get involved in?</th>
-                  <th class="custom-font-size" >What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
-                  <th class="custom-font-size" >What difficulties do you expect to encounter with this target?</th>
-                  <th class="custom-font-size" >Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+                  <th class="custom-font-size" style="vertical-align: middle;">
+                    What extracurricular activities or MOOCs will you get involved in?
+                  </th>
+                  <th class="custom-font-size" style="vertical-align: middle;">
+                    What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)
+                  </th>
+                  <th class="custom-font-size" style="vertical-align: middle;">
+                    What difficulties do you expect to encounter with this target?
+                  </th>
+                  <th class="custom-font-size" style="vertical-align: middle;">
+                    Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)
+                  </th>
                 </tr>
               </thead>
               <tbody data-nested-form-target="skillsContainer">
@@ -90,7 +104,9 @@
                 <% end %>
               </tbody>
             </table>
-            <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="skills">Add</button>
+            <div class="d-flex justify-content-center mb-3">
+              <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="skills" style='border-radius: 10px;'>Add</button>
+            </div>
             <template data-nested-form-target="template" data-kind="skills">
               <%= form.fields_for :skills, Skill.new, child_index: "TEMPLATE_INDEX" do |skill_form| %>
                 <tr>
@@ -104,55 +120,55 @@
           </div>
         </div>
       </div>
-    </div>
   </div>
 
- <div class="container py-2">
-    <div class="row justify-content-center">
-      <div class="col-12"> <!-- Adjusted for full width -->
-        <div class="card">
-          <div class="card-body">
-            <h3 class="card-title text-center mb-4 mt-4">Community Block</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th class="custom-font-size" >How do you plan to get involved in your community, are there any BGA Clubs, Hub Projects, or Volunteering that you want to get involved in? </th>
-                    <th class="custom-font-size" >What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
-                    <th class="custom-font-size" >What difficulties do you expect to encounter with this target?</th>
-                    <th class="custom-font-size" >Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
-                  </tr>
-                </thead>
-                <tbody data-nested-form-target="communitiesContainer">
-                  <% @sprint_goal.communities.each_with_index do |community, index| %>
-                    <%= form.fields_for :communities, community, child_index: index do |community_form| %>
-                      <tr>
-                        <td><%= community_form.text_field :involved, class: 'form-control'  %></td>
-                        <td><%= community_form.text_area :smartgoals, class: 'form-control'  %></td>
-                        <td><%= community_form.text_area :difficulties, class: 'form-control'  %></td>
-                        <td><%= community_form.text_area :plan, class: 'form-control'  %></td>
-                      </tr>
-                    <% end %>
+ <div class="py-2">
+    <div class="mb-4">
+      <h2 class="mb-3">Skills Block</h2>
+      <div class="card mb-2 shadow-sm" style="border-radius: 10px">
+        <div class="px-2">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="custom-font-size" >How do you plan to get involved in your community, are there any BGA Clubs, Hub Projects, or Volunteering that you want to get involved in? </th>
+                  <th class="custom-font-size" >What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
+                  <th class="custom-font-size" >What difficulties do you expect to encounter with this target?</th>
+                  <th class="custom-font-size" >Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+                </tr>
+              </thead>
+              <tbody data-nested-form-target="communitiesContainer">
+                <% @sprint_goal.communities.each_with_index do |community, index| %>
+                  <%= form.fields_for :communities, community, child_index: index do |community_form| %>
+                    <tr>
+                      <td><%= community_form.text_field :involved, class: 'form-control'  %></td>
+                      <td><%= community_form.text_area :smartgoals, class: 'form-control'  %></td>
+                      <td><%= community_form.text_area :difficulties, class: 'form-control'  %></td>
+                      <td><%= community_form.text_area :plan, class: 'form-control'  %></td>
+                    </tr>
                   <% end %>
-                </tbody>
-              </table>
-              <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="communities">Add</button>
-              <template data-nested-form-target="template" data-kind="communities">
-                <%= form.fields_for :communities, Community.new, child_index: "TEMPLATE_INDEX" do |community_form| %>
-                  <tr>
-                    <td><%= community_form.text_field :involved, class: 'form-control' %></td>
-                    <td><%= community_form.text_area :smartgoals, class: 'form-control' %></td>
-                    <td><%= community_form.text_area :difficulties, class: 'form-control' %></td>
-                    <td><%= community_form.text_area :plan, class: 'form-control' %></td>
-                  </tr>
                 <% end %>
-              </template>
-          </div>
+              </tbody>
+            </table>
+            <div class="d-flex justify-content-center mb-3">
+              <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="communities" style='border-radius: 10px;'>Add</button>
+            </div>
+            <template data-nested-form-target="template" data-kind="communities">
+              <%= form.fields_for :communities, Community.new, child_index: "TEMPLATE_INDEX" do |community_form| %>
+                <tr>
+                  <td><%= community_form.text_field :involved, class: 'form-control' %></td>
+                  <td><%= community_form.text_area :smartgoals, class: 'form-control' %></td>
+                  <td><%= community_form.text_area :difficulties, class: 'form-control' %></td>
+                  <td><%= community_form.text_area :plan, class: 'form-control' %></td>
+                </tr>
+              <% end %>
+            </template>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="form-group text-center">
-    <%= form.submit "Save Sprint Goal", class: "btn btn-primary" %>
+  <div class="form-group d-flex justify-content-center gap-2 mb-5">
+    <%= link_to 'Back', sprint_goals_path(date: @sprint_goal.sprint.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+    <%= form.submit "Save Sprint Goal", class: "btn btn-primary", style: 'border-radius: 10px;' %>
   </div>
 <% end %>

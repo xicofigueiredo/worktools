@@ -1,15 +1,180 @@
-<%= link_to "New Sprint goal", new_sprint_goal_path, class: "btn btn-primary mb-3" %>
+<div class="container mt-3">
+  <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
 
-<% @sprint_goals.each do |sprint_goal| %>
-  <div class="card mb-3">
-    <div class="card-body">
+    <div class="d-flex">
+      <h1><%= @sprint.name%></h1>
+    </div>
 
-      <p class="card-text">
-        <strong><%= sprint_goal.sprint.name %> <%= sprint_goal.sprint.start_date.year %> </strong> <br>
-      </p>
-      <%= link_to "Show", sprint_goal_path(sprint_goal), class: "btn btn-primary mr-2" %>
-      <%= link_to "Edit", edit_sprint_goal_path(sprint_goal), class: "btn btn-secondary mr-2" %>
-      <%= link_to "Delete", sprint_goal_path(sprint_goal), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
+    <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
+      <%= link_to '<i class="fa-solid fa-chevron-left"></i>'.html_safe, sprint_goals_path(date: @prev_date), class: "btn btn-outline-secondary rounded d-flex align-items-center #{'disabled' unless @has_prev_sprint}" %>
+      <%= link_to 'This Sprint', sprint_goals_path(Date.today), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+      <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe, sprint_goals_path(date: @next_date), class: "btn btn-outline-secondary rounded d-flex align-items-center #{'disabled' unless @has_next_sprint}" %>
+    </div>
+
+    <div>
+      <h1><%= @sprint.start_date.strftime('%Y') %></h1>
     </div>
   </div>
-<% end %>
+
+  <% if !@sprint_goal %>
+    <div class="d-flex flex-column gap-3 mt-5">
+      <div class="text-center">
+        <h1>There is currently no Sprint Goal for <%= @sprint.name %></h1>
+      </div>
+    </div>
+  <% else %>
+    <div class="mb-4">
+      <h2 class="mb-3">Knowledge Block</h2>
+      <div class="card mb-2 shadow-sm" style="border-radius: 10px">
+        <div class="px-2">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="vertical-align: middle;">
+                  What courses are you aiming to complete?
+                </th>
+                <th style="vertical-align: middle;">
+                  When are you planning on sitting the exams?
+                </th>
+                <th style="vertical-align: middle;">
+                  When do you plan to finish the course?
+                </th>
+                <th style="vertical-align: middle;">
+                  When do you plan to sit the 50% Mock?
+                </th>
+                <th style="vertical-align: middle;">
+                  When do you plan to sit the 100% Mock?
+                </th>
+                <th style="vertical-align: middle;">
+                  What Topic do you plan to have completed by the end of this sprint?
+                </th>
+                <th style="vertical-align: middle;">
+                  What difficulties do you expect to encounter with this target?
+                </th>
+                <th style="vertical-align: middle;">
+                  Explain your plan to achieve your goal in 3 steps or more.
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <% current_user.timelines.each do |timeline| %>
+                <% knowledge = @sprint_goal.knowledges.find_by(timeline: timeline) %>
+                <tr>
+                  <td class="custom-font-size"><%= timeline.subject.name %></td>
+                  <% if timeline.exam_date != nil %>
+                    <td class="custom-font-size"><%= timeline.exam_date.date.strftime("%d/%m/%Y") %></td>
+                  <% else %>
+                    <td class="custom-font-size">N/A</td>
+                  <% end %>
+                  <td class="custom-font-size"><%= timeline.end_date.strftime("%d/%m/%Y") %></td>
+                  <% mock50_topic = current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true)) %>
+                  <% if mock50_topic %>
+                    <td class="custom-font-size"><%= mock50_topic.deadline.strftime("%d/%m/%Y") %></td>
+                  <% else %>
+                    <td class="custom-font-size">N/A</td>
+                  <% end %>
+
+                  <% mock100_topic = current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true)) %>
+                  <% if mock100_topic %>
+                    <td class="custom-font-size"><%= mock100_topic.deadline.strftime("%d/%m/%Y") %></td>
+                  <% else %>
+                    <td class="custom-font-size">N/A</td>
+                  <% end %>
+                  <td class="custom-font-size"></td>
+
+                  <td><%= knowledge&.difficulties %></td>
+                  <td><%= knowledge&.plan %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <h2 class="mb-3">Skills Block</h2>
+      <div class="card mb-2 shadow-sm" style="border-radius: 10px">
+        <div class="px-2">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>What extracurricular activities or MOOCs will you get involved in?</th>
+                <th>What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
+                <th>What difficulties do you expect to encounter with this target?</th>
+                <th>Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+              </tr>
+            </thead>
+            <tbody data-nested-form-target="skillsContainer">
+
+              <% if @sprint_goal.skills.exists? %>
+                <% @sprint_goal.skills.each do |skill, index| %>
+                    <tr>
+                      <td><%= skill.extracurricular %></td>
+                      <td><%= skill.smartgoals %></td>
+                      <td><%= skill.difficulties %></td>
+                      <td><%= skill.plan %></td>
+                    </tr>
+                <% end %>
+              <% else %>
+                 <tr>
+                  <td colspan='4'>
+                    <div class="text-center my-5">
+                      <h2>No Skill Goals set yet...</h2>
+                      <p>Edit form to add Skill Goals.</p>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <h2 class="mb-3">Community Block</h2>
+      <div class="card mb-2 shadow-sm" style="border-radius: 10px">
+        <div class="px-2">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>How do you plan to get involved in your community, are there any BGA Clubs, Hub Projects, or Volunteering that you want to get involved in? </th>
+                <th>What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
+                <th>What difficulties do you expect to encounter with this target?</th>
+                <th>Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+              </tr>
+            </thead>
+            <tbody data-nested-form-target="communitiesContainer">
+              <% if @sprint_goal.communities.exists? %>
+                <% @sprint_goal.communities.each_with_index do |community, index| %>
+                    <tr>
+                      <td><%= community.involved %></td>
+                      <td><%= community.smartgoals %></td>
+                      <td><%= community.difficulties %></td>
+                      <td><%= community.plan %></td>
+                    </tr>
+                <% end %>
+              <% else %>
+                <tr>
+                  <td colspan='4'>
+                    <div class="text-center my-5">
+                      <h2>No Community Goals set yet...</h2>
+                      <p>Edit form to add Community Goals.</p>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-center mb-5">
+      <%= link_to 'Edit Sprint Goal', edit_sprint_goal_path(@sprint_goal), class: "btn btn-primary", style: 'border-radius: 10px;' %>
+    </div>
+
+  <% end %>
+</div>

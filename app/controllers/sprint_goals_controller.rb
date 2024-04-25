@@ -1,33 +1,31 @@
 class SprintGoalsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_sprint_goal, only: [:show, :edit, :update, :destroy]
+  before_action :set_sprint_goal, only: [:update]
   before_action :set_available_sprints, only: [:new]
 
   # GET /sprint_goals
   def index
     @sprint_goals = current_user.sprint_goals.includes(:sprint, :knowledges, :skills, :communities).order('sprints.start_date DESC')
+    @date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+    @all_sprints = Sprint.all
+    ensure_sprint_goal_exists(@date)
+    calc_nav_dates(@sprint)
+    @has_prev_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @prev_date, @prev_date).present?
+    @has_next_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @next_date, @next_date).present?
   end
 
   # GET /sprint_goals/1
   def show
-    @sprint = @sprint_goal.sprint
   end
 
   # GET /sprint_goals/new
   def new
-    @sprint_goal = current_user.sprint_goals.build
-    current_user.timelines.each do |timeline|
-      knowledge = @sprint_goal.knowledges.build
-      knowledge.subject_name = timeline.subject.name
-    end
-    @sprint_goal.skills.build
-    @sprint_goal.communities.build
   end
 
   # GET /sprint_goals/1/edit
   def edit
     @edit = true
-    set_available_sprints
     @sprint_goal = current_user.sprint_goals.find(params[:id])
     # If the @sprint_goal doesn't have associated knowledges for each timeline, you need to build them here
     current_user.timelines.each do |timeline|
@@ -39,21 +37,13 @@ class SprintGoalsController < ApplicationController
 
   # POST /sprint_goals
   def create
-    @sprint_goal = current_user.sprint_goals.build(sprint_goal_params)
-    if @sprint_goal.save
-      redirect_to sprint_goals_path, notice: 'sprint_goal was successfully created.'
-    else
-      set_available_sprints
-      render :new, status: :unprocessable_entity
-    end
   end
 
   # PATCH/PUT /sprint_goals/1
   def update
     if @sprint_goal.update(sprint_goal_params)
-      redirect_to @sprint_goal, notice: 'Sprint goal was successfully updated.'
+      redirect_to sprint_goals_path(date: @sprint_goal.sprint.start_date), notice: 'Sprint goal was successfully updated.'
     else
-      set_available_sprints
       render :edit, status: :unprocessable_entity
     end
   end
@@ -66,17 +56,22 @@ class SprintGoalsController < ApplicationController
 
   private
 
-  def set_sprint_goal
-    @sprint_goal = SprintGoal.find(params[:id])
+  def calc_nav_dates(current_sprint)
+    @next_date = current_sprint.end_date + 30
+    @prev_date = current_sprint.start_date - 30
   end
 
-  def set_available_sprints
-    used_sprints = current_user.sprint_goals.pluck(:sprint_id)
-    if @edit == true
-      @available_sprints = Sprint.all
-    else
-      @available_sprints = Sprint.where.not(id: used_sprints)
+  def ensure_sprint_goal_exists(date)
+    @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", date, date)
+    return if @sprint.nil?
+
+    @sprint_goal = current_user.sprint_goals.find_or_create_by(sprint: @sprint) do |sg|
+      sg.sprint = @sprint
     end
+  end
+
+  def set_sprint_goal
+    @sprint_goal = SprintGoal.find(params[:id])
   end
 
   def sprint_goal_params
