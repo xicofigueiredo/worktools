@@ -1,20 +1,29 @@
 require 'date'
 
 class AttendancesController < ApplicationController
+  # FIXME
+  # Function is not working, it says the yield is receiving no block.
+  # Potentially wrap set_time_zone method around const creation of each
+  # method or something..
+  around_action :set_time_zone
+
   def attendance
     create_daily_attendance()
-    @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @current_date = params[:date] ? Date.parse(params[:date]) : Time.zone.today
     @prev_date = calculate_prev_date(@current_date, 'daily')
     @next_date = calculate_next_date(@current_date, 'daily')
     @attendances = fetch_daily_attendances(@current_date)
     @has_learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner').exists?
+    @hub = current_user.hub
+    @time_zone = Time.zone
+    @current_date = Time.now
     if @has_learners == true
-      @is_today = @attendances ? @attendances.first.attendance_date == Date.today : false;
+      @is_today = @attendances ? @attendances.first.attendance_date == Time.zone.today : false;
     end
   end
 
   def index
-    current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    current_date = params[:date] ? Date.parse(params[:date]) : Time.zone.today
     @prev_date = calculate_prev_date(current_date, 'weekly')
     @next_date = calculate_next_date(current_date, 'weekly')
     @time_frame = 'Weekly'
@@ -28,14 +37,14 @@ class AttendancesController < ApplicationController
     attendance = learner.attendances.find_by(attendance_date: attendance_date)
 
     if attendance.nil?
-      learner.attendances.create(attendance_date: attendance_date, start_time: Time.now, present: true, absence: 'Present')
+      learner.attendances.create(attendance_date: attendance_date, start_time: Time.zone.now, present: true, absence: 'Present')
     else
       # If start time is present but end time is not, set end time
       if attendance.start_time.present? && attendance.end_time.blank?
-        attendance.update(end_time: Time.now)
+        attendance.update(end_time: Time.zone.now)
       # If start time is not present, set start time
       elsif attendance.start_time.blank?
-        attendance.update(start_time: Time.now, present: true, absence: 'Present')
+        attendance.update(start_time: Time.zone.now, present: true, absence: 'Present')
       end
     end
 
@@ -172,6 +181,16 @@ class AttendancesController < ApplicationController
       current_date + 7
     else
       current_date
+    end
+  end
+
+  # Set time zone of current hub
+  def set_time_zone
+    hub_time_zone = current_user.hubs.first.time_zone if current_user&.hubs
+    if hub_time_zone
+      Time.use_zone(hub_time_zone) { yield }
+    else
+      yield # Executes the action (e.g., show) in the default time zone if no hub time zone is found
     end
   end
 
