@@ -148,7 +148,7 @@ class TimelinesController < ApplicationController
     index = 0
 
     user_topics.each do |user_topic|
-      time_per_topic = (user_topic.calculate_percentage * total_time).round
+      time_per_topic = (user_topic.calculate_percentage * total_time)
       deadline_date = calculate_deadline_date(index, time_per_topic, working_days, total_time)
       user_topic.deadline = deadline_date
       user_topic.save if user_topic.changed?
@@ -158,7 +158,7 @@ class TimelinesController < ApplicationController
 
   def calculate_deadline_date(index, time_per_topic, working_days, total_time)
     # Ensure index does not exceed the bounds of working days
-    final_index = [index + time_per_topic, total_time - 1].min
+    final_index = index + time_per_topic
     working_days[final_index] || working_days.last
   end
 
