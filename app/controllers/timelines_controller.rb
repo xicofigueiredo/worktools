@@ -47,7 +47,7 @@ class TimelinesController < ApplicationController
     end.compact
 
 
-    @holidays = current_user.holidays.or(Holiday.where(bga: true))
+    @holidays = current_user.holidays
   end
 
   def new
@@ -130,7 +130,11 @@ class TimelinesController < ApplicationController
   end
 
   def calculate_holidays_array
-    @holidays_array ||= current_user.holidays.flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
+    user_holidays ||= current_user.holidays.flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
+    bga_holidays ||= Holiday.where(bga: true, country: nil).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
+    hub_holidays ||= Holiday.where(country: current_user.users_hubs.first.hub.country).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
+
+    @holidays_array = (user_holidays + bga_holidays + hub_holidays).uniq
   end
 
   def calculate_working_days(timeline)
