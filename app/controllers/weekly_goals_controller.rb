@@ -1,8 +1,8 @@
 class WeeklyGoalsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_weekly_goal, only: [:show, :edit, :update, :destroy]
-  before_action :set_subject_names
-  before_action :set_topic_names
+  before_action :set_subject_names, only: [:new, :edit]
+  before_action :set_topic_names, only: [:new, :edit]
   before_action :set_available_weeks, only: [:new, :edit]
 
   def topics_for_subject
@@ -34,7 +34,6 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def navigator
-    ensure_weekly_goal_exists
     @current_date = Date.parse(params[:date])
     @user_goals = current_user.weekly_goals
     @weekly_goal = current_user.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
@@ -99,16 +98,16 @@ class WeeklyGoalsController < ApplicationController
 
   private
 
-  def ensure_weekly_goal_exists
-    @date = params[:date] ? Date.parse(params[:date]) : Date.today
-    @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @date, @date)
-    return if @current_week.nil?
+  # def ensure_weekly_goal_exists
+  #   @date = params[:date] ? Date.parse(params[:date]) : Date.today
+  #   @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+  #   return if @current_week.nil?
 
-    @weekly_goal = current_user.weekly_goals.find_or_create_by(week: @current_week) do |wg|
-      wg.week = @current_week
-      build_weekly_slots(wg)
-    end
-  end
+  #   @weekly_goal = current_user.weekly_goals.find_or_create_by(week: @current_week) do |wg|
+  #     wg.week = @current_week
+  #     build_weekly_slots(wg)
+  #   end
+  # end
 
   def set_weekly_goal
     @weekly_goal = current_user.weekly_goals.find(params[:id])
@@ -135,8 +134,7 @@ class WeeklyGoalsController < ApplicationController
                   .joins(:user_topics)
                   .where(user_topics: { user_id: current_user.id, done: false })
                   .select('topics.id, topics.name, user_topics.deadline, topics.unit, subjects.category as subject_category')
-                  .order('topics.unit ASC, user_topics.deadline ASC')
-
+                  .order('user_topics.deadline ASC')
     @topic_names = @topics.map do |topic|
       if topic.subject_category == 'lws'
         "#{topic.unit} - #{topic.name}"
@@ -146,11 +144,11 @@ class WeeklyGoalsController < ApplicationController
     end.uniq
   end
 
-  def build_weekly_slots(weekly_goal)
+  def build_weekly_slots
     WeeklySlot.day_of_weeks.keys.each do |day_of_week|
       WeeklySlot.time_slots.keys.each do |time_slot|
-        unless weekly_goal.weekly_slots.exists?(day_of_week: day_of_week, time_slot: time_slot)
-          weekly_goal.weekly_slots.build(day_of_week: day_of_week, time_slot: time_slot)
+        unless @weekly_goal.weekly_slots.exists?(day_of_week: day_of_week, time_slot: time_slot)
+          @weekly_goal.weekly_slots.build(day_of_week: day_of_week, time_slot: time_slot)
         end
       end
     end
