@@ -138,7 +138,7 @@ class TimelinesController < ApplicationController
   end
 
   def calculate_working_days(timeline)
-    (timeline.start_date...timeline.end_date).to_a.reject do |date|
+    (timeline.start_date..timeline.end_date).to_a.reject do |date|
       @holidays_array.include?(date) || date.saturday? || date.sunday?
     end
   end
@@ -153,6 +153,9 @@ class TimelinesController < ApplicationController
       user_topic.deadline = deadline_date
       user_topic.save if user_topic.changed?
       index += time_per_topic
+      if index >= total_time - 1
+
+      end
     end
   end
 
