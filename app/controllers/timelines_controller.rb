@@ -153,9 +153,6 @@ class TimelinesController < ApplicationController
       user_topic.deadline = deadline_date
       user_topic.save if user_topic.changed?
       index += time_per_topic
-      if index >= total_time - 1
-
-      end
     end
   end
 
