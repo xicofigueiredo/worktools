@@ -22,6 +22,6 @@ class LearnerFlagsController < ApplicationController
   end
 
   def learner_flag_params
-    params.require(:learner_flag).permit(:asks_for_help, :takes_notes, :goes_to_live_lessons, :does_p2p, :action_plan)
+    params.require(:learner_flag).permit(:asks_for_help, :takes_notes, :goes_to_live_lessons, :does_p2p, :life_experiences, :action_plan)
   end
 end

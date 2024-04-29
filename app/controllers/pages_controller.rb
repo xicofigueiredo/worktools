@@ -84,13 +84,19 @@ class PagesController < ApplicationController
     @learner_flag = @learner.learner_flag
     @notes = @learner.notes.order(created_at: :asc)
     @timelines = @learner.timelines
-    current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
-    @sprint_goals = @learner.sprint_goals.find_by(sprint: current_sprint)
+    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+    @current_sprint_weeks = @current_sprint.weeks
+    @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
     @skills = @sprint_goals&.skills
     @communities = @sprint_goals&.communities
     @hub_lcs = @learner.hubs.first.users.where(role: 'lc')
 
+    @weekly_goals_percentage = @current_sprint.count_weekly_goals_total(@learner)
+    @kdas_percentage = @current_sprint.count_kdas_total(@learner)
+
     @has_exam_date = @timelines.any? { |timeline| timeline.exam_date.present? }
+
+    @current_week = Week.find_by("start_date <= ? AND end_date >= ?", Date.today, Date.today)
 
     get_mocks_dates(@learner)
     @has_mock50 = !@mock50.empty?
