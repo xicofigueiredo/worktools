@@ -8,6 +8,8 @@ class Timeline < ApplicationRecord
   belongs_to :lws_timeline, optional: true
   has_many :user_topics
   has_many :topics, through: :user_topics
+  has_many :timeline_progresses
+  has_many :weeks, through: :timeline_progresses
 
 
 
@@ -34,5 +36,11 @@ class Timeline < ApplicationRecord
 
   def destroy_associated_user_topics
     user.user_topics.joins(:topic).where(topics: { subject_id: subject_id }).destroy_all
+  end
+
+  def update_weekly_progress(week)
+    tp = timeline_progresses.find_or_initialize_by(week: week)
+    tp.progress = self.progress
+    tp.save!
   end
 end

@@ -86,7 +86,16 @@
             <tr>
               <th></th>
               <% @current_sprint_weeks.each do |week| %>
-                <th><%= week.week_name_abbr %></th>
+                <th style="vertical-align: middle;">
+                  <div class="d-flex">
+                    <% if week.name.include?("Build") %>
+                      <%= week.week_name_abbr %>
+                      <p style="font-size: 10px; margin-bottom: -1;">BW</p>
+                    <% else %>
+                      <div style="margin-bottom: 3px"><%= week.week_name_abbr %></div>
+                    <% end %>
+                  </div>
+                </th>
               <% end %>
               <th>
                 Total
@@ -142,9 +151,9 @@
             <tr>
               <td>Weekly Progress</td>
               <% @current_sprint_weeks.each do |week| %>
-                <td></td>
+                <td><%= week.calc_relative_average_timeline_progress(@learner) %>%</td>
               <% end %>
-              <td></td>
+              <td><%= @current_week.calc_user_average_timeline_progress(@learner) %>%</td>
             </tr>
           </tbody>
         </table>

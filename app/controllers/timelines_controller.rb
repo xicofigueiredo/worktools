@@ -1,6 +1,9 @@
 class TimelinesController < ApplicationController
+  include ProgressCalculations
+
   before_action :authenticate_user!
   before_action :set_timeline, only: [:show, :edit, :update, :destroy]
+
 
 
   def index
@@ -14,7 +17,7 @@ class TimelinesController < ApplicationController
       generate_topic_deadlines(timeline)
       timeline.save
     end
-    calculate_progress_and_balance
+    calculate_progress_and_balance(@timelines)
 
     if @timelines.count.positive?
       @total_progress = (@timelines.sum(&:progress).to_f / @timelines.count) / 100
@@ -160,54 +163,5 @@ class TimelinesController < ApplicationController
     # Ensure index does not exceed the bounds of working days
     final_index = index + time_per_topic
     working_days[final_index] || working_days.last
-  end
-
-
-  def calculate_progress_and_balance
-    @timelines.each do |timeline|
-      balance = 0
-      completed_topics_count = 0 # Count of completed topics for progress calculation
-      progress = 0
-      expected_progress = 0
-
-      topics = timeline.subject.topics
-      total_topics = topics.count
-
-      topics.each do |topic|
-        user_topic = current_user.user_topics.find_by(topic_id: topic.id)
-        next unless user_topic # Skip if no user_topic found
-
-        # Balance calculation
-        if timeline.lws_timeline != nil
-          expected = (timeline.lws_timeline.blocks_per_day * (Date.today - timeline.start_date).to_f).to_i
-          actual = current_user.user_topics.where(topic_id: topic.id, done: true).count
-          balance = actual - expected
-
-          completed_topics_count += 1 if user_topic.done
-          progress += user_topic.percentage if user_topic.done
-          expected_progress = (expected / total_topics)
-
-        else
-          if user_topic.done && user_topic.deadline >= Date.today
-            balance += 1
-          elsif !user_topic.done && user_topic.deadline < Date.today
-            balance -= 1
-          end
-          # Counting completed topics for progress calculation
-          completed_topics_count += 1 if user_topic.done
-          progress += user_topic.percentage if user_topic.done
-          expected_progress += user_topic.percentage if user_topic.deadline < Date.today
-        end
-
-      end
-
-      # Calculate progress as an integer percentage of completed topics
-      progress = (progress.to_f * 100).round
-
-      expected_progress_percentage = (expected_progress.to_f * 100).round
-
-      # Update timeline with both balance and progress
-      timeline.update(balance: balance, progress: progress, expected_progress: expected_progress_percentage)
-    end
   end
 end

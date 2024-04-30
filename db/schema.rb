@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_04_27_111138) do
+ActiveRecord::Schema[7.0].define(version: 2024_04_30_144246) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -248,6 +248,16 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_27_111138) do
     t.index ["weekly_meeting_id"], name: "index_thursday_slots_on_weekly_meeting_id"
   end
 
+  create_table "timeline_progresses", force: :cascade do |t|
+    t.bigint "timeline_id", null: false
+    t.bigint "week_id", null: false
+    t.integer "progress"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["timeline_id"], name: "index_timeline_progresses_on_timeline_id"
+    t.index ["week_id"], name: "index_timeline_progresses_on_week_id"
+  end
+
   create_table "timelines", force: :cascade do |t|
     t.bigint "subject_id", null: false
     t.bigint "user_id", null: false
@@ -418,6 +428,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_04_27_111138) do
   add_foreign_key "thursday_slots", "users", column: "lc_id"
   add_foreign_key "thursday_slots", "users", column: "learner_id"
   add_foreign_key "thursday_slots", "weekly_meetings"
+  add_foreign_key "timeline_progresses", "timelines"
+  add_foreign_key "timeline_progresses", "weeks"
   add_foreign_key "timelines", "exam_dates"
   add_foreign_key "timelines", "subjects"
   add_foreign_key "timelines", "users"

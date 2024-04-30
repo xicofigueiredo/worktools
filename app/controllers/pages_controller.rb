@@ -85,7 +85,7 @@ class PagesController < ApplicationController
     @notes = @learner.notes.order(created_at: :asc)
     @timelines = @learner.timelines
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
-    @current_sprint_weeks = @current_sprint.weeks
+    @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
     @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
     @skills = @sprint_goals&.skills
     @communities = @sprint_goals&.communities
