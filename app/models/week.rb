@@ -12,7 +12,7 @@ class Week < ApplicationRecord
     if name =~ /\AWeek (\d+)( \/ Build Week)?\z/
       "W#{$1}"
     else
-      nil  # or some default value or raise an error, depending on your needs
+      "W"
     end
   end
 
@@ -36,7 +36,6 @@ class Week < ApplicationRecord
       previous_week_average = previous_week.calc_user_average_timeline_progress(user)
       relative_average = (current_week_average - previous_week_average).round(1)
     else
-      # If there is no previous week, you might return nil or the current week's average as the relative change
       relative_average = current_week_average
     end
 
