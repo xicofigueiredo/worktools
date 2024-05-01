@@ -155,7 +155,14 @@
             <tr>
               <td>Weekly Progress</td>
               <% @current_sprint_weeks.each do |week| %>
-                <td><%= week.calc_relative_average_timeline_progress(@learner) %>%</td>
+                <td>
+                  <% relative_progress = week.calc_relative_average_timeline_progress(@learner) %>
+                  <% if relative_progress > 10 %>
+                    N/A
+                  <% else %>
+                    <%= "#{relative_progress}%" %>
+                  <% end %>
+                </td>
               <% end %>
               <td><%= @current_sprint.count_weekly_progress_average(@learner) %>%</td>
             </tr>

@@ -39,7 +39,7 @@ class Sprint < ApplicationRecord
   end
 
   def count_weekly_progress_average(user)
-    week_averages = self.weeks.map do |week|
+    week_averages = self.weeks.where('start_date < ?', Date.today).map do |week|
       week.calc_user_average_timeline_progress(user)
     end
 
