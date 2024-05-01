@@ -59,12 +59,115 @@
           <p>Does Peer to Peer?</p>
           <%= form.check_box :does_p2p, onchange: "this.form.submit();" %>
         </div>
+        <div class="d-flex justify-content-between">
+          <p>Life Experiences</p>
+          <%= form.check_box :life_experiences, onchange: "this.form.submit();" %>
+        </div>
       <% end %>
+    </div>
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
       <div class="d-flex justify-content-between">
         <p>Action Plan</p>
         <%= link_to edit_learner_flag_path(@learner_flag), data: { turbo_frame: "modal" } do %>
           <i class="fa-solid fa-pencil"></i>
         <% end %>
+      </div>
+      <p><%= @learner_flag.action_plan %></p>
+    </div>
+  </div>
+
+  <div class="mb-5">
+    <h2>Overview</h2>
+    <p>Keep track of your learner below.</p>
+    <div class="card mb-2 shadow-sm px-2" style="border-radius: 10px">
+      <div class="px-2 overflow-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <% @current_sprint_weeks.each do |week| %>
+                <th style="vertical-align: middle;">
+                  <div class="d-flex">
+                    <% if week.name.include?("Build") %>
+                      <%= week.week_name_abbr %>
+                      <p style="font-size: 10px; margin-bottom: -1;">BW</p>
+                    <% else %>
+                      <div style="margin-bottom: 3px"><%= week.week_name_abbr %></div>
+                    <% end %>
+                  </div>
+                </th>
+              <% end %>
+              <th>
+                Total
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Weekly Goals</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <% if week.weekly_goals.where(user: @learner).exists? %>
+                  <% if week.start_date <= Date.today %>
+                    <td class="text-success"><i class="fa-regular fa-circle-check"></i></td>
+                  <% else %>
+                    <td></td>
+                  <% end %>
+                <% else %>
+                  <% if week.start_date <= Date.today %>
+                    <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
+                  <% else %>
+                    <td> <%= week.start_date%></td>
+                  <% end %>
+                <% end %>
+              <% end %>
+              <td><%= @weekly_goals_percentage %>%</td>
+            </tr>
+            <tr>
+              <td>KDAs</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <% if week.kdas.where(user: @learner).exists? %>
+                  <% if week.start_date <= Date.today %>
+                    <td class="text-success"><i class="fa-regular fa-circle-check"></i></td>
+                  <% else %>
+                    <td></td>
+                  <% end %>
+                <% else %>
+                  <% if week.start_date <= Date.today %>
+                    <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
+                  <% else %>
+                    <td></td>
+                  <% end %>
+                <% end %>
+              <% end %>
+              <td><%= @kdas_percentage %>%</td>
+            </tr>
+            <tr>
+              <td>Unjustified Absences</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <% if week.start_date <= Date.today %>
+                  <td><%= week.count_absences(@learner) %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+              <% end %>
+              <td><%= @current_sprint.count_absences(@learner) %></td>
+            </tr>
+            <tr>
+              <td>Weekly Progress</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <td>
+                  <% relative_progress = week.calc_relative_average_timeline_progress(@learner) %>
+                  <% if relative_progress > 10 %>
+                    N/A
+                  <% else %>
+                    <%= "#{relative_progress}%" %>
+                  <% end %>
+                </td>
+              <% end %>
+              <td><%= @current_sprint.count_weekly_progress_average(@learner) %>%</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

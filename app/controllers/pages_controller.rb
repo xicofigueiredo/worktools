@@ -84,13 +84,19 @@ class PagesController < ApplicationController
     @learner_flag = @learner.learner_flag
     @notes = @learner.notes.order(created_at: :asc)
     @timelines = @learner.timelines
-    current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
-    @sprint_goals = @learner.sprint_goals.find_by(sprint: current_sprint)
+    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+    @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
+    @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
     @skills = @sprint_goals&.skills
     @communities = @sprint_goals&.communities
     @hub_lcs = @learner.hubs.first.users.where(role: 'lc')
 
+    @weekly_goals_percentage = @current_sprint.count_weekly_goals_total(@learner)
+    @kdas_percentage = @current_sprint.count_kdas_total(@learner)
+
     @has_exam_date = @timelines.any? { |timeline| timeline.exam_date.present? }
+
+    @current_week = Week.find_by("start_date <= ? AND end_date >= ?", Date.today, Date.today)
 
     get_mocks_dates(@learner)
     @has_mock50 = !@mock50.empty?
@@ -129,11 +135,11 @@ class PagesController < ApplicationController
     end
 
     # Calculate averages
-    avg_mot = kdas.count > 0 ? sum_mot.to_f / kdas.count : 0
-    avg_p2p = kdas.count > 0 ? sum_p2p.to_f / kdas.count : 0
-    avg_ini = kdas.count > 0 ? sum_ini.to_f / kdas.count : 0
-    avg_hubp = kdas.count > 0 ? sum_hubp.to_f / kdas.count : 0
-    avg_sdl = kdas.count > 0 ? sum_sdl.to_f / kdas.count : 0
+    avg_mot = kdas.count > 0 ? sum_mot.to_f.round / kdas.count : 0
+    avg_p2p = kdas.count > 0 ? sum_p2p.to_f.round / kdas.count : 0
+    avg_ini = kdas.count > 0 ? sum_ini.to_f.round / kdas.count : 0
+    avg_hubp = kdas.count > 0 ? sum_hubp.to_f.round / kdas.count : 0
+    avg_sdl = kdas.count > 0 ? sum_sdl.to_f.round / kdas.count : 0
 
     @average_items = [
       { title: 'Self-Directed Learning', average: avg_sdl },

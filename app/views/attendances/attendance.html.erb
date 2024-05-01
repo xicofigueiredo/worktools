@@ -17,6 +17,13 @@
 
   </div>
   <div class="overflow-x-auto">
-    <%= render 'daily' %>
+    <% if @isWeekend %>
+      <div class="my-5 text-center">
+        <h1>There is not attendance on weekends..</h1>
+        <p>You can switch to weekly view to view this weeks attendance.</p>
+      </div>
+    <% else %>
+      <%= render 'daily' %>
+    <% end %>
   </div>
 </div>

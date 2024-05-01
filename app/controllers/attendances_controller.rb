@@ -4,12 +4,13 @@ class AttendancesController < ApplicationController
   def attendance
     create_daily_attendance()
     @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @isWeekend = @current_date.saturday? || @current_date.sunday?
     @prev_date = calculate_prev_date(@current_date, 'daily')
     @next_date = calculate_next_date(@current_date, 'daily')
     @attendances = fetch_daily_attendances(@current_date)
     @has_learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner').exists?
     if @has_learners == true
-      @is_today = @attendances ? @attendances.first.attendance_date == Date.today : false;
+      @is_today = @attendances ? @attendances&.first&.attendance_date == Date.today : false;
     end
   end
 
@@ -44,7 +45,12 @@ class AttendancesController < ApplicationController
 
   def update_absence
     attendance = Attendance.find(params[:id])
-    attendance.update(absence: params[:absence])
+    if params[:absence] == ""
+      attendance.update(absence: nil)
+    else
+      attendance.update(absence: params[:absence])
+    end
+
     if params[:absense] != 'Present'
       attendance.update(start_time: nil, end_time: nil)
     end
@@ -91,8 +97,10 @@ class AttendancesController < ApplicationController
   end
 
   def create_daily_attendance
-    learners = User.where(role: 'learner')
     current_date = Date.today
+
+    return if current_date.saturday? || current_date.sunday?
+    learners = User.where(role: 'learner')
 
 
     learners.each do |learner|
@@ -101,7 +109,7 @@ class AttendancesController < ApplicationController
 
       # If not, create one
       if attendance.nil?
-        learner.attendances.create(attendance_date: current_date, absence: 'Unjustified Leave')
+        learner.attendances.create(attendance_date: current_date)
       end
     end
   end
@@ -114,17 +122,18 @@ class AttendancesController < ApplicationController
 
       learners.each do |learner|
         unless learner.attendances.exists?(attendance_date: date)
-          learner.attendances.create(attendance_date: date, absence: 'Unjustified Leave')
+          learner.attendances.create(attendance_date: date)
         end
       end
     end
   end
 
   def ensure_daily_attendance_records(date)
+    return if date.saturday? || date.sunday?
     learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner')
     learners.each do |learner|
       unless learner.attendances.exists?(attendance_date: date)
-        learner.attendances.create(attendance_date: date, absence: 'Unjustified Leave')
+        learner.attendances.create(attendance_date: date)
       end
     end
   end
