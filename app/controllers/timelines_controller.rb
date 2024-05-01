@@ -131,7 +131,7 @@ class TimelinesController < ApplicationController
 
   def calculate_holidays_array
     user_holidays ||= current_user.holidays.flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
-    bga_holidays ||= Holiday.where(bga: true, country: nil).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
+    bga_holidays ||= Holiday.where(bga: true).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
     hub_holidays ||= Holiday.where(country: current_user.users_hubs.first.hub.country).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
 
     @holidays_array = (user_holidays + bga_holidays + hub_holidays).uniq
