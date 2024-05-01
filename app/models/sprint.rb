@@ -38,4 +38,18 @@ class Sprint < ApplicationRecord
     percent_rate
   end
 
+  def count_weekly_progress_average(user)
+    week_averages = self.weeks.map do |week|
+      week.calc_user_average_timeline_progress(user)
+    end
+
+    # Calculate the average of all week averages if there are any weeks
+    if week_averages.any?
+      overall_average = week_averages.compact.sum / week_averages.compact.size
+      overall_average.round(1)  # rounding the result to one decimal place
+    else
+      0  # Return 0 if there are no weeks or all weeks returned nil
+    end
+  end
+
 end

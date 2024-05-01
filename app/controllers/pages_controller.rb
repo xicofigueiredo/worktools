@@ -135,11 +135,11 @@ class PagesController < ApplicationController
     end
 
     # Calculate averages
-    avg_mot = kdas.count > 0 ? sum_mot.to_f / kdas.count : 0
-    avg_p2p = kdas.count > 0 ? sum_p2p.to_f / kdas.count : 0
-    avg_ini = kdas.count > 0 ? sum_ini.to_f / kdas.count : 0
-    avg_hubp = kdas.count > 0 ? sum_hubp.to_f / kdas.count : 0
-    avg_sdl = kdas.count > 0 ? sum_sdl.to_f / kdas.count : 0
+    avg_mot = kdas.count > 0 ? sum_mot.to_f.round / kdas.count : 0
+    avg_p2p = kdas.count > 0 ? sum_p2p.to_f.round / kdas.count : 0
+    avg_ini = kdas.count > 0 ? sum_ini.to_f.round / kdas.count : 0
+    avg_hubp = kdas.count > 0 ? sum_hubp.to_f.round / kdas.count : 0
+    avg_sdl = kdas.count > 0 ? sum_sdl.to_f.round / kdas.count : 0
 
     @average_items = [
       { title: 'Self-Directed Learning', average: avg_sdl },

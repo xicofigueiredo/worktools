@@ -153,7 +153,7 @@
               <% @current_sprint_weeks.each do |week| %>
                 <td><%= week.calc_relative_average_timeline_progress(@learner) %>%</td>
               <% end %>
-              <td><%= @current_week.calc_user_average_timeline_progress(@learner) %>%</td>
+              <td><%= @current_sprint.count_weekly_progress_average(@learner) %>%</td>
             </tr>
           </tbody>
         </table>
