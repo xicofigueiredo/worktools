@@ -6,7 +6,7 @@ namespace :timeline_progress do
     if current_week.present?
       Timeline.find_each do |timeline|
         # Assuming the Timeline model has a method `current_progress` that returns the latest progress
-        current_progress = timeline.current_progress || 0 # Provide a default if no progress is set
+        current_progress = timeline.progress || 0 # Provide a default if no progress is set
 
         timeline_progress = timeline.timeline_progresses.find_or_initialize_by(week: current_week)
         timeline_progress.progress = current_progress

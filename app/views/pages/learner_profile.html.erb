@@ -144,7 +144,11 @@
             <tr>
               <td>Unjustified Absences</td>
               <% @current_sprint_weeks.each do |week| %>
-                <td><%= week.count_absences(@learner) %></td>
+                <% if week.start_date <= Date.today %>
+                  <td><%= week.count_absences(@learner) %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
               <% end %>
               <td><%= @current_sprint.count_absences(@learner) %></td>
             </tr>
