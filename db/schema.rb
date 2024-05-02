@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_05_02_141038) do
+ActiveRecord::Schema[7.0].define(version: 2024_05_02_151401) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -309,6 +309,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_02_141038) do
     t.bigint "exam_date_id"
     t.boolean "anulado"
     t.bigint "lws_timeline_id"
+    t.datetime "mock50"
+    t.datetime "mock100"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
     t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"

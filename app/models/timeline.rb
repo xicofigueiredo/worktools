@@ -2,6 +2,9 @@ class Timeline < ApplicationRecord
   belongs_to :user
   belongs_to :subject
   after_create :create_user_topics
+  after_create :assign_mock_deadlines
+  after_update :assign_mock_deadlines
+
   has_many :knowledges, dependent: :destroy
   before_destroy :destroy_associated_user_topics
   belongs_to :exam_date, optional: true
@@ -42,5 +45,17 @@ class Timeline < ApplicationRecord
     tp = timeline_progresses.find_or_initialize_by(week: week)
     tp.progress = self.progress
     tp.save!
+  end
+
+  def assign_mock_deadlines
+    # Assign `mock50` value
+    mock50_topic = self.subject.topics.find_by(Mock50: true)
+    self.mock50 = self.user.user_topics.find_by(topic: mock50_topic)&.deadline if mock50_topic
+
+    # Assign `mock100` value
+    mock100_topic = self.subject.topics.find_by(Mock100: true)
+    self.mock100 = self.user.user_topics.find_by(topic: mock100_topic)&.deadline if mock100_topic
+
+    self.save!
   end
 end
