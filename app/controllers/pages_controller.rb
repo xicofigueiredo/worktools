@@ -154,7 +154,7 @@ class PagesController < ApplicationController
   def get_mocks_dates(user)
     @mock50 = []
     @mock100 = []
-    @closest_future_deadline_by_timeline = {}
+    # @closest_future_deadline_by_timeline = {}
 
 
     user.timelines.each do |timeline|
@@ -163,13 +163,13 @@ class PagesController < ApplicationController
         @mock50 << user_topic.deadline if user_topic.topic.Mock50
         @mock100 << user_topic.deadline if user_topic.topic.Mock100
 
-        if user_topic.deadline > Date.today
-          if closest_future_deadline.nil? || user_topic.deadline < closest_future_deadline
-            closest_future_deadline = user_topic.deadline
-          end
-        end
+        # if !user_topic.deadline.nil? && user_topic.deadline > Date.today
+        #   if closest_future_deadline.nil? || user_topic.deadline < closest_future_deadline
+        #     closest_future_deadline = user_topic.deadline
+        #   end
+        # end
       end
-      @closest_future_deadline_by_timeline[timeline.id] = closest_future_deadline
+      # @closest_future_deadline_by_timeline[timeline.id] = closest_future_deadline
     end
   end
 

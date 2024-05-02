@@ -49,7 +49,7 @@
                   <tr>
                     <td class="custom-font-size"><%= knowledge_form.text_field :subject_name, value: timeline.subject.name, readonly: true, class: 'form-control' %></td>
                     <td class="custom-font-size"><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A'%></td>
-                    <% if current_user.level == 'lws' || timeline.subject.category == 'up' %>
+                    <% if current_user.level == 'lws' || timeline.subject.category == 'up' || timeline.subject.category == 'lws' %>
                       <td>N/A</td>
                       <td>N/A</td>
                     <% else %>
@@ -57,7 +57,6 @@
                       <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'%></td>
                     <% end %>
                     <!-- Hidden field to ensure the knowledge is associated with the correct timeline -->
-                    <%= knowledge_form.hidden_field :timeline_id, value: timeline.id %>
                     <td class="custom-font-size"><%= knowledge_form.text_area :difficulties, class: 'form-control' %></td>
                     <td class="custom-font-size"><%= knowledge_form.text_area :plan, class: 'form-control' %></td>
                   </tr>

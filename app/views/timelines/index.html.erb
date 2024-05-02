@@ -10,8 +10,8 @@
               <div class="card-body">
                 <p class="card-text">
                   <strong><%= current_user.timelines.first.subject.category_long_form %></strong><br>
-                  <strong>Start Date:</strong> <%= current_user.lws_timelines.first.start_date %><br>
-                  <strong>End Date:</strong> <%= current_user.lws_timelines.first.end_date %>
+                  <strong>Start Date:</strong> <%= current_user.lws_timelines.first.start_date.strftime('%d-%m-%Y') %><br>
+                  <strong>End Date:</strong> <%= current_user.lws_timelines.first.end_date.strftime('%d-%m-%Y') %>
                 </p>
                 <%= link_to "Edit", edit_lws_timeline_path(current_user.lws_timelines.first), class: "btn btn-secondary mr-2" %>
                 <%= link_to "Delete", lws_timeline_path(current_user.lws_timelines.first), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
@@ -53,8 +53,8 @@
                   </thead>
                   <tbody>
                     <tr>
-                      <td><%= timeline.start_date %></td>
-                      <td><%= timeline.end_date %></td>
+                      <td><%= timeline.start_date.strftime('%d-%m-%Y') %></td>
+                      <td><%= timeline.end_date.strftime('%d-%m-%Y') %></td>
                       <td><% link_to 'Show', timeline %></td>
                       <td><%= link_to 'Edit', edit_timeline_path(timeline) %></td>
                       <td><%= link_to 'Delete', timeline_path(timeline), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } %></td>
@@ -96,7 +96,7 @@
                         <td style="<%= background_color %>"><%= topic.name %></td>
                         <% if current_user.level != 'lws'%>
                           <td style="<%= background_color %>"><%= topic.time %></td>
-                          <td style="<%= background_color %>"><%= user_topic.deadline %></td>
+                          <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
                         <% end %>
                         <td style="<%= background_color %>">
                           <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
@@ -151,7 +151,7 @@
             <tr>
               <td><%= goal[:timeline].subject.name %></td>
               <td><%= goal[:topic].name %></td>
-              <td><%= goal[:topic].user_topics.find_by(topic: goal[:topic], user: current_user).deadline %></td>
+              <td><%= goal[:topic].user_topics.find_by(topic: goal[:topic], user: current_user).deadline.strftime('%d-%m-%Y') %></td>
               <% if goal[:topic].user_topics.find_by(topic: goal[:topic], user: current_user).done %>
                 <td> <i class="fa-regular fa-circle-check text-success"></i> </td>
               <% else %>
@@ -173,9 +173,9 @@
         <tbody>
           <% @holidays.each do |holiday| %>
             <tr>
-              <td><%= holiday.start_date %></td>
+              <td><%= holiday.start_date.strftime('%d-%m-%Y') %></td>
               <td><%= holiday.name %></td>
-              <td><%= holiday.end_date %></td>
+              <td><%= holiday.end_date.strftime('%d-%m-%Y') %></td>
               <td><%= link_to 'Edit', edit_holiday_path(holiday) %></td>
               <td><%= link_to 'Delete', holiday_path(holiday), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } %></td>
             </tr>
