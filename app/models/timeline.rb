@@ -8,7 +8,7 @@ class Timeline < ApplicationRecord
   belongs_to :lws_timeline, optional: true
   has_many :user_topics
   has_many :topics, through: :user_topics
-  has_many :timeline_progresses
+  has_many :timeline_progresses, dependent: :destroy
   has_many :weeks, through: :timeline_progresses
 
 
