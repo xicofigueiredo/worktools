@@ -30,7 +30,7 @@
             <%= link_to "Weekly Meetings", weekly_meetings_path, class: "nav-link" %>
           </li>
           <li class="nav-item">
-            <%= link_to "KDA's", kdas_path, class: "nav-link" %>
+            <%= link_to "KDA's", kdas_path(date: Date.today), class: "nav-link" %>
           <li class="nav-item">
             <%= link_to "Weekly Goals", weekly_goals_navigator_path(Date.today), class: "nav-link" %>
           </li>
