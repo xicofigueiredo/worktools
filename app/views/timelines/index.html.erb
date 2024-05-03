@@ -65,7 +65,7 @@
                     <tr>
                       <th>Unit</th>
                       <th>Topic</th>
-                      <% if current_user.level!= 'lws' %>
+                      <% if (timeline.subject.category != 'lws8' && timeline.subject.category != 'lws9' && timeline.subject.category != 'up') %>
                         <th>Hours</th>
                         <th width = "120px" >Date</th>
                       <% end %>
@@ -94,7 +94,7 @@
                           <% end %>
                         </td>
                         <td style="<%= background_color %>"><%= topic.name %></td>
-                        <% if current_user.level != 'lws'%>
+                        <% if (timeline.subject.category != 'lws8' && timeline.subject.category != 'lws9' && timeline.subject.category != 'up') %>
                           <td style="<%= background_color %>"><%= topic.time %></td>
                           <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
                         <% end %>
