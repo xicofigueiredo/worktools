@@ -1,191 +1,265 @@
+<%= turbo_page_requires_reload %>
 <div class="container">
-    <div class="main-body">
+  <div class="d-flex gap-3 align-items-center mb-3 mt-3">
+    <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
+    <h4><%= @learner.full_name %>'s Profile</h4>
+  </div>
 
-          <!-- Breadcrumb -->
-          <nav aria-label="breadcrumb" class="main-breadcrumb">
-            <ol class="breadcrumb">
-              <li class="breadcrumb-item active" aria-current="page"></li>
-            </ol>
-          </nav>
-          <!-- /Breadcrumb -->
-
-          <div class="row gutters-sm">
-            <div class="col-md-4 mb-3">
-              <div class="card">
-                <div class="card-body">
-                  <div class="d-flex flex-column align-items-center text-center">
-                    <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "150" %>
-                    <div class="mt-3">
-                      <h4> <%= current_user.full_name %></h4>
-                      <% @hubs.each do |hub| %>
-                        <p class="text-secondary mb-1"><%= hub.country %></p>
-                        <p class="text-muted font-size-sm"><%= hub.name%> Hub
-                      <% end %>
-                      </p>
-                      <button class="btn btn-outline-primary disabled">Message</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card mt-3">
-                <ul class="list-group list-group-flush">
-                  <% @activities.each do |activity| %>
-                    <% if activity.first != '' %>
-                      <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                        <%= activity.first.capitalize %> - <%= activity.last.capitalize %>
-                      </li>
-                    <% end %>
-                  <% end %>
-                </ul>
-              </div>
-            </div>
-            <div class="col-md-8">
-              <div class="card mb-3">
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-sm-3">
-                      <h6 class="mb-0">Full Name</h6>
-                    </div>
-                    <div class="col-sm-9 text-secondary">
-                      <%= current_user.full_name   %>
-                    </div>
-                  </div>
-                  <hr>
-                  <div class="row">
-                    <div class="col-sm-3">
-                      <h6 class="mb-0">Email</h6>
-                    </div>
-                    <div class="col-sm-9 text-secondary">
-                      <%= current_user.email   %>
-                    </div>
-                  </div>
-                  <hr>
-                  <% if current_user.role == 'learner' %>
-                    <div class="row">
-                      <div class="col-sm-3">
-                        <h6 class="mb-0">Year</h6>
-                      </div>
-                      <div class="col-sm-9 text-secondary">
-                        <%= current_user.level %>
-                      </div>
-                    </div>
-                  <% else  %>
-                    <div class="row">
-                      <div class="col-sm-3">
-                        <h6 class="mb-0">Role</h6>
-                      </div>
-                      <div class="col-sm-9 text-secondary">
-                        <%= user_role_display(current_user) %>
-                      </div>
-                    </div>
-                  <% end %>
-                  <hr>
-                  <div class="row">
-                    <div class="col-sm-12">
-                      <%= link_to "Edit Profile", edit_profile_path, class: "btn btn-info disabled" %>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="row gutters-sm">
-                <div class="col-sm-6 mb-3">
-                  <div class="card h-100">
-                    <div class="card-body">
-                      <h6 class="d-flex align-items-center mb-3"><i class="material-icons text-info mr-2"></i>Progress Overview</h6>
-                      <% @timelines.each do |timeline| %>
-                        <div class="timeline">
-                          <small>
-                            <%= timeline.subject.name %>
-                          </small>
-                          <div class="progress mb-3" style="height: 20px;"> <!-- Increased height to accommodate text -->
-                            <!-- Current progress -->
-                            <!-- Difference to expected progress -->
-                            <% if timeline.progress > timeline.expected_progress %>
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [timeline.progress, timeline.expected_progress].min %>%;" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
-                              <span class="progress-text"><%= timeline.expected_progress %>%</span> <!-- Display the actual progress percentage inside the bar -->
-                            </div>
-                              <div class="progress-bar bg-success" role="progressbar" style="width: <%= timeline.progress - timeline.expected_progress %>%;" aria-valuenow="<%= timeline.progress - timeline.expected_progress %>">
-                                <%= timeline.progress - timeline.expected_progress %>% <!-- Display the difference inside the bar -->
-                              </div>
-                            <% elsif timeline.progress < timeline.expected_progress %>
-                              <!-- Corrected to show red bar only when actual progress is less than expected -->
-                              <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [timeline.progress, timeline.expected_progress].min %>%;" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
-                                <span class="progress-text"><%= timeline.progress %>%</span> <!-- Display the actual progress percentage inside the bar -->
-                              </div>
-                              <div class="progress-bar bg-danger" role="progressbar" style="width: <%= timeline.expected_progress - timeline.progress %>%;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
-                                <%= timeline.expected_progress - timeline.progress %>% <!-- Display the difference inside the bar -->
-                              </div>
-                            <% end %>
-                          </div>
-                        </div>
-                      <% end %>
-                      <div class="timeline">
-                        <h6 class="d-flex align-items-center mb-3">
-                          <i class="material-icons text-info mr-2"></i>Overall Progress
-                        </h6>
-                        <div class="progress mb-3" style="height: 20px;"> <!-- Increased height to accommodate text -->
-                          <!-- Current progress -->
-                          <!-- Difference to expected progress -->
-                          <% if @overall_progress > @overall_progress_expected %>
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [@overall_progress, @overall_progress_expected].min %>%;" aria-valuenow="<%= @overall_progress %>" aria-valuemin="0" aria-valuemax="100">
-                              <span class="progress-text"><%= @overall_progress_expected %>%</span> <!-- Display the actual progress percentage inside the bar -->
-                            </div>
-                            <div class="progress-bar bg-success" role="progressbar" style="width: <%= @overall_progress - @overall_progress_expected %>%;" aria-valuenow="<%= @overall_progress - @overall_progress_expected %>">
-                              <%= @overall_progress - @overall_progress_expected %>% <!-- Display the difference inside the bar -->
-                            </div>
-                          <% elsif @overall_progress < @overall_progress_expected %>
-                            <!-- Corrected to show red bar only when actual progress is less than expected -->
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: <%= @overall_progress %> %>%;" aria-valuenow="<%= @overall_progress %>" aria-valuemin="0" aria-valuemax="100">
-                              <span class="progress-text"><%= @overall_progress %>%</span> <!-- Display the actual progress percentage inside the bar -->
-                            </div>
-                            <div class="progress-bar bg-danger" role="progressbar" style="width: <%= @overall_progress_expected - @overall_progress %>%;" aria-valuenow="<%= @overall_progress_expected - @overall_progress %>">
-                              <%= @overall_progress_expected - @overall_progress %>% <!-- Display the difference inside the bar -->
-                            </div>
-                          <% end %>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-                <div class="col-sm-6 mb-3">
-                      <% if @timelines.present? %>
-                        <div class="card h-100">
-                          <div class="card-body">
-                            <div class="row mb-2 font-weight-bold"> <!-- Header Row for Titles -->
-                              <div class="col-md-4">50% Mock</div>
-                              <div class="col-md-4">100% Mock</div>
-                              <div class="col-md-4">Exam Season</div>
-                            </div>
-                            <% @timelines.each_with_index do |timeline, index| %>
-                            <div class="row">
-                              <div class="col-md-4 mt-4">
-                                <%= @mock50[index] %>
-                              </div>
-                              <div class="col-md-4 mt-4">
-                                <%= @mock100[index] %>
-                              </div>
-                              <div class="col-md-4 mt-4">
-                                <% if timeline.exam_date.present? %>
-                                  <% if timeline.exam_date.date.month == 5 || timeline.exam_date.date.month == 6 %>
-                                    <%= "May/June"%> <br> <%= timeline.exam_date.date.strftime("%Y") %>
-                                  <% elsif timeline.exam_date.date.month == 10 || timeline.exam_date.date.month == 11 %>
-                                    <%= "Oct/Nov" %> <br> <%= timeline.exam_date.date.strftime("%Y") %>
-                                  <% else %>
-                                    <%= timeline.exam_date.date.strftime("%B %Y") %>
-                                  <% end %>
-                                <% end %>
-                              </div>
-                            </div>
-                            <% end %>
-                          </div>
-                        </div>
-                      <% end %>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div class="d-flex row gap-3 mb-5">
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <p>Name: <%= @learner.full_name %></p>
+      <p>Hub: <%= @learner.hubs.first.name %></p>
+      <p>Email: <%= @learner.email %></p>
+      <% @hub_lcs.first(2).each do |lc| %>
+        <p>LC: <%= lc.full_name %></p>
+      <% end %>
+    </div>
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <% @average_items.each do |average_item| %>
+        <div class="d-flex justify-content-between">
+          <p><%= average_item[:title] %></p>
+          <p><%= average_item[:average] %></p>
         </div>
+      <% end %>
+    </div>
+    <%# FIXME add dynamic numbers when attendance is ready %>
+    <%# <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <div class="d-flex justify-content-between">
+        <p>Attendance</p>
+        <p>80%</p>
+      </div>
+      <div class="d-flex justify-content-between">
+        <p>Weekly Meetings</p>
+        <p>80%</p>
+      </div>
+      <div class="d-flex justify-content-between">
+        <p>Average Progress</p>
+        <p>50%</p>
+      </div>
+      <div class="d-flex justify-content-between">
+        <p>Progress/Week</p>
+        <p>2%</p>
+      </div>
+    </div> %>
+
+  <div class="mb-5">
+    <h2>Overview</h2>
+    <p>Keep track of your learner below.</p>
+    <div class="card mb-2 shadow-sm px-2" style="border-radius: 10px">
+      <div class="px-2 overflow-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th></th>
+              <% @current_sprint_weeks.each do |week| %>
+                <th style="vertical-align: middle;">
+                  <div class="d-flex">
+                    <% if week.name.include?("Build") %>
+                      <%= week.week_name_abbr %>
+                      <p style="font-size: 10px; margin-bottom: -1;">BW</p>
+                    <% else %>
+                      <div style="margin-bottom: 3px"><%= week.week_name_abbr %></div>
+                    <% end %>
+                  </div>
+                </th>
+              <% end %>
+              <th>
+                Overall
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Weekly Goals</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <% if week.weekly_goals.where(user: @learner).exists? %>
+                  <% if week.start_date <= Date.today %>
+                    <td class="text-success"><i class="fa-regular fa-circle-check"></i></td>
+                  <% else %>
+                    <td></td>
+                  <% end %>
+                <% else %>
+                  <% if week.start_date <= Date.today %>
+                    <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
+                  <% else %>
+                    <td> <%= week.start_date%></td>
+                  <% end %>
+                <% end %>
+              <% end %>
+              <td><%= @weekly_goals_percentage %>%</td>
+            </tr>
+            <tr>
+              <td>KDAs</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <% if week.kdas.where(user: @learner).exists? %>
+                  <% if week.start_date <= Date.today %>
+                    <td class="text-success"><i class="fa-regular fa-circle-check"></i></td>
+                  <% else %>
+                    <td></td>
+                  <% end %>
+                <% else %>
+                  <% if week.start_date <= Date.today %>
+                    <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
+                  <% else %>
+                    <td></td>
+                  <% end %>
+                <% end %>
+              <% end %>
+              <td><%= @kdas_percentage %>%</td>
+            </tr>
+            <tr>
+              <td>Unjustified Absences</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <% if week.start_date <= Date.today %>
+                  <td><%= week.count_absences(@learner) %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+              <% end %>
+              <td><%= @current_sprint.count_absences(@learner) %></td>
+            </tr>
+            <tr>
+              <td>Weekly Progress</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <td>
+                  <% relative_progress = week.calc_relative_average_timeline_progress(@learner) %>
+                  <%# FIXME The logic below is temporary to hide initial
+                      progress without previous week progress.
+                      Logic can be removed after Sprint 3
+                  %>
+                  <% if relative_progress > 10 %>
+                    N/A
+                  <% else %>
+                    <%= "#{relative_progress}%" %>
+                  <% end %>
+                </td>
+              <% end %>
+              <td><%= @current_sprint.count_weekly_progress_average(@learner) %>%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
+
+  <h2>Knowledge</h2>
+  <p>Check your academic goals below</p>
+  <div class="card mb-5" style="border-radius: 10px">
+    <div class="px-2">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Progress</th>
+            <th>Mock 50%</th>
+            <th>Mock 100%</th>
+            <% if @has_exam_date %>
+              <th>Exam Season</th>
+            <% end %>
+            <th>Start Date</th>
+            <th>End Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @timelines.exists? %>
+            <% @timelines.each do |timeline| %>
+              <tr>
+                <td><%= timeline.subject.name %></td>
+                <td style="width: 200px;">
+                  <div style="background-color: rgb(220,220,220); border-radius: 10px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.progress%>%; border-radius: 10px;" aria-valuenow="<%= timeline.progress%>" aria-valuemin="0" aria-valuemax="100">
+                      <span class="progress-text text-white"><%= timeline.progress %>%</span> <!-- Display the actual progress percentage inside the bar -->
+                    </div>
+                  </div>
+                </td>
+                <% if timeline.mock50 != nil %>
+                  <td><%= timeline.mock50.strftime("%d/%m/%Y") %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+                <% if timeline.mock100 != nil %>
+                  <td><%= timeline.mock100.strftime("%d/%m/%Y") %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+                <% if @has_exam_date %>
+                  <td>
+                    <% if timeline.exam_date.present? %>
+                      <% if timeline.exam_date.date.month == 5 || timeline.exam_date.date.month == 6 %>
+                        <p>May/ Jun <%= timeline.exam_date.date.strftime("%Y") %></p>
+                      <% elsif timeline.exam_date.date.month == 10 || timeline.exam_date.date.month == 11 %>
+                        <p>Oct/ Nov <%= timeline.exam_date.date.strftime("%Y") %></p>
+                      <% else %>
+                        <%= timeline.exam_date.date.strftime("%B %Y") %>
+                      <% end %>
+                    <% else %>
+                      <p>N/A</p>
+                    <% end %>
+                  </td>
+                <% end %>
+                <td><%= timeline.start_date.strftime("%d/%m/%Y") %></td>
+                <td><%= timeline.end_date.strftime("%d/%m/%Y") %></td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="7">
+                <div class="text-center py-5">
+                  <h2>No Timelines available...</h2>
+                  <p>Please help <%= @learner.full_name %> set up their timelines.</p>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>Skills & Community</h2>
+  <p>Check your skills and community goals for the sprint below.</p>
+  <div class="card mb-5" style="border-radius: 10px">
+    <div class="px-2">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Activity</th>
+            <th>Your Goals for this Activity</th>
+            <th>The challenges you might encounter.</th>
+            <th>The plan to overcome the challenges</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @skills && @communities %>
+            <% @skills.each do |skill| %>
+              <tr>
+                <td><%= skill.extracurricular %></td>
+                <td><%= skill.smartgoals %></td>
+                <td><%= skill.difficulties %></td>
+                <td><%= skill.plan %></td>
+              </tr>
+            <% end %>
+            <% @communities.each do |community| %>
+              <tr>
+                <td><%= community.involved %></td>
+                <td><%= community.smartgoals %></td>
+                <td><%= community.difficulties %></td>
+                <td><%= community.plan %></td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="4">
+                <div class="text-center py-5">
+                  <h2>No Sprint Goals yet...</h2>
+                  <p>Please help <%= @learner.full_name %> fill out their sprint goals.</p>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
