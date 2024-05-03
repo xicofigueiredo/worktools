@@ -248,7 +248,7 @@
         </thead>
         <tbody>
           <% if @timelines.exists? %>
-            <% @timelines.each_with_index do |timeline, index| %>
+            <% @timelines.each do |timeline| %>
               <tr>
                 <td><%= timeline.subject.name %></td>
                 <td style="width: 200px;">
@@ -258,8 +258,16 @@
                     </div>
                   </div>
                 </td>
+                <% if timeline.mock50 != nil %>
                   <td><%= timeline.mock50.strftime("%d/%m/%Y") %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+                <% if timeline.mock100 != nil %>
                   <td><%= timeline.mock100.strftime("%d/%m/%Y") %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
                 <% if @has_exam_date %>
                   <td>
                     <% if timeline.exam_date.present? %>

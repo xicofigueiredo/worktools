@@ -95,6 +95,10 @@ class PagesController < ApplicationController
 
     @current_week = Week.find_by("start_date <= ? AND end_date >= ?", Date.today, Date.today)
 
+    @has_mock50 = @timelines.any? { |timeline| timeline.mock50.present? }
+
+    @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
+
     get_kda_averages(@learner.kdas)
     unless @learner
       redirect_to some_fallback_path, alert: "Learner not found."
