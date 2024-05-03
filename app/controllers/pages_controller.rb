@@ -11,7 +11,6 @@ class PagesController < ApplicationController
   end
 
   def dashboard_lc
-    get_mocks_dates(current_user)
     @users = current_user.hubs.first.users_hub.map(&:user).reject { |user| user.role == "lc" }
     @total_balance = {}
 
@@ -45,8 +44,6 @@ class PagesController < ApplicationController
       @overall_progress = 0
       @overall_progress_expected = 0
     end
-
-    get_mocks_dates(current_user)
 
     @activities = []
     current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
@@ -98,10 +95,6 @@ class PagesController < ApplicationController
 
     @current_week = Week.find_by("start_date <= ? AND end_date >= ?", Date.today, Date.today)
 
-    get_mocks_dates(@learner)
-    @has_mock50 = !@mock50.empty?
-    @has_mock100 = !@mock100.empty?
-
     get_kda_averages(@learner.kdas)
     unless @learner
       redirect_to some_fallback_path, alert: "Learner not found."
@@ -149,28 +142,6 @@ class PagesController < ApplicationController
       { title: 'Peer-to-Peer Learning', average: avg_p2p }
     ]
 
-  end
-
-  def get_mocks_dates(user)
-    @mock50 = []
-    @mock100 = []
-    # @closest_future_deadline_by_timeline = {}
-
-
-    user.timelines.each do |timeline|
-      closest_future_deadline = nil
-      timeline.user.user_topics.each do |user_topic|
-        @mock50 << user_topic.deadline if user_topic.topic.Mock50
-        @mock100 << user_topic.deadline if user_topic.topic.Mock100
-
-        # if !user_topic.deadline.nil? && user_topic.deadline > Date.today
-        #   if closest_future_deadline.nil? || user_topic.deadline < closest_future_deadline
-        #     closest_future_deadline = user_topic.deadline
-        #   end
-        # end
-      end
-      # @closest_future_deadline_by_timeline[timeline.id] = closest_future_deadline
-    end
   end
 
   def check_admin_role

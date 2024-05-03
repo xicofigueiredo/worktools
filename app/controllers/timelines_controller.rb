@@ -15,6 +15,7 @@ class TimelinesController < ApplicationController
     @timelines.each do |timeline|
       timeline.calculate_total_time
       generate_topic_deadlines(timeline)
+      assign_mock_deadlines(timeline)
       timeline.save
     end
     calculate_progress_and_balance(@timelines)
@@ -117,7 +118,7 @@ class TimelinesController < ApplicationController
   end
 
   def timeline_params
-    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_date_id)
+    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_date_id, :mock100, :mock50)
   end
 
   def generate_topic_deadlines(timeline)
@@ -163,5 +164,18 @@ class TimelinesController < ApplicationController
     # Ensure index does not exceed the bounds of working days
     final_index = index + time_per_topic
     working_days[final_index] || working_days.last
+  end
+
+  def assign_mock_deadlines(timeline)
+    # Assign mock50 value
+    mock50_topic = timeline.subject.topics.find_by(Mock50: true)
+    timeline.mock50 = timeline.user.user_topics.find_by(topic: mock50_topic)&.deadline if mock50_topic
+
+    # Assign mock100 value
+    mock100_topic = timeline.subject.topics.find_by(Mock100: true)
+    timeline.mock100 = timeline.user.user_topics.find_by(topic: mock100_topic)&.deadline if mock100_topic
+
+    # Prevent loop by using a flag
+    timeline.save
   end
 end
