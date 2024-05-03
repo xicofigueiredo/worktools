@@ -27,3 +27,7 @@ replant:
 
 dangling:
 	docker rmi -f $(docker images -f "dangling=true" -q)
+
+pass:
+	docker exec -it worktools-server-1 bash
+	RAILS_ENV=production rails console
