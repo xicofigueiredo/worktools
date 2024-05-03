@@ -15,7 +15,6 @@ class TimelinesController < ApplicationController
     @timelines.each do |timeline|
       timeline.calculate_total_time
       generate_topic_deadlines(timeline)
-      assign_mock_deadlines(timeline)
       timeline.save
     end
     calculate_progress_and_balance(@timelines)
@@ -68,6 +67,8 @@ class TimelinesController < ApplicationController
 
     if @timeline.save
       generate_topic_deadlines(@timeline)
+      assign_mock_deadlines(@timeline)
+      @timeline.save
       redirect_to root_path, notice: 'Timeline was successfully created.'
     else
       render :new
@@ -87,6 +88,9 @@ class TimelinesController < ApplicationController
 
       @timeline.save
       generate_topic_deadlines(@timeline)
+
+      assign_mock_deadlines(@timeline)
+      @timeline.save
       redirect_to root_path, notice: 'Timeline was successfully updated.'
     else
       render :edit
