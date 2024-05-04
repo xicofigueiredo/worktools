@@ -73,23 +73,7 @@
                 <div class="col-8">
                   <div class="card shadow-sm m-2 p-2" style="border-radius: 10px;">
                     <div class="d-flex justify-content-between">
-                      <div class="d-flex gap-3">
-                        <h5><%= timeline.subject.name %></h5>
-                        <%# FIXME in case the balance badge is desired %>
-                        <%# <% if timeline.balance.negative? %>
-                            <%# <div class="bg-danger py-1 px-2 text-white" style="font-size: 14px; border-radius: 16px;">
-                              <%= timeline.balance %>
-                            <%# </div> %>
-                        <%# <% elsif timeline.balance.positive?%>
-                          <%# <div>
-                            <div class="bg-success py-1 px-2 text-white" style="font-size: 14px; border-radius: 16px;">
-                              +<%= timeline.balance %>
-                            <%# </div>
-                          </div> %>
-                        <%# <% else %>
-                            <%# <div class="bg-warning py-1 px-2 text-white" style="font-size: 14px; border-radius: 16px;"></div> %>
-                        <%# <% end %>
-                      </div>
+                      <h5><%= timeline.subject.name %></h5>
                       <div class="d-flex gap-2 fs-2">
                         <%= link_to edit_timeline_path(timeline) do %>
                           <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
@@ -164,7 +148,7 @@
                       <tr>
                         <th>Unit</th>
                         <th>Topic</th>
-                        <% if (timeline.subject.category != 'lws8' && timeline.subject.category != 'lws9' && timeline.subject.category != 'up') %>
+                        <% if !timeline.subject.name.include?("LWS") %>
                           <th>Hours</th>
                           <th width = "120px" >Date</th>
                         <% end %>
@@ -193,7 +177,7 @@
                             <% end %>
                           </td>
                           <td style="<%= background_color %>"><%= topic.name %></td>
-                          <% if (timeline.subject.category != 'lws8' && timeline.subject.category != 'lws9' && timeline.subject.category != 'up') %>
+                          <% if !timeline.subject.name.include?("LWS") %>
                             <td style="<%= background_color %>"><%= topic.time %></td>
                             <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
                           <% end %>
