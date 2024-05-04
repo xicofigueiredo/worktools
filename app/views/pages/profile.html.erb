@@ -82,7 +82,7 @@
                   <% if week.start_date <= Date.today %>
                     <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
                   <% else %>
-                    <td> <%= week.start_date%></td>
+                    <td></td>
                   <% end %>
                 <% end %>
               <% end %>
@@ -127,7 +127,7 @@
                       progress without previous week progress.
                       Logic can be removed after Sprint 3
                   %>
-                  <% if relative_progress > 10 %>
+                  <% if relative_progress > 10 || relative_progress < 0 %>
                     N/A
                   <% else %>
                     <%= "#{relative_progress}%" %>

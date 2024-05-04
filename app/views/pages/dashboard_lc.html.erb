@@ -1,4 +1,4 @@
-<div class="container mt-5">
+<div class="container mt-3">
   <div class="d-flex justify-content-between mb-4">
     <h2><%=  current_user.users_hubs.first.hub.name %></h2>
     <h2>Learner Count: <%=  current_user.users_hubs.first.hub.users.where(role: 'learner').count%></h2>
