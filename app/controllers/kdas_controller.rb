@@ -6,16 +6,6 @@ class KdasController < ApplicationController
   # GET /kdas
   def index
     @kdas = current_user.kdas.includes(:week).order('weeks.start_date DESC')
-    @date = params[:date] ? Date.parse(params[:date]) : Date.today
-
-    if @date.saturday?
-      @date -= 1.day  # Subtract 1 day if it's Saturday
-    elsif @date.sunday?
-      @date -= 2.days # Subtract 2 days if it's Sunday
-    end
-
-    @current_week = Week.find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @date, @date)
-    @kda = current_user.kdas.find_by(week: @current_week)
   end
 
   # GET /kdas/1
