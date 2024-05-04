@@ -73,7 +73,23 @@
                 <div class="col-8">
                   <div class="card shadow-sm m-2 p-2" style="border-radius: 10px;">
                     <div class="d-flex justify-content-between">
-                      <h5><%= timeline.subject.name %></h5>
+                      <div class="d-flex gap-3">
+                        <h5><%= timeline.subject.name %></h5>
+                        <%# FIXME in case the balance badge is desired %>
+                        <%# <% if timeline.balance.negative? %>
+                            <%# <div class="bg-danger py-1 px-2 text-white" style="font-size: 14px; border-radius: 16px;">
+                              <%= timeline.balance %>
+                            <%# </div> %>
+                        <%# <% elsif timeline.balance.positive?%>
+                          <%# <div>
+                            <div class="bg-success py-1 px-2 text-white" style="font-size: 14px; border-radius: 16px;">
+                              +<%= timeline.balance %>
+                            <%# </div>
+                          </div> %>
+                        <%# <% else %>
+                            <%# <div class="bg-warning py-1 px-2 text-white" style="font-size: 14px; border-radius: 16px;"></div> %>
+                        <%# <% end %>
+                      </div>
                       <div class="d-flex gap-2 fs-2">
                         <%= link_to edit_timeline_path(timeline) do %>
                           <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
