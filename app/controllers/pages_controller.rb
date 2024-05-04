@@ -12,6 +12,7 @@ class PagesController < ApplicationController
 
   def dashboard_lc
     @users = current_user.hubs.first.users_hub.map(&:user).reject { |user| user.role == "lc" }
+    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     @total_balance = {}
 
     @users.each do |user|

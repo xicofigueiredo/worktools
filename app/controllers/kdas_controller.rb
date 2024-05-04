@@ -5,6 +5,14 @@ class KdasController < ApplicationController
 
   # GET /kdas
   def index
+    @date = params[:date] ? Date.parse(params[:date]) : Date.today
+    if @date.saturday?
+      @date -= 1.day  # Subtract 1 day if it's Saturday
+    elsif @date.sunday?
+      @date -= 2.days # Subtract 2 days if it's Sunday
+    end
+    @current_week = Week.find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @date, @date)
+    @kda = current_user.kdas.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @date, @date)
     @kdas = current_user.kdas.includes(:week).order('weeks.start_date DESC')
   end
 
@@ -16,8 +24,10 @@ class KdasController < ApplicationController
 
   # GET /kdas/new
   def new
+    @current_week = Week.find_by(start_date: params[:date])
     @kda = Kda.new
     @kda.user_id = current_user.id
+    @kda.week = @current_week
     @kda.build_sdl
     @kda.build_ini
     @kda.build_mot
@@ -28,6 +38,7 @@ class KdasController < ApplicationController
   # GET /kdas/1/edit
   def edit
     @kda = Kda.find(params[:id])
+    @current_week = @kda.week
   end
 
   # POST /kdas
@@ -36,7 +47,7 @@ class KdasController < ApplicationController
 
 
     if @kda.save
-      redirect_to kdas_path, notice: 'Kda was successfully created.'
+      redirect_to kdas_path(date: @kda.week.start_date), notice: 'Kda was successfully created.'
     else
       flash.now[:alert] = 'KDA could not be created. Please check your input.'
       render :new, status: :unprocessable_entity
@@ -46,7 +57,7 @@ class KdasController < ApplicationController
   # PATCH/PUT /kdas/1
   def update
     if @kda.update(kda_params)
-      redirect_to kdas_path, notice: 'Kda was successfully updated.'
+      redirect_to kdas_path(date: @kda.week.start_date), notice: 'Kda was successfully updated.'
     else
       flash.now[:alert] =  'KDA could not be updated. Please check your input.'
       render :new, status: :unprocessable_entity
@@ -68,7 +79,7 @@ class KdasController < ApplicationController
 
     def kda_params
       params.require(:kda).permit(
-                    :week_id, :user_id,
+                    :week_id, :user_id, :date,
                     sdl_attributes: [:id, :rating, :why, :improve, :_destroy],
                     ini_attributes: [:id, :rating, :why, :improve, :_destroy],
                     mot_attributes: [:id, :rating, :why, :improve, :_destroy],
