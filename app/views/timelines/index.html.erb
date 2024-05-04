@@ -1,201 +1,214 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-md-7">
-        <h3>Timelines</h3>
-        <% if current_user.level == 'lws' && current_user.lws_timelines.count == 0 %>
-          <h2>Lower Secundary</h2>
-          <%= link_to "New Lws Timeline", new_lws_timeline_path, class: "btn btn-primary mb-3" %>
-          <% elsif current_user.level == 'lws' && current_user.lws_timelines.count > 0 && current_user.timelines.count > 0%>
-            <div class="card mb-3">
-              <div class="card-body">
-                <p class="card-text">
-                  <strong><%= current_user.timelines.first.subject.category_long_form %></strong><br>
-                  <strong>Start Date:</strong> <%= current_user.lws_timelines.first.start_date.strftime('%d-%m-%Y') %><br>
-                  <strong>End Date:</strong> <%= current_user.lws_timelines.first.end_date.strftime('%d-%m-%Y') %>
-                </p>
-                <%= link_to "Edit", edit_lws_timeline_path(current_user.lws_timelines.first), class: "btn btn-secondary mr-2" %>
-                <%= link_to "Delete", lws_timeline_path(current_user.lws_timelines.first), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
-              </div>
-            </div>
-        <% end %>
-      <% @timelines.each_with_index do |timeline, index| %>
-        <div class="accordion" id="parentAccordion">
-          <div class="accordion-item">
-            <h2 class="accordion-header">
-              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>" aria-expanded="false" aria-controls="collapse<%= index %>">
-                <div class="d-flex justify-content-end gap-2" style="font-size: calc(1rem + 0.6vw);" >
-                  <%= timeline.subject.name %>
-                  <% if timeline.balance.negative? %>
-                      <span class="badge rounded-pill bg-danger">
-                        <%= timeline.balance %>
-                      </span>
-                  <% elsif timeline.balance.positive?%>
-                      <span class="badge rounded-pill bg-success">
-                        +<%= timeline.balance %>
-                      </span>
-                  <% else %>
-                      <span class="badge rounded-pill bg-warning"></span>
-                  <% end %>
-                </div>
-              </button>
-              <div class="progress" role="progressbar" aria-label="Progress bar" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
-                  <div class="progress-bar" style="width: <%= timeline.progress > 5 ? timeline.progress : 4 %>%;"> <%= timeline.progress %>% </div>
-              </div>
-            </h2>
-            <div id="collapse<%= index %>" class="accordion-collapse collapse" aria-labelledby="heading<%= index %>" data-bs-parent="#parentAccordion">
-              <div class="accordion-body">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Start Date</th>
-                      <th>End Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><%= timeline.start_date.strftime('%d-%m-%Y') %></td>
-                      <td><%= timeline.end_date.strftime('%d-%m-%Y') %></td>
-                      <td><% link_to 'Show', timeline %></td>
-                      <td><%= link_to 'Edit', edit_timeline_path(timeline) %></td>
-                      <td><%= link_to 'Delete', timeline_path(timeline), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } %></td>
-                    </tr>
-                </table>
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Unit</th>
-                      <th>Topic</th>
-                      <% if (timeline.subject.category != 'lws8' && timeline.subject.category != 'lws9' && timeline.subject.category != 'up') %>
-                        <th>Hours</th>
-                        <th width = "120px" >Date</th>
-                      <% end %>
-                      <th>Done</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% timeline.subject.topics.each_with_index do |topic, index| %>
-                      <% user_topic = current_user.user_topics.find_or_initialize_by(topic: topic) %>
-                      <% subject_category = topic.subject.category %>
-                      <% background_color = if !user_topic.done && user_topic.deadline < Date.today && !['lws8', 'lws9'].include?(subject_category)
-                         'background-color: lightcoral;'
-                       elsif !user_topic.done && Date.today.monday < user_topic.deadline && user_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws8', 'lws9'].include?(subject_category)
-                         'background-color: lightgrey;'
-                       elsif user_topic.done
-                         'background-color: lightgreen;'
-                       else
-                         ''
-                       end
-                      %>
+<div class="container mt-3">
+  <div class="d-flex flex-column mb-4">
+    <h1>Timelines</h1>
+    <p>Keep track of your progress in each course.</p>
+  </div>
 
-                      <tr style="<%= background_color %>">
-                        <td>
-                          <% if index == 0 || topic.unit != timeline.subject.topics[index - 1].unit %>
-                            <%= topic.unit %>
-                          <% end %>
-                        </td>
-                        <td style="<%= background_color %>"><%= topic.name %></td>
-                        <% if (timeline.subject.category != 'lws8' && timeline.subject.category != 'lws9' && timeline.subject.category != 'up') %>
-                          <td style="<%= background_color %>"><%= topic.time %></td>
-                          <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
-                        <% end %>
-                        <td style="<%= background_color %>">
-                          <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
-                            <%= form_with model: user_topic, url: timeline_path(timeline), method: :patch, local: true do |form| %>
-                              <div class="form-check">
-                                <%= form.check_box :done, class: "form-check-input",
-                                                        data: {
-                                                          action: "change->toggle-done#toggle",
-                                                          toggle_done_target: "checkbox",
-                                                          user_topic_id: user_topic.id,
-                                                          timeline_id: timeline.id
-                                                        } %>
-                              </div>
-                            <% end %>
-                          </div>
-                        </td>
-                        <% (user_topic.calculate_percentage * 100).round(3)%>
-                      </tr>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+  <div class="container">
+    <div class="mb-5">
+      <div class="d-flex justify-content-between">
+        <div>
+          <h2>Holidays</h2>
+          <p>Create new Holidays here</p>
         </div>
-      <% end %>
-      <div class="container">
-        <div class="row">
-          <div class="col text-end mt-3 mb-3">
-            <% if current_user.level != 'lws' %>
-              <%= link_to new_timeline_path, class: 'btn btn-primary' do %>
-                <i class="fas fa-plus"></i>
-                New Timeline
-              <% end %>
-            <% end %>
-          </div>
+        <div>
+          <%= link_to new_holiday_path, class: 'btn btn-primary p-3', style: 'border-radius: 10px;' do  %>
+            Create
+          <% end %>
         </div>
       </div>
-    </div>
-    <div class="col-md-5">
-      <h3><%= Date.today.strftime("%B")%> Goals</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Subject</th>
-            <th>Topic</th>
-            <th>Deadline</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @monthly_goals.each do |goal| %>
-            <tr>
-              <td><%= goal[:timeline].subject.name %></td>
-              <td><%= goal[:topic].name %></td>
-              <td><%= goal[:topic].user_topics.find_by(topic: goal[:topic], user: current_user).deadline.strftime('%d-%m-%Y') %></td>
-              <% if goal[:topic].user_topics.find_by(topic: goal[:topic], user: current_user).done %>
-                <td> <i class="fa-regular fa-circle-check text-success"></i> </td>
-              <% else %>
-                <td> <i class="fa-regular fa-circle-xmark text-danger"></i> </td>
-              <% end %>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-      <h3>Holidays</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Start Date</th>
-            <th>Note</th>
-            <th>End Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @holidays.each do |holiday| %>
-            <tr>
-              <td><%= holiday.start_date.strftime('%d-%m-%Y') %></td>
-              <td><%= holiday.name %></td>
-              <td><%= holiday.end_date.strftime('%d-%m-%Y') %></td>
-              <td><%= link_to 'Edit', edit_holiday_path(holiday) %></td>
-              <td><%= link_to 'Delete', holiday_path(holiday), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } %></td>
-            </tr>
-          <% end %>
-          <tr>
-            <td>
-              <div class="container">
-                <div class="row">
-                  <div class="col text-end mt-3 mb-3">
-                    <%= link_to new_holiday_path, class: 'btn btn-primary' do  %>
-                      <i class="fas fa-plus"></i>
-                      New Holiday
+      <div class="row row-cols-4">
+        <% @holidays.each do |holiday| %>
+          <div>
+            <div class="card shadow-sm mb-3" style="border-radius: 10px">
+              <div class="p-3">
+                <div class="d-flex justify-content-between mb-2 align-items-center">
+                  <h5>
+                    <%= holiday.name %>
+                  </h5>
+                  <div class="d-flex gap-2">
+                    <%= link_to edit_holiday_path(holiday) do %>
+                      <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
+                    <% end %>
+                    <%= link_to holiday_path(holiday), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } do %>
+                      <i class="fa-solid fa-trash" style="font-size: 20px; color: gray;"></i>
                     <% end %>
                   </div>
                 </div>
+                <div>
+                  <div class="d-flex justify-content-between">
+                    <p class="mb-1" style="color: gray">Start Date: </p>
+                    <%= holiday.start_date %>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <p class="mb-1" style="color: gray">End Date: </p>
+                    <%= holiday.end_date %>
+                  </div>
+                </div>
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+        <% end %>
+      </div>
     </div>
+
+    <div class="mb-5">
+      <div class="d-flex justify-content-between">
+        <div>
+          <h2>Timelines</h2>
+          <p>Create your Timelines here</p>
+        </div>
+        <div>
+          <%= link_to new_timeline_path, class: 'btn btn-primary p-3', style: 'border-radius: 10px;' do  %>
+            Create
+          <% end %>
+        </div>
+      </div>
+      <div class="accordion" id="parentAccordion">
+        <% @timelines.each_with_index do |timeline, index| %>
+          <div>
+            <h2>
+              <div class="d-flex">
+                <%# Timeline Header %>
+                <div class="col-8">
+                  <div class="card shadow-sm m-2 p-2" style="border-radius: 10px;">
+                    <div class="d-flex justify-content-between">
+                      <h5><%= timeline.subject.name %></h5>
+                      <div class="d-flex gap-2 fs-2">
+                        <%= link_to edit_timeline_path(timeline) do %>
+                          <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
+                        <% end %>
+                        <%= link_to timeline_path(timeline), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } do %>
+                          <i class="fa-solid fa-trash" style="font-size: 20px; color: gray;"></i>
+                        <% end %>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-middle">
+                      <div>
+                        <div class="d-flex gap-3">
+                          <p class="mb-1" style="color: gray; font-size: 16px;">Start Date: </p>
+                          <p style="font-size: 16px;">
+                            <%= timeline.start_date %>
+                          </p>
+                        </div>
+                        <div class="d-flex gap-3">
+                          <p class="mb-1" style="color: gray; font-size: 16px;">End Date: </p>
+                          <p style="font-size: 16px;">
+                            <%= timeline.end_date %>
+                          </p>
+                        </div>
+                      </div>
+                      <div style="margin-block: auto;">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>" aria-expanded="false" aria-controls="collapse<%= index %>" style="border-radius: 10px;">
+                        </button>
+                      </div>
+                    </div>
+                    <div class="progress" role="progressbar" aria-label="Progress bar" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100" style="border-radius: 10px;">
+                      <div class="progress-bar" style="width: <%= timeline.progress > 5 ? timeline.progress : 4 %>%; border-radius: 10px;"> <%= timeline.progress %>% </div>
+                      </div>
+                    </div>
+                </div>
+                <%# Monthly Goal %>
+                <div class="col-4 h-full">
+                  <div class="card shadow-sm m-2 p-2" style="border-radius: 10px; height: 91%;">
+                    <% monthly_goal = @monthly_goals.find { |monthly_goal| monthly_goal[:timeline].subject.name == timeline.subject.name } %>
+
+                    <% if monthly_goal %>
+
+                      <p style="font-size: 16px;"><%= monthly_goal[:timeline].subject.name %></p>
+                      <div>
+                        <div class="d-flex gap-3">
+                          <p class="mb-1" style="color: gray; font-size: 16px;">Topic: </p>
+                          <p style="font-size: 16px;">
+                            <%= monthly_goal[:topic].name %>
+                          </p>
+                        </div>
+                        <div class="d-flex gap-3">
+                          <p class="mb-1" style="color: gray; font-size: 16px">End Date: </p>
+                          <p style="font-size: 16px;">
+                            <%= monthly_goal[:topic]&.user_topics.find_by(topic: monthly_goal[:topic], user: current_user).deadline.strftime('%d-%m-%Y') %>
+                          </p>
+                        </div>
+                      </div>
+                    <% else %>
+                      <div class="d-flex justify-content-center align-middle" style="margin-block: auto;">
+                        <p style="font-size: 16px;">This Timeline has no goal for this month</p>
+                      </div>
+                    <% end %>
+
+                  </div>
+                </div>
+              </div>
+            </h2>
+            <div id="collapse<%= index %>" class="accordion-collapse collapse" aria-labelledby="heading<%= index %>" data-bs-parent="#parentAccordion">
+              <div class="accordion-body p-2">
+                <div class="card shadow-sm px-2" style="border-radius: 10px;">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Unit</th>
+                        <th>Topic</th>
+                        <% if (timeline.subject.category != 'lws8' && timeline.subject.category != 'lws9' && timeline.subject.category != 'up') %>
+                          <th>Hours</th>
+                          <th width = "120px" >Date</th>
+                        <% end %>
+                        <th>Done</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% timeline.subject.topics.each_with_index do |topic, index| %>
+                        <% user_topic = current_user.user_topics.find_or_initialize_by(topic: topic) %>
+                        <% subject_category = topic.subject.category %>
+                        <% background_color = if !user_topic.done && user_topic.deadline < Date.today && !['lws8', 'lws9'].include?(subject_category)
+                            'background-color: lightcoral;'
+                          elsif !user_topic.done && Date.today.monday < user_topic.deadline && user_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws8', 'lws9'].include?(subject_category)
+                            'background-color: lightgrey;'
+                          elsif user_topic.done
+                            'background-color: lightgreen;'
+                          else
+                            ''
+                          end
+                        %>
+
+                        <tr style="<%= background_color %>">
+                          <td>
+                            <% if index == 0 || topic.unit != timeline.subject.topics[index - 1].unit %>
+                              <%= topic.unit %>
+                            <% end %>
+                          </td>
+                          <td style="<%= background_color %>"><%= topic.name %></td>
+                          <% if (timeline.subject.category != 'lws8' && timeline.subject.category != 'lws9' && timeline.subject.category != 'up') %>
+                            <td style="<%= background_color %>"><%= topic.time %></td>
+                            <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
+                          <% end %>
+                          <td style="<%= background_color %>">
+                            <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
+                              <%= form_with model: user_topic, url: timeline_path(timeline), method: :patch, local: true do |form| %>
+                                <div class="form-check">
+                                  <%= form.check_box :done, class: "form-check-input",
+                                                          data: {
+                                                            action: "change->toggle-done#toggle",
+                                                            toggle_done_target: "checkbox",
+                                                            user_topic_id: user_topic.id,
+                                                            timeline_id: timeline.id
+                                                          } %>
+                                </div>
+                              <% end %>
+                            </div>
+                          </td>
+                          <% (user_topic.calculate_percentage * 100).round(3)%>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
   </div>
+
 </div>
