@@ -25,12 +25,13 @@
                 </tr>
               </thead>
               <tbody>
+                <%= form.hidden_field :week_id, value: @current_week.id %>
                 <%= form.fields_for :sdl do |sdl_fields| %>
                   <tr>
                     <td>Self-Directed Learning</td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
-                        <%= sdl_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                        <%= sdl_fields.select :rating, options_for_select(0..5, sdl_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
                       </div>
                     </td>
                     <td><%= sdl_fields.text_area :why, rows: 6, class: "form-control" %></td>
@@ -42,7 +43,7 @@
                     <td>Initiative</td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
-                        <%= ini_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                        <%= ini_fields.select :rating, options_for_select(0..5, ini_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
                       </div>
                     </td>
                     <td><%= ini_fields.text_area :why, rows: 4, class: "form-control" %></td>
@@ -54,7 +55,7 @@
                     <td>Motivation</td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
-                        <%= mot_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                        <%= mot_fields.select :rating, options_for_select(0..5, mot_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
                       </div>
                     </td>
                     <td><%= mot_fields.text_area :why, rows: 4, class: "form-control" %></td>
@@ -66,7 +67,7 @@
                     <td>P2P</td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
-                        <%= p2p_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                        <%= p2p_fields.select :rating, options_for_select(0..5, p2p_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
                       </div>
                     </td>
                     <td><%= p2p_fields.text_area :why, rows: 4, class: "form-control" %></td>
@@ -78,7 +79,7 @@
                     <td>Hub Participation</td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
-                        <%= hubp_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                        <%= hubp_fields.select :rating, options_for_select(0..5, hubp_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
                       </div>
                     </td>
                     <td><%= hubp_fields.text_area :why, rows: 4, class: "form-control" %></td>
