@@ -28,6 +28,5 @@ replant:
 dangling:
 	docker rmi -f $(docker images -f "dangling=true" -q)
 
-pass:
-	docker exec -it worktools-server-1 bash
-	RAILS_ENV=production rails console
+pass: ## user = User.find_by(email: '') ; user.password = '' ; user.password_confirmation = '' ; user.save
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rails console"

@@ -3,7 +3,6 @@ class WeeklyGoalsController < ApplicationController
   before_action :set_weekly_goal, only: [:show, :edit, :update, :destroy]
   before_action :set_subject_names, only: [:new, :edit]
   before_action :set_topic_names, only: [:new, :edit]
-  before_action :set_available_weeks, only: [:new, :edit]
 
   def topics_for_subject
     # Assume subject_name is passed correctly and you find the subject by its name
@@ -180,26 +179,6 @@ class WeeklyGoalsController < ApplicationController
         # Check if the slot is new or has changes and save it
         slot.save if slot.new_record? || slot.changed?
       end
-    end
-  end
-
-
-  def set_available_weeks(edit_week_id = nil)
-    used_week_ids = current_user.weekly_goals.pluck(:week_id)
-    current_sprint = nil
-    Sprint.all.each do |sprint|
-      if sprint.start_date <= Date.today && sprint.end_date >= Date.today
-        current_sprint = sprint
-        break
-      end
-    end
-
-    # Exclude the edit_week_id from used_week_ids if provided
-    used_week_ids.delete(edit_week_id) if edit_week_id.present?
-    @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids).order(:start_date)
-    # Ensure the current week is included if we're editing
-    if edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
-      @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
     end
   end
 

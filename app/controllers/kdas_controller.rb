@@ -80,13 +80,7 @@ class KdasController < ApplicationController
       used_week_ids = current_user.kdas.pluck(:week_id)
       @available_weeks = Week.where.not(id: used_week_ids).order(start_date: :asc)
 
-      current_sprint = nil
-      Sprint.all.each do |sprint|
-        if sprint.start_date <= Date.today && sprint.end_date >= Date.today
-          current_sprint = sprint
-          break
-        end
-      end
+      current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
 
       # Exclude the edit_week_id from used_week_ids if provided
       used_week_ids.delete(edit_week_id) if edit_week_id.present?
