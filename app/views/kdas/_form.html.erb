@@ -10,21 +10,15 @@
     </div>
   <% end %>
 
-  <div class="container py-5">
+  <div class="">
     <div class="row justify-content-center">
       <div class="col-md-12">
-        <div class="card">
-          <div class="card-body">
-            <h2 class="card-title text-center mb-4">New KDA</h2>
-            <!-- Week Selection -->
-            <div class="field">
-              <%= form.collection_select :week_id, @available_weeks, :id, :name, { include_blank: "Please select a Week" }, { class: 'form-select', required: true } %>
-            </div>
-            <hr>
+        <div class="card mb-5" style="border-radius: 10px;">
+          <div class="card-body py-0">
             <table class="table">
               <thead>
                 <tr>
-                  <th>How well did you do, last week?	</th>
+                  <th class="pt-3">How well did you do, last week?	</th>
                   <th>Rating (0-5)</th>
                   <th>Why did you give yourself that rating? Provide two arguments.</th>
                   <th>How will you improve in each KDA, during this week? Give two strategies.</th>
@@ -34,7 +28,11 @@
                 <%= form.fields_for :sdl do |sdl_fields| %>
                   <tr>
                     <td>Self-Directed Learning</td>
-                    <td><%= sdl_fields.number_field :rating, min: 0, max: 5, class: "form-control", required: true %></td>
+                    <td>
+                      <div class="shadow-sm" style="border-radius: 10px;">
+                        <%= sdl_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                      </div>
+                    </td>
                     <td><%= sdl_fields.text_area :why, rows: 6, class: "form-control" %></td>
                     <td><%= sdl_fields.text_area :improve, rows: 6, class: "form-control" %></td>
                   </tr>
@@ -42,41 +40,58 @@
                 <%= form.fields_for :ini do |ini_fields| %>
                   <tr>
                     <td>Initiative</td>
-                    <td><%= ini_fields.number_field :rating, min: 0, max: 5, class: "form-control", required: true  %></td>
-                    <td><%= ini_fields.text_area :why, rows: 6, class: "form-control" %></td>
-                    <td><%= ini_fields.text_area :improve, rows: 6, class: "form-control" %></td>
+                    <td>
+                      <div class="shadow-sm" style="border-radius: 10px;">
+                        <%= ini_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                      </div>
+                    </td>
+                    <td><%= ini_fields.text_area :why, rows: 4, class: "form-control" %></td>
+                    <td><%= ini_fields.text_area :improve, rows: 4, class: "form-control" %></td>
                   </tr>
                 <% end %>
                 <%= form.fields_for :mot do |mot_fields| %>
                   <tr>
                     <td>Motivation</td>
-                    <td><%= mot_fields.number_field :rating, min: 0, max: 5, class: "form-control", required: true  %></td>
-                    <td><%= mot_fields.text_area :why, rows: 6, class: "form-control" %></td>
-                    <td><%= mot_fields.text_area :improve, rows: 6, class: "form-control" %></td>
+                    <td>
+                      <div class="shadow-sm" style="border-radius: 10px;">
+                        <%= mot_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                      </div>
+                    </td>
+                    <td><%= mot_fields.text_area :why, rows: 4, class: "form-control" %></td>
+                    <td><%= mot_fields.text_area :improve, rows: 4, class: "form-control" %></td>
                   </tr>
                 <% end %>
                 <%= form.fields_for :p2p do |p2p_fields| %>
                   <tr>
                     <td>P2P</td>
-                    <td><%= p2p_fields.number_field :rating, min: 0, max: 5, class: "form-control", required: true  %></td>
-                    <td><%= p2p_fields.text_area :why, rows: 6, class: "form-control" %></td>
-                    <td><%= p2p_fields.text_area :improve, rows: 6, class: "form-control" %></td>
+                    <td>
+                      <div class="shadow-sm" style="border-radius: 10px;">
+                        <%= p2p_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                      </div>
+                    </td>
+                    <td><%= p2p_fields.text_area :why, rows: 4, class: "form-control" %></td>
+                    <td><%= p2p_fields.text_area :improve, rows: 4, class: "form-control" %></td>
                   </tr>
                 <% end %>
                 <%= form.fields_for :hubp do |hubp_fields| %>
                   <tr>
                     <td>Hub Participation</td>
-                    <td><%= hubp_fields.number_field :rating, min: 0, max: 5, class: "form-control", required: true  %></td>
-                    <td><%= hubp_fields.text_area :why, rows: 6, class: "form-control" %></td>
-                    <td><%= hubp_fields.text_area :improve, rows: 6, class: "form-control" %></td>
+                    <td>
+                      <div class="shadow-sm" style="border-radius: 10px;">
+                        <%= hubp_fields.select :rating, options_for_select(0..5), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
+                      </div>
+                    </td>
+                    <td><%= hubp_fields.text_area :why, rows: 4, class: "form-control" %></td>
+                    <td><%= hubp_fields.text_area :improve, rows: 4, class: "form-control" %></td>
                   </tr>
                 <% end %>
               </tbody>
             </table>
-            <div class="actions">
-              <%= form.submit "Save KDA", class: "btn btn-primary" %>
-            </div>
           </div>
+        </div>
+        <div class="d-flex justify-content-center  gap-2 mt-3">
+          <%= link_to "Back", kdas_path(date: @kda.week.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+          <%= form.submit "Save KDA", class: "btn btn-primary", style: 'border-radius: 10px;' %>
         </div>
       </div>
     </div>

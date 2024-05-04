@@ -16,8 +16,10 @@ class KdasController < ApplicationController
 
   # GET /kdas/new
   def new
+    @current_week = Week.find_by(start_date: params[:date])
     @kda = Kda.new
     @kda.user_id = current_user.id
+    @kda.week = @current_week
     @kda.build_sdl
     @kda.build_ini
     @kda.build_mot
@@ -68,7 +70,7 @@ class KdasController < ApplicationController
 
     def kda_params
       params.require(:kda).permit(
-                    :week_id, :user_id,
+                    :week_id, :user_id, :date,
                     sdl_attributes: [:id, :rating, :why, :improve, :_destroy],
                     ini_attributes: [:id, :rating, :why, :improve, :_destroy],
                     mot_attributes: [:id, :rating, :why, :improve, :_destroy],
