@@ -64,7 +64,6 @@ class WeeklyGoalsController < ApplicationController
   def edit
     @weekly_goal = WeeklyGoal.find(params[:id])
     @is_edit = true
-    set_available_weeks(@weekly_goal.week_id)
 
     # Pre-populate or build missing slots if necessary
     WeeklySlot.time_slots.keys.each do |time|
