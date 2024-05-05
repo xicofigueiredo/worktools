@@ -33,7 +33,7 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def navigator
-    @current_date = Date.parse(params[:date])
+    @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
 
     if @current_date.saturday?
       @current_date -= 1.day  # Subtract 1 day if it's Saturday
