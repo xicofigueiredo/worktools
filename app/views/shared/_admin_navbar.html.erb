@@ -11,31 +11,47 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto">
         <% if user_signed_in? %>
-          <li class="nav-item active">
-            <%= link_to "Timelines", root_path, class: "nav-link" %>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(root_path)%>">
+              <%= link_to "Timelines", root_path, class: "nav-link" %>
+            </div>
           </li>
           <li class="nav-item">
-            <%= link_to "Admin Dashboard", dashboard_admin_path, class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(dashboard_admin_path)%>">
+              <%= link_to "Admin Dashboard", dashboard_admin_path, class: "nav-link" %>
+            </div>
           </li>
           <li class="nav-item">
             <%# <%= link_to "Subjects", subjects_path, class: "nav-link" %>
           </li>
           <li class="nav-item">
-            <%= link_to "LC Dashboard", dashboard_lc_path, class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(dashboard_lc_path)%>">
+              <%= link_to "LC Dashboard", dashboard_lc_path, class: "nav-link" %>
+            </div>
           </li>
           <li class="nav-item">
-            <%= link_to "Attendance", attendance_path, class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(attendance_path)%>">
+              <%= link_to "Attendance", attendance_path, class: "nav-link" %>
+            </div>
           </li>
           <li class="nav-item">
-            <%= link_to "Weekly Meetings", weekly_meetings_path, class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(weekly_meetings_path)%>">
+              <%= link_to "Weekly Meetings", weekly_meetings_path, class: "nav-link" %>
+            </div>
           </li>
           <li class="nav-item">
-            <%= link_to "KDA's", kdas_path(date: Date.today), class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(kdas_path)%>">
+              <%= link_to "KDA's", kdas_path(date: Date.today), class: "nav-link" %>
+            </div>
           <li class="nav-item">
-            <%= link_to "Weekly Goals", weekly_goals_navigator_path(Date.today), class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(weekly_goals_navigator_path)%>">
+              <%= link_to "Weekly Goals", weekly_goals_navigator_path(date: Date.today), class: "nav-link" %>
+            </div>
           </li>
           <li class="nav-item">
-            <%= link_to "Sprint Goals", sprint_goals_path(date: Date.today), class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(sprint_goals_path)%>">
+              <%= link_to "Sprint Goals", sprint_goals_path(date: Date.today), class: "nav-link" %>
+            </div>
           </li>
           <li class="nav-item dropdown">
             <%= link_to 'Profile', class: 'avatar', id: 'navbarDropdown', 'data-bs-toggle': 'dropdown', 'aria-haspopup': true, 'aria-expanded': false do %>

@@ -71,9 +71,13 @@
                           <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
                         </div>
                       <% elsif timeline.balance < 0 %>
-                        <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
+                        <div style="height: 28px;">
+                          <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
+                        </div>
                       <% else %>
-                      <div class="badge rounded-pill bg-warning">On time</div></p>
+                        <div style="height: 28px;">
+                          <div class="badge rounded-pill bg-warning">On time</div>
+                        </div>
                       <% end %>
 
                   </div>
