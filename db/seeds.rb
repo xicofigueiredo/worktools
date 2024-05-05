@@ -1926,10 +1926,10 @@ ActiveRecord::Base.transaction do
 #         environmental_mgmt.topics.create!(name: "Checkpoint 9: Natural ecosystems and human activities (9.1 - 9.5)", time: 1, unit: "9. Natural ecosystems and human activities")
 #         environmental_mgmt.topics.create!(name: "100% Mock exam", time: 2, unit: "100% Mock exam", milestone: true, has_grade: true, Mock100: true)
 
-# english_y8 = Subject.create!(
-#   name: "English - Y8",
-#   category: :lws8,
-#   )
+english_y8 = Subject.create!(
+  name: "English - Y8",
+  category: :lws8,
+  )
 
 english_y8.topics.create!(name: "1.1 What is a Short Story?", time: 1, unit: "Project 1")
 english_y8.topics.create!(name: "1.2 Let's Have a Go at Reading!", time: 1, unit: "Project 1")
@@ -1990,7 +1990,7 @@ english_y8.topics.create!(name: "8.2 Everyone Loves Ava... - Let´s Check your U
 english_y8.topics.create!(name: "8.3 All things Grammar: The Passive Voice", time: 1, unit: "Project 8")
 english_y8.topics.create!(name: "8.3 The Passive Voice Meme - Let´s Check your Understanding!", time: 1, unit: "Project 8")
 english_y8.topics.create!(name: "9.1 Information Texts", time: 1, unit: "Project 9")
-english_y8.topics.crete!(name: "9.1 Information Text - Let´s Check your Understanding!", time: 1, unit: "Project 9")
+english_y8.topics.create!(name: "9.1 Information Text - Let´s Check your Understanding!", time: 1, unit: "Project 9")
 english_y8.topics.create!(name: "9.2 Strategies for Tricky Words", time: 1, unit: "Project 9")
 english_y8.topics.create!(name: "9.2 Word Wizard Adventure - Let´s Check your Understanding!", time: 1, unit: "Project 9")
 english_y8.topics.create!(name: "9.3 All things Grammar", time: 1, unit: "Project 9")
@@ -1998,10 +1998,10 @@ english_y8.topics.create!(name: "9.3 Conjunction Explorer - Let´s Check your Un
 english_y8.topics.create!(name: "English— 100% Progression Test Submission", time: 1, unit: "Project 9", milestone: true, has_grade: true, Mock100: true)
 
 
-# maths_y8 = Subject.create!(
-#   name: "Maths - Y8",
-#   category: :lws8,
-#   )
+maths_y8 = Subject.create!(
+  name: "Maths - Y8",
+  category: :lws8,
+  )
 
    maths_y8.topics.create!(name: "Let's Learn - Number and Place Value", time: 1, unit: "Project 1")
     maths_y8.topics.create!(name: "Let's Watch", time: 1, unit: "Project 1")
@@ -2126,10 +2126,10 @@ english_y8.topics.create!(name: "English— 100% Progression Test Submission", t
 
 
 
-# ltr_y8 = Subject.create!(
-#   name: "Learning Through Research - Y8",
-#   category: :lws8,
-#   )
+ltr_y8 = Subject.create!(
+  name: "Learning Through Research - Y8",
+  category: :lws8,
+  )
 
 ltr_y8.topics.create!(name: "1.1 Understanding Migration", time: 1, unit: "Project 1")
 ltr_y8.topics.create!(name: "1.2 Migrant vs Refugees", time: 1, unit: "Project 1")
@@ -2174,10 +2174,10 @@ ltr_y8.topics.create!(name: "9.2 Nature's Puzzle: Protecting Life's Wonders", ti
 ltr_y8.topics.create!(name: "9.3 Guardians of the Canopy: One Man's Tree-Saving Mission", time: 1, unit: "Project 9")
 ltr_y8.topics.create!(name: "Final Project: Becoming an SDG 15 Warrior - Let´s Check your Understanding!", time: 1, unit: "Project 9")
 
-# science_y8 = Subject.create!(
-#   name: "Science - Y8",
-#   category: :lws8,
-#   )
+science_y8 = Subject.create!(
+  name: "Science - Y8",
+  category: :lws8,
+  )
 
 science_y8.topics.create!(name: "1.1 Food", time: 1, unit: "Project 1")
 science_y8.topics.create!(name: "1.1 Food Labels — Let's Check your Understanding! 🍭", time: 1, unit: "Project 1")
