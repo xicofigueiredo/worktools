@@ -14,11 +14,21 @@ class TimelinesController < ApplicationController
     end
 
     @timelines = current_user.timelines_sorted_by_balance
+    @has_lws = false
+    @total_blocks_per_day = 0
     @timelines.each do |timeline|
-      timeline.calculate_total_time
       generate_topic_deadlines(timeline)
+      if timeline.subject.category.include?("lws")
+        remaining_days = calc_remaining_working_days(timeline)
+        remaining_topics = calc_remaining_blocks(timeline)
+        blocks_per_day = remaining_topics.to_f / remaining_days
+        @total_blocks_per_day += blocks_per_day
+        @has_lws = true
+      end
+      timeline.calculate_total_time
       timeline.save
     end
+
     calculate_progress_and_balance(@timelines)
 
     if @timelines.count.positive?
@@ -58,12 +68,12 @@ class TimelinesController < ApplicationController
   def new
     @timeline = Timeline.new
     set_exam_dates
-    # @subjects = Subject.all.order(:category, :name).reject do |subject|
-    #   subject.name.match?(/^P\d/)
-    # end
     @subjects = Subject.all.order(:category, :name).reject do |subject|
-      subject.lws8? || subject.lws9?
+      subject.name.match?(/^P\d/)
     end
+    # @subjects = Subject.all.order(:category, :name).reject do |subject|
+    #   subject.lws8? || subject.lws9?
+    # end
 
     @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
   end
@@ -157,6 +167,12 @@ class TimelinesController < ApplicationController
     (timeline.start_date..timeline.end_date).to_a.reject do |date|
       @holidays_array.include?(date) || date.saturday? || date.sunday?
     end
+  end
+
+  def calc_remaining_working_days(timeline)
+    (Date.today..timeline.end_date).to_a.reject do |date|
+      @holidays_array.include?(date) || date.saturday? || date.sunday?
+    end.count
   end
 
   def distribute_deadlines(user_topics, working_days)
