@@ -70,7 +70,16 @@
                 <div class="col-8">
                   <div class="card shadow-sm m-2 p-2" style="border-radius: 10px;">
                     <div class="d-flex justify-content-between">
-                      <h5><%= timeline.subject.name %></h5>
+                      <h5>
+                        <%= timeline.subject.name %>
+                        <% if timeline.balance > 0 %>
+                            <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
+                        <% elsif timeline.balance < 0 %>
+                            <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
+                        <% else %>
+                            <div class="badge rounded-pill bg-warning">On time</div>
+                        <% end %>
+                      </h5>
                       <div class="d-flex gap-2 fs-2">
                         <%= link_to edit_timeline_path(timeline) do %>
                           <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>

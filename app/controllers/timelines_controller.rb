@@ -58,7 +58,9 @@ class TimelinesController < ApplicationController
   def new
     @timeline = Timeline.new
     set_exam_dates
-    @subjects = Subject.all.order(:category, :name)
+    @subjects = Subject.all.order(:category, :name).reject do |subject|
+      subject.name.match?(/^P\d/)
+    end
     @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
   end
 
