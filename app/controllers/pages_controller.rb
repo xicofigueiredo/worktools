@@ -18,7 +18,9 @@ class PagesController < ApplicationController
     @users.each do |user|
       total_balance_for_user = 0
       user.timelines.each do |timeline|
-        total_balance_for_user += timeline.balance
+        if timeline.balance != nil
+          total_balance_for_user += timeline.balance
+        end
       end
       user.topics_balance = total_balance_for_user
       user.save

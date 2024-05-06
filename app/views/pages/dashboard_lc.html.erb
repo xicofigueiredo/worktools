@@ -9,7 +9,7 @@
         <div class="card shadow-sm w-100" style="border-radius: 10px; ">
           <%= link_to learner_profile_path(user), class: "text-decoration-none on-card-hover", style: "border-radius: 10px; height: 100%;" do %>
             <div class="p-3">
-              <p class="text-black"><%= user.full_name %></p>
+              <p class="text-black d-flex justify-content-center"><%= user.full_name %></p>
               <div class="d-flex justify-content-center mb-3">
                 <div class="card p-2 d-flex flex-row gap-1" style="border-radius: 10px; width: fit-content;">
                   <div>
@@ -71,10 +71,7 @@
                 <% sorted_timelines = user.timelines.to_a.sort_by { |timeline| timeline.balance } %>
                 <% sorted_timelines.each do |timeline| %>
                   <div class="d-flex justify-content-between gap-2" style="height: fit-content;">
-
                       <p class="text-secondary mb-1"><%= timeline.subject.name %>
-
-
                       <% if timeline.balance > 0 %>
                         <div style="height: 28px;">
                           <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
