@@ -26,6 +26,11 @@ class PagesController < ApplicationController
     end
 
     @users.sort_by! { |user| user.topics_balance }
+    @result = false
+  end
+
+  def dashboard_dc
+    @hubs = Hub.all.order(:name)
   end
 
   def profile
@@ -155,5 +160,17 @@ class PagesController < ApplicationController
     unless current_user.role != "learner"
       redirect_to root_path, alert: "You are not authorized to access this page."
     end
+  end
+
+  def check_sprint_goal(user)
+    result = false
+    user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)).knowledges.each do |knowledge|
+      if knowledge.difficulties != nil && knowledge.plan != nil
+        result = true
+      else
+        result = false
+      end
+    end
+    result
   end
 end

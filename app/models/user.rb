@@ -26,7 +26,7 @@ class User < ApplicationRecord
   has_many :attendances, dependent: :destroy
   has_many :notes, dependent: :destroy
   has_one :learner_flag, dependent: :destroy
-  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner' }
+  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', dc: 'Development Coach' }
 
   after_create :associate_with_hubs, :create_learner_flag
   # after_commit :send_welcome_email, on: :create

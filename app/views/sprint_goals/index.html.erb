@@ -26,6 +26,7 @@
     <div class="d-flex flex-column gap-3 mt-5">
       <div class="text-center">
         <h1>There is currently no Sprint Goal for <%= @sprint.name %></h1>
+        <%= link_to "Create Sprint Goal", new_sprint_goal_path, class: "btn btn-primary mb-3"  %>
       </div>
     </div>
   <% else %>

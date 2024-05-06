@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   get '/about', to: 'pages#about'
   get 'dashboard_admin', to: 'pages#dashboard_admin'
   get 'dashboard_lc', to: 'pages#dashboard_lc'
+  get 'dashboard_dc', to: 'pages#dashboard_dc'
   get 'learner_profile/:id', to: 'pages#learner_profile', as: 'learner_profile'
 
 

@@ -16,7 +16,7 @@
                 </div>
 
                 <div class="form-outline form-black mb-4">
-                  <%= f.select :role, options_for_select(User.roles.keys.reject { |role| role == "admin" }.map { |role| [role.titleize, role] }), {}, {class: "form-select form-select-lg"} %>
+                  <%= f.select :role, options_for_select(User.roles.keys.reject { |role| role == "admin" }.map { |role| [role.upcase, role] }, "learner"), {}, {class: "form-select form-select-lg"} %>
                 </div>
 
                 <div class="form-outline form-black mb-4">

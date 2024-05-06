@@ -9,6 +9,8 @@ class TimelinesController < ApplicationController
   def index
     if current_user.role == "lc"
       redirect_to dashboard_lc_path
+    elsif current_user.role == "dc"
+      redirect_to dashboard_admin_path
     end
 
     @timelines = current_user.timelines_sorted_by_balance

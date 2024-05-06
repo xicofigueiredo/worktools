@@ -1,7 +1,6 @@
 class SprintGoalsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_sprint_goal, only: [:update]
-  before_action :set_available_sprints, only: [:new]
 
   # GET /sprint_goals
   def index
