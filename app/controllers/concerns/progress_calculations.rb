@@ -42,4 +42,16 @@ module ProgressCalculations
       timeline.update(balance: balance, progress: progress, expected_progress: expected_progress_percentage)
     end
   end
+
+  def calc_remaining_blocks(timeline)
+    topics = timeline.subject.topics
+    remaining_topics_count = 0
+
+    topics.each do |topic|
+      user_topic = current_user.user_topics.find_by(topic_id: topic.id)
+      remaining_topics_count += 1 if user_topic && !user_topic.done
+    end
+
+    remaining_topics_count
+  end
 end

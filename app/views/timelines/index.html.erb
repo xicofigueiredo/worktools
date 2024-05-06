@@ -52,8 +52,13 @@
     <div class="mb-5">
       <div class="d-flex justify-content-between">
         <div>
-          <h2>Timelines</h2>
+            <h2>Timelines</h2>
           <p>Create your Timelines here</p>
+        </div>
+        <div style="margin-right: 130px;">
+          <% if @has_lws %>
+              <h5 class="mb-0" style="margin-top: 12px">Blocks per day: <%= @total_blocks_per_day.round(1)  %></h5>
+          <% end %>
         </div>
         <div>
           <%= link_to new_timeline_path, class: 'btn btn-primary p-3', style: 'border-radius: 10px;' do  %>
@@ -63,6 +68,7 @@
       </div>
       <div class="accordion" id="parentAccordion">
         <% @timelines.each_with_index do |timeline, index| %>
+          <% is_lws = timeline.subject.category.include?("lws") %>
           <div>
             <h2>
               <div class="d-flex">
@@ -72,12 +78,14 @@
                     <div class="d-flex justify-content-between">
                       <h5>
                         <%= timeline.subject.name %>
-                        <% if timeline.balance > 0 %>
-                            <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
-                        <% elsif timeline.balance < 0 %>
-                            <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
-                        <% else %>
-                            <div class="badge rounded-pill bg-warning">On time</div>
+                        <% unless is_lws %>
+                          <% if timeline.balance > 0 %>
+                              <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
+                          <% elsif timeline.balance < 0 %>
+                              <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
+                          <% else %>
+                              <div class="badge rounded-pill bg-warning">On time</div>
+                          <% end %>
                         <% end %>
                       </h5>
                       <div class="d-flex gap-2 fs-2">
@@ -152,9 +160,9 @@
                   <table class="table">
                     <thead>
                       <tr>
-                        <th>Unit</th>
+                        <th><%= is_lws ? 'Project' : 'Unit' %></th>
                         <th>Topic</th>
-                        <% if !timeline.subject.name.include?("LWS") %>
+                        <% if !is_lws %>
                           <th>Hours</th>
                           <th width = "120px" >Date</th>
                         <% end %>
@@ -183,7 +191,7 @@
                             <% end %>
                           </td>
                           <td style="<%= background_color %>"><%= topic.name %></td>
-                          <% if !timeline.subject.name.include?("LWS") %>
+                          <% if !is_lws %>
                             <td style="<%= background_color %>"><%= topic.time %></td>
                             <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
                           <% end %>
