@@ -45,8 +45,9 @@
                 <%= form.date_field :end_date, class: 'form-control', required: true %>
               </div>
 
-              <div class="form-group text-center">
-                <%= form.submit class: "btn btn-primary btn-lg px-5" %>
+              <div class="d-flex justify-content-center  gap-2 mt-3">
+                <%= link_to "Back", timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+                <%= form.submit 'Create Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
               </div>
             <% end %>
           </div>
@@ -54,6 +55,7 @@
       </div>
     </div>
     <br>
+    <hr>
     <div class="row justify-content-center">
       <%= image_tag "rules.png"%>
     </div>

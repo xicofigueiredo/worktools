@@ -22,10 +22,9 @@
               <%= f.date_field :end_date, class: 'form-control' %>
             </div>
 
-            <hr>
-
-            <div class="form-group text-center">
-              <%= f.submit class: 'btn btn-primary' %>
+            <div class="d-flex justify-content-center  gap-2 mt-3">
+              <%= link_to "Back", timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+              <%= f.submit 'Create Holiday', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
             </div>
           <% end %>
         </div>

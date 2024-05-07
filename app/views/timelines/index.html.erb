@@ -9,9 +9,7 @@
           <p>Create new Holidays here</p>
         </div>
         <div>
-          <%= link_to new_holiday_path, class: 'btn btn-primary p-3', style: 'border-radius: 10px;' do  %>
-            New Holiday
-          <% end %>
+          <%= link_to "New Holiday", new_holiday_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
         </div>
       </div>
       <div class="row row-cols-4">
@@ -61,9 +59,7 @@
           <% end %>
         </div>
         <div>
-          <%= link_to new_timeline_path, class: 'btn btn-primary p-3', style: 'border-radius: 10px;' do  %>
-            Create
-          <% end %>
+          <%= link_to "New Timeline", new_timeline_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
         </div>
       </div>
       <div class="accordion" id="parentAccordion">
