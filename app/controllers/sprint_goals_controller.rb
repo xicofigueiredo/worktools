@@ -25,17 +25,20 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals/new
   def new
-    @sprint = current_sprint
+    @is_edit = false
+    @date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
 
-    # Check if a sprint goal already exists for this sprint and user
-    existing_goal = @sprint.sprint_goals.find_by(user: current_user)
-    if existing_goal
-      redirect_to edit_sprint_goal_path(existing_goal), notice: 'You already have a Sprint Goal for this period. You are being redirected to edit it.'
-      return # Ensure that the action is halted here
+    @sprint_goal = current_user.sprint_goals.find_or_create_by(sprint: @sprint) do |sg|
+      sg.sprint = @sprint
     end
 
-    # Build a new sprint goal if one does not exist
-    @sprint_goal = current_user.sprint_goals.build(sprint: @sprint)
+    # # Check if a sprint goal already exists for this sprint and user
+    # existing_goal = @sprint.sprint_goals.find_by(user: current_user)
+    # if existing_goal
+    #   redirect_to edit_sprint_goal_path(existing_goal), notice: 'You already have a Sprint Goal for this period. You are being redirected to edit it.'
+    #   return # Ensure that the action is halted here
+    # end
 
     # Build associated knowledges for each timeline
     current_user.timelines.each do |timeline|
