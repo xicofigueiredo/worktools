@@ -54,7 +54,7 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals/1/edit
   def edit
-    @edit = true
+    @is_edit = true
     @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find(params[:id])
     Rails.logger.debug @sprint_goal.knowledges.inspect  # Add this line to check what's loaded
 

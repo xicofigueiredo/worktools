@@ -30,3 +30,6 @@ dangling:
 
 pass: ## user = User.find_by(email: '') ; user.password = '' ; user.password_confirmation = '' ; user.save
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rails console"
+
+cache: ## Clear the cache
+	docker builder prune

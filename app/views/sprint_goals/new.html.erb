@@ -1,1 +1,5 @@
-<%= render 'form', sprint_goal: @sprint_goal%>
+<div class="container mt-3">
+  <h1 class="mb-3">New Sprint Goal - <%= @sprint_goal.sprint.name %></h1>
+
+  <%= render 'form', sprint_goal: @sprint_goal %>
+</div>
