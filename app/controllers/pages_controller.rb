@@ -28,7 +28,7 @@ class PagesController < ApplicationController
     end
 
     @users.sort_by! { |user| user.topics_balance }
-    @result = false
+    @result = []
   end
 
   def dashboard_dc

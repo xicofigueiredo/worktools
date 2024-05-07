@@ -61,9 +61,13 @@ Rails.application.routes.draw do
   resources :exam_dates
 
   resources :sprint_goals do
-    resources :knowledges, only: [:create, :update, :destroy]
-    resources :skills, only: [:create, :update, :destroy]
-    resources :communities, only: [:create, :update, :destroy]
+    member do
+      delete :reset_associations, as: 'reset_associations' # Adds a custom delete route for resetting associations
+    end
+
+    resources :knowledges, only: [:create, :update, :destroy] # Nested resources for knowledges
+    resources :skills, only: [:create, :update, :destroy]     # Nested resources for skills
+    resources :communities, only: [:create, :update, :destroy] # Nested resources for communities
   end
 
   resources :kdas

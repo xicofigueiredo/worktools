@@ -63,7 +63,7 @@
                 <tr>
                   <td class="custom-font-size"><%= timeline.subject.name %></td>
                   <% if timeline.exam_date != nil %>
-                    <td class="custom-font-size"><%= timeline.exam_date.date.strftime("%d/%m/%Y") %></td>
+                    <td class="custom-font-size"><%= timeline.exam_date.formatted_date %></td>
                   <% else %>
                     <td class="custom-font-size">N/A</td>
                   <% end %>

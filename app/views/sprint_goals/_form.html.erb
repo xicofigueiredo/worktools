@@ -1,9 +1,9 @@
-<%= form_with(model: sprint_goal, data: { controller: "nested-form" }, local: true) do |form| %>
-  <% if sprint_goal.errors.any? %>
+<%= form_with(model: @sprint_goal, data: { controller: "nested-form" }, local: true) do |form| %>
+  <% if @sprint_goal.errors.any? %>
     <div class="alert alert-danger" role="alert">
       <h4 class="alert-heading">Errors prevented this sprint_goal from being saved:</h4>
       <ul>
-        <% sprint_goal.errors.full_messages.each do |message| %>
+        <% @sprint_goal.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>
@@ -14,60 +14,52 @@
       font-size: 13px;
     }
   </style>
-  <div class="py-2">
-    <div class="mb-4">
-      <h2 class="mb-3">Knowledge Block</h2>
-      <div class="card mb-2 shadow-sm" style="border-radius: 10px">
-        <div class="px-2">
-          <table class="table">
-            <thead>
+<div class="py-2">
+  <div class="mb-4">
+    <h2 class="mb-3">Knowledge Block</h2>
+    <div class="card mb-2 shadow-sm" style="border-radius: 10px">
+      <div class="px-2">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="custom-font-size vertical-mid" style="vertical-align: middle;">Subject</th>
+              <th class="custom-font-size" style="vertical-align: middle;">Exam Season</th>
+              <th class="custom-font-size" style="vertical-align: middle;">50% Mock</th>
+              <th class="custom-font-size" style="vertical-align: middle;">100% Mock</th>
+              <th class="custom-font-size" style="vertical-align: middle;">What difficulties do you expect to encounter with this target?</th>
+              <th class="custom-font-size" style="vertical-align: middle;">Explain your plan to achieve your goal in 3 steps or more.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <%= form.fields_for :knowledges,  @sprint_goal.knowledges do |knowledge_form| %>
               <tr>
-                <th class="custom-font-size vertical-mid" style="vertical-align: middle;">
-                  Subject
-                </th>
-                <th class="custom-font-size" style="vertical-align: middle;">
-                  Exam Season
-                </th>
-                <th class="custom-font-size" style="vertical-align: middle;">
-                  50% Mock
-                </th>
-                <th class="custom-font-size" style="vertical-align: middle;">
-                  100% Mock
-                </th>
-                <th class="custom-font-size" style="vertical-align: middle;">
-                  What difficulties do you expect to encounter with this target?
-                </th>
-                <th class="custom-font-size" style="vertical-align: middle;">
-                  Explain your plan to achieve your goal in 3 steps or more.
-                </th>
+                <td class="custom-font-size">
+                  <%= knowledge_form.text_field :subject_name, class: 'form-control', value: knowledge_form.object.subject_name, readonly: true  %>
+                </td>
+                <td class="custom-font-size">
+                  <%= knowledge_form.text_field :exam_season, class: 'form-control', value: knowledge_form.object.exam_season, readonly: true %>
+                </td>
+                <td class="custom-font-size">
+                  <%= knowledge_form.text_field :mock50, class: 'form-control', value: knowledge_form.object.mock50, readonly: true %>
+                </td>
+                <td class="custom-font-size">
+                  <%= knowledge_form.text_field :mock100, class: 'form-control', value: knowledge_form.object.mock100, readonly: true %>
+                </td>
+                <td class="custom-font-size">
+                  <%= knowledge_form.text_area :difficulties, class: 'form-control' %>
+                </td>
+                <td class="custom-font-size">
+                  <%= knowledge_form.text_area :plan, class: 'form-control' %>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              <% current_user.timelines.each_with_index do |timeline, index| %>
-                <% knowledge = @sprint_goal.knowledges.find_or_initialize_by(subject_name: timeline.subject.name) %>
-                <%= fields_for "sprint_goal[knowledges_attributes][]", knowledge do |knowledge_form| %>
-                  <tr>
-                    <td class="custom-font-size"><%= knowledge_form.text_field :subject_name, value: timeline.subject.name, readonly: true, class: 'form-control' %></td>
-                    <td class="custom-font-size"><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A'%></td>
-                    <% if current_user.level == 'lws' || timeline.subject.category == 'up' || timeline.subject.category == 'lws' %>
-                      <td>N/A</td>
-                      <td>N/A</td>
-                    <% else %>
-                      <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A' %></td>
-                      <td class="custom-font-size"><%= current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'%></td>
-                    <% end %>
-                    <!-- Hidden field to ensure the knowledge is associated with the correct timeline -->
-                    <td class="custom-font-size"><%= knowledge_form.text_area :difficulties, class: 'form-control' %></td>
-                    <td class="custom-font-size"><%= knowledge_form.text_area :plan, class: 'form-control' %></td>
-                  </tr>
-                <% end %>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
+            <% end %>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
+</div>
+
   <div class="py-2">
       <div class="mb-4">
         <h2 class="mb-3">Skills Block</h2>
@@ -167,7 +159,8 @@
   </div>
 
   <div class="form-group d-flex justify-content-center gap-2 mb-5">
-    <%= link_to 'Back', sprint_goals_path(date: @sprint_goal.sprint.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+    <%= link_to 'Back', sprint_goals_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
     <%= form.submit "Save Sprint Goal", class: "btn btn-primary", style: 'border-radius: 10px;' %>
-  </div>
 <% end %>
+<%= button_to 'Reset Knowledge', reset_associations_sprint_goal_path(@sprint_goal), method: :delete, data: { confirm: 'Are you sure you want to reset all associated data?' }, class: "btn btn-danger", style: 'border-radius: 10px; color: white;' %>
+  </div>
