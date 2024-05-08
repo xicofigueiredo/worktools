@@ -28,7 +28,6 @@ class TimelinesController < ApplicationController
       timeline.calculate_total_time
       timeline.save
     end
-    @total_blocks_per_day = @total_blocks_per_day * 2
 
     calculate_progress_and_balance(@timelines)
 
