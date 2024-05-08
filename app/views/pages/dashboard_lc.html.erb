@@ -5,6 +5,7 @@
   </div>
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">
     <% @users.each do |user| %>
+    <% @result = [] %>
       <div class="col d-flex mb-3 px-2">
         <div class="card shadow-sm w-100" style="border-radius: 10px; ">
           <%= link_to learner_profile_path(user), class: "text-decoration-none on-card-hover", style: "border-radius: 10px; height: 100%;" do %>
@@ -18,16 +19,35 @@
                     </div>
                     <div class="text-center">
                       <% if user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)).present?
-                          user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)).knowledges.each do |knowledge|
-                            if knowledge.difficulties.present? && knowledge.plan.present?
-                                @result << true
-                              else
-                                @result << false
+                          sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
+                            sg.knowledges.each do |knowledge|
+                              if knowledge.difficulties != '' && knowledge.plan != ''
+                                  @result << true
+                                else
+                                  @result << false
+                              end
                             end
-                          end
+                            sg.skills.each do |skill|
+                              if skill.difficulties != '' && skill.plan != '' && skill.smartgoals != '' && skill.extracurricular != ''
+                                  @result << true
+                                else
+                                  @result << false
+                              end
+                            end
+                            sg.communities.each do |community|
+                              if community.difficulties != '' && community.plan != '' && community.smartgoals != '' && community.involved != ''
+                                  @result << true
+                                else
+                                  @result << false
+                              end
+                            end
                         end %>
+                        <% count_true = @result.count(true)
+                          count_false = @result.count(false) %>
                       <% if @result.all?%>
                         <i class="fa-solid fa-check text-success"></i>
+                      <% elsif count_true >= count_false %>
+                        <i class="fa-regular fa-hourglass-half"></i>
                       <% else %>
                         <i class="fa-solid fa-x text-danger"></i>
                       <% end %>
