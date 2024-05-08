@@ -64,7 +64,7 @@
       </div>
       <div class="accordion" id="parentAccordion">
         <% @timelines.each_with_index do |timeline, index| %>
-          <% is_lws = ["lws", "lang"].include?(timeline.subject.category)%>
+          <% is_lws = timeline.subject.category.include?("lws")%>
           <div>
             <h2>
               <div class="d-flex">
