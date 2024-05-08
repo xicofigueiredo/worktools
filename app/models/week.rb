@@ -39,7 +39,11 @@ class Week < ApplicationRecord
       relative_average = current_week_average
     end
 
-    relative_average
+    if relative_average < 0
+      relative_average = 0
+    else
+      relative_average
+    end
   end
 
   def count_absences(user)

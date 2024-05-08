@@ -42,7 +42,7 @@ class Sprint < ApplicationRecord
     week_averages = self.weeks.where('start_date < ?', Date.today).map do |week|
       average = week.calc_user_average_timeline_progress(user)
       # FIXME The logic below is temporary and can be removed after Sprint 2
-      average > 10 ? 0 : average
+      (average > 10 || average < 0) ? 0 : average
     end
 
     # Calculate the average of all week averages if there are any weeks

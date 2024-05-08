@@ -79,7 +79,7 @@ class WeeklyGoalsController < ApplicationController
     @weekly_goal = current_user.weekly_goals.new(weekly_goal_params)
     if @weekly_goal.save
       save_weekly_slots
-      redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date), notice: 'Weekly goal was successfully created.'
+      redirect_to weekly_goals_navigator_path(date: @weekly_goal.week.start_date), notice: 'Weekly goal was successfully created.'
     else
       render :new
     end
