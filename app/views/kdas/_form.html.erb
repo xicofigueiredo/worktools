@@ -28,7 +28,7 @@
                 <%= form.hidden_field :week_id, value: @current_week.id %>
                 <%= form.fields_for :sdl do |sdl_fields| %>
                   <tr>
-                    <td title="Are you able to learn independently? This KDA refers to your ability to set your learning goals, assign deadlines, and complete them, whether the goals are academic in nature or not. From an academic perspective this relates to the BGA Moodle platform and its subjects; are you keeping up with your deadlines and setting effective goals each week and adhering to them.">Self-Directed Learning <i class="fa-regular fa-circle-question"></i></td>
+                    <td>Self-Directed Learning <i class="fa-regular fa-circle-question" title="Are you able to learn independently? This KDA refers to your ability to set your learning goals, assign deadlines, and complete them, whether the goals are academic in nature or not. From an academic perspective this relates to the BGA Moodle platform and its subjects; are you keeping up with your deadlines and setting effective goals each week and adhering to them."></i></td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
                         <%= sdl_fields.select :rating, options_for_select(0..5, sdl_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
