@@ -160,6 +160,21 @@ class TimelinesController < ApplicationController
     @holidays_array = (user_holidays + bga_holidays + hub_holidays).uniq
   end
 
+  def calculate_build_week_days(timeline)
+    start_date = timeline.start_date
+    end_date = timeline.end_date
+    build_weeks = Week.where('start_date >= ? AND start_date <= ? AND name ILIKE ?', start_date, end_date, '%Build%')
+
+    build_week_days = []
+
+    build_weeks.each do |week|
+      week_days = (week.start_date..week.end_date).to_a
+      build_week_days.concat(week_days)
+    end
+
+    build_week_days
+  end
+
   def calculate_working_days(timeline)
     (timeline.start_date..timeline.end_date).to_a.reject do |date|
       @holidays_array.include?(date) || date.saturday? || date.sunday?
@@ -167,9 +182,11 @@ class TimelinesController < ApplicationController
   end
 
   def calc_remaining_working_days(timeline)
-    (Date.today..timeline.end_date).to_a.reject do |date|
-      @holidays_array.include?(date) || date.saturday? || date.sunday?
+    build_week_days = calculate_build_week_days(timeline)
+    ting = (Date.today..timeline.end_date).to_a.reject do |date|
+      build_week_days.include?(date) || @holidays_array.include?(date) || date.saturday? || date.sunday?
     end.count
+    raise
   end
 
   def distribute_deadlines(user_topics, working_days)
