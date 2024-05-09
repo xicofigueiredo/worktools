@@ -33,7 +33,7 @@
           </td>
           <td>
             <%= form_tag(update_absence_attendance_path(attendance), method: :patch) do %>
-              <%= select_tag 'absence', options_for_select(['Justified Leave', 'Unjustified Leave', 'Holiday', 'Present'], attendance.absence), prompt: '-Select Option-', class: 'form-control', onchange: 'this.form.submit()' %>
+              <%= select_tag 'absence', options_for_select(['Justified Leave', 'Unjustified Leave', 'Working Away', 'Holiday', 'Present'], attendance.absence), prompt: '-Select Option-', class: 'form-control', onchange: 'this.form.submit()' %>
             <% end %>
           </td>
         </tr>
