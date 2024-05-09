@@ -167,7 +167,8 @@ class TimelinesController < ApplicationController
   end
 
   def calc_remaining_working_days(timeline)
-    (Date.today..timeline.end_date).to_a.reject do |date|
+    date = [Date.today, timeline.start_date].max
+    (date..timeline.end_date).to_a.reject do |date|
       @holidays_array.include?(date) || date.saturday? || date.sunday?
     end.count
   end
