@@ -5,7 +5,7 @@
   </div>
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">
     <% @users.each do |user| %>
-    <% @result = [] %>
+    <% result = [] %>
       <div class="col d-flex mb-3 px-2">
         <div class="card shadow-sm w-100" style="border-radius: 10px; ">
           <%= link_to learner_profile_path(user), class: "text-decoration-none on-card-hover", style: "border-radius: 10px; height: 100%;" do %>
@@ -22,32 +22,38 @@
                           sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
                             sg.knowledges.each do |knowledge|
                               if knowledge.difficulties != '' && knowledge.plan != ''
-                                  @result << true
+                                  result << true
                                 else
-                                  @result << false
+                                  result << false
                               end
                             end
                             sg.skills.each do |skill|
-                              if skill.difficulties != '' && skill.plan != '' && skill.smartgoals != '' && skill.extracurricular != ''
-                                  @result << true
-                                else
-                                  @result << false
+                              if skill.extracurricular != ''
+                                if skill.difficulties != '' && skill.plan != '' && skill.smartgoals != ''
+                                    result << true
+                                  else
+                                    result << false
+                                end
                               end
                             end
                             sg.communities.each do |community|
-                              if community.difficulties != '' && community.plan != '' && community.smartgoals != '' && community.involved != ''
-                                  @result << true
-                                else
-                                  @result << false
+                              if community.involved != ''
+                                if community.difficulties != '' && community.plan != '' && community.smartgoals != ''
+                                    result << true
+                                  else
+                                    result << false
+                                end
                               end
                             end
                         end %>
-                        <% count_true = @result.count(true)
-                          count_false = @result.count(false) %>
-                      <% if @result.all?%>
+                        <% count_true = result.count(true)
+                          count_false = result.count(false)
+
+                          %>
+                      <% if result.all?%>
                         <i class="fa-solid fa-check text-success"></i>
                       <% elsif count_true >= count_false %>
-                        <i class="fa-regular fa-hourglass-half"></i>
+                        <i class="fa-solid fa-check text-warning"></i>
                       <% else %>
                         <i class="fa-solid fa-x text-danger"></i>
                       <% end %>
@@ -58,8 +64,22 @@
                       WG
                     </div>
                     <div class="text-center">
-                      <% if user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)) %>
-                        <i class="fa-solid fa-check text-success"></i>
+                      <% wg = user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))%>
+                      <% count = 0 %>
+                      <% if wg %>
+                        <% wg.weekly_slots.each do |slot|
+                            if slot.subject_name != ''
+                              count += 1
+                            end
+                          end
+                        %>
+                        <% if count >= 13 %>
+                          <i class="fa-solid fa-check text-success"></i>
+                        <% elsif count >= 8 %>
+                          <i class="fa-solid fa-check text-warning"></i>
+                        <% else %>
+                          <i class="fa-solid fa-x text-danger"></i>
+                        <% end %>
                       <% else %>
                         <i class="fa-solid fa-x text-danger"></i>
                       <% end %>
@@ -71,7 +91,44 @@
                     </div>
                     <div class="text-center">
                       <% if user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)) %>
-                        <i class="fa-solid fa-check text-success"></i>
+                      <% result = [] %>
+                        <% kda = user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
+                            if kda.sdl.why != '' && kda.sdl.improve != ''
+                              result << true
+                            else
+                              result << false
+                            end
+                            if kda.ini.why != '' && kda.ini.improve != ''
+                              result << true
+                            else
+                              result << false
+                            end
+                            if kda.mot.why != '' && kda.mot.improve != ''
+                              result << true
+                            else
+                              result << false
+                            end
+                            if kda.p2p.why != '' && kda.p2p.improve != ''
+                              result << true
+                            else
+                              result << false
+                            end
+                            if kda.hubp.why != '' && kda.hubp.improve != ''
+                              result << true
+                            else
+                              result << false
+                            end
+                        %>
+                        <% count_true = result.count(true)
+                          count_false = result.count(false)
+                          %>
+                        <% if result.all?%>
+                          <i class="fa-solid fa-check text-success"></i>
+                        <% elsif count_true >= count_false %>
+                          <i class="fa-solid fa-check text-warning"></i>
+                        <% else %>
+                          <i class="fa-solid fa-x text-danger"></i>
+                        <% end %>
                       <% else %>
                         <i class="fa-solid fa-x text-danger"></i>
                       <% end %>
