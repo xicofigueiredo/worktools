@@ -1,45 +1,68 @@
-import { Controller } from "@hotwired/stimulus"
+import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static targets = ["subject", "topic"]
+  static targets = ["subject", "topicContainer"];
 
   connect() {
     console.log("Selects controller connected");
-    if (this.subjectTarget.value) {
-      this.updateTopics(true);
+    this.updateTopics();
+  }
+
+  updateTopics() {
+    const subjectName = this.subjectTarget.value;
+    const existingTopicName = this.topicContainerTarget.dataset.selectedTopic;
+
+    if (subjectName === "Other") {
+      console.log("Switching to input because Other is selected");
+      this.topicContainerTarget.innerHTML = `<input type="text" name="${this.subjectTarget.name.replace(
+        "subject",
+        "topic"
+      )}" class="form-control" value="${
+        existingTopicName || ""
+      }" placeholder="">`;
+    } else {
+      this.resetSelect();
+      this.fetchAndUpdateTopics(subjectName);
     }
   }
 
-  updateTopics(preserveSelectedTopic = false) {
-    const subjectName = this.subjectTarget.value;
-    const topicSelect = this.topicTarget;
-    const currentTopic = preserveSelectedTopic ? topicSelect.value : null;
+  resetSelect() {
+    this.topicContainerTarget.innerHTML = `<select name="${this.subjectTarget.name.replace(
+      "subject",
+      "topic"
+    )}" class="form-control"><option value=""></option></select>`;
+  }
 
-    fetch(`/topics_for_subject?subject_name=${encodeURIComponent(subjectName)}`, {
-      method: 'GET',
-      headers: {
-        'X-CSRF-Token': document.querySelector("meta[name='csrf-token']").getAttribute("content"),
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      topicSelect.innerHTML = '<option value="">Select Topic</option>';
-      data.forEach((topic) => {
-        const option = document.createElement('option');
-        option.value = topic.name;
-        option.text = topic.name;
-        topicSelect.appendChild(option);
-      });
-      // Restore the previously selected topic, if applicable
-      if (currentTopic) {
-        topicSelect.value = currentTopic;
-        if (topicSelect.value !== currentTopic) {
-          // Handle the case where the previous topic is no longer valid for the selected subject
-          console.warn("Previously selected topic is not valid for the new subject.");
+  fetchAndUpdateTopics(subjectName) {
+    const topicSelect = this.topicContainerTarget.querySelector("select");
+    const existingTopicName = this.topicContainerTarget.dataset.selectedTopic;
+
+    if (subjectName) {
+      fetch(
+        `/topics_for_subject?subject_name=${encodeURIComponent(subjectName)}`,
+        {
+          method: "GET",
+          headers: {
+            "X-CSRF-Token": document
+              .querySelector("meta[name='csrf-token']")
+              .getAttribute("content"),
+            "Content-Type": "application/json",
+          },
         }
-      }
-    })
-    .catch(error => console.error('Error:', error));
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          data.forEach((topic) => {
+            const option = document.createElement("option");
+            option.value = topic.name;
+            option.text = topic.name;
+            if (topic.name === existingTopicName) {
+              option.selected = true; // Mark the option as selected if it matches the existing topic name
+            }
+            topicSelect.appendChild(option);
+          });
+        })
+        .catch((error) => console.error("Error:", error));
+    }
   }
 }

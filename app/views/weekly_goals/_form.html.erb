@@ -25,7 +25,7 @@
                   <tr class="bg-gray">
                     <th class="text-uppercase">Time</th>
                     <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                      <th class="text-uppercase"><%= day.split('_').first.capitalize %></th>
+                      <th class="text-uppercase" style="width: 20%"><%= day.split('_').first.capitalize %></th>
                     <% end %>
                   </tr>
                 </thead>
@@ -37,13 +37,17 @@
                         <td id="<%= time.downcase %>_<%= day.downcase %>">
                           <div class="form-group" data-controller="selects">
                             <% selected_subject = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:subject_name) %>
-                            <%= form.collection_select "#{day}_#{time}_subject", @combined_options, :itself, :itself,
-                                { selected: selected_subject, prompt: "" },
-                                { data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control" } %>
+                            <div>
+                              <%= form.collection_select "#{day}_#{time}_subject", @combined_options, :itself, :itself,
+                                  { selected: selected_subject, prompt: "" },
+                                  { data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control mb-1" } %>
+                            </div>
                             <% selected_topic = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:topic_name) %>
-                            <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself,
-                                { selected: selected_topic, prompt: "" },
-                                { data: { selects_target: "topic" }, class: "form-control" } %>
+                            <div data-selects-target="topicContainer" data-selected-topic="<%= selected_topic%>">
+                              <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself,
+                                  { selected: selected_topic, prompt: "" },
+                                  { class: "form-control" } %>
+                            </div>
                           </div>
                         </td>
                       <% end %>
