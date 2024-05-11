@@ -4,7 +4,6 @@ export default class extends Controller {
   static targets = ["subject", "topicContainer"];
 
   connect() {
-    console.log("Selects controller connected");
     this.updateTopics();
   }
 
@@ -13,7 +12,6 @@ export default class extends Controller {
     const existingTopicName = this.topicContainerTarget.dataset.selectedTopic;
 
     if (subjectName === "Other") {
-      console.log("Switching to input because Other is selected");
       this.topicContainerTarget.innerHTML = `<input type="text" name="${this.subjectTarget.name.replace(
         "subject",
         "topic"
