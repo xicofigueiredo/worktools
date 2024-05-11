@@ -131,7 +131,8 @@ class WeeklyGoalsController < ApplicationController
     # Combine subjects and skills, prefixing each for clarity
     @combined_options = @subject_names.map { |name| name} +
                         skill_names.map { |name| name} +
-                        communities_names.map { |name| name}
+                        communities_names.map { |name| name} +
+                        ["Other"]
   end
 
   def set_topic_names
