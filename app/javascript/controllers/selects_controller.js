@@ -57,7 +57,7 @@ export default class extends Controller {
             option.value = topic.name;
             option.text = topic.name;
             if (topic.name === existingTopicName) {
-              option.selected = true; // Mark the option as selected if it matches the existing topic name
+              option.selected = true;
             }
             topicSelect.appendChild(option);
           });
