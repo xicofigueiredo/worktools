@@ -59,7 +59,7 @@
             </thead>
             <tbody>
               <% current_user.timelines.each do |timeline| %>
-                <%= timeline.subject.name != '' ? subject = timeline.subject.name : subject =timeline.personalized_name %>
+                <% timeline.subject.name != '' ? subject = timeline.subject.name : subject =timeline.personalized_name %>
                 <% knowledge = @sprint_goal.knowledges.find_by(subject_name: subject) %>
                 <tr>
                   <td class="custom-font-size"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %></td>
