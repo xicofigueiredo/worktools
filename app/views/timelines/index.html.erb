@@ -72,7 +72,7 @@
                     <div class="d-flex justify-content-between">
                       <h5>
                         <%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
-                        <% if !is_lws && timeline.subject.name.present? %>
+                        <% unless is_lws || timeline.personalized_name.present? %>
                           <% if timeline.balance > 0 %>
                               <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
                           <% elsif timeline.balance < 0 %>
