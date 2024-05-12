@@ -149,18 +149,24 @@
                 <% sorted_timelines.each do |timeline| %>
                   <div class="d-flex justify-content-between gap-2" style="height: fit-content;">
                       <p class="text-secondary mb-1"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
-                      <% if timeline.balance > 0 %>
-                        <div style="height: 28px;">
-                          <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
-                        </div>
-                      <% elsif timeline.balance < 0 %>
-                        <div style="height: 28px;">
-                          <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
-                        </div>
+                      <% if !timeline.personalized_name.present? %>
+                        <% if timeline.balance > 0 %>
+                          <div style="height: 28px;">
+                            <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
+                          </div>
+                        <% elsif timeline.balance < 0 %>
+                          <div style="height: 28px;">
+                            <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
+                          </div>
+                        <% else %>
+                          <div style="height: 28px;">
+                            <div class="badge rounded-pill bg-warning">On time</div>
+                          </div>
+                        <% end %>
                       <% else %>
-                        <div style="height: 28px;">
-                          <div class="badge rounded-pill bg-warning">On time</div>
-                        </div>
+                          <div style="height: 28px;">
+                            <div class="badge rounded-pill bg-warning">N/A</div>
+                          </div>
                       <% end %>
 
                   </div>
