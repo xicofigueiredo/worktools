@@ -37,19 +37,29 @@ Rails.application.routes.draw do
 
   get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'
 
-  resources :lws_timelines
-
   resources :subjects do
     resources :topics, except: [:show, :index]
   end
 
   resources :holidays, except: [:show, :index]
-  resources :timelines
+
+  resources :timelines do
+    collection do
+      get :personalized_new
+      post :personalized_create
+    end
+    member do
+      get :personalized_edit
+      patch :personalized_update
+    end
+  end
 
   get 'weekly_goals/week/', to: 'weekly_goals#navigator', as: :weekly_goals_navigator
+
   resources :weekly_goals do
     resources :weekly_slots
   end
+
   resources :weekly_meetings do
     resources :monday_slots, except: [:index]
     resources :tuesday_slots, except: [:index]

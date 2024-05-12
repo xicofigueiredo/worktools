@@ -1,0 +1,51 @@
+<!-- app/views/timelines/personalized_new.html.erb -->
+<section>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">Personalized Timeline</h2>
+            <%= form_with(model: @timeline, url: personalized_create_timelines_path, local: true) do |form| %>
+              <% if @timeline.errors.any? %>
+                <div id="error_explanation" class="alert alert-danger">
+                  <h4><%= pluralize(@timeline.errors.count, "error") %> prohibited this timeline from being saved:</h4>
+                  <ul>
+                    <% @timeline.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+
+              <div class="form-group">
+                <%= form.label :personalized_name, 'Subject Name*' %>
+                <%= form.text_field :personalized_name, class: 'form-control', required: true %>
+              </div>
+              <br>
+              <div class="form-group">
+                <%= form.label :start_date, 'Start Date*' %>
+                <%= form.date_field :start_date, class: 'form-control', required: true %>
+              </div>
+              <br>
+              <div class="form-group">
+                <%= form.label :end_date, 'End Date*' %>
+                <%= form.date_field :end_date, class: 'form-control', required: true %>
+              </div>
+              <br>
+              <%# <div class="form-group">
+                <%= form.label :exam_date, 'Exam Date:' %>
+                <%# <%= form.date_field :exam_date, class: 'form-control' %>
+              <%# </div> %>
+              <br>
+              <div class="d-flex justify-content-center gap-2 mt-3">
+                <%= link_to "Back", timelines_path, class: "btn btn-secondary" %>
+                <%= form.submit 'Save Personalized Timeline', class: 'btn btn-primary' %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

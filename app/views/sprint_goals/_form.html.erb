@@ -31,8 +31,15 @@
             </tr>
           </thead>
           <tbody>
+            <% personalized_timelines = current_user.timelines.joins(:subject).where(subjects: { name: '' }) %>
+            <% count = 0 %>
+            <% max = personalized_timelines.count%>
             <%= form.fields_for :knowledges,  @sprint_goal.knowledges do |knowledge_form| %>
               <tr>
+                <% if knowledge_form.object.subject_name.blank? && count < max %>
+                  <% knowledge_form.object.subject_name = personalized_timelines[count].personalized_name%>
+                  <% count += 1 %>
+                <% end %>
                 <td class="custom-font-size">
                   <%= knowledge_form.text_field :subject_name, class: 'form-control', value: knowledge_form.object.subject_name, readonly: true  %>
                 </td>

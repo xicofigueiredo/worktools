@@ -12,21 +12,24 @@ class TimelinesController < ApplicationController
     elsif current_user.role == "dc"
       redirect_to dashboard_admin_path
     end
+    @timelines_with_names = current_user.timelines.where.not(personalized_name: nil)
 
     @timelines = current_user.timelines_sorted_by_balance
     @has_lws = false
     @total_blocks_per_day = 0
     @timelines.each do |timeline|
-      generate_topic_deadlines(timeline)
-      if timeline.subject.category.include?("lws")
-        remaining_days = calc_remaining_working_days(timeline)
-        remaining_topics = calc_remaining_blocks(timeline)
-        blocks_per_day = remaining_topics.to_f / remaining_days
-        @total_blocks_per_day += blocks_per_day
-        @has_lws = true
+      if timeline.personalized_name != nil
+        generate_topic_deadlines(timeline)
+        if timeline.subject.category.include?("lws")
+          remaining_days = calc_remaining_working_days(timeline)
+          remaining_topics = calc_remaining_blocks(timeline)
+          blocks_per_day = remaining_topics.to_f / remaining_days
+          @total_blocks_per_day += blocks_per_day
+          @has_lws = true
+        end
+        timeline.calculate_total_time
+        timeline.save
       end
-      timeline.calculate_total_time
-      timeline.save
     end
 
     calculate_progress_and_balance(@timelines)
@@ -69,7 +72,7 @@ class TimelinesController < ApplicationController
     @timeline = Timeline.new
     set_exam_dates
     @subjects = Subject.all.order(:category, :name).reject do |subject|
-      subject.name.match?(/^P\d/)
+      subject.name.blank? || subject.name.match?(/^P\d/)
     end
 
     @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
@@ -117,6 +120,38 @@ class TimelinesController < ApplicationController
     redirect_to timelines_url, notice: 'Timeline was successfully destroyed.'
   end
 
+  def personalized_new
+    @timeline = Timeline.new
+    set_exam_dates
+  end
+
+  def personalized_create
+    @timeline = current_user.timelines.new(timeline_params)
+    @timeline.subject_id = 666
+
+    if @timeline.save
+      redirect_to root_path, notice: 'Personalized Timeline was successfully created.'
+    else
+      render :personalized_new
+    end
+  end
+
+  def personalized_edit
+    @timeline = Timeline.find(params[:id])
+  end
+
+  def personalized_update
+    @timeline = Timeline.find(params[:id])
+    @timeline.assign_attributes(timeline_params)
+    @timeline.subject_id = 666  # Ensure subject ID remains 666 even if not included in form
+
+    if @timeline.save
+      redirect_to timelines_path, notice: 'Personalized Timeline was successfully updated.'
+    else
+      render :personalized_edit
+    end
+  end
+
   private
 
   def set_exam_dates
@@ -137,7 +172,7 @@ class TimelinesController < ApplicationController
   end
 
   def timeline_params
-    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_date_id, :mock100, :mock50)
+    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_date_id, :mock100, :mock50, :personalized_name)
   end
 
   def generate_topic_deadlines(timeline)

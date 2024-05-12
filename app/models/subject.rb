@@ -5,9 +5,8 @@ class Subject < ApplicationRecord
   has_many :user_topics
   has_many :timelines
   has_many :users, through: :timelines
-  validates :category, presence: true
 
-  enum category: [ :lws7, :lws8, :lws9, :igcse, :as, :al, :up, :lang]
+  enum category: [ :lws7, :lws8, :lws9, :igcse, :as, :al, :up, :lang, :other]
 
   def category_long_form
     self.class.category_options[category.to_sym]
@@ -22,7 +21,8 @@ class Subject < ApplicationRecord
       as: "AS Level",
       al: "A Level",
       up: "UP",
-      lang: "Language"
+      lang: "Language",
+      other: "Other"
     }
   end
 end

@@ -1,6 +1,4 @@
 <div class="container mt-3">
-
-
   <div class="container">
     <div class="mb-5">
       <div class="d-flex justify-content-between">
@@ -73,7 +71,7 @@
                   <div class="card shadow-sm m-2 p-2" style="border-radius: 10px;">
                     <div class="d-flex justify-content-between">
                       <h5>
-                        <%= timeline.subject.name %>
+                        <%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
                         <% unless is_lws %>
                           <% if timeline.balance > 0 %>
                               <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
@@ -84,10 +82,17 @@
                           <% end %>
                         <% end %>
                       </h5>
-                      <div class="d-flex gap-2 fs-2">
-                        <%= link_to edit_timeline_path(timeline) do %>
-                          <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
-                        <% end %>
+                      <% if timeline.subject.id != 666  %>
+                        <div class="d-flex gap-2 fs-2">
+                          <%= link_to edit_timeline_path(timeline) do %>
+                            <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
+                          <% end %>
+                      <% else %>
+                         <div class="d-flex gap-2 fs-2">
+                          <%= link_to personalized_edit_timeline_path(timeline) do %>
+                            <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
+                          <% end %>
+                      <% end %>
                         <%= link_to timeline_path(timeline), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } do %>
                           <i class="fa-solid fa-trash" style="font-size: 20px; color: gray;"></i>
                         <% end %>
@@ -218,9 +223,7 @@
             </div>
           </div>
         <% end %>
-      </div>
     </div>
-
   </div>
 
 </div>

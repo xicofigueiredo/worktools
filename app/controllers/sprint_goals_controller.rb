@@ -42,8 +42,10 @@ class SprintGoalsController < ApplicationController
 
     # Build associated knowledges for each timeline
     current_user.timelines.each do |timeline|
+      subject = ''
+      timeline.subject.name != '' ? subject = timeline.subject.name : subject = timeline.personalized_name
       @sprint_goal.knowledges.build(
-        subject_name: timeline.subject.name,
+        subject_name: subject,
         exam_season: timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A',
         mock50: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A',
         mock100: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'

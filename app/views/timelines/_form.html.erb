@@ -4,8 +4,11 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-body">
-            <h2 class="card-title text-center mb-4">New Timeline</h2>
-
+            <% if !@edit %>
+              <h2 class="card-title text-center mb-4">New Timeline</h2>
+            <% else %>
+              <h2 class="card-title text-center mb-4">Edit Timeline</h2>
+            <% end %>
             <%= form_with(model: @timeline) do |form| %>
               <% if @timeline.errors.any? %>
                 <div id="error_explanation" class="alert alert-danger">
@@ -47,27 +50,22 @@
 
               <div class="d-flex justify-content-center  gap-2 mt-3">
                 <%= link_to "Back", timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
-                <%= form.submit 'Create Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+                <% if !@edit %>
+                  <%= form.submit 'Create Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+                <% else %>
+                  <%= form.submit 'Update Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+                <% end %>
+              </div>
+            <% end %>
+            <% if !@edit %>
+              <div class="text-center mb-4">
+                <br>
+                <p><a href="<%= personalized_new_timelines_path %>" class="text-decoration-underline"> Do you want to create a personalized timeline?</a></p>
               </div>
             <% end %>
           </div>
         </div>
       </div>
-    </div>
-    <br>
-    <hr>
-    <div class="row justify-content-center">
-      <%= image_tag "rules.png"%>
-    </div>
-    <br>
-    <h2 class="card-title text-center mb-4">IGCSE's</h2>
-    <div class="row justify-content-center">
-      <%= image_tag "IGCSE.png" %>
-    </div>
-    <br>
-    <h2 class="card-title text-center mb-4">A-Levels</h2>
-    <div class="row justify-content-center">
-      <%= image_tag "A-Levels.png" %>
     </div>
   </div>
 
