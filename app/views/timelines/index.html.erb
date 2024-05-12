@@ -72,7 +72,7 @@
                     <div class="d-flex justify-content-between">
                       <h5>
                         <%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
-                        <% unless is_lws %>
+                        <% if !is_lws && timeline.subject.name.present? %>
                           <% if timeline.balance > 0 %>
                               <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
                           <% elsif timeline.balance < 0 %>
@@ -82,7 +82,7 @@
                           <% end %>
                         <% end %>
                       </h5>
-                      <% if timeline.subject.id != 666  %>
+                      <% if timeline.subject.name.present? %>
                         <div class="d-flex gap-2 fs-2">
                           <%= link_to edit_timeline_path(timeline) do %>
                             <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
@@ -113,15 +113,17 @@
                           </p>
                         </div>
                       </div>
-                      <div style="margin-block: auto;">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>" aria-expanded="false" aria-controls="collapse<%= index %>" style="border-radius: 10px;">
-                        </button>
-                      </div>
+                      <% if timeline.subject.name.present? %>
+                        <div style="margin-block: auto;">
+                          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>" aria-expanded="false" aria-controls="collapse<%= index %>" style="border-radius: 10px;">
+                          </button>
+                        </div>
                     </div>
                     <div class="progress" role="progressbar" aria-label="Progress bar" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100" style="border-radius: 10px;">
                       <div class="progress-bar" style="width: <%= timeline.progress > 5 ? timeline.progress : 4 %>%; border-radius: 10px;"> <%= timeline.progress %>% </div>
-                      </div>
+                      <% end %>
                     </div>
+                  </div>
                 </div>
                 <%# Monthly Goal %>
                 <div class="col-4 h-full">
