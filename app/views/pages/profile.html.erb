@@ -164,7 +164,7 @@
           <% if @timelines.exists? %>
             <% @timelines.each do |timeline| %>
               <tr>
-                <td><%= timeline.subject.name %></td>
+                <td><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %></td>
                 <td style="width: 200px;">
                   <div style="background-color: rgb(220,220,220); border-radius: 10px;">
                     <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.progress%>%; border-radius: 10px;" aria-valuenow="<%= timeline.progress%>" aria-valuemin="0" aria-valuemax="100">
