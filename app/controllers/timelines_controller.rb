@@ -1,5 +1,8 @@
+require 'utilities/timeframe'
+
 class TimelinesController < ApplicationController
   include ProgressCalculations
+  include WorkingDaysAndHolidays
 
   before_action :authenticate_user!
   before_action :set_timeline, only: [:show, :edit, :update, :destroy]
@@ -18,12 +21,13 @@ class TimelinesController < ApplicationController
     @has_lws = false
     @total_blocks_per_day = 0
     @timelines.each do |timeline|
-      if timeline.personalized_name != nil
+      unless timeline.personalized_name
         generate_topic_deadlines(timeline)
         if timeline.subject.category.include?("lws")
-          remaining_days = calc_remaining_working_days(timeline)
+          timeframe = Timeframe.new(Date.today, timeline.end_date)
+          remaining_days = calculate_working_days(timeframe)
           remaining_topics = calc_remaining_blocks(timeline)
-          blocks_per_day = remaining_topics.to_f / remaining_days
+          blocks_per_day = remaining_topics.to_f / remaining_days.count
           @total_blocks_per_day += blocks_per_day
           @has_lws = true
         end
@@ -181,32 +185,33 @@ class TimelinesController < ApplicationController
       current_user.user_topics.find_or_initialize_by(topic: topic)
     end
 
-    calculate_holidays_array
     working_days = calculate_working_days(timeline)
 
     distribute_deadlines(user_topics, working_days)
   end
 
-  def calculate_holidays_array
-    user_holidays ||= current_user.holidays.flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
-    bga_holidays ||= Holiday.where(bga: true).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
-    hub_holidays ||= Holiday.where(country: current_user.users_hubs.first.hub.country).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
 
-    @holidays_array = (user_holidays + bga_holidays + hub_holidays).uniq
-  end
+  # FIXME remove if everything is alright after merge
+  # def calculate_holidays_array
+  #   user_holidays ||= current_user.holidays.flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
+  #   bga_holidays ||= Holiday.where(bga: true).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
+  #   hub_holidays ||= Holiday.where(country: current_user.users_hubs.first.hub.country).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
 
-  def calculate_working_days(timeline)
-    (timeline.start_date..timeline.end_date).to_a.reject do |date|
-      @holidays_array.include?(date) || date.saturday? || date.sunday?
-    end
-  end
+  #   @holidays_array = (user_holidays + bga_holidays + hub_holidays).uniq
+  # end
 
-  def calc_remaining_working_days(timeline)
-    date = [Date.today, timeline.start_date].max
-    (date..timeline.end_date).to_a.reject do |date|
-      @holidays_array.include?(date) || date.saturday? || date.sunday?
-    end.count
-  end
+  # def calculate_working_days(timeline)
+  #   (timeline.start_date..timeline.end_date).to_a.reject do |date|
+  #     @holidays_array.include?(date) || date.saturday? || date.sunday?
+  #   end
+  # end
+
+  # def calc_remaining_working_days(timeline)
+  #   date = [Date.today, timeline.start_date].max
+  #   (date..timeline.end_date).to_a.reject do |date|
+  #     @holidays_array.include?(date) || date.saturday? || date.sunday?
+  #   end.count
+  # end
 
   def distribute_deadlines(user_topics, working_days)
     total_time = working_days.count
