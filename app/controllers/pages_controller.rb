@@ -1,4 +1,8 @@
+require 'utilities/timeframe'
+
 class PagesController < ApplicationController
+  include WorkingDaysAndHolidays
+
   skip_before_action :authenticate_user!
   before_action :check_admin_role, only: [:dashboard_admin]
   before_action :check_lc_role, only: [:dashboard_lc, :learner_profile, :attendance, :attendances, :learner_attendances, :update_attendance, :update_absence_attendance, :update_start_time_attendance, :update_end_time_attendance, :update_comments_attendance]
@@ -92,6 +96,8 @@ class PagesController < ApplicationController
     @communities = @sprint_goals&.communities
     @hub_lcs = @learner.hubs.first.users.where(role: 'lc')
 
+    @yearly_presence = calc_yearly_presence()
+
     @weekly_goals_percentage = @current_sprint.count_weekly_goals_total(@learner)
     @kdas_percentage = @current_sprint.count_kdas_total(@learner)
 
@@ -174,5 +180,32 @@ class PagesController < ApplicationController
       end
     end
     result
+  end
+
+  def calc_yearly_presence
+    current_year = Date.today.year
+    # start_of_year = Date.new(current_year, 1, 1)
+    # FIXME temporary logic for 2024 to only count starting sprint 2, remove for 2025
+    start_of_year = Date.new(2024, 5, 3)
+    end_of_year = Date.new(current_year, 12, 31)
+
+    yearly_sprints = Sprint.where(start_date: start_of_year..end_of_year)
+
+    earliest_start_date = yearly_sprints.minimum(:start_date)
+
+    timeframe = Timeframe.new(earliest_start_date, Date.today)
+
+    passed_working_days = calculate_working_days(timeframe)
+
+    date_range = passed_working_days.first..passed_working_days.last
+
+    learner = User.find_by(id: params[:id])
+
+    absence_count = Attendance.where(user_id: learner.id, attendance_date: date_range)
+              .where(absence: 'Unjustified Leave').count
+
+    presence = 100 - ((absence_count.to_f / passed_working_days.count) * 100)
+
+    presence.round
   end
 end
