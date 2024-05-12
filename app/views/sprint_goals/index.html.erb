@@ -41,6 +41,9 @@
                   Subject
                 </th>
                 <th style="vertical-align: middle;">
+                  <%= @sprint.name %> Goal
+                </th>
+                <th style="vertical-align: middle;">
                   Exam Season
                 </th>
                 <th style="vertical-align: middle;">
@@ -63,11 +66,21 @@
                 <% knowledge = @sprint_goal.knowledges.find_by(subject_name: subject) %>
                 <tr>
                   <td class="custom-font-size"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %></td>
-                  <% if timeline.exam_date != nil %>
-                    <td class="custom-font-size"><%= timeline.exam_date.formatted_date %></td>
-                  <% else %>
-                    <td class="custom-font-size">N/A</td>
-                  <% end %>
+                  <td class="custom-font-size">
+                    <% sprint_goal = @sprint_deadlines.find { |sprint_goal| sprint_goal[:timeline].subject.name == timeline.subject.name } %>
+                    <% if sprint_goal %>
+                      <%= sprint_goal[:topic].name %>
+                    <% else %>
+                      N/A
+                    <% end %>
+                  </td>
+                  <td class="custom-font-size">
+                    <% if timeline.exam_date != nil %>
+                      <%= timeline.exam_date.formatted_date %>
+                    <% else %>
+                      N/A
+                    <% end %>
+                  </td>
                   <% mock50_topic = current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true)) %>
                   <% if mock50_topic %>
                     <td class="custom-font-size"><%= mock50_topic.deadline.strftime("%d/%m/%Y") %></td>

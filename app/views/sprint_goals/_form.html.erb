@@ -23,6 +23,7 @@
           <thead>
             <tr>
               <th class="custom-font-size vertical-mid" style="vertical-align: middle;">Subject</th>
+              <th class="custom-font-size" style="vertical-align: middle;"><%= @sprint_goal.sprint.name %> Goal</th>
               <th class="custom-font-size" style="vertical-align: middle;">Exam Season</th>
               <th class="custom-font-size" style="vertical-align: middle;">50% Mock</th>
               <th class="custom-font-size" style="vertical-align: middle;">100% Mock</th>
@@ -42,6 +43,14 @@
                 <% end %>
                 <td class="custom-font-size">
                   <%= knowledge_form.text_field :subject_name, class: 'form-control', value: knowledge_form.object.subject_name, readonly: true  %>
+                </td>
+                <td class="custom-font-size">
+                  <% sprint_deadline = @sprint_deadlines.find { |sprint_deadline| sprint_deadline[:timeline].subject.name == knowledge_form.object.subject_name } %>
+                  <% if sprint_deadline %>
+                    <%= sprint_deadline[:topic].name %>
+                  <% else %>
+                    N/A
+                  <% end %>
                 </td>
                 <td class="custom-font-size">
                   <%= knowledge_form.text_field :exam_season, class: 'form-control', value: knowledge_form.object.exam_season, readonly: true %>

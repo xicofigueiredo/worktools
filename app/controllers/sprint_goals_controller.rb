@@ -1,6 +1,7 @@
 class SprintGoalsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_sprint_goal, only: [:update]
+  before_action :set_sprint_deadlines, only: [:index, :new, :edit]
 
   # GET /sprint_goals
   def index
@@ -21,6 +22,7 @@ class SprintGoalsController < ApplicationController
     @has_prev_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @prev_date, @prev_date).present?
     @has_next_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @next_date, @next_date).present?
     @edit = false
+
   end
 
   # GET /sprint_goals/new
@@ -168,6 +170,29 @@ class SprintGoalsController < ApplicationController
     # This method should return the current sprint based on logic you define
     # For example, finding a sprint that includes today's date:
     Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)
+  end
+
+  def set_sprint_deadlines
+    @sprint_deadlines = current_user.timelines.map do |timeline|
+      # Group topics by their deadlines within the current sprint
+      topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
+                                            .where(user_topics: { user_id: current_user.id })
+                                            .select { |topic|
+                                              user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
+                                              user_topic && user_topic.deadline && user_topic.deadline >= current_sprint.start_date && user_topic.deadline <= current_sprint.end_date
+                                            }
+                                            .group_by { |topic|
+                                              topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline
+                                            }
+
+      # Find the latest deadline
+      latest_deadline = topics_grouped_by_deadline.keys.max
+
+      # Select the last topic with the latest deadline
+      last_relevant_topic = topics_grouped_by_deadline[latest_deadline]&.last
+
+      { timeline: timeline, topic: last_relevant_topic } if last_relevant_topic.present?
+    end.compact
   end
 
 end

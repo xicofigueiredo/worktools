@@ -130,10 +130,10 @@ class WeeklyGoalsController < ApplicationController
     communities_names = current_sprint.sprint_goals.where(user: current_user).map(&:communities).flatten.uniq.pluck(:involved).reject(&:blank?).map(&:capitalize)
 
     # Combine subjects and skills, prefixing each for clarity
-    @combined_options = @subject_names.map { |name| name} +
+    @combined_options = @subject_names.select { |name| name != '' } +
                         skill_names.map { |name| name} +
                         communities_names.map { |name| name} +
-                        personalized_names
+                        personalized_names +
                         ["Other"]
   end
 
