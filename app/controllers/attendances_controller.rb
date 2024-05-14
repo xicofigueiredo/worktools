@@ -46,7 +46,6 @@ class AttendancesController < ApplicationController
   def update_absence
     attendance = Attendance.find(params[:id])
 
-    # Update absence field based on params
     if params[:attendance][:absence].blank?
       attendance.update(absence: nil)
       raise
@@ -54,12 +53,10 @@ class AttendancesController < ApplicationController
       attendance.update(absence: params[:attendance][:absence])
     end
 
-    # Conditionally clear times if absence is not 'Present'
     if params[:absence] != 'Present'
       attendance.update(start_time: nil, end_time: nil)
     end
 
-    # Always render a success message if no exceptions occur
     render json: { status: "success", message: "Absence updated successfully" }
 end
 
