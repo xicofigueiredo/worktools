@@ -6,9 +6,7 @@ export default class extends Controller {
 
   connect() {
     this.attendanceId = this.element.dataset.attendanceId;
-    console.log("Ting is connected");
     this.debounceUpdateComments = this.debounce(this.actualUpdateComments, 600);
-    console.log("Has startTimeTarget:", this.hasStartTimeTarget);
   }
 
   debounce(func, wait) {
@@ -39,13 +37,6 @@ export default class extends Controller {
   }
 
   updateStartTime() {
-    console.log(
-      "Updated Start Time:",
-      this.startTimeTarget.value,
-      "Attendance ID: ",
-      this.attendanceId
-    );
-
     const startTime = this.startTimeTarget.value;
     const attendanceId = this.attendanceId;
 
@@ -73,13 +64,6 @@ export default class extends Controller {
   }
 
   updateEndTime() {
-    console.log(
-      "Updated End Time:",
-      this.endTimeTarget.value,
-      "Attendance ID: ",
-      this.attendanceId
-    );
-
     const endTime = this.endTimeTarget.value;
     const attendanceId = this.attendanceId;
 
@@ -105,13 +89,6 @@ export default class extends Controller {
   }
 
   actualUpdateComments = () => {
-    console.log(
-      "Updated Comments:",
-      this.commentsTarget.value,
-      "Attendance ID: ",
-      this.attendanceId
-    );
-
     const comments = this.commentsTarget.value;
     const attendanceId = this.attendanceId;
 
@@ -141,13 +118,6 @@ export default class extends Controller {
   }
 
   updateAbsence() {
-    console.log(
-      "Updated Absence:",
-      this.absenceTarget.value,
-      "Attendance ID: ",
-      this.attendanceId
-    );
-
     const absence = this.absenceTarget.value;
     const attendanceId = this.attendanceId;
 
