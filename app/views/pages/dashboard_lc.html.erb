@@ -149,7 +149,7 @@
                 <% sorted_timelines.each do |timeline| %>
                   <div class="d-flex justify-content-between gap-2" style="height: fit-content;">
                       <p class="text-secondary mb-1"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
-                      <% if !timeline.personalized_name.present? %>
+                      <% if !timeline.personalized_name.present? && timeline.balance != nil %>
                         <% if timeline.balance > 0 %>
                           <div style="height: 28px;">
                             <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>

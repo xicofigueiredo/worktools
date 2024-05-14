@@ -8,7 +8,7 @@ help: ## Show this help message.
 
 ##@ build
 deploy: ## Build and deploy the application.
-	docker compose up -d --remove-orphans --build
+	docker compose	 up -d --remove-orphans --build
 
 migrate: ## Run database migrations.
 	docker compose run server rails db:migrate
@@ -33,3 +33,6 @@ pass: ## user = User.find_by(email: '') ; user.password = '' ; user.password_con
 
 cache: ## Clear the cache
 	docker builder prune
+
+load-test:
+	python3 -m locust -f locustfile.py --host=http://worktools.site
