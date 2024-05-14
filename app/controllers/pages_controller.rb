@@ -51,6 +51,8 @@ class PagesController < ApplicationController
       @communities = @sprint_goals&.communities
       @hub_lcs = @learner.hubs.first.users.where(role: 'lc')
 
+      @yearly_presence = calc_yearly_presence(@learner)
+
       @weekly_goals_percentage = @current_sprint.count_weekly_goals_total(@learner)
       @kdas_percentage = @current_sprint.count_kdas_total(@learner)
 
@@ -96,7 +98,7 @@ class PagesController < ApplicationController
     @communities = @sprint_goals&.communities
     @hub_lcs = @learner.hubs.first.users.where(role: 'lc')
 
-    @yearly_presence = calc_yearly_presence()
+    @yearly_presence = calc_yearly_presence(@learner)
 
     @weekly_goals_percentage = @current_sprint.count_weekly_goals_total(@learner)
     @kdas_percentage = @current_sprint.count_kdas_total(@learner)
@@ -182,7 +184,7 @@ class PagesController < ApplicationController
     result
   end
 
-  def calc_yearly_presence
+  def calc_yearly_presence(user)
     current_year = Date.today.year
     # start_of_year = Date.new(current_year, 1, 1)
     # FIXME temporary logic for 2024 to only count starting sprint 2, remove for 2025
@@ -199,9 +201,7 @@ class PagesController < ApplicationController
 
     date_range = passed_working_days.first..passed_working_days.last
 
-    learner = User.find_by(id: params[:id])
-
-    absence_count = Attendance.where(user_id: learner.id, attendance_date: date_range)
+    absence_count = Attendance.where(user_id: user.id, attendance_date: date_range)
               .where(absence: ['Unjustified Leave', nil]).count
 
     presence = 100 - ((absence_count.to_f / passed_working_days.count) * 100)
