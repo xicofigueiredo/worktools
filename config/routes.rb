@@ -23,7 +23,7 @@ Rails.application.routes.draw do
   get '/attendances/:time_frame', to: 'attendances#index', as: :attendances
   get '/attendance/:learner_id', to: 'attendances#learner_attendances', as: 'learner_attendances'
   put '/attendances/update_attendance', to: 'attendances#update_attendance', as: :update_attendance
-  patch '/attendances/:id/update_absence', to: 'attendances#update_absence', as: :update_absence_attendance
+  patch '/attendance/:id/update_absence', to: 'attendances#update_absence', as: :update_absence_attendance
   patch 'attendance/:id/update_start_time', to: 'attendances#update_start_time', as: :update_start_time_attendance
   patch 'attendance/:id/update_end_time', to: 'attendances#update_end_time', as: :update_end_time_attendance
   patch 'attendance/:id/update_comments', to: 'attendances#update_comments', as: :update_comments_attendance

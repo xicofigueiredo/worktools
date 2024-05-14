@@ -45,43 +45,46 @@ class AttendancesController < ApplicationController
 
   def update_absence
     attendance = Attendance.find(params[:id])
-    if params[:absence] == ""
+
+    if params[:attendance][:absence].blank?
       attendance.update(absence: nil)
+      raise
     else
-      attendance.update(absence: params[:absence])
+      attendance.update(absence: params[:attendance][:absence])
     end
 
-    if params[:absense] != 'Present'
+    if params[:absence] != 'Present'
       attendance.update(start_time: nil, end_time: nil)
     end
-    redirect_back(fallback_location: attendance_path, notice: "Absence updated successfully")
-  end
+
+    render json: { status: "success", message: "Absence updated successfully" }
+end
 
   def update_start_time
     attendance = Attendance.find(params[:id])
     if attendance.update(start_time: params[:attendance][:start_time])
       attendance.update(absence: 'Present')
-      redirect_back(fallback_location: attendance_path, notice: "Attendance start time updated successfully")
+      render json: { status: "success", message: "Attendance start time updated successfully" }
     else
-      redirect_back(fallback_location: attendance_path, alert: "Failed to update attendance start time")
+      render json: { status: "error", message: "Failed to update attendance start time" }, status: :unprocessable_entity
     end
   end
 
   def update_end_time
     attendance = Attendance.find(params[:id])
     if attendance.update(end_time: params[:attendance][:end_time])
-      redirect_back(fallback_location: attendance_path, notice: "Attendance end time updated successfully")
+      render json: { status: "success", message: "Attendance end time updated successfully" }
     else
-      redirect_back(fallback_location: attendance_path, alert: "Failed to update attendance end time")
+      render json: { status: "error", message: "Failed to update attendance end time" }, status: :unprocessable_entity
     end
   end
 
   def update_comments
     attendance = Attendance.find(params[:id])
     if attendance.update(comments: params[:attendance][:comments])
-      redirect_back(fallback_location: attendance_path, notice: "Attendance comments updated successfully")
+      render json: { status: "success", message: "Attendance comments updated successfully" }
     else
-      redirect_back(fallback_location: attendance_path, alert: "Failed to update attendance comments")
+      render json: { status: "error", message: "Failed to update attendance comments" }, status: :unprocessable_entity
     end
   end
 
@@ -93,7 +96,7 @@ class AttendancesController < ApplicationController
   private
 
   def attendance_params
-    params.require(:attendance).permit(:start_time, :end_time, :comments)
+    params.require(:attendance).permit(:start_time, :end_time, :comments, :absence)
   end
 
   def create_daily_attendance
