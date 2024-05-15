@@ -88,9 +88,7 @@ class TimelinesController < ApplicationController
 
 
     if @timeline.save
-      generate_topic_deadlines(@timeline)
-      assign_mock_deadlines(@timeline)
-      @timeline.save
+      RecalculateTimelineJob.perform_later(@timeline.id)
       redirect_to root_path, notice: 'Timeline was successfully created.'
     else
       render :new
@@ -108,11 +106,8 @@ class TimelinesController < ApplicationController
     if @timeline.update(timeline_params)
       set_exam_dates
 
-      @timeline.save
-      generate_topic_deadlines(@timeline)
+    RecalculateTimelineJob.perform_later(@timeline.id)
 
-      assign_mock_deadlines(@timeline)
-      @timeline.save
       redirect_to root_path, notice: 'Timeline was successfully updated.'
     else
       render :edit

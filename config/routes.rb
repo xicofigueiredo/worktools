@@ -89,5 +89,11 @@ Rails.application.routes.draw do
 
   match '*path', via: :all, to: 'pages#not_found'
 
+  require 'sidekiq/web'
+
+  authenticate :user, lambda { |u| u.admin? } do
+    mount Sidekiq::Web => '/sidekiq'
+  end
+
 
 end

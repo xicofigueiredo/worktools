@@ -10,6 +10,7 @@ services:
       - .env.production
     ports:
       - "5432:5432"
+
   server:
       build: .
       command: "./bin/rails server"
@@ -19,6 +20,9 @@ services:
         - app-storage:/rails/storage
       depends_on:
         - db
+              - redis
+    environment:
+      REDIS_URL: redis://redis:6379/0
       ports:
         - "80:3000"
       labels:
@@ -26,17 +30,18 @@ services:
       - "traefik.http.routers.worktools.rule=Host(`worktools.site`)"
       - "traefik.http.routers.worktools.entrypoints=websecure"
       - "traefik.http.routers.worktools.tls.certresolver=myresolver"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+
   traefik:
     image: "traefik:v2.11"
     container_name: "traefik"
     command:
-      #- "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
       - "--certificatesresolvers.myresolver.acme.email=francisco-abf@hotmail.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
@@ -46,7 +51,13 @@ services:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
+  redis:
+    image: redis:latest
+    container_name: worktools_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
 
 volumes:
-  postgres-data: {}
-  app-storage: {}
+  redis-data:

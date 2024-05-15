@@ -32,11 +32,15 @@
                 </div>
               <% end %>
 
+              <% min_date = 3.years.ago.to_date %>
+              <% max_date = 4.years.from_now.to_date %>
+
               <div class="form-group">
                 <%= form.label :start_date %>
-                <%= form.date_field :start_date, class: 'form-control', required: true %>
+                <%= form.date_field :start_date, class: 'form-control', required: true, min: min_date, max: max_date %>
               </div>
               <br>
+
               <div class="form-group">
                 <%= form.label :exam_date %>
                 <%= form.collection_select :exam_date_id, @exam_dates, :last, :first, include_blank: true, class: 'form-control' %>
@@ -45,8 +49,9 @@
 
               <div class="form-group">
                 <%= form.label :end_date %>
-                <%= form.date_field :end_date, class: 'form-control', required: true %>
+                <%= form.date_field :end_date, class: 'form-control', required: true, min: min_date, max: max_date %>
               </div>
+              <br>
 
               <div class="d-flex justify-content-center  gap-2 mt-3">
                 <%= link_to "Back", timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
