@@ -64,7 +64,7 @@ class PagesController < ApplicationController
 
       @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
-      get_kda_averages(@learner.kdas)
+      get_kda_averages(@learner.kdas, @current_sprint)
       unless @learner
         redirect_to some_fallback_path, alert: "Learner not found."
       end
@@ -111,7 +111,8 @@ class PagesController < ApplicationController
 
     @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
-    get_kda_averages(@learner.kdas)
+    get_kda_averages(@learner.kdas, @current_sprint)
+
     unless @learner
       redirect_to some_fallback_path, alert: "Learner not found."
     end
@@ -128,14 +129,18 @@ class PagesController < ApplicationController
     params.require(:user).permit(:full_name, :hub_id)
   end
 
-  def get_kda_averages(kdas)
+  def get_kda_averages(kdas, current_sprint)
     sum_mot = 0
     sum_p2p = 0
     sum_ini = 0
     sum_hubp = 0
     sum_sdl = 0
 
-    kdas.each do |kda|
+    filtered_kdas = kdas.filter do |kda|
+      kda.week.sprint === current_sprint
+    end
+
+    filtered_kdas.each do |kda|
       sum_mot += kda.mot.rating
       sum_p2p += kda.p2p.rating
       sum_ini += kda.ini.rating
@@ -143,12 +148,14 @@ class PagesController < ApplicationController
       sum_sdl += kda.sdl.rating
     end
 
+    kdas_count = filtered_kdas.count
+
     # Calculate averages
-    avg_mot = kdas.count > 0 ? sum_mot.to_f.round / kdas.count : 0
-    avg_p2p = kdas.count > 0 ? sum_p2p.to_f.round / kdas.count : 0
-    avg_ini = kdas.count > 0 ? sum_ini.to_f.round / kdas.count : 0
-    avg_hubp = kdas.count > 0 ? sum_hubp.to_f.round / kdas.count : 0
-    avg_sdl = kdas.count > 0 ? sum_sdl.to_f.round / kdas.count : 0
+    avg_mot = kdas_count > 0 ? sum_mot.to_f.round / kdas_count : 0
+    avg_p2p = kdas_count > 0 ? sum_p2p.to_f.round / kdas_count : 0
+    avg_ini = kdas_count > 0 ? sum_ini.to_f.round / kdas_count : 0
+    avg_hubp = kdas_count > 0 ? sum_hubp.to_f.round / kdas_count : 0
+    avg_sdl = kdas_count > 0 ? sum_sdl.to_f.round / kdas_count : 0
 
     @average_items = [
       { title: 'Self-Directed Learning', average: avg_sdl },
