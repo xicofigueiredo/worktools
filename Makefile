@@ -17,7 +17,7 @@ seed: ## Seed the database.
 	docker compose run server rails db:seed
 
 sync: ## Sync the application to the server
-	rsync -av -e "ssh" --exclude='.git' --exclude='*.log' --exclude='.tmp' --exclude='tmp' --exclude='data' . worktools_server:~/worktools
+	rsync -av -e "ssh" --exclude='.git' --exclude='*.log' --exclude='.tmp' --exclude='tmp' --exclude='data' . worktools_server_new:~/worktools
 
 connect: ## Connect to the server
 	ssh worktools_server
@@ -35,4 +35,10 @@ cache: ## Clear the cache
 	docker builder prune
 
 load-test:
-	python3 -m locust -f locustfile.py --host=http://worktools.site
+	python3 -m locust -f locustfile.py --host=http://185.11.167.156/
+
+backup:
+		rsync -av -e "ssh" worktools_server_new:~/worktools/data ./databackup
+
+restore:
+		# rsync -av -e "ssh" ./databackup/data/* worktools_server_new:~/worktools/data
