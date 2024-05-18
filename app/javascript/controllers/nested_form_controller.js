@@ -10,7 +10,6 @@ export default class extends Controller {
   ];
 
   connect() {
-    console.log("Connected");
     this.sprintGoalId = this.element.dataset.sprintGoalId;
     this.communityId = this.element.dataset.communityId;
     this.deletedCommunityIds = [];
