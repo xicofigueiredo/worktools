@@ -39,8 +39,6 @@ export default class extends Controller {
   updateStartTime() {
     const startTime = this.startTimeTarget.value;
     const attendanceId = this.attendanceId;
-    const token = this.getCSRFToken();
-    console.log({ token });
 
     fetch(`/attendance/${attendanceId}/update_start_time`, {
       method: "PATCH",
