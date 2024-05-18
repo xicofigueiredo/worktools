@@ -56,15 +56,11 @@ export default class extends Controller {
 
     if (kind === "communities") {
       const communityId = button.dataset.communityId;
-      console.log("clicked with ID: ", { communityId, kind });
       this.deletedCommunityIds.push(communityId);
     } else {
       const skillId = button.dataset.skillId;
-      console.log("clicked with ID: ", { skillId, kind });
       this.deletedSkillsIds.push(skillId);
     }
-    console.log("CommunityIds: ", this.deletedCommunityIds);
-    console.log("SkillIds: ", this.deletedSkillsIds);
     if (row) {
       row.remove();
     }
