@@ -30,8 +30,10 @@ Rails.application.routes.draw do
   patch 'attendance/:id/update_start_time', to: 'attendances#update_start_time', as: :update_start_time_attendance
   patch 'attendance/:id/update_end_time', to: 'attendances#update_end_time', as: :update_end_time_attendance
   patch 'attendance/:id/update_comments', to: 'attendances#update_comments', as: :update_comments_attendance
-
   end
+
+  post 'sprint_goals/bulk_destroy', to: 'sprint_goals#bulk_destroy'
+
 
   resources :users do
     resources :notes, except: [:show, :index]

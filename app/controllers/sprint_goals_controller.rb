@@ -95,8 +95,24 @@ class SprintGoalsController < ApplicationController
 
   # PATCH/PUT /sprint_goals/1
   def update
-    if @sprint_goal.update(sprint_goal_params)
-      redirect_to sprint_goals_path(date: @sprint_goal.sprint.start_date), notice: 'Sprint goal was successfully updated.'
+    clean_params = sprint_goal_params
+
+    # filtrar communites vazias
+    clean_params[:communities_attributes]&.each do |key, attributes|
+      if attributes[:involved].blank? && attributes[:smartgoals].blank? && attributes[:difficulties].blank? && attributes[:plan].blank?
+        clean_params[:communities_attributes].delete(key)
+      end
+    end
+
+    # filtrar skills vazias
+    clean_params[:skills_attributes]&.each do |key, attributes|
+      if attributes[:extracurricular].blank? && attributes[:smartgoals].blank? && attributes[:difficulties].blank? && attributes[:plan].blank?
+        clean_params[:skills_attributes].delete(key)
+      end
+    end
+
+    if @sprint_goal.update(clean_params)
+      render json: { status: "success", message: "Sprint Goal updated successfully" }
     else
       render :edit, status: :unprocessable_entity
     end
@@ -113,6 +129,12 @@ class SprintGoalsController < ApplicationController
     @sprint_goal = current_user.sprint_goals.find(params[:id])
     @sprint_goal.knowledges.destroy_all
     redirect_to edit_sprint_goal_path(@sprint_goal), notice: 'All associated records have been reset.'
+  end
+
+  def bulk_destroy
+    Community.where(id: params[:deleted_communities_ids]).destroy_all
+    Skill.where(id: params[:deleted_skills_ids]).destroy_all
+    render json: { status: "success", message: "Communities and skills successfully deleted" }
   end
 
 

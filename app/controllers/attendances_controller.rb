@@ -58,7 +58,7 @@ class AttendancesController < ApplicationController
     end
 
     render json: { status: "success", message: "Absence updated successfully" }
-end
+  end
 
   def update_start_time
     attendance = Attendance.find(params[:id])
