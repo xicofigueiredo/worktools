@@ -20,7 +20,7 @@ sync: ## Sync the application to the server
 	rsync -av -e "ssh" --exclude='.git' --exclude='*.log' --exclude='.tmp' --exclude='tmp' --exclude='data' . worktools_server_new:~/worktools
 
 connect: ## Connect to the server
-	ssh worktools_server
+	ssh worktools_server_new
 
 replant:
 	docker compose run server rails db:seed:replant
