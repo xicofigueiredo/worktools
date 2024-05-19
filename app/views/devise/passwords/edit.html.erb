@@ -13,9 +13,8 @@
               <%= simple_form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
                 <%= f.error_notification %>
 
-                <%= f.input :reset_password_token, as: :hidden %>
-                <%= f.full_error :reset_password_token %>
-
+                <%= f.input :reset_password_token, as: :hidden, input_html: { value: params[:reset_password_token] } %>
+                <br>
                 <div class="form-outline form-black mb-4">
                   <%= f.input :password,
                               label: "New password",
@@ -36,7 +35,6 @@
                   <%= f.button :submit, "Change my password", class: "btn btn-primary" %>
                 </div>
               <% end %>
-
             </div>
 
           </div>
