@@ -33,7 +33,7 @@ class User < ApplicationRecord
   # after_commit :post_create_actions, on: :create
 
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+         :recoverable, :rememberable, :validatable, :confirmable
 
   def subjects_without_timeline
     Subject.left_outer_joins(:timelines).where(timelines: { user_id: nil })

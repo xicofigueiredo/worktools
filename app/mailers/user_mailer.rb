@@ -1,4 +1,10 @@
 class UserMailer < ApplicationMailer
+
+  def confirmation_instructions(record, token, opts={})
+    @token = token
+    devise_mail(record, :confirmation_instructions, opts)
+  end
+
   def welcome_email(user)
     @user = user
     mail(to: @user.email, subject: 'Welcome to Our Awesome App!')
@@ -11,7 +17,7 @@ class UserMailer < ApplicationMailer
     mail(to: @user.email, subject: 'Your Password Reset Instructions')
   end
 
-  # Send a notification to the user
+  # Send a notification to the userz
   def notification(user, message)
     @user = user
     @message = message
