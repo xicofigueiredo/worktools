@@ -1,4 +1,6 @@
 class HolidaysController < ApplicationController
+  include GenerateTopicDeadlines
+
   before_action :set_holiday, only: [ :edit, :update, :destroy]
 
   def new
@@ -12,6 +14,11 @@ class HolidaysController < ApplicationController
     @holiday = current_user.holidays.new(holiday_params)
 
     if @holiday.save
+      current_user.timelines.each do |timeline|
+        generate_topic_deadlines(timeline)
+        timeline.calculate_total_time
+        timeline.save
+      end
       redirect_to root_path, notice: 'Holiday was successfully created.'
     else
       render :new, status: :unprocessable_entity
@@ -20,6 +27,11 @@ class HolidaysController < ApplicationController
 
   def update
     if @holiday.update(holiday_params)
+      current_user.timelines.each do |timeline|
+        generate_topic_deadlines(timeline)
+        timeline.calculate_total_time
+        timeline.save
+      end
       redirect_to root_path, notice: 'Holiday was successfully updated.'
     else
       render :edit, status: :unprocessable_entity
@@ -28,6 +40,11 @@ class HolidaysController < ApplicationController
 
   def destroy
     @holiday.destroy
+    current_user.timelines.each do |timeline|
+      generate_topic_deadlines(timeline)
+      timeline.calculate_total_time
+      timeline.save
+    end
     redirect_to root_path, notice: 'Holiday was successfully destroyed.'
   end
 
