@@ -60,7 +60,7 @@
           <%= link_to "New Timeline", new_timeline_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
         </div>
       </div>
-      <div class="accordion" id="parentAccordion">
+      <div class="accordion" id="parentAccordion" data-controller="toggle-done">
         <% @timelines.each_with_index do |timeline, index| %>
           <% is_lws = timeline.subject.category&.include?("lws")%>
           <div>
@@ -201,7 +201,7 @@
                             <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
                           <% end %>
                           <td style="<%= background_color %>">
-                            <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
+                            <div class="d-flex justify-content-center align-items-center">
                               <%= form_with model: user_topic, url: timeline_path(timeline), method: :patch, local: true do |form| %>
                                 <div class="form-check">
                                   <%= form.check_box :done, class: "form-check-input",
