@@ -11,11 +11,7 @@ class TimelinesController < ApplicationController
 
 
   def index
-    if current_user.role == "lc"
-      redirect_to dashboard_lc_path
-    # elsif current_user.role == "dc"
-    #   redirect_to dashboard_admin_path
-    end
+
     @timelines_with_names = current_user.timelines.where.not(personalized_name: nil)
 
     @timelines = current_user.timelines_sorted_by_balance
@@ -91,7 +87,7 @@ class TimelinesController < ApplicationController
     if @timeline.save
       generate_topic_deadlines(@timeline)
       @timeline.save
-      redirect_to root_path, notice: 'Timeline was successfully created.'
+      redirect_to timelines_path, notice: 'Timeline was successfully created.'
     else
       render :new
     end
@@ -112,7 +108,7 @@ class TimelinesController < ApplicationController
       generate_topic_deadlines(@timeline)
 
       @timeline.save
-      redirect_to root_path, notice: 'Timeline was successfully updated.'
+      redirect_to timelines_path, notice: 'Timeline was successfully updated.'
     else
       render :edit
     end
@@ -133,7 +129,7 @@ class TimelinesController < ApplicationController
     @timeline.subject_id = 666
 
     if @timeline.save
-      redirect_to root_path, notice: 'Personalized Timeline was successfully created.'
+      redirect_to timelines_path, notice: 'Personalized Timeline was successfully created.'
     else
       render :personalized_new
     end

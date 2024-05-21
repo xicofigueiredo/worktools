@@ -68,6 +68,8 @@ class PagesController < ApplicationController
       unless @learner
         redirect_to some_fallback_path, alert: "Learner not found."
       end
+    else
+      redirect_to dashboard_lc_path
     end
   end
 

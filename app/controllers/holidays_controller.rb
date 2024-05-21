@@ -19,7 +19,7 @@ class HolidaysController < ApplicationController
         timeline.calculate_total_time
         timeline.save
       end
-      redirect_to root_path, notice: 'Holiday was successfully created.'
+      redirect_to timelines_path, notice: 'Holiday was successfully created.'
     else
       render :new, status: :unprocessable_entity
     end
@@ -32,7 +32,7 @@ class HolidaysController < ApplicationController
         timeline.calculate_total_time
         timeline.save
       end
-      redirect_to root_path, notice: 'Holiday was successfully updated.'
+      redirect_to timelines_path, notice: 'Holiday was successfully updated.'
     else
       render :edit, status: :unprocessable_entity
     end
@@ -45,7 +45,7 @@ class HolidaysController < ApplicationController
       timeline.calculate_total_time
       timeline.save
     end
-    redirect_to root_path, notice: 'Holiday was successfully destroyed.'
+    redirect_to timelines_path, notice: 'Holiday was successfully destroyed.'
   end
 
   private

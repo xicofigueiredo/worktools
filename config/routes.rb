@@ -6,7 +6,7 @@ Rails.application.routes.draw do
 
   }
   authenticate :user do
-  root to: "timelines#index"
+  root to: "pages#profile"
 
   get 'profile', to: 'pages#profile'
   get 'report', to: 'pages#report'

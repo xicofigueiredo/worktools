@@ -16,7 +16,7 @@ class LwsTimelinesController < ApplicationController
     if @lws_timeline.save
       # Since user_topics_data is not used during creation, we can pass an empty hash or nil.
       create_timelines_for_subjects(@lws_timeline)
-      redirect_to root_path, notice: 'LWS Timeline and associated timelines were successfully created.'
+      redirect_to timelines_path, notice: 'LWS Timeline and associated timelines were successfully created.'
     else
       render :new
     end
@@ -29,7 +29,7 @@ class LwsTimelinesController < ApplicationController
     ActiveRecord::Base.transaction do
       if @lws_timeline.update(lws_timeline_params)
         recreate_timelines_for_subjects(@lws_timeline)
-        redirect_to root_path, notice: 'LWS Timeline and associated timelines were successfully updated.'
+        redirect_to timelines_path, notice: 'LWS Timeline and associated timelines were successfully updated.'
       else
         render :edit
       end
@@ -41,7 +41,7 @@ class LwsTimelinesController < ApplicationController
 
   def destroy
     @lws_timeline.destroy
-    redirect_to root_path, notice: 'LWS Timeline was successfully destroyed.'
+    redirect_to timelines_path, notice: 'LWS Timeline was successfully destroyed.'
   end
 
   private

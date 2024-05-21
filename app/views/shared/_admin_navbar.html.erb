@@ -12,8 +12,8 @@
       <ul class="navbar-nav me-auto">
         <% if user_signed_in? %>
           <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(root_path)%>">
-              <%= link_to "Timelines", root_path, class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(timelines_path)%>">
+              <%= link_to "Timelines", timelines_path, class: "nav-link" %>
             </div>
           </li>
           <li class="nav-item">
@@ -43,6 +43,7 @@
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(kdas_path)%>">
               <%= link_to "KDA's", kdas_path(date: Date.today), class: "nav-link" %>
             </div>
+          </li>
           <li class="nav-item">
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(weekly_goals_navigator_path)%>">
               <%= link_to "Weekly Goals", weekly_goals_navigator_path(date: Date.today), class: "nav-link" %>
