@@ -213,7 +213,11 @@ class PagesController < ApplicationController
     absence_count = Attendance.where(user_id: user.id, attendance_date: date_range)
               .where(absence: ['Unjustified Leave', nil]).count
 
-    presence = 100 - ((absence_count.to_f / passed_working_days.count) * 100)
+    if passed_working_days.count == 0
+      presence = 0
+    else
+      presence = 100 - ((absence_count.to_f / passed_working_days.count) * 100)
+    end
 
     presence.round
   end
