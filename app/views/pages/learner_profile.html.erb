@@ -249,9 +249,9 @@
                     <p class="mb-1" style="color: gray; font-size: 16px;">Exam Season: </p>
                       <% if timeline.exam_date.present? %>
                         <% if timeline.exam_date.date.month == 5 || timeline.exam_date.date.month == 6 %>
-                          <p>May/Jun <%= timeline.exam_date.date.strftime("%Y") %></p>
+                          <p style="font-size: 16px;">May/Jun <%= timeline.exam_date.date.strftime("%Y") %></p>
                         <% elsif timeline.exam_date.date.month == 10 || timeline.exam_date.date.month == 11 %>
-                          <p>Oct/Nov <%= timeline.exam_date.date.strftime("%Y") %></p>
+                          <p style="font-size: 16px;">Oct/Nov <%= timeline.exam_date.date.strftime("%Y") %></p>
                         <% else %>
                           <%= timeline.exam_date.date.strftime("%B %Y") %>
                         <% end %>
