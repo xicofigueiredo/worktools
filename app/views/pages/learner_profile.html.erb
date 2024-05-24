@@ -231,7 +231,7 @@
   <h2>Knowledge</h2>
   <p>Check your academic goals below</p>
 
-  <div class="accordion mb-5 p-3" id="parentAccordion">
+  <div class="accordion mb-5" id="parentAccordion">
     <% @timelines.each_with_index do |timeline, index| %>
       <% is_lws = timeline.subject.category&.include?("lws")%>
       <div>
@@ -264,13 +264,21 @@
                     <div>
                       <p class="mb-1" style="color: gray; font-size: 16px;">Mock 50%: </p>
                       <p class="mb-1" style="font-size: 16px;">
-                        <%= timeline.end_date.strftime('%d-%m-%Y') %>
+                        <% if timeline.mock50 != nil %>
+                          <%= timeline.mock50.strftime("%d/%m/%Y") %>
+                        <% else %>
+                          N/A
+                        <% end %>
                       </p>
                     </div>
                     <div>
                       <p class="mb-1" style="color: gray; font-size: 16px;">Mock 100%: </p>
                       <p class="mb-1" style="font-size: 16px;">
-                        <%= timeline.end_date.strftime('%d-%m-%Y') %>
+                        <% if timeline.mock100 != nil %>
+                          <%= timeline.mock100.strftime("%d/%m/%Y") %>
+                        <% else %>
+                          N/A
+                        <% end %>
                       </p>
                     </div>
                   </div>
@@ -279,13 +287,13 @@
                     <div>
                       <p class="mb-1" style="color: gray; font-size: 16px;">Start Date: </p>
                       <p class="mb-1" style="font-size: 16px;">
-                        <%= timeline.start_date.strftime('%d-%m-%Y') %>
+                        <%= timeline.start_date.strftime("%d/%m/%Y") %>
                       </p>
                     </div>
                     <div>
                       <p class="mb-1" style="color: gray; font-size: 16px;">End Date: </p>
                       <p class="mb-1" style="font-size: 16px;">
-                        <%= timeline.end_date.strftime('%d-%m-%Y') %>
+                        <%= timeline.end_date.strftime("%d/%m/%Y") %>
                       </p>
                     </div>
                   </div>
