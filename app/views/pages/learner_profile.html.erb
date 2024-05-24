@@ -253,7 +253,9 @@
                 <td><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %></td>
                 <td style="width: 200px;">
                   <% if timeline.expected_progress.nil? %>
-                    <p>Please check: Timelines dates; Holidays dates</p>
+                    <p style="background-color: #ffcccc; color: #cc0000; border: 1px solid #cc0000; padding: 10px; border-radius: 5px;">
+                      Please check: Timelines dates Holidays dates
+                    </p>
                   <% else %>
                     <% if timeline.progress > timeline.expected_progress%>
                       <div style="background-color: rgb(220,220,220); border-radius: 10px;" class="d-flex">
