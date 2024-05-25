@@ -92,13 +92,11 @@ export default class extends Controller {
 
     const row = event.target.closest("tr");
 
-    // Populate the hidden fields within this row
     row.querySelector('input[name$="[subject_name]"]').value = subjectName;
     row.querySelector('input[name$="[exam_season]"]').value = "N/A";
     row.querySelector('input[name$="[mock50]"]').value = formattedMock50;
     row.querySelector('input[name$="[mock100]"]').value = formattedMock100;
 
-    // Enable the comment fields
     row.querySelector('input[name$="[subject_name]"]').disabled = false;
     row.querySelector('input[name$="[exam_season]"]').disabled = false;
     row.querySelector('input[name$="[mock50]"]').disabled = false;
@@ -106,7 +104,6 @@ export default class extends Controller {
     row.querySelector('textarea[name$="[difficulties]"]').disabled = false;
     row.querySelector('textarea[name$="[plan]"]').disabled = false;
 
-    // Replace the select element with a <p> tag containing the subject name
     const subjectCell = row.querySelector("[data-subject-cell]");
     subjectCell.innerHTML = `<p ${fontSize}>${subjectName}</p>`;
 
