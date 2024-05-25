@@ -74,11 +74,6 @@ export default class extends Controller {
     } else if (kind === "knowledges") {
       const knowledgeId = button.dataset.knowledgeId;
       this.deletedKnowledgeIds.push(knowledgeId);
-      console.log(
-        "Ting's been clicked yo",
-        knowledgeId,
-        this.deletedKnowledgeIds
-      );
     }
     if (row) {
       row.remove();
@@ -148,7 +143,6 @@ export default class extends Controller {
       deletedSkillIds.length > 0 ||
       deletedKnowledgeIds.length > 0
     ) {
-      console.log("Deleting...");
       try {
         const response = await fetch("/sprint_goals/bulk_destroy", {
           method: "POST",
