@@ -27,6 +27,8 @@ class User < ApplicationRecord
   has_many :notes, dependent: :destroy
   has_one :learner_flag, dependent: :destroy
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', dc: 'Development Coach' }
+  validate :email_domain_check, on: :create
+
 
   after_create :associate_with_hubs, :create_learner_flag
   # after_commit :send_welcome_email, on: :create
@@ -61,9 +63,10 @@ class User < ApplicationRecord
     build_learner_flag.save
   end
 
-  # def post_create_actions
-  #   associate_with_hubs
-  #   send_welcome_email
-  # end
+  def email_domain_check
+    unless email.ends_with?('@edubga.com')
+      errors.add(:email, 'must be an @edubga.com account')
+    end
+  end
 
 end
