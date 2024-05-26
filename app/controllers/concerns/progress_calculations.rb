@@ -24,9 +24,9 @@ module ProgressCalculations
           progress += user_topic.percentage if user_topic.done
           expected_progress = (expected / total_topics)
         else
-          if user_topic.done && user_topic.deadline >= Date.today
+          if user_topic.done && user_topic.deadline && user_topic.deadline >= Date.today
             balance += 1
-          elsif !user_topic.done && user_topic.deadline < Date.today
+          elsif !user_topic.done && user_topic.deadline && user_topic.deadline < Date.today
             balance -= 1
           end
 
