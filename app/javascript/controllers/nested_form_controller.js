@@ -11,6 +11,9 @@ export default class extends Controller {
   ];
 
   connect() {
+    const innitialKnowledgesData = this.data.get("knowledges");
+    this.innitialKnowledges = JSON.parse(innitialKnowledgesData);
+    console.log("Innitial Knowledges: ", this.innitialKnowledges);
     this.sprintGoalId = this.element.dataset.sprintGoalId;
     this.communityId = this.element.dataset.communityId;
     this.deletedCommunityIds = [];

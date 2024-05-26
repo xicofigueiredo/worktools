@@ -1,5 +1,5 @@
 
-  <%= form_with(model: @sprint_goal, data: { controller: "nested-form", nested_form_target: "form", action: "submit->nested-form#submit", sprint_goal_id: @sprint_goal.id, sprint_goal_date: @sprint_goal.sprint.start_date }, local: false, remote: true) do |form| %>
+  <%= form_with(model: @sprint_goal, data: { controller: "nested-form", nested_form_target: "form", nested_form_knowledges: @knowledges_subject_names.to_json, action: "submit->nested-form#submit", sprint_goal_id: @sprint_goal.id, sprint_goal_date: @sprint_goal.sprint.start_date }, local: false, remote: true) do |form| %>
     <input name="authenticity_token" type="hidden" value="<%= form_authenticity_token %>">
     <% if @sprint_goal.errors.any? %>
       <div class="alert alert-danger" role="alert">
@@ -90,9 +90,15 @@
                       <select name="Timeline Select" id="Timeline Select" class="form-select" data-action="change->nested-form#createKnowledge">
                           <option value="" disabled selected>Select timeline</option>
                         <% current_user.timelines.each do |timeline| %>
-                          <option value="<%= [timeline.subject.name, timeline.exam_date, timeline.mock50, timeline.mock100].join('||') %>">
-                            <%= timeline.subject.name %>
-                          </option>
+                          <% if @knowledges_subject_names.include?(timeline.subject.name) %>
+                            <option value="<%= timeline.subject.name %>" disabled>
+                              <%= timeline.subject.name %>
+                            </option>
+                          <% else %>
+                            <option value="<%= [timeline.subject.name, timeline.exam_date, timeline.mock50, timeline.mock100].join('||') %>">
+                              <%= timeline.subject.name %>
+                            </option>
+                          <% end %>
                         <% end %>
                       </select>
                     </div>
