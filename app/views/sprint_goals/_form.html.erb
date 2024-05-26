@@ -1,5 +1,5 @@
 
-  <%= form_with(model: @sprint_goal, data: { controller: "nested-form", nested_form_target: "form", action: "submit->nested-form#submit", sprint_goal_id: @sprint_goal.id, sprint_goal_date: @sprint_goal.sprint.start_date }, local: false, remote: true) do |form| %>
+  <%= form_with(model: @sprint_goal, data: { controller: "nested-form", nested_form_target: "form", nested_form_knowledges: @knowledges_subject_names.to_json, action: "submit->nested-form#submit", sprint_goal_id: @sprint_goal.id, sprint_goal_date: @sprint_goal.sprint.start_date }, local: false, remote: true) do |form| %>
     <input name="authenticity_token" type="hidden" value="<%= form_authenticity_token %>">
     <% if @sprint_goal.errors.any? %>
       <div class="alert alert-danger" role="alert">
@@ -73,6 +73,56 @@
                 <% end %>
               </tbody>
             </table>
+            <div class="d-flex justify-content-center mb-3">
+              <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="knowledges" style='border-radius: 10px;'>Add</button>
+            </div>
+            <template data-nested-form-target="template" data-kind="knowledges">
+              <%= form.fields_for :knowledges, Knowledge.new, child_index: "TEMPLATE_INDEX" do |knowledge_form| %>
+                <tr>
+                  <td>
+                    <div data-subject-cell>
+                      <select name="Timeline Select" id="Timeline Select" class="form-select" data-action="change->nested-form#createKnowledge">
+                          <option value="" disabled selected>Select timeline</option>
+                        <% current_user.timelines.each do |timeline| %>
+                          <% if @knowledges_subject_names.include?(timeline.subject.name) %>
+                            <option value="<%= timeline.subject.name %>" disabled>
+                              <%= timeline.subject.name %>
+                            </option>
+                          <% else %>
+                            <option value="<%= [timeline.subject.name, timeline.exam_date, timeline.mock50, timeline.mock100].join('||') %>">
+                              <%= timeline.subject.name %>
+                            </option>
+                          <% end %>
+                        <% end %>
+                      </select>
+                    </div>
+                    <%= knowledge_form.hidden_field :subject_name, disabled: true %>
+                  </td>
+                  <td>
+                    <div data-sprint-goal-cell>
+                    </div>
+                  </td>
+                  <td>
+                    <div data-exam-season-cell>
+                    </div>
+                    <%= knowledge_form.hidden_field :exam_season, class: 'form-control', disabled: true  %>
+                  </td>
+                  <td>
+                    <div data-mock50-cell>
+                    </div>
+                    <%= knowledge_form.hidden_field :mock50, class: 'form-control', disabled: true  %>
+                  </td>
+                  <td>
+                    <div data-mock100-cell>
+                    </div>
+                    <%= knowledge_form.hidden_field :mock100, class: 'form-control', disabled: true  %>
+                  </td>
+                  <td><%= knowledge_form.text_area :difficulties, class: 'form-control',  disabled: true  %></td>
+                  <td><%= knowledge_form.text_area :plan, class: 'form-control',  disabled: true  %></td>
+                  <td style="vertical-align: middle"><button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow" data-kind="knowledges"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+              <% end %>
+            </template>
           </div>
         </div>
       </div>
