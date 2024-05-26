@@ -373,9 +373,12 @@
                         <% end %>
                       </td>
                       <td style="<%= background_color %>"><%= topic.name %></td>
-                      <% if !is_lws %>
+                      <% if !is_lws && !user_topic.deadline.nil? %>
                         <td style="<%= background_color %>"><%= topic.time %></td>
                         <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
+                      <% else %>
+                        <td style="<%= background_color %>"><%= topic.time %></td>
+                        <td style="<%= background_color %>">Update Dates</td>
                       <% end %>
                       <td style="<%= background_color %>">
                         <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
