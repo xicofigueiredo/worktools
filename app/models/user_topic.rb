@@ -4,7 +4,7 @@ class UserTopic < ApplicationRecord
   belongs_to :timeline, optional: true
 
   validates :user, :topic, presence: true
-  validates :deadline, presence: true
+  # validates :deadline, presence: true
 
   before_save :update_percentage
 

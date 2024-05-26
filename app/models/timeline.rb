@@ -18,6 +18,7 @@ class Timeline < ApplicationRecord
   validate :start_date_before_end_date
   validates :start_date, presence: true
   validates :end_date, presence: true
+  validate :start_date_cannot_be_equal_to_end_date
 
   def create_user_topics
     self.subject.topics.find_each do |topic|
@@ -43,5 +44,13 @@ class Timeline < ApplicationRecord
     tp = timeline_progresses.find_or_initialize_by(week: week)
     tp.progress = self.progress
     tp.save!
+  end
+
+  private
+
+  def start_date_cannot_be_equal_to_end_date
+    if start_date == end_date
+      errors.add(:end_date, "cannot be the same as the start date")
+    end
   end
 end
