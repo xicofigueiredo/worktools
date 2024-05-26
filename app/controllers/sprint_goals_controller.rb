@@ -61,6 +61,8 @@ class SprintGoalsController < ApplicationController
     @is_edit = true
     @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find(params[:id])
     @knowledges_subject_names = @sprint_goal.knowledges.pluck(:subject_name)
+    @number_of_timelines = current_user.timelines.count
+
     Rails.logger.debug @sprint_goal.knowledges.inspect  # Add this line to check what's loaded
 
     # If the @sprint_goal doesn't have associated knowledges for each timeline, you need to build them here

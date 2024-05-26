@@ -12,8 +12,9 @@ export default class extends Controller {
 
   connect() {
     const innitialKnowledgesData = this.data.get("knowledges");
-    this.innitialKnowledges = JSON.parse(innitialKnowledgesData);
-    console.log("Innitial Knowledges: ", this.innitialKnowledges);
+    this.numberOfTimelines = this.data.get("numberOfTimelines");
+    this.createdKnowldges = JSON.parse(innitialKnowledgesData);
+    console.log("Innitial Knowledges: ", this.createdKnowldges);
     this.sprintGoalId = this.element.dataset.sprintGoalId;
     this.communityId = this.element.dataset.communityId;
     this.deletedCommunityIds = [];
@@ -35,6 +36,73 @@ export default class extends Controller {
       .getAttribute("content");
   }
 
+  disableOptions(templateHTML, disableList) {
+    const tempDiv = document.createElement("tr");
+    tempDiv.innerHTML = templateHTML;
+
+    const selects = tempDiv.querySelectorAll("select");
+    selects.forEach((select) => {
+      const options = Array.from(select.options);
+      options.forEach((option) => {
+        if (disableList.includes(option.innerHTML.trim())) {
+          option.disabled = true;
+        }
+      });
+    });
+
+    return tempDiv.innerHTML;
+  }
+
+  disableOptionsInSubjectCells() {
+    const subjectCells = document.querySelectorAll("[data-subject-cell]");
+
+    subjectCells.forEach((cell) => {
+      const select = cell.querySelector("select");
+
+      if (select) {
+        const options = Array.from(select.options);
+        options.forEach((option) => {
+          if (this.createdKnowldges.includes(option.innerHTML.trim())) {
+            option.disabled = true;
+          }
+        });
+      }
+    });
+  }
+
+  updateKnowledgeAddBtn() {
+    const knowledgeContainer = this.knowledgesContainerTarget;
+    const rows = knowledgeContainer.querySelectorAll("tr");
+    const rowCount = rows.length;
+
+    const knowledgesAddBtn = document.querySelector("[data-knowledge-add-btn]");
+
+    if (rowCount >= this.numberOfTimelines) {
+      knowledgesAddBtn.disabled = true;
+    } else {
+      knowledgesAddBtn.disabled = false;
+    }
+  }
+
+  enableOptionsInSubjectCells() {
+    const subjectCells = document.querySelectorAll("[data-subject-cell]");
+
+    subjectCells.forEach((cell) => {
+      const select = cell.querySelector("select");
+
+      if (select) {
+        const options = Array.from(select.options);
+        options.forEach((option) => {
+          if (this.createdKnowldges.includes(option.innerHTML.trim())) {
+            option.disabled = true;
+          } else {
+            option.removeAttribute("disabled");
+          }
+        });
+      }
+    });
+  }
+
   addRow(event) {
     event.preventDefault();
     const kind = event.target.dataset.kind; // 'skills' or 'communities' or 'knowledges'
@@ -43,10 +111,13 @@ export default class extends Controller {
     );
 
     if (templates.length > 0) {
-      const content = templates[0].innerHTML.replace(
+      let content = templates[0].innerHTML.replace(
         /TEMPLATE_INDEX/g,
         new Date().getTime()
       );
+
+      content = this.disableOptions(content, this.createdKnowldges);
+
       if (kind === "skills") {
         this.skillsContainerTarget.insertAdjacentHTML("beforeend", content);
       } else if (kind === "communities") {
@@ -60,6 +131,8 @@ export default class extends Controller {
     } else {
       console.error("Template for", kind, "not found.");
     }
+
+    this.updateKnowledgeAddBtn();
   }
 
   removeRow(event) {
@@ -67,6 +140,16 @@ export default class extends Controller {
     const button = event.target.closest("button");
     const kind = button.dataset.kind;
     const row = button.closest("tr");
+
+    const subject = row.querySelector("[data-subject-cell]").innerText;
+
+    this.createdKnowldges = this.createdKnowldges.filter(
+      (subjectName) => subjectName !== subject
+    );
+
+    this.enableOptionsInSubjectCells();
+
+    console.log("Created Knowledges at remove: ", this.createdKnowldges);
 
     if (kind === "communities") {
       const communityId = button.dataset.communityId;
@@ -81,12 +164,16 @@ export default class extends Controller {
     if (row) {
       row.remove();
     }
+
+    this.updateKnowledgeAddBtn();
   }
 
   createKnowledge(event) {
     const selectedValue = event.target.value;
     const [subjectName, examSeason, mock50, mock100] =
       selectedValue.split("||");
+
+    console.log({ examSeason });
 
     const formattedMock50 = this.formatDate(mock50);
     const formattedMock100 = this.formatDate(mock100);
@@ -95,8 +182,16 @@ export default class extends Controller {
 
     const row = event.target.closest("tr");
 
+    this.createdKnowldges.push(subjectName);
+
+    console.log("CreatedKnowledges at create: ", this.createdKnowldges);
+
+    this.disableOptionsInSubjectCells(true);
+
+    this.updateKnowledgeAddBtn();
+
     row.querySelector('input[name$="[subject_name]"]').value = subjectName;
-    row.querySelector('input[name$="[exam_season]"]').value = "N/A";
+    row.querySelector('input[name$="[exam_season]"]').value = examSeason;
     row.querySelector('input[name$="[mock50]"]').value = formattedMock50;
     row.querySelector('input[name$="[mock100]"]').value = formattedMock100;
 

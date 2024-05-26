@@ -1,5 +1,5 @@
 
-  <%= form_with(model: @sprint_goal, data: { controller: "nested-form", nested_form_target: "form", nested_form_knowledges: @knowledges_subject_names.to_json, action: "submit->nested-form#submit", sprint_goal_id: @sprint_goal.id, sprint_goal_date: @sprint_goal.sprint.start_date }, local: false, remote: true) do |form| %>
+  <%= form_with(model: @sprint_goal, data: { controller: "nested-form", nested_form_target: "form", nested_form_knowledges: @knowledges_subject_names.to_json, nested_form_number_of_timelines: @number_of_timelines, action: "submit->nested-form#submit", sprint_goal_id: @sprint_goal.id, sprint_goal_date: @sprint_goal.sprint.start_date }, local: false, remote: true) do |form| %>
     <input name="authenticity_token" type="hidden" value="<%= form_authenticity_token %>">
     <% if @sprint_goal.errors.any? %>
       <div class="alert alert-danger" role="alert">
@@ -44,7 +44,7 @@
                       <% knowledge_form.object.subject_name = personalized_timelines[count].personalized_name%>
                       <% count += 1 %>
                     <% end %>
-                    <td class="custom-font-size">
+                    <td class="custom-font-size" data-subject-cell>
                       <p><%= knowledge_form.object.subject_name %></p>
                       <%# <%= knowledge_form.text_field :subject_name, class: 'form-control', value: knowledge_form.object.subject_name, readonly: true  %>
                     </td>
@@ -80,7 +80,12 @@
               </tbody>
             </table>
             <div class="d-flex justify-content-center mb-3">
-              <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="knowledges" style='border-radius: 10px;'>Add</button>
+              <% if @sprint_goal.knowledges.count >= @number_of_timelines %>
+                <button disabled class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="knowledges" data-knowledge-add-btn style='border-radius: 10px;'>Add</button>
+              <% else %>
+                <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="knowledges" data-knowledge-add-btn style='border-radius: 10px;'>Add</button>
+              <% end %>
+
             </div>
             <template data-nested-form-target="template" data-kind="knowledges">
               <%= form.fields_for :knowledges, Knowledge.new, child_index: "TEMPLATE_INDEX" do |knowledge_form| %>
@@ -90,15 +95,12 @@
                       <select name="Timeline Select" id="Timeline Select" class="form-select" data-action="change->nested-form#createKnowledge">
                           <option value="" disabled selected>Select timeline</option>
                         <% current_user.timelines.each do |timeline| %>
-                          <% if @knowledges_subject_names.include?(timeline.subject.name) %>
-                            <option value="<%= timeline.subject.name %>" disabled>
-                              <%= timeline.subject.name %>
-                            </option>
-                          <% else %>
-                            <option value="<%= [timeline.subject.name, timeline.exam_date, timeline.mock50, timeline.mock100].join('||') %>">
-                              <%= timeline.subject.name %>
-                            </option>
-                          <% end %>
+                          <% exam_date = timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A' %>
+
+                          <option value="<%= [timeline.subject.name, exam_date, timeline.mock50, timeline.mock100].join('||') %>">
+                            <%= timeline.subject.name %>
+                          </option>
+
                         <% end %>
                       </select>
                     </div>
