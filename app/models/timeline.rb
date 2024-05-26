@@ -19,6 +19,8 @@ class Timeline < ApplicationRecord
   validates :start_date, presence: true
   validates :end_date, presence: true
   validate :start_date_cannot_be_equal_to_end_date
+  validate :dates_cannot_be_holidays
+
 
   def create_user_topics
     self.subject.topics.find_each do |topic|
@@ -51,6 +53,13 @@ class Timeline < ApplicationRecord
   def start_date_cannot_be_equal_to_end_date
     if start_date == end_date
       errors.add(:end_date, "cannot be the same as the start date")
+    end
+  end
+
+  def dates_cannot_be_holidays
+    holidays = self.user.holidays
+    if holidays.include?(start_date) || holidays.include?(end_date)
+      errors.add(:base, "Start date and end date cannot be on a holiday")
     end
   end
 end
