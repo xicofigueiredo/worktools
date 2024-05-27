@@ -5,9 +5,8 @@ export default class extends Controller {
   static targets = ["checkbox"]; // Assuming you have 'data-toggle-done-target="checkbox"' on your checkbox
 
   toggle(event) {
-    const checkbox = event.target;
-    const userTopicId = checkbox.dataset.userTopicId; // Correctly access the userTopicId
-    const timelineId = checkbox.dataset.timelineId;
+    const userTopicId = this.checkboxTarget.dataset.userTopicId; // Correctly access the userTopicId
+    const timelineId = this.checkboxTarget.dataset.timelineId;
 
     fetch(`/user_topics/${userTopicId}/toggle_done`, {
       method: "PATCH",
