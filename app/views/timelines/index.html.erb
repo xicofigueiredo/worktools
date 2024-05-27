@@ -176,7 +176,7 @@
                     </thead>
                     <tbody>
                       <% previous_unit = nil %>
-                      <% timeline.subject.topics.order(id: :asc).each_with_index do |topic, index| %>
+                      <% timeline.subject.topics.order(:order, id: :asc).each_with_index do |topic, index| %>
                         <% user_topic = current_user.user_topics.find_or_initialize_by(topic: topic) %>
                         <% subject_category = topic.subject.category %>
                         <% background_color = if !user_topic.done && !user_topic.deadline.nil? && user_topic.deadline < Date.today && !['lws7', 'lws8', 'lws9'].include?(subject_category)

@@ -12,7 +12,6 @@ class UserTopicsController < ApplicationController
                     Date.today
                   end
     current_week = Week.find_by('start_date <= ? AND end_date >= ?', current_date, current_date)
-    currnet_user_topic = UserTopic.find_by(id: params[:id])
     current_timeline = Timeline.find_by(id: params[:timeline_id])
     if @user_topic.update(done: params[:user_topic][:done])
       calculate_progress_and_balance([current_timeline])

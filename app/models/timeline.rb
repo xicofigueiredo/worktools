@@ -23,7 +23,7 @@ class Timeline < ApplicationRecord
 
 
   def create_user_topics
-    self.subject.topics.find_each do |topic|
+    self.subject.topics.order(:order).find_each do |topic|
       self.user.user_topics.create!(topic: topic, done: false)
     end
   end
