@@ -14,7 +14,6 @@ export default class extends Controller {
     const innitialKnowledgesData = this.data.get("knowledges");
     this.numberOfTimelines = this.data.get("numberOfTimelines");
     this.createdKnowldges = JSON.parse(innitialKnowledgesData);
-    console.log("Innitial Knowledges: ", this.createdKnowldges);
     this.sprintGoalId = this.element.dataset.sprintGoalId;
     this.communityId = this.element.dataset.communityId;
     this.deletedCommunityIds = [];
@@ -72,7 +71,6 @@ export default class extends Controller {
 
   updateKnowledgeAddBtn() {
     const knowledgeContainer = this.knowledgesContainerTarget;
-    console.log({ knowledgeContainer });
     const rows = knowledgeContainer.querySelectorAll("tr");
     const rowCount = rows.length;
 
@@ -170,8 +168,6 @@ export default class extends Controller {
 
     this.enableOptionsInSubjectCells();
 
-    console.log("Created Knowledges at remove: ", this.createdKnowldges);
-
     if (kind === "communities") {
       const communityId = button.dataset.communityId;
       this.deletedCommunityIds.push(communityId);
@@ -204,8 +200,6 @@ export default class extends Controller {
     const row = event.target.closest("tr");
 
     this.createdKnowldges.push(subjectName);
-
-    console.log("CreatedKnowledges at create: ", this.createdKnowldges);
 
     this.disableOptionsInSubjectCells(true);
 
