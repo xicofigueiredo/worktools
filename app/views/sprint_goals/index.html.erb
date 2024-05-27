@@ -61,13 +61,12 @@
               </tr>
             </thead>
             <tbody>
-              <% current_user.timelines.each do |timeline| %>
-                <% timeline.subject.name != '' ? subject = timeline.subject.name : subject =timeline.personalized_name %>
-                <% knowledge = @sprint_goal.knowledges.find_by(subject_name: subject) %>
+              <% if @sprint_goal.knowledges.exists? %>
+                <% @sprint_goal.knowledges.each do |knowledge| %>
                 <tr>
-                  <td class="custom-font-size"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %></td>
+                  <td class="custom-font-size"><%= knowledge.subject_name %></td>
                   <td class="custom-font-size">
-                    <% sprint_goal = @sprint_deadlines.find { |sprint_goal| sprint_goal[:timeline].subject.name == timeline.subject.name } %>
+                    <% sprint_goal = @sprint_deadlines.find { |sprint_goal| sprint_goal[:timeline].subject.name == knowledge.subject_name } %>
                     <% if sprint_goal %>
                       <%= sprint_goal[:topic].name %>
                     <% else %>
@@ -75,28 +74,34 @@
                     <% end %>
                   </td>
                   <td class="custom-font-size">
-                    <% if timeline.exam_date != nil %>
-                      <%= timeline.exam_date.formatted_date %>
+                    <% if knowledge.exam_season != nil %>
+                      <%= knowledge.exam_season %>
                     <% else %>
                       N/A
                     <% end %>
                   </td>
-                  <% mock50_topic = current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true)) %>
-                  <% if mock50_topic %>
-                    <td class="custom-font-size"><%= mock50_topic.deadline.strftime("%d/%m/%Y") %></td>
+                  <% if knowledge.mock50? %>
+                    <td class="custom-font-size"><%= knowledge.mock50 %></td>
                   <% else %>
                     <td class="custom-font-size">N/A</td>
                   <% end %>
-
-                  <% mock100_topic = current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true)) %>
-                  <% if mock100_topic %>
-                    <td class="custom-font-size"><%= mock100_topic.deadline.strftime("%d/%m/%Y") %></td>
+                  <% if knowledge.mock100? %>
+                    <td class="custom-font-size"><%= knowledge.mock100 %></td>
                   <% else %>
                     <td class="custom-font-size">N/A</td>
                   <% end %>
-
                   <td><%= knowledge&.difficulties %></td>
                   <td><%= knowledge&.plan %></td>
+                </tr>
+              <% end %>
+              <% else %>
+                <tr>
+                  <td colspan='7'>
+                    <div class="text-center my-5">
+                      <h2>No Knowledge Goals set yet...</h2>
+                      <p>Edit form to add Knowledge Goals.</p>
+                    </div>
+                  </td>
                 </tr>
               <% end %>
             </tbody>
