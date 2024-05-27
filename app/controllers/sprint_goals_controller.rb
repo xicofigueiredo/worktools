@@ -30,6 +30,7 @@ class SprintGoalsController < ApplicationController
     @is_edit = false
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+    @number_of_timelines = current_user.timelines.count
 
     @sprint_goal = current_user.sprint_goals.find_or_create_by(sprint: @sprint) do |sg|
       sg.sprint = @sprint
@@ -43,16 +44,16 @@ class SprintGoalsController < ApplicationController
     # end
 
     # Build associated knowledges for each timeline
-    current_user.timelines.each do |timeline|
-      subject = ''
-      timeline.subject.name != '' ? subject = timeline.subject.name : subject = timeline.personalized_name
-      @sprint_goal.knowledges.build(
-        subject_name: subject,
-        exam_season: timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A',
-        mock50: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A',
-        mock100: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'
-      )
-    end
+    # current_user.timelines.each do |timeline|
+    #   subject = ''
+    #   timeline.subject.name != '' ? subject = timeline.subject.name : subject = timeline.personalized_name
+    #   @sprint_goal.knowledges.build(
+    #     subject_name: subject,
+    #     exam_season: timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A',
+    #     mock50: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A',
+    #     mock100: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'
+    #   )
+    # end
   end
 
 
@@ -60,24 +61,27 @@ class SprintGoalsController < ApplicationController
   def edit
     @is_edit = true
     @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find(params[:id])
+    @knowledges_subject_names = @sprint_goal.knowledges.pluck(:subject_name)
+    @number_of_timelines = current_user.timelines.count
+
     Rails.logger.debug @sprint_goal.knowledges.inspect  # Add this line to check what's loaded
 
     # If the @sprint_goal doesn't have associated knowledges for each timeline, you need to build them here
     # current_user.timelines.each do |timeline|
     #   @sprint_goal.knowledges.find_or_initialize_by(subject_name: timeline.subject.name)
     # end
-    if @sprint_goal.knowledges.empty?
-      current_user.timelines.each do |timeline|
-        @sprint_goal.knowledges.build(
-          subject_name: timeline.subject.name,
-          exam_season: timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A',
-          mock50: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A',
-          mock100: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'
-        )
-      end
-    end
-    @sprint_goal.skills.build if @sprint_goal.skills.empty?
-    @sprint_goal.communities.build if @sprint_goal.communities.empty?
+    # if @sprint_goal.knowledges.empty?
+    #   current_user.timelines.each do |timeline|
+    #     @sprint_goal.knowledges.build(
+    #       subject_name: timeline.subject.name,
+    #       exam_season: timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A',
+    #       mock50: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A',
+    #       mock100: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'
+    #     )
+    #   end
+    # end
+    # @sprint_goal.skills.build if @sprint_goal.skills.empty?
+    # @sprint_goal.communities.build if @sprint_goal.communities.empty?
   end
 
   # POST /sprint_goals
@@ -99,15 +103,22 @@ class SprintGoalsController < ApplicationController
 
     # filtrar communites vazias
     clean_params[:communities_attributes]&.each do |key, attributes|
-      if attributes[:involved].blank? && attributes[:smartgoals].blank? && attributes[:difficulties].blank? && attributes[:plan].blank?
+      if attributes.keys == ["id"] || (attributes[:involved].blank? && attributes[:smartgoals].blank? && attributes[:difficulties].blank? && attributes[:plan].blank?)
         clean_params[:communities_attributes].delete(key)
       end
     end
 
     # filtrar skills vazias
     clean_params[:skills_attributes]&.each do |key, attributes|
-      if attributes[:extracurricular].blank? && attributes[:smartgoals].blank? && attributes[:difficulties].blank? && attributes[:plan].blank?
+      if attributes.keys == ["id"] || (attributes[:extracurricular].blank? && attributes[:smartgoals].blank? && attributes[:difficulties].blank? && attributes[:plan].blank?)
         clean_params[:skills_attributes].delete(key)
+      end
+    end
+
+    # filtrar knodleges vazias
+    clean_params[:knowledges_attributes]&.each do |key, attributes|
+      if attributes.keys == ["id"] || (attributes[:subject_name].present? && attributes[:subject_name].blank?)
+        clean_params[:knowledges_attributes].delete(key)
       end
     end
 
@@ -134,7 +145,8 @@ class SprintGoalsController < ApplicationController
   def bulk_destroy
     Community.where(id: params[:deleted_communities_ids]).destroy_all
     Skill.where(id: params[:deleted_skills_ids]).destroy_all
-    render json: { status: "success", message: "Communities and skills successfully deleted" }
+    Knowledge.where(id: params[:deleted_knowledges_ids]).destroy_all
+    render json: { status: "success", message: "Communities, skills and knowledges successfully deleted" }
   end
 
 

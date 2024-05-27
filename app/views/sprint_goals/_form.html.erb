@@ -1,5 +1,4 @@
-
-  <%= form_with(model: @sprint_goal, data: { controller: "nested-form", nested_form_target: "form", action: "submit->nested-form#submit", sprint_goal_id: @sprint_goal.id, sprint_goal_date: @sprint_goal.sprint.start_date }, local: false, remote: true) do |form| %>
+  <%= form_with(model: @sprint_goal, data: { controller: "nested-form", nested_form_target: "form", nested_form_knowledges: @knowledges_subject_names.to_json, nested_form_number_of_timelines: @number_of_timelines, action: "submit->nested-form#submit", sprint_goal_id: @sprint_goal.id, sprint_goal_date: @sprint_goal.sprint.start_date }, local: false, remote: true) do |form| %>
     <input name="authenticity_token" type="hidden" value="<%= form_authenticity_token %>">
     <% if @sprint_goal.errors.any? %>
       <div class="alert alert-danger" role="alert">
@@ -31,9 +30,10 @@
                   <th class="custom-font-size" style="vertical-align: middle;">100% Mock</th>
                   <th class="custom-font-size" style="vertical-align: middle;">What difficulties do you expect to encounter with this target?</th>
                   <th class="custom-font-size" style="vertical-align: middle;">Explain your plan to achieve your goal in 3 steps or more.</th>
+                  <th></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody data-nested-form-target="knowledgesContainer">
                 <% personalized_timelines = current_user.timelines.joins(:subject).where(subjects: { name: '' }) %>
                 <% count = 0 %>
                 <% max = personalized_timelines.count%>
@@ -43,8 +43,9 @@
                       <% knowledge_form.object.subject_name = personalized_timelines[count].personalized_name%>
                       <% count += 1 %>
                     <% end %>
-                    <td class="custom-font-size">
-                      <%= knowledge_form.text_field :subject_name, class: 'form-control', value: knowledge_form.object.subject_name, readonly: true  %>
+                    <td class="custom-font-size" data-subject-cell>
+                      <p><%= knowledge_form.object.subject_name %></p>
+                      <%# <%= knowledge_form.text_field :subject_name, class: 'form-control', value: knowledge_form.object.subject_name, readonly: true  %>
                     </td>
                     <td class="custom-font-size">
                       <% sprint_deadline = @sprint_deadlines.find { |sprint_deadline| sprint_deadline[:timeline].subject.name == knowledge_form.object.subject_name } %>
@@ -55,13 +56,13 @@
                       <% end %>
                     </td>
                     <td class="custom-font-size">
-                      <%= knowledge_form.text_field :exam_season, class: 'form-control', value: knowledge_form.object.exam_season, readonly: true %>
+                      <p><%= knowledge_form.object.exam_season %></p>
                     </td>
                     <td class="custom-font-size">
-                      <%= knowledge_form.text_field :mock50, class: 'form-control', value: knowledge_form.object.mock50, readonly: true %>
+                      <p><%= knowledge_form.object.mock50 %></p>
                     </td>
                     <td class="custom-font-size">
-                      <%= knowledge_form.text_field :mock100, class: 'form-control', value: knowledge_form.object.mock100, readonly: true %>
+                      <p><%= knowledge_form.object.mock100 %></p>
                     </td>
                     <td class="custom-font-size">
                       <%= knowledge_form.text_area :difficulties, class: 'form-control' %>
@@ -69,15 +70,70 @@
                     <td class="custom-font-size">
                       <%= knowledge_form.text_area :plan, class: 'form-control' %>
                     </td>
+                    <td style="vertical-align: middle"><button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow" data-knowledge-id="<%= knowledge_form.object.id %>" data-kind="knowledges"><i class="fa-solid fa-trash"></i></button></td>
                   </tr>
                 <% end %>
               </tbody>
             </table>
+            <div class="d-flex justify-content-center mb-3">
+              <% if @sprint_goal.knowledges.count >= @number_of_timelines %>
+                <button disabled class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="knowledges" data-knowledge-add-btn style='border-radius: 10px;'>Add</button>
+              <% else %>
+                <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="knowledges" data-knowledge-add-btn style='border-radius: 10px;'>Add</button>
+              <% end %>
+
+            </div>
+            <template data-nested-form-target="template" data-kind="knowledges">
+              <%= form.fields_for :knowledges, Knowledge.new, child_index: "TEMPLATE_INDEX" do |knowledge_form| %>
+                <tr>
+                  <td>
+                    <div data-subject-cell>
+                      <select name="Timeline Select" id="Timeline Select" class="form-select" data-action="change->nested-form#createKnowledge">
+                          <option value="" disabled selected>Select timeline</option>
+                        <% current_user.timelines.each do |timeline| %>
+                          <% exam_date = timeline.exam_date&.date %>
+
+                          <% sprint_goal = @sprint_deadlines.find { |sprint_goal| sprint_goal[:timeline].subject.name == timeline.subject.name }[:topic].name %>
+
+
+                          <option value="<%= [timeline.subject.name, exam_date, timeline.mock50, timeline.mock100, sprint_goal].join('||') %>">
+                            <%= timeline.subject.name %>
+                          </option>
+
+                        <% end %>
+                      </select>
+                    </div>
+                    <%= knowledge_form.hidden_field :subject_name, disabled: true %>
+                  </td>
+                  <td>
+                    <div data-sprint-goal-cell>
+                    </div>
+                  </td>
+                  <td>
+                    <div data-exam-season-cell>
+                    </div>
+                    <%= knowledge_form.hidden_field :exam_season, class: 'form-control', disabled: true  %>
+                  </td>
+                  <td>
+                    <div data-mock50-cell>
+                    </div>
+                    <%= knowledge_form.hidden_field :mock50, class: 'form-control', disabled: true  %>
+                  </td>
+                  <td>
+                    <div data-mock100-cell>
+                    </div>
+                    <%= knowledge_form.hidden_field :mock100, class: 'form-control', disabled: true  %>
+                  </td>
+                  <td><%= knowledge_form.text_area :difficulties, class: 'form-control',  disabled: true  %></td>
+                  <td><%= knowledge_form.text_area :plan, class: 'form-control',  disabled: true  %></td>
+                  <td style="vertical-align: middle"><button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow" data-kind="knowledges"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+              <% end %>
+            </template>
           </div>
         </div>
       </div>
     </div>
-
     <%# Skills Block %>
     <div class="py-2">
         <div class="mb-4">
@@ -134,7 +190,6 @@
           </div>
         </div>
     </div>
-
     <%# Community Block %>
     <div class="py-2">
       <div class="mb-4">
@@ -183,16 +238,10 @@
         </div>
       </div>
     </div>
-
     <div class="form-group d-flex justify-content-center gap-2 mb-5">
       <%= link_to 'Back', sprint_goals_path(date: @sprint_goal.sprint.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
       <div data-nested-form-target="submit">
         <%= form.submit "Save Sprint Goal", class: "btn btn-primary", style: "border-radius: 10px;"%>
       </div>
-      <% if @is_edit %>
-        <%= button_to 'Reset Knowledge', reset_associations_sprint_goal_path(@sprint_goal), method: :delete, data: { confirm: 'Are you sure you want to reset all associated data?' }, class: "btn btn-danger", style: 'border-radius: 10px; color: white;' %>
-      <% end %>
     </div>
-
-
 <% end %>
