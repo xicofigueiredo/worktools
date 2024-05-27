@@ -23,7 +23,4 @@ end
     params.require(:user).permit(:full_name, :email, :password, :password_confirmation, :role, hub_ids: [])
   end
 
-  def after_inactive_sign_up_path_for(resource)
-    check_email_path
-  end
 end
