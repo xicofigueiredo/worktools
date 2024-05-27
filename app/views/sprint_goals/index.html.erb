@@ -80,13 +80,20 @@
                       N/A
                     <% end %>
                   </td>
+                  <% subject = Subject.find_by(name: knowledge.subject_name) %>
+                  <% mock50_topic = current_user.user_topics.joins(:topic).find_by(topics: { subject_id: subject.id, Mock50: true }) if subject %>
                   <% if knowledge.mock50? %>
                     <td class="custom-font-size"><%= knowledge.mock50 %></td>
+                  <% elsif mock50_topic %>
+                    <td class="custom-font-size"><%= mock50_topic.deadline.strftime("%d/%m/%Y") %></td>
                   <% else %>
                     <td class="custom-font-size">N/A</td>
                   <% end %>
+                  <% mock100_topic = current_user.user_topics.joins(:topic).find_by(topics: { subject_id: subject.id, Mock100: true }) if subject %>
                   <% if knowledge.mock100? %>
                     <td class="custom-font-size"><%= knowledge.mock100 %></td>
+                  <% elsif mock100_topic %>
+                    <td class="custom-font-size"><%= mock100_topic.deadline.strftime("%d/%m/%Y") %></td>
                   <% else %>
                     <td class="custom-font-size">N/A</td>
                   <% end %>

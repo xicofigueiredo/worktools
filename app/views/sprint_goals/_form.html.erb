@@ -246,8 +246,5 @@
       <div data-nested-form-target="submit">
         <%= form.submit "Save Sprint Goal", class: "btn btn-primary", style: "border-radius: 10px;"%>
       </div>
-      <% if @is_edit %>
-        <%= button_to 'Reset Knowledge', reset_associations_sprint_goal_path(@sprint_goal), method: :delete, data: { confirm: 'Are you sure you want to reset all associated data?' }, class: "btn btn-danger", style: 'border-radius: 10px; color: white;' %>
-      <% end %>
     </div>
 <% end %>
