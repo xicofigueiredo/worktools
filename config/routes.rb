@@ -8,7 +8,7 @@ Rails.application.routes.draw do
   authenticate :user do
   root to: "pages#profile"
 
-  get 'check_email', to: 'devise/registrations#check_email'
+  get 'after_signup', to: 'users/registrations#after_signup', as: 'after_signup'
   get 'profile', to: 'pages#profile'
   get 'report', to: 'pages#report'
   get 'edit_profile', to: 'pages#edit_profile'
