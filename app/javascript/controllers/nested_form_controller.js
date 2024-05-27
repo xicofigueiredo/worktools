@@ -4,7 +4,6 @@ export default class extends Controller {
   static targets = [
     "skillsContainer",
     "communitiesContainer",
-    "knowledgesContainer",
     "template",
     "form",
     "submit",
@@ -19,15 +18,6 @@ export default class extends Controller {
     this.communityId = this.element.dataset.communityId;
     this.deletedCommunityIds = [];
     this.deletedSkillsIds = [];
-    this.deletedKnowledgeIds = [];
-  }
-
-  formatDate(dateString) {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
   }
 
   getCSRFToken() {
@@ -105,7 +95,7 @@ export default class extends Controller {
 
   addRow(event) {
     event.preventDefault();
-    const kind = event.target.dataset.kind; // 'skills' or 'communities' or 'knowledges'
+    const kind = event.target.dataset.kind; // 'skills' or 'communities'
     const templates = this.templateTargets.filter(
       (t) => t.dataset.kind === kind
     );
@@ -125,8 +115,6 @@ export default class extends Controller {
           "beforeend",
           content
         );
-      } else if (kind === "knowledges") {
-        this.knowledgesContainerTarget.insertAdjacentHTML("beforeend", content);
       }
     } else {
       console.error("Template for", kind, "not found.");
@@ -154,12 +142,9 @@ export default class extends Controller {
     if (kind === "communities") {
       const communityId = button.dataset.communityId;
       this.deletedCommunityIds.push(communityId);
-    } else if (kind === "skills") {
+    } else {
       const skillId = button.dataset.skillId;
       this.deletedSkillsIds.push(skillId);
-    } else if (kind === "knowledges") {
-      const knowledgeId = button.dataset.knowledgeId;
-      this.deletedKnowledgeIds.push(knowledgeId);
     }
     if (row) {
       row.remove();
@@ -218,13 +203,13 @@ export default class extends Controller {
     mock100Cell.innerHTML = `<p ${fontSize}>${formattedMock100}</p>`;
   }
 
+
   async submit(event) {
     event.preventDefault();
     const sprintGoalId = event.target.dataset.sprintGoalId;
     const sprintGoalDate = event.target.dataset.sprintGoalDate;
     const deletedCommunityIds = this.deletedCommunityIds;
-    const deletedSkillIds = this.deletedSkillsIds;
-    const deletedKnowledgeIds = this.deletedKnowledgeIds;
+    const deletedSkillsIds = this.deletedSkillsIds;
     const token = this.getCSRFToken();
 
     const form = this.formTarget;
@@ -233,11 +218,7 @@ export default class extends Controller {
     this.submitTarget.innerHTML =
       '<button class="btn btn-primary" style="border-radius: 10px" disabled>Saving...</button>';
 
-    if (
-      deletedCommunityIds.length > 0 ||
-      deletedSkillIds.length > 0 ||
-      deletedKnowledgeIds.length > 0
-    ) {
+    if (deletedCommunityIds.length > 0 || deletedSkillsIds > 0) {
       try {
         const response = await fetch("/sprint_goals/bulk_destroy", {
           method: "POST",
@@ -247,8 +228,7 @@ export default class extends Controller {
           },
           body: JSON.stringify({
             deleted_communities_ids: deletedCommunityIds,
-            deleted_skills_ids: deletedSkillIds,
-            deleted_knowledges_ids: deletedKnowledgeIds,
+            deleted_skills_ids: deletedSkillsIds,
           }),
         });
 

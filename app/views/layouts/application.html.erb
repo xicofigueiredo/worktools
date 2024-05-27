@@ -22,6 +22,11 @@
     <% else %>
       <%= render "shared/navbar" %>
     <% end %>
+    <div class="d-flex justify-content-center align-items-center">
+      <%# <%= notice if notice %>
+      <%= alert if alert %>
+    </div>
+
     <%= turbo_frame_tag "modal" %>
     <%= yield %>
   </body>

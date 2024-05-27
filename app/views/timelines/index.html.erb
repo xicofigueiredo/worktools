@@ -143,7 +143,7 @@
                           </p>
                         </div>
                         <div class="d-flex gap-3">
-                          <p class="mb-1" style="color: gray; font-size: 16px">End Date: </p>
+                          <p class="mb-1" style="color: gray; font-size: 16px">Deadline: </p>
                           <p style="font-size: 16px;">
                             <%= monthly_goal[:topic]&.user_topics.find_by(topic: monthly_goal[:topic], user: current_user).deadline.strftime('%d-%m-%Y') %>
                           </p>
@@ -179,7 +179,7 @@
                       <% timeline.subject.topics.order(id: :asc).each_with_index do |topic, index| %>
                         <% user_topic = current_user.user_topics.find_or_initialize_by(topic: topic) %>
                         <% subject_category = topic.subject.category %>
-                        <% background_color = if !user_topic.done && !user_topic.deadline.nil?  && user_topic.deadline < Date.today && !['lws7', 'lws8', 'lws9'].include?(subject_category)
+                        <% background_color = if !user_topic.done && !user_topic.deadline.nil? && user_topic.deadline < Date.today && !['lws7', 'lws8', 'lws9'].include?(subject_category)
                             'background-color: lightcoral;'
                           elsif !user_topic.done && !user_topic.deadline.nil? &&  Date.today.monday < user_topic.deadline && user_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(subject_category)
                             'background-color: lightgrey;'
@@ -198,11 +198,12 @@
                             <% end %>
                           </td>
                           <td style="<%= background_color %>"><%= topic.name %></td>
-                          <% if !is_lws && !user_topic.deadline.nil? %>
-                            <td style="<%= background_color %>"><%= topic.time %></td>
-                            <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
+                          <% if !user_topic.deadline.nil? %>
+                            <% if !is_lws %>
+                              <td style="<%= background_color %>"><%= topic.time %></td>
+                              <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
+                            <% end %>
                           <% else %>
-                            <td style="<%= background_color %>"><%= topic.time %></td>
                             <td style="<%= background_color %>">Update Dates</td>
                           <% end %>
                           <td style="<%= background_color %>">

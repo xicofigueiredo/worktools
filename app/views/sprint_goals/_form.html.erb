@@ -31,10 +31,9 @@
                   <th class="custom-font-size" style="vertical-align: middle;">100% Mock</th>
                   <th class="custom-font-size" style="vertical-align: middle;">What difficulties do you expect to encounter with this target?</th>
                   <th class="custom-font-size" style="vertical-align: middle;">Explain your plan to achieve your goal in 3 steps or more.</th>
-                  <th></th>
                 </tr>
               </thead>
-              <tbody data-nested-form-target="knowledgesContainer">
+              <tbody>
                 <% personalized_timelines = current_user.timelines.joins(:subject).where(subjects: { name: '' }) %>
                 <% count = 0 %>
                 <% max = personalized_timelines.count%>
@@ -44,9 +43,11 @@
                       <% knowledge_form.object.subject_name = personalized_timelines[count].personalized_name%>
                       <% count += 1 %>
                     <% end %>
+                    
                     <td class="custom-font-size" data-subject-cell>
                       <p><%= knowledge_form.object.subject_name %></p>
                       <%# <%= knowledge_form.text_field :subject_name, class: 'form-control', value: knowledge_form.object.subject_name, readonly: true  %>
+
                     </td>
                     <td class="custom-font-size">
                       <% sprint_deadline = @sprint_deadlines.find { |sprint_deadline| sprint_deadline[:timeline].subject.name == knowledge_form.object.subject_name } %>
@@ -57,16 +58,13 @@
                       <% end %>
                     </td>
                     <td class="custom-font-size">
-                      <p><%= knowledge_form.object.exam_season %></p>
-                      <%# <%= knowledge_form.text_field :exam_season, class: 'form-control', value: knowledge_form.object.exam_season, readonly: true %>
+                      <%= knowledge_form.text_field :exam_season, class: 'form-control', value: knowledge_form.object.exam_season, readonly: true %>
                     </td>
                     <td class="custom-font-size">
-                      <p><%= knowledge_form.object.mock50 %></p>
-                      <%# <%= knowledge_form.text_field :mock50, class: 'form-control', value: knowledge_form.object.mock50, readonly: true %>
+                      <%= knowledge_form.text_field :mock50, class: 'form-control', value: knowledge_form.object.mock50, readonly: true %>
                     </td>
                     <td class="custom-font-size">
-                      <p><%= knowledge_form.object.mock100 %></p>
-                      <%# <%= knowledge_form.text_field :mock100, class: 'form-control', value: knowledge_form.object.mock100, readonly: true %>
+                      <%= knowledge_form.text_field :mock100, class: 'form-control', value: knowledge_form.object.mock100, readonly: true %>
                     </td>
                     <td class="custom-font-size">
                       <%= knowledge_form.text_area :difficulties, class: 'form-control' %>
@@ -74,7 +72,6 @@
                     <td class="custom-font-size">
                       <%= knowledge_form.text_area :plan, class: 'form-control' %>
                     </td>
-                    <td style="vertical-align: middle"><button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow" data-knowledge-id="<%= knowledge_form.object.id %>" data-kind="knowledges"><i class="fa-solid fa-trash"></i></button></td>
                   </tr>
                 <% end %>
               </tbody>
@@ -131,6 +128,7 @@
                 </tr>
               <% end %>
             </template>
+
           </div>
         </div>
       </div>
