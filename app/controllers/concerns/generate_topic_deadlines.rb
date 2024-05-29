@@ -5,7 +5,7 @@ module GenerateTopicDeadlines
 
   def generate_topic_deadlines(timeline)
     subject = timeline.subject
-    user_topics = subject.topics.map do |topic|
+    user_topics = subject.topics.order(:order).map do |topic|
       current_user.user_topics.find_or_initialize_by(topic: topic)
     end
 
