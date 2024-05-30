@@ -90,6 +90,7 @@ class TimelinesController < ApplicationController
       @timeline.save
       redirect_to timelines_path, notice: 'Timeline was successfully created.'
     else
+      flash.now[:alert] = @timeline.errors.full_messages.to_sentence
       render :new
     end
   end
@@ -100,7 +101,7 @@ class TimelinesController < ApplicationController
     @subjects = Subject.all.order(:category, :name)
     @max_date = Date.today + 5.year
     @min_date = Date.today - 5.year
-
+    @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
   end
 
   def update
@@ -113,6 +114,7 @@ class TimelinesController < ApplicationController
       @timeline.save
       redirect_to timelines_path, notice: 'Timeline was successfully updated.'
     else
+      flash.now[:alert] = @timeline.errors.full_messages.to_sentence
       render :edit
     end
   end

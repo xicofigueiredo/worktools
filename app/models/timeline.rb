@@ -18,7 +18,6 @@ class Timeline < ApplicationRecord
   validate :start_date_before_end_date
   validates :start_date, presence: true
   validates :end_date, presence: true
-  validate :start_date_cannot_be_equal_to_end_date
   validate :dates_cannot_be_holidays
 
 
@@ -33,7 +32,7 @@ class Timeline < ApplicationRecord
   end
 
   def start_date_before_end_date
-    if start_date && end_date && start_date > end_date
+    if start_date && end_date && start_date >= end_date
       errors.add(:end_date, "must be after the start date")
     end
   end
@@ -48,17 +47,9 @@ class Timeline < ApplicationRecord
     tp.save!
   end
 
-  private
-
-  def start_date_cannot_be_equal_to_end_date
-    if start_date == end_date
-      errors.add(:end_date, "cannot be the same as the start date")
-    end
-  end
-
   def dates_cannot_be_holidays
     holidays = self.user.holidays
-    if holidays.include?(start_date) || holidays.include?(end_date)
+    if holidays.include?(start_date) && holidays.include?(end_date)
       errors.add(:base, "Start date and end date cannot be on a holiday")
     end
   end

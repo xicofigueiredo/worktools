@@ -352,7 +352,7 @@
                 <tbody>
                   <% previous_unit = nil %>
                   <% timeline.subject.topics.order(:order, id: :asc).each_with_index do |topic, index| %>
-                    <% user_topic = current_user.user_topics.find_or_initialize_by(topic: topic) %>
+                    <% user_topic = @learner.user_topics.find_or_initialize_by(topic: topic) %>
                     <% subject_category = topic.subject.category %>
                     <% background_color = if !user_topic.done && user_topic.deadline && user_topic.deadline < Date.today && !['lws8', 'lws9'].include?(subject_category)
                         'background-color: lightcoral;'
@@ -373,12 +373,15 @@
                         <% end %>
                       </td>
                       <td style="<%= background_color %>"><%= topic.name %></td>
-                      <% if !is_lws && !user_topic.deadline.nil? %>
-                        <td style="<%= background_color %>"><%= topic.time %></td>
-                        <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
+                      <% if !user_topic.deadline.nil? %>
+                        <% if !is_lws%>
+                          <td style="<%= background_color %>"><%= topic.time %></td>
+                          <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
+                        <% else %>
+                          <td style="<%= background_color %>"><%= topic.time %></td>
+                        <% end %>
                       <% else %>
                         <td style="<%= background_color %>"><%= topic.time %></td>
-                        <td style="<%= background_color %>">Update Dates</td>
                       <% end %>
                       <td style="<%= background_color %>">
                         <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
