@@ -7,9 +7,6 @@
         <th scope="col">End Time</th>
         <th scope="col">Comments</th>
         <th scope="col">Presence</th>
-        <%# <% if @is_today %>
-          <%# <th scope="col">I/O</th> %>
-        <%# <% end %>
       </tr>
     </thead>
     <tbody>
@@ -39,27 +36,6 @@
               <%= select_tag 'absence', options_for_select(['Justified Leave', 'Unjustified Leave', 'Working Away', 'Holiday', 'Present'], attendance.absence), prompt: '-Select Option-', class: 'form-control', data: { attendance_target: "absence", action: "change->attendance#updateAbsence" } %>
             <% end %>
           </td>
-          <%# <% if @is_today %>
-            <%# <td> %>
-              <%# <% if attendance.start_time.present? %>
-                <%# <% if attendance.end_time.blank? %>
-                  <%# <%= link_to update_attendance_path(learner_id: attendance.user.id, attendance_date: attendance.attendance_date), data: {"turbo-method": :put} do %>
-                    <%# <button class="btn btn-danger"> %>
-                    <%# <i class="fa-solid fa-stop"></i> %>
-                    <%# </button> %>
-                  <%# <% end %>
-                <%# <% else %>
-                  <%# <button class="btn btn-secondary" style="cursor: not-allowed;"><i class="fa-solid fa-play"></i></button> %>
-                <%# <% end %>
-              <%# <% else %>
-                <%# <%= link_to update_attendance_path(learner_id: attendance.user.id, attendance_date: attendance.attendance_date), data: {"turbo-method": :put}  do %>
-                  <%# <button class="btn btn-success"> %>
-                    <%# <i class="fa-solid fa-play"></i> %>
-                  <%# </button> %>
-                <%# <% end %>
-              <%# <% end  %>
-            <%# </td> %>
-          <%# <% end %>
         </tr>
       <% end %>
     </tbody>
