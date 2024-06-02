@@ -20,6 +20,7 @@ Rails.application.routes.draw do
   get 'dashboard_lc', to: 'pages#dashboard_lc'
   get 'dashboard_dc', to: 'pages#dashboard_dc'
   get 'learner_profile/:id', to: 'pages#learner_profile', as: 'learner_profile'
+  get 'change_weekly_goal/:date/:current_week_id/:learner_id/:current_date', to: 'pages#change_weekly_goal', as: 'change_weekly_goal'
 
 
   # Attendances Routes
