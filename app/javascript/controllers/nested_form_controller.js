@@ -160,14 +160,6 @@ export default class extends Controller {
     const kind = button.dataset.kind;
     const row = button.closest("tr");
 
-    const subject = row.querySelector("[data-subject-cell]").innerText;
-
-    this.createdKnowldges = this.createdKnowldges.filter(
-      (subjectName) => subjectName !== subject
-    );
-
-    this.enableOptionsInSubjectCells();
-
     if (kind === "communities") {
       const communityId = button.dataset.communityId;
       this.deletedCommunityIds.push(communityId);
@@ -175,6 +167,14 @@ export default class extends Controller {
       const skillId = button.dataset.skillId;
       this.deletedSkillsIds.push(skillId);
     } else if (kind === "knowledges") {
+      const subject = row.querySelector("[data-subject-cell]").innerText;
+
+      this.createdKnowldges = this.createdKnowldges.filter(
+        (subjectName) => subjectName !== subject
+      );
+
+      this.enableOptionsInSubjectCells();
+
       const knowledgeId = button.dataset.knowledgeId;
       this.deletedKnowledgeIds.push(knowledgeId);
     }
