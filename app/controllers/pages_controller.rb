@@ -149,14 +149,14 @@ class PagesController < ApplicationController
 
   private
 
-  def update_weekly_goal(weekly_goal, week, learner, current_date)
+  def update_weekly_goal(weekly_goal, week, learner, date)
     render turbo_stream:
       turbo_stream.replace("lp_weekly_goal",
                             partial: "pages/weekly_goals",
                             locals: {weekly_goal: weekly_goal,
                                     current_week: week,
                                     learner: learner,
-                                    current_date: current_date})
+                                    current_date: date})
   end
 
   def user_params
