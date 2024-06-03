@@ -4,7 +4,7 @@ class Holiday < ApplicationRecord
   validates :start_date, presence: true
   validates :end_date, presence: true
   validate :start_date_before_end_date
-  validate :dates_cannot_outside_timeline
+  # validate :dates_cannot_outside_timeline
 
   def calculate_number_of_days
     self.number_days = (end_date - start_date).to_i + 1
@@ -16,11 +16,11 @@ class Holiday < ApplicationRecord
     end
   end
 
-  def dates_cannot_outside_timeline
-    user.timelines.each do |timeline|
-      if timeline.start_date <= start_date && timeline.end_date >= end_date
-        errors.add(:base, "Holiday cannot be outside of a timeline")
-      end
-    end
-  end
+  # def dates_cannot_outside_timeline
+  #   user.timelines.each do |timeline|
+  #     if timeline.start_date <= start_date && timeline.end_date >= end_date
+  #       errors.add(:base, "Holiday cannot be outside of a timeline")
+  #     end
+  #   end
+  # end
 end
