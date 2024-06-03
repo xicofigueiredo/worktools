@@ -89,13 +89,11 @@ class PagesController < ApplicationController
   end
 
   def learner_profile
-    current_date = Date.today
-
     @learner = User.find_by(id: params[:id])
     @learner_flag = @learner.learner_flag
     @notes = @learner.notes.order(created_at: :asc)
     @timelines = @learner.timelines
-    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", current_date, current_date).first
+    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
     @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
     @skills = @sprint_goals&.skills
@@ -109,21 +107,11 @@ class PagesController < ApplicationController
 
     @has_exam_date = @timelines.any? { |timeline| timeline.exam_date.present? }
 
+    @current_week = Week.find_by("start_date <= ? AND end_date >= ?", Date.today, Date.today)
+
     @has_mock50 = @timelines.any? { |timeline| timeline.mock50.present? }
 
     @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
-
-
-    if current_date.saturday?
-      @current_weekly_goal_date = current_date - 1.day
-    elsif current_date.sunday?
-      @current_weekly_goal_date = current_date - 2.days
-    end
-
-    @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
-
-    @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
-
 
     get_kda_averages(@learner.kdas, @current_sprint)
 
@@ -132,32 +120,12 @@ class PagesController < ApplicationController
     end
   end
 
-  def change_weekly_goal
-    date = params[:date] ? Date.parse(params[:date]) : Date.today
-    week = Week.find_by("start_date <= ? AND end_date >= ?", date, date)
-    learner = User.find_by(id: params[:learner_id])
-    current_date = params[:current_date] ? Date.parse(params[:current_date]) : Date.today
-    weekly_goal = learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", date, date)
-
-    update_weekly_goal(weekly_goal, week, learner, date)
-  end
-
   def not_found
     render 'not_found', status: :not_found
   end
 
 
   private
-
-  def update_weekly_goal(weekly_goal, week, learner, date)
-    render turbo_stream:
-      turbo_stream.replace("lp_weekly_goal",
-                            partial: "pages/weekly_goals",
-                            locals: {weekly_goal: weekly_goal,
-                                    current_week: week,
-                                    learner: learner,
-                                    current_date: date})
-  end
 
   def user_params
     params.require(:user).permit(:full_name, :hub_id)
