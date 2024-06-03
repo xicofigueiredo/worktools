@@ -113,6 +113,18 @@ class PagesController < ApplicationController
 
     @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
+    @current_weekly_goal_date = current_date
+
+    if current_date.saturday?
+      @current_weekly_goal_date = current_date - 1.day
+    elsif current_date.sunday?
+      @current_weekly_goal_date = current_date - 2.days
+    end
+
+    @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
+
+    @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
+
     get_kda_averages(@learner.kdas, @current_sprint)
 
     unless @learner
