@@ -113,6 +113,7 @@ class PagesController < ApplicationController
 
     @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
+    @current_weekly_goal_date = current_date
 
     if current_date.saturday?
       @current_weekly_goal_date = current_date - 1.day
