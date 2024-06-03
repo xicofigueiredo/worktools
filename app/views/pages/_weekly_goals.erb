@@ -1,3 +1,90 @@
-<div>
-  <h1>Hello</h1>
-</div>
+<%= turbo_frame_tag "lp_weekly_goal" do %>
+  <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+    <div>
+      <h3><%= current_week.name %></h3>
+    </div>
+
+    <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
+      <%= button_to change_weekly_goal_path(date: current_date - 7, current_week_id: current_week.id, learner_id: learner.id, current_date: current_date), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center h-100", data: { turbo_frame: 'lp_weekly_goal' } do %>
+        <i class="fa-solid fa-chevron-left"></i>
+      <% end %>
+      <% date_today = (Date.today.saturday? || Date.today.sunday?) ? Date.today - 2 : Date.today %>
+      <%= button_to change_weekly_goal_path(date: date_today, current_week_id: current_week.id, learner_id: learner.id, current_date: current_date), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center", data: { turbo_frame: 'lp_weekly_goal' } do %>
+        This Week
+      <% end %>
+      <%= button_to change_weekly_goal_path(date: current_date + 7, current_week_id: current_week.id, learner_id: learner.id, current_date: current_date), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center h-100", data: { turbo_frame: 'lp_weekly_goal' } do %>
+        <i class="fa-solid fa-chevron-right"></i>
+      <% end %>
+    </div>
+
+    <div>
+      <h3><%= current_week.sprint.name %></h3>
+    </div>
+  </div>
+
+  <% if !weekly_goal %>
+    <div class="d-flex flex-column gap-3 mt-5">
+      <div class="text-center mb-5">
+        <h2> <%= learner.full_name %> has no Weekly Goal for <%= current_week.name %> - <%= current_week.sprint.name %></h2>
+      </div>
+    </div>
+  <% else %>
+    <div class="row justify-content-center">
+      <div class="col-md-12">
+        <div class="card shadow-sm mb-5" style="border-radius: 10px;">
+          <div class="card-body">
+            <div class="container">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group text-center">
+                    <strong>Start Date:</strong> <%= weekly_goal.week.start_date.strftime("%d/%m/%Y") %>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group text-center">
+                    <strong>End Date:</strong> <%= weekly_goal.week.end_date.strftime("%d/%m/%Y") %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4">
+              <div class="container">
+                <div class="table-responsive">
+                  <table class="table table-bordered text-center">
+                    <thead>
+                      <tr class="bg-gray">
+                        <th class="text-uppercase">Time</th>
+                        <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                          <th class="text-uppercase" style="width: 20%"><%= day.split('_').first.capitalize %></th>
+                        <% end %>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% WeeklySlot.time_slots.keys.each do |time| %>
+                        <tr>
+                          <td class="align-middle"><%= time.to_s.humanize.titleize %></td>
+                          <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                            <td id="<%= time.downcase %>_<%= day.downcase %>">
+                              <div class="form-group">
+                                <% slot = weekly_goal.weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
+                                <% if slot %>
+                                  <%= slot.subject_name %><br>
+                                  <%= slot.topic_name %>
+                                <% end %>
+                              </div>
+                            </td>
+                          <% end %>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
