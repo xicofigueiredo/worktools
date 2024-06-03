@@ -103,17 +103,12 @@ class AttendancesController < ApplicationController
     current_date = Date.today
 
     return if current_date.saturday? || current_date.sunday?
-    learners = User.where(role: 'learner')
+    learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner')
 
 
     learners.each do |learner|
       # Check if the learner already has an attendance record for the current day
-      attendance = learner.attendances.find_by(attendance_date: current_date)
-
-      # If not, create one
-      if attendance.nil?
-        learner.attendances.create(attendance_date: current_date)
-      end
+      attendance = learner.attendances.find_or_initialize_by(attendance_date: current_date)
     end
   end
 
