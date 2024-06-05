@@ -1,0 +1,4 @@
+<!-- app/views/holidays/_timelines.html.erb -->
+<script type="application/json" id="timelines-data">
+  <%= raw current_user.timelines.map { |timeline| { start: timeline.start_date, end: timeline.end_date, name: timeline.subject.name  } }.to_json %>
+</script>
