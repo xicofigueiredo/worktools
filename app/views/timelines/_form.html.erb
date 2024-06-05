@@ -2,7 +2,7 @@
   <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-md-6">
-        <div class="card">
+        <div class="card" data-controller="timeline-form">
           <div class="card-body">
             <% if !@edit %>
               <h2 class="card-title text-center mb-4">New Timeline</h2>
@@ -10,6 +10,7 @@
               <h2 class="card-title text-center mb-4">Edit Timeline</h2>
             <% end %>
             <%= form_with(model: @timeline) do |form| %>
+              <div id="error_explanation" class="alert alert-danger" data-timeline-form-target="error"></div>
               <% if @timeline.errors.any? %>
                 <div id="error_explanation" class="alert alert-danger">
                   <h4><%= pluralize(@timeline.errors.count, "error") %> prohibited this timeline from being saved:</h4>
@@ -34,7 +35,7 @@
 
               <div class="form-group">
                 <%= form.label :start_date %>
-                <%= form.date_field :start_date, class: 'form-control', min: @min_date, max: @max_date, required: true %>
+                <%= form.date_field :start_date, class: 'form-control', min: @min_date, max: @max_date, required: true, data: { "timeline-form-target": "startDate" } %>
               </div>
               <br>
               <div class="form-group">
@@ -45,15 +46,15 @@
 
               <div class="form-group">
                 <%= form.label :end_date %>
-                <%= form.date_field :end_date, class: 'form-control', min: @min_date, max: @max_date, required: true %>
+                <%= form.date_field :end_date, class: 'form-control', min: @min_date, max: @max_date, required: true, data: { "timeline-form-target": "endDate" } %>
               </div>
 
-              <div class="d-flex justify-content-center  gap-2 mt-3">
+              <div class="d-flex justify-content-center gap-2 mt-3">
                 <%= link_to "Back", timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
                 <% if !@edit %>
-                  <%= form.submit 'Create Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+                  <%= form.submit 'Create Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;', data: { "timeline-form-target": "submitButton" } %>
                 <% else %>
-                  <%= form.submit 'Update Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+                  <%= form.submit 'Update Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;', data: { "timeline-form-target": "submitButton" } %>
                 <% end %>
               </div>
             <% end %>
@@ -63,10 +64,12 @@
                 <p><a href="<%= personalized_new_timelines_path %>" class="text-decoration-underline"> Do you want to create a personalized timeline?</a></p>
               </div>
             <% end %>
+            <%= turbo_frame_tag "holidays" do %>
+              <%= render "holidays" %>
+            <% end %>
           </div>
         </div>
       </div>
     </div>
   </div>
-
 </section>

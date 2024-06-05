@@ -1,0 +1,4 @@
+<!-- app/views/users/_holidays.html.erb -->
+<script type="application/json" id="holidays-data">
+  <%= raw current_user.holidays.map { |holiday| { start: holiday.start_date, end: holiday.end_date } }.to_json %>
+</script>
