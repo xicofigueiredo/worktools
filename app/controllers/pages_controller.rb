@@ -237,21 +237,21 @@ class PagesController < ApplicationController
 
     earliest_start_date = yearly_sprints.minimum(:start_date)
 
-    timeframe = Timeframe.new(earliest_start_date, Date.today)
-
-    passed_working_days = calculate_working_days(timeframe)
-
-    date_range = passed_working_days.first..passed_working_days.last
+    date_range = earliest_start_date..Date.today
 
     absence_count = Attendance.where(user_id: user.id, attendance_date: date_range)
-              .where(absence: ['Unjustified Leave', nil]).count
+              .where(absence: ['Unjustified Leave', 'Justified Leave']).count
 
-    if passed_working_days.count == 0
+    present_count = Attendance.where(user_id: user.id, attendance_date: date_range)
+    .where(absence: 'Present').count
+
+
+    if (absence_count == 0 && present_count == 0) || present_count == 0
       presence = 0
     else
-      presence = 100 - ((absence_count.to_f / passed_working_days.count) * 100)
+      presence = ((present_count.to_f / (present_count + absence_count)) * 100).round
     end
 
-    presence.round
+    presence
   end
 end
