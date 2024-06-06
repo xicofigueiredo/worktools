@@ -1,4 +1,3 @@
-# lib/tasks/deduplicate_attendances.rake
 namespace :attendances do
   desc 'Deduplicate attendances'
   task deduplicate: :environment do
