@@ -125,7 +125,7 @@ class PagesController < ApplicationController
 
     @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
 
-    
+
     get_kda_averages(@learner.kdas, @current_sprint)
 
     unless @learner
@@ -244,7 +244,7 @@ class PagesController < ApplicationController
     date_range = passed_working_days.first..passed_working_days.last
 
     absence_count = Attendance.where(user_id: user.id, attendance_date: date_range)
-              .where(absence: ['Unjustified Leave', nil]).count
+              .where(absence: 'Unjustified Leave').count
 
     if passed_working_days.count == 0
       presence = 0
