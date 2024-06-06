@@ -125,7 +125,7 @@ class PagesController < ApplicationController
 
     @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
 
-    
+
     get_kda_averages(@learner.kdas, @current_sprint)
 
     unless @learner

@@ -1,159 +1,161 @@
 <div class="container mt-3">
-  <div class="d-flex justify-content-between mb-4">
-    <h2><%=  current_user.users_hubs.first.hub.name %></h2>
-    <h2>Learner Count: <%=  current_user.users_hubs.first.hub.users.where(role: 'learner').count%></h2>
-  </div>
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">
-    <% @users.each do |user| %>
-    <% result = 0 %>
-    <% max = 0 %>
-      <div class="col d-flex mb-3 px-2">
-        <div class="card shadow-sm w-100" style="border-radius: 10px; ">
-          <%= link_to learner_profile_path(user), class: "text-decoration-none on-card-hover", style: "border-radius: 10px; height: 100%;" do %>
-            <div class="p-3">
-              <p class="text-black d-flex justify-content-center"><%= user.full_name %></p>
-              <div class="d-flex justify-content-center mb-3">
-                <div class="card p-2 d-flex flex-row gap-1" style="border-radius: 10px; width: fit-content;">
-                  <div>
-                    <div class="text-secondary">
-                      SG
-                    </div>
-                    <div class="text-center">
-                      <% if user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)).present?
-                          sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
-                            sg.knowledges.each do |knowledge|
-                            max +=1
-                              if knowledge.difficulties != '' && knowledge.plan != ''
-                                  result += 1
-                              end
-                            end
-                            sg.skills.each do |skill|
+  <%  current_user.hubs.each do |hub| %></h2>
+    <div class="d-flex justify-content-between mb-4">
+      <h2><%= hub.name %></h2>
+      <h2>Learner Count: <%=  hub.users.joins(:users_hubs).where(users: { role: 'learner' }).count  %></h2>
+    </div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">
+      <% hub.users.joins(:users_hubs).where.not(users: { role: 'lc' }).each do |user| %>
+      <% result = 0 %>
+      <% max = 0 %>
+        <div class="col d-flex mb-3 px-2">
+          <div class="card shadow-sm w-100" style="border-radius: 10px; ">
+            <%= link_to learner_profile_path(user), class: "text-decoration-none on-card-hover", style: "border-radius: 10px; height: 100%;" do %>
+              <div class="p-3">
+                <p class="text-black d-flex justify-content-center"><%= user.full_name %></p>
+                <div class="d-flex justify-content-center mb-3">
+                  <div class="card p-2 d-flex flex-row gap-1" style="border-radius: 10px; width: fit-content;">
+                    <div>
+                      <div class="text-secondary">
+                        SG
+                      </div>
+                      <div class="text-center">
+                        <% if user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)).present?
+                            sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
+                              sg.knowledges.each do |knowledge|
                               max +=1
-                              if skill.extracurricular != ''
-                                if skill.difficulties != '' && skill.plan != '' && skill.smartgoals != ''
+                                if knowledge.difficulties != '' && knowledge.plan != ''
                                     result += 1
                                 end
                               end
-                            end
-                            sg.communities.each do |community|
-                            max +=1
-                              if community.involved != ''
-                                if community.difficulties != '' && community.plan != '' && community.smartgoals != ''
-                                    result += 1
+                              sg.skills.each do |skill|
+                                max +=1
+                                if skill.extracurricular != ''
+                                  if skill.difficulties != '' && skill.plan != '' && skill.smartgoals != ''
+                                      result += 1
+                                  end
                                 end
                               end
-                            end
-                        end %>
-                      <% if result == max%>
-                        <i class="fa-solid fa-check text-success"></i>
-                      <% else %>
-                        <i class="fa-solid fa-x text-danger"></i>
-                      <% end %>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-secondary">
-                      WG
-                    </div>
-                    <div class="text-center">
-                      <% wg = user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))%>
-                      <% count = 0 %>
-                      <% if wg %>
-                        <% wg.weekly_slots.each do |slot|
-                            if slot.subject_name != ''
-                              count += 1
-                            end
-                          end
-                        %>
-                        <% if count >= 13 %>
+                              sg.communities.each do |community|
+                              max +=1
+                                if community.involved != ''
+                                  if community.difficulties != '' && community.plan != '' && community.smartgoals != ''
+                                      result += 1
+                                  end
+                                end
+                              end
+                          end %>
+                        <% if result == max%>
                           <i class="fa-solid fa-check text-success"></i>
                         <% else %>
                           <i class="fa-solid fa-x text-danger"></i>
                         <% end %>
-                      <% else %>
-                        <i class="fa-solid fa-x text-danger"></i>
-                      <% end %>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div class="text-secondary">
-                      KDA
-                    </div>
-                    <div class="text-center">
-                      <% if user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)) %>
-                      <% result = 0 %>
-                        <% kda = user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
-                            if kda.sdl.why != '' && kda.sdl.improve != ''
-                              result += 1
+                    <div>
+                      <div class="text-secondary">
+                        WG
+                      </div>
+                      <div class="text-center">
+                        <% wg = user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))%>
+                        <% count = 0 %>
+                        <% if wg %>
+                          <% wg.weekly_slots.each do |slot|
+                              if slot.subject_name != ''
+                                count += 1
+                              end
                             end
-                            if kda.ini.why != '' && kda.ini.improve != ''
-                              result += 1
-                            end
-                            if kda.mot.why != '' && kda.mot.improve != ''
-                              result += 1
-                            end
-                            if kda.p2p.why != '' && kda.p2p.improve != ''
-                              result += 1
-                            end
-                            if kda.hubp.why != '' && kda.hubp.improve != ''
-                              result += 1
-                            end
-                        %>
-                        <% if result == 5%>
-                          <i class="fa-solid fa-check text-success"></i>
+                          %>
+                          <% if count >= 13 %>
+                            <i class="fa-solid fa-check text-success"></i>
+                          <% else %>
+                            <i class="fa-solid fa-x text-danger"></i>
+                          <% end %>
                         <% else %>
                           <i class="fa-solid fa-x text-danger"></i>
                         <% end %>
-                      <% else %>
-                        <i class="fa-solid fa-x text-danger"></i>
-                      <% end %>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div class="text-secondary">
-                      UA
+                    <div>
+                      <div class="text-secondary">
+                        KDA
+                      </div>
+                      <div class="text-center">
+                        <% if user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)) %>
+                        <% result = 0 %>
+                          <% kda = user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
+                              if kda.sdl.why != '' && kda.sdl.improve != ''
+                                result += 1
+                              end
+                              if kda.ini.why != '' && kda.ini.improve != ''
+                                result += 1
+                              end
+                              if kda.mot.why != '' && kda.mot.improve != ''
+                                result += 1
+                              end
+                              if kda.p2p.why != '' && kda.p2p.improve != ''
+                                result += 1
+                              end
+                              if kda.hubp.why != '' && kda.hubp.improve != ''
+                                result += 1
+                              end
+                          %>
+                          <% if result == 5%>
+                            <i class="fa-solid fa-check text-success"></i>
+                          <% else %>
+                            <i class="fa-solid fa-x text-danger"></i>
+                          <% end %>
+                        <% else %>
+                          <i class="fa-solid fa-x text-danger"></i>
+                        <% end %>
+                      </div>
                     </div>
-                    <div class="text-center">
-                      <%= @current_sprint.count_absences(user) %>
+                    <div>
+                      <div class="text-secondary">
+                        UA
+                      </div>
+                      <div class="text-center">
+                        <%= @current_sprint.count_absences(user) %>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <% if user.timelines.present? %>
-                <% sorted_timelines = user.timelines.to_a.sort_by { |timeline| timeline.balance } %>
-                <% sorted_timelines.each do |timeline| %>
-                  <div class="d-flex justify-content-between gap-2" style="height: fit-content;">
-                      <p class="text-secondary mb-1"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
-                      <% if !timeline.personalized_name.present? && timeline.balance != nil %>
-                        <% if timeline.balance > 0 %>
-                          <div style="height: 28px;">
-                            <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
-                          </div>
-                        <% elsif timeline.balance < 0 %>
-                          <div style="height: 28px;">
-                            <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
-                          </div>
+                <% if user.timelines.present? %>
+                  <% sorted_timelines = user.timelines.to_a.sort_by { |timeline| timeline.balance } %>
+                  <% sorted_timelines.each do |timeline| %>
+                    <div class="d-flex justify-content-between gap-2" style="height: fit-content;">
+                        <p class="text-secondary mb-1"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
+                        <% if !timeline.personalized_name.present? && timeline.balance != nil %>
+                          <% if timeline.balance > 0 %>
+                            <div style="height: 28px;">
+                              <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
+                            </div>
+                          <% elsif timeline.balance < 0 %>
+                            <div style="height: 28px;">
+                              <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
+                            </div>
+                          <% else %>
+                            <div style="height: 28px;">
+                              <div class="badge rounded-pill bg-warning">On time</div>
+                            </div>
+                          <% end %>
                         <% else %>
-                          <div style="height: 28px;">
-                            <div class="badge rounded-pill bg-warning">On time</div>
-                          </div>
+                            <div style="height: 28px;">
+                              <div class="badge rounded-pill bg-warning">N/A</div>
+                            </div>
                         <% end %>
-                      <% else %>
-                          <div style="height: 28px;">
-                            <div class="badge rounded-pill bg-warning">N/A</div>
-                          </div>
-                      <% end %>
 
-                  </div>
+                    </div>
+                  <% end %>
                 <% end %>
-              <% end %>
-            </div>
-          <% end %>
+              </div>
+            <% end %>
 
+          </div>
         </div>
-      </div>
-    <% end %>
-  </div>
+      <% end %>
+    </div>
+  <% end %>
 </div>
 
 
