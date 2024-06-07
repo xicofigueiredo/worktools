@@ -240,7 +240,7 @@ class PagesController < ApplicationController
     date_range = earliest_start_date..Date.today
 
     absence_count = Attendance.where(user_id: user.id, attendance_date: date_range)
-              .where(absence: ['Unjustified Leave', 'Justified Leave']).count
+              .where(absence: ['Unjustified Leave', 'Justified Leave', 'Working Away']).count
 
     present_count = Attendance.where(user_id: user.id, attendance_date: date_range)
     .where(absence: 'Present').count
