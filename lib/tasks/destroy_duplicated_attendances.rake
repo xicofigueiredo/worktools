@@ -4,9 +4,9 @@ namespace :attendances do
     puts "Starting duplicate removal process..."
 
     duplicates = Attendance
-                   .select('user_id, attendance_date, COUNT(*) as count')
+                   .select('user_id, attendance_date')
                    .group('user_id, attendance_date')
-                   .having('count > 1')
+                   .having('COUNT(*) > 1')
 
     duplicates.each do |duplicate|
       user_id = duplicate.user_id

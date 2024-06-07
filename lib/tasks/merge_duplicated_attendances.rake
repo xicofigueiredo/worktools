@@ -4,9 +4,9 @@ namespace :attendances do
     puts "Starting deduplication process..."
 
     duplicates = Attendance
-                   .select('user_id, attendance_date, COUNT(*) as count')
+                   .select('user_id, attendance_date')
                    .group('user_id, attendance_date')
-                   .having('count > 1')
+                   .having('COUNT(*) > 1')
 
     duplicates.each do |duplicate|
       user_id = duplicate.user_id
@@ -27,6 +27,7 @@ namespace :attendances do
 
       records.each do |record|
         record.update!(merged_attributes)
+        puts "updated attendance: #{record.id}"
       end
     end
 
