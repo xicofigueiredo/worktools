@@ -1,6 +1,6 @@
 namespace :attendances do
   desc 'Remove duplicate attendances, keeping the first created record'
-  task remove_duplicates: :environment do
+  task destroy_duplicated_attendances: :environment do
     puts "Starting duplicate removal process..."
 
     duplicates = Attendance

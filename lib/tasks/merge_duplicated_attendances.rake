@@ -1,6 +1,6 @@
 namespace :attendances do
   desc 'Deduplicate attendances'
-  task deduplicate: :environment do
+  task merge_duplicated_attendances: :environment do
     puts "Starting deduplication process..."
 
     duplicates = Attendance
