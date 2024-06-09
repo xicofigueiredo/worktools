@@ -1,11 +1,11 @@
 <div class="container mt-3">
-  <%  current_user.hubs.each do |hub| %></h2>
+  <% hub = @selected_hub %>
     <div class="d-flex justify-content-between mb-4">
       <h2><%= hub.name %></h2>
-      <h2>Learner Count: <%=  hub.users.joins(:users_hubs).where(users: { role: 'learner' }).count  %></h2>
+      <h2>Learner Count: <%=  @users.count  %></h2>
     </div>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">
-      <% hub.users.joins(:users_hubs).where.not(users: { role: 'lc' }).each do |user| %>
+      <% @users.each do |user| %>
       <% result = 0 %>
       <% max = 0 %>
         <div class="col d-flex mb-3 px-2">
@@ -124,27 +124,26 @@
                   <% sorted_timelines = user.timelines.to_a.sort_by { |timeline| timeline.balance } %>
                   <% sorted_timelines.each do |timeline| %>
                     <div class="d-flex justify-content-between gap-2" style="height: fit-content;">
-                        <p class="text-secondary mb-1"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
-                        <% if !timeline.personalized_name.present? && timeline.balance != nil %>
-                          <% if timeline.balance > 0 %>
-                            <div style="height: 28px;">
-                              <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
-                            </div>
-                          <% elsif timeline.balance < 0 %>
-                            <div style="height: 28px;">
-                              <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
-                            </div>
-                          <% else %>
-                            <div style="height: 28px;">
-                              <div class="badge rounded-pill bg-warning">On time</div>
-                            </div>
-                          <% end %>
+                      <p class="text-secondary mb-1"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
+                      <% if !timeline.personalized_name.present? && timeline.balance != nil %>
+                        <% if timeline.balance > 0 %>
+                          <div style="height: 28px;">
+                            <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
+                          </div>
+                        <% elsif timeline.balance < 0 %>
+                          <div style="height: 28px;">
+                            <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
+                          </div>
                         <% else %>
-                            <div style="height: 28px;">
-                              <div class="badge rounded-pill bg-warning">N/A</div>
-                            </div>
+                          <div style="height: 28px;">
+                            <div class="badge rounded-pill bg-warning">On time</div>
+                          </div>
                         <% end %>
-
+                      <% else %>
+                          <div style="height: 28px;">
+                            <div class="badge rounded-pill bg-warning">N/A</div>
+                          </div>
+                      <% end %>
                     </div>
                   <% end %>
                 <% end %>
@@ -155,7 +154,6 @@
         </div>
       <% end %>
     </div>
-  <% end %>
 </div>
 
 

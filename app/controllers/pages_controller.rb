@@ -9,13 +9,26 @@ class PagesController < ApplicationController
 
   def dashboard_admin
     if current_user.role == "admin"
-      @users = User.all.order(:full_name)
       @hubs = Hub.all.order(:name)
     end
   end
 
+  def hub_selection
+    @hubs = current_user.hubs
+  end
+
   def dashboard_lc
-    @users = current_user.hubs.first.users_hub.map(&:user).reject { |user| user.role == "lc" }
+    if current_user.hubs.count > 1 && params[:hub_id].nil?
+      redirect_to dashboard_dc_path
+    end
+
+    if params[:hub_id].nil?
+      @selected_hub = current_user.hubs.first
+    else
+      @selected_hub = Hub.find_by(id: params[:hub_id])
+    end
+
+    @users = @selected_hub.users.where(role: 'learner')
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     @total_balance = {}
 
@@ -28,15 +41,14 @@ class PagesController < ApplicationController
       end
       user.topics_balance = total_balance_for_user
       user.save
-
     end
 
-    @users.sort_by! { |user| user.topics_balance }
-    @result = []
+    @users = @users.order(topics_balance: :asc)
+
   end
 
   def dashboard_dc
-    @hubs = Hub.all.order(:name)
+    @hubs = current_user.hubs
   end
 
   def profile
