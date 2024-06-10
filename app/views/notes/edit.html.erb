@@ -7,7 +7,8 @@
           <%= link_to 'X', '#', data: {
               controller: "modals",
               action: "modals#close"
-            }, class: "btn btn-secondary" %>
+            }, class: "btn btn-secondary",
+            style: "border-radius: 10px;" %>
         </div>
       </div>
 
@@ -23,7 +24,8 @@
             <%= f.select :category, ['Behaviour', 'Knowledge', 'Skills & Community', 'Parents'], {}, { class: 'form-control' } %>
           </div>
 
-          <%= f.input :topic %>
+          <%= f.label :topic %>
+          <%= f.text_area :topic, class: 'form-control', rows: 3 %>
 
           <%= f.label :follow_up_action %>
           <%= f.text_area :follow_up_action, class: 'form-control', rows: 3 %>
@@ -31,14 +33,14 @@
         </div>
 
         <div class="form-actions pt-2">
-          <%= f.button :submit, class: 'btn btn-primary' %>
+          <%= f.button :submit, class: 'btn btn-primary', style: "border-radius: 10px;" %>
         </div>
       <% end %>
 
       <div class="d-flex justify-content-end">
         <%= form_with url: user_note_path(@learner, @note), method: :delete do %>
           <div style="margin-top: -38px">
-            <%= submit_tag 'Delete Note', data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+            <%= submit_tag 'Delete Note', data: { confirm: 'Are you sure?' }, class: 'btn btn-danger text-white', style: "border-radius: 10px;" %>
           </div>
         <% end %>
       </div>

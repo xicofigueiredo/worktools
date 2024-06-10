@@ -1,0 +1,23 @@
+.lp-notes-category-width {
+  width: 12%;
+
+  @media (max-width: 1024px) {
+    width: 16%;
+  }
+}
+
+.lp-notes-topic-width {
+  width: 48%;
+
+  @media (max-width: 1024px) {
+    width: 36%;
+  }
+}
+
+.lp-notes-status-width {
+  width: 12%;
+
+  @media (max-width: 1024px) {
+    width: 18%;
+  }
+}
