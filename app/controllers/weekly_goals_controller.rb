@@ -141,8 +141,8 @@ class WeeklyGoalsController < ApplicationController
     @topics = Topic.joins(:subject)
                   .joins(:user_topics)
                   .where(user_topics: { user_id: current_user.id, done: false })
-                  .select('topics.id, topics.name, user_topics.deadline, topics.unit, subjects.category as subject_category')
-                  .order('user_topics.deadline ASC')
+                  .select('topics.id, topics.name, topics.order, topics.unit, subjects.category as subject_category')
+                  .order('topics.order')
     @topic_names = @topics.map do |topic|
       if topic.subject_category == 'lws'
         "#{topic.unit} - #{topic.name}"
