@@ -5,6 +5,7 @@
     <h4><%= @learner.full_name %>'s Profile</h4>
   </div>
 
+  <%# Card Section %>
   <div>
     <%= render 'pages/partials/cards' %>
   </div>
@@ -15,57 +16,10 @@
     <%= render 'pages/partials/sprint_overview' %>
   </div>
 
-  <div class="mb-3">
-    <h2>Notes</h2>
-    <p>Create and save your notes below</p>
-    <div class="card mb-2 shadow-sm" style="border-radius: 10px">
-      <div class="px-2">
-        <table class="table">
-          <thead>
-            <tr style="display: table; width: 100%; table-layout: fixed;">
-              <th class="lp-notes-category-width">Category</th>
-              <th class="lp-notes-topic-width">Topic</th>
-              <th>Follow-up Action</th>
-              <th class="lp-notes-status-width">Status</th>
-              <th style="width: 50px;">Edit</th>
-            </tr>
-          </thead>
-          <tbody style="display: block; max-height: 400px; overflow: auto;">
-            <% if @notes.exists? %>
-              <% @notes.each do |note| %>
-              <tr style="display: table; width: 100%; table-layout: fixed;">
-                <td class="lp-notes-category-width">
-                  <p class="mb-2"><%= note.category %></p>
-                  <p><%= note.date.strftime("%d/%m/%Y") %></p>
-                </td>
-                <td class="lp-notes-topic-width"><%= note.topic %></td>
-                <td style="max-width: 250px;"><%= note.follow_up_action %></td>
-                <td class="lp-notes-status-width">
-                  <%= form_with model: [note.user, note], remote: true do |f| %>
-                    <%= f.select :status, ['Not Done', 'In Progress', 'Completed'], {}, { onchange: "this.form.submit();" } %>
-                  <% end %>
-                </td>
-                <td style="width: 50px;">
-                  <%= link_to edit_user_note_path(@learner, note), data: { turbo_frame: "modal" } do %>
-                    <i class="fa-solid fa-pencil"></i>
-                  <% end %>
-                </td>
-              </tr>
-              <% end %>
-            <% else %>
-            <td colspan="6">
-              <div class="text-center py-5">
-                <h2>No Notes available...</h2>
-              </div>
-            </td>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div style="width: 100%" class="d-flex justify-content-end">
-      <%= link_to 'Create New Note', new_user_note_path(@learner), data: { turbo_frame: "modal" }, class: 'btn btn-primary', style: 'border-radius: 10px;' %>
-    </div>
+  <h2>Notes</h2>
+  <p>Create and save your notes below</p>
+  <div>
+    <%= render 'pages/partials/notes' %>
   </div>
 
   <h2>Knowledge</h2>
