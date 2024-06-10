@@ -1,5 +1,5 @@
-require '/Users/xico/code/xicofigueiredo/worktools/app/controllers/concerns/working_days_and_holidays'
-require '/Users/xico/code/xicofigueiredo/worktools/app/controllers/concerns/generate_topic_deadlines'
+require './app/controllers/concerns/working_days_and_holidays'
+require './app/controllers/concerns/generate_topic_deadlines'
 # lib/tasks/simulate_update.rake
 
 class TimelineUpdater
