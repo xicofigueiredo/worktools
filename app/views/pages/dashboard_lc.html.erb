@@ -22,6 +22,9 @@
                       <div class="text-center">
                         <% if user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)).present?
                             sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
+                              if sg.knowledges.count < 1 || sg.skills.count < 1 || sg.communities.count < 1
+                                result = 1
+                              end
                               sg.knowledges.each do |knowledge|
                               max +=1
                                 if knowledge.difficulties != '' && knowledge.plan != ''
@@ -66,7 +69,7 @@
                               end
                             end
                           %>
-                          <% if count >= 13 %>
+                          <% if count >= 1 %>
                             <i class="fa-solid fa-check text-success"></i>
                           <% else %>
                             <i class="fa-solid fa-x text-danger"></i>
