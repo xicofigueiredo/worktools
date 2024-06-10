@@ -184,23 +184,24 @@
         <table class="table">
           <thead>
             <tr style="display: table; width: 100%; table-layout: fixed;">
-              <th>Category</th>
-              <th>Topic</th>
-              <th style="width: 120px;">Date</th>
+              <th class="lp-notes-category-width">Category</th>
+              <th class="lp-notes-topic-width">Topic</th>
               <th>Follow-up Action</th>
-              <th>Status</th>
+              <th class="lp-notes-status-width">Status</th>
               <th style="width: 50px;">Edit</th>
             </tr>
           </thead>
-          <tbody style="display: block; max-height: 200px; overflow: auto;">
+          <tbody style="display: block; max-height: 400px; overflow: auto;">
             <% if @notes.exists? %>
               <% @notes.each do |note| %>
               <tr style="display: table; width: 100%; table-layout: fixed;">
-                <td><%= note.category %></td>
-                <td><%= note.topic %></td>
-                <td style="width: 120px;"><%= note.date.strftime("%d/%m/%Y") %></td>
+                <td class="lp-notes-category-width">
+                  <p class="mb-2"><%= note.category %></p>
+                  <p><%= note.date.strftime("%d/%m/%Y") %></p>
+                </td>
+                <td class="lp-notes-topic-width"><%= note.topic %></td>
                 <td style="max-width: 250px;"><%= note.follow_up_action %></td>
-                <td>
+                <td class="lp-notes-status-width">
                   <%= form_with model: [note.user, note], remote: true do |f| %>
                     <%= f.select :status, ['Not Done', 'In Progress', 'Completed'], {}, { onchange: "this.form.submit();" } %>
                   <% end %>
