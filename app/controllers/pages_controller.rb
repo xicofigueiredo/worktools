@@ -113,6 +113,7 @@ class PagesController < ApplicationController
     @skills = @sprint_goals&.skills
     @communities = @sprint_goals&.communities
     @hub_lcs = @learner.hubs.first.users.where(role: 'lc')
+    @holidays = @learner.holidays
 
     @yearly_presence = calc_yearly_presence(@learner)
 

@@ -5,175 +5,14 @@
     <h4><%= @learner.full_name %>'s Profile</h4>
   </div>
 
-  <div class="d-flex row gap-3 mb-5">
-    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-      <p><%= Date.today.strftime("%Y")%> Presence: <%= @yearly_presence %>%</p>
-      <p>Hub: <%= @learner.hubs.first.name %></p>
-      <p>Email: <%= @learner.email %></p>
-      <% @hub_lcs.first(2).each do |lc| %>
-        <p>LC: <%= lc.full_name %></p>
-      <% end %>
-    </div>
-    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-      <% @average_items.each do |average_item| %>
-        <div class="d-flex justify-content-between">
-          <p><%= average_item[:title] %></p>
-          <p><%= average_item[:average] %></p>
-        </div>
-      <% end %>
-    </div>
-    <%# FIXME add dynamic numbers when attendance is ready %>
-    <%# <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-      <div class="d-flex justify-content-between">
-        <p>Attendance</p>
-        <p>80%</p>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Weekly Meetings</p>
-        <p>80%</p>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Average Progress</p>
-        <p>50%</p>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Progress/Week</p>
-        <p>2%</p>
-      </div>
-    </div> %>
-    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-      <%= form_with(model: @learner_flag, local: true) do |form| %>
-        <div class="d-flex justify-content-between align-items-center">
-          <p>Asks for Help</p>
-          <%= form.check_box :asks_for_help, onchange: "this.form.submit();" %>
-        </div>
-        <div class="d-flex justify-content-between">
-          <p>Takes notes</p>
-          <%= form.check_box :takes_notes, onchange: "this.form.submit();" %>
-        </div>
-        <div class="d-flex justify-content-between">
-          <p>Goes to live lessons?</p>
-          <%= form.check_box :goes_to_live_lessons, onchange: "this.form.submit();" %>
-        </div>
-        <div class="d-flex justify-content-between">
-          <p>Does Peer to Peer?</p>
-          <%= form.check_box :does_p2p, onchange: "this.form.submit();" %>
-        </div>
-        <div class="d-flex justify-content-between">
-          <p>Life Experiences</p>
-          <%= form.check_box :life_experiences, onchange: "this.form.submit();" %>
-        </div>
-      <% end %>
-    </div>
-    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-      <div class="d-flex justify-content-between">
-        <p>Action Plan</p>
-        <%= link_to edit_learner_flag_path(@learner_flag), data: { turbo_frame: "modal" } do %>
-          <i class="fa-solid fa-pencil"></i>
-        <% end %>
-      </div>
-      <p><%= @learner_flag.action_plan %></p>
-    </div>
+  <div>
+    <%= render 'pages/partials/cards' %>
   </div>
 
-  <div class="mb-5">
-    <h2>Sprint Overview</h2>
-    <p>Keep track of your learner below.</p>
-    <div class="card mb-2 shadow-sm px-2" style="border-radius: 10px">
-      <div class="px-2 overflow-auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th></th>
-              <% @current_sprint_weeks.each do |week| %>
-                <th style="vertical-align: middle;">
-                  <div class="d-flex">
-                    <% if week.name.include?("Build") %>
-                      <%= week.week_name_abbr %>
-                      <p style="font-size: 10px; margin-bottom: -1;">BW</p>
-                    <% else %>
-                      <div style="margin-bottom: 3px"><%= week.week_name_abbr %></div>
-                    <% end %>
-                  </div>
-                </th>
-              <% end %>
-              <th>
-                Overall
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Weekly Goals</td>
-              <% @current_sprint_weeks.each do |week| %>
-                <% if week.weekly_goals.where(user: @learner).exists? %>
-                  <% if week.start_date <= Date.today %>
-                    <td class="text-success"><i class="fa-regular fa-circle-check"></i></td>
-                  <% else %>
-                    <td></td>
-                  <% end %>
-                <% else %>
-                  <% if week.start_date <= Date.today %>
-                    <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
-                  <% else %>
-                    <td></td>
-                  <% end %>
-                <% end %>
-              <% end %>
-              <td><%= @weekly_goals_percentage %>%</td>
-            </tr>
-            <tr>
-              <td>KDAs</td>
-              <% @current_sprint_weeks.each do |week| %>
-                <% if week.kdas.where(user: @learner).exists? %>
-                  <% if week.start_date <= Date.today %>
-                    <td class="text-success"><i class="fa-regular fa-circle-check"></i></td>
-                  <% else %>
-                    <td></td>
-                  <% end %>
-                <% else %>
-                  <% if week.start_date <= Date.today %>
-                    <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
-                  <% else %>
-                    <td></td>
-                  <% end %>
-                <% end %>
-              <% end %>
-              <td><%= @kdas_percentage %>%</td>
-            </tr>
-            <tr>
-              <td>Unjustified Absences</td>
-              <% @current_sprint_weeks.each do |week| %>
-                <% if week.start_date <= Date.today %>
-                  <td><%= week.count_absences(@learner) %></td>
-                <% else %>
-                  <td></td>
-                <% end %>
-              <% end %>
-              <td><%= @current_sprint.count_absences(@learner) %></td>
-            </tr>
-            <tr>
-              <td>Weekly Progress</td>
-              <% @current_sprint_weeks.each do |week| %>
-                <td>
-                  <% relative_progress = week.calc_relative_average_timeline_progress(@learner) %>
-                  <%# FIXME The logic below is temporary to hide initial
-                      progress without previous week progress.
-                      Logic can be removed after Sprint 3
-                  %>
-                  <% if relative_progress > 10 || relative_progress < 0 %>
-                    N/A
-                  <% else %>
-                    <%= "#{relative_progress}%" %>
-                  <% end %>
-                </td>
-              <% end %>
-              <td><%= @current_sprint.count_weekly_progress_average(@learner) %>%</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+  <h2>Sprint Overview</h2>
+  <p>Keep track of your learner below.</p>
+  <div>
+    <%= render 'pages/partials/sprint_overview' %>
   </div>
 
   <div class="mb-3">
@@ -231,242 +70,32 @@
 
   <h2>Knowledge</h2>
   <p>Check your academic goals below</p>
-
-  <div class="accordion mb-5" id="parentAccordion">
-    <% @timelines.each_with_index do |timeline, index| %>
-      <% is_lws = timeline.subject.category&.include?("lws")%>
-      <div>
-        <h2>
-          <div class="d-flex">
-            <%# Timeline Header %>
-            <div class="col-12">
-              <div class="card shadow-sm p-2" style="border-radius: 10px;">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <h5 style="vertical-align: middle; width: 150px">
-                    <%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
-                  </h5>
-
-                  <div>
-                    <p class="mb-1" style="color: gray; font-size: 16px;">Exam Season: </p>
-                      <% if timeline.exam_date.present? %>
-                        <% if timeline.exam_date.date.month == 5 || timeline.exam_date.date.month == 6 %>
-                          <p style="font-size: 16px;">May/Jun <%= timeline.exam_date.date.strftime("%Y") %></p>
-                        <% elsif timeline.exam_date.date.month == 10 || timeline.exam_date.date.month == 11 %>
-                          <p style="font-size: 16px;">Oct/Nov <%= timeline.exam_date.date.strftime("%Y") %></p>
-                        <% else %>
-                          <%= timeline.exam_date.date.strftime("%B %Y") %>
-                        <% end %>
-                      <% else %>
-                        <p style="font-size: 16px;" class="mb-1">N/A</p>
-                      <% end %>
-                  </div>
-
-                  <div class="d-flex gap-3">
-                    <div>
-                      <p class="mb-1" style="color: gray; font-size: 16px;">Mock 50%: </p>
-                      <p class="mb-1" style="font-size: 16px;">
-                        <% if timeline.mock50 != nil %>
-                          <%= timeline.mock50.strftime("%d/%m/%Y") %>
-                        <% else %>
-                          N/A
-                        <% end %>
-                      </p>
-                    </div>
-                    <div>
-                      <p class="mb-1" style="color: gray; font-size: 16px;">Mock 100%: </p>
-                      <p class="mb-1" style="font-size: 16px;">
-                        <% if timeline.mock100 != nil %>
-                          <%= timeline.mock100.strftime("%d/%m/%Y") %>
-                        <% else %>
-                          N/A
-                        <% end %>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div class="d-flex gap-3">
-                    <div>
-                      <p class="mb-1" style="color: gray; font-size: 16px;">Start Date: </p>
-                      <p class="mb-1" style="font-size: 16px;">
-                        <%= timeline.start_date.strftime("%d/%m/%Y") %>
-                      </p>
-                    </div>
-                    <div>
-                      <p class="mb-1" style="color: gray; font-size: 16px;">End Date: </p>
-                      <p class="mb-1" style="font-size: 16px;">
-                        <%= timeline.end_date.strftime("%d/%m/%Y") %>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div style="margin-block: auto;">
-                    <button class="accordion-button" style="border-radius: 10px; padding: 0.5rem;" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<%= index %>" aria-expanded="false" aria-controls="collapse<%= index %>">
-                    </button>
-                  </div>
-                </div>
-                <% unless timeline.expected_progress.nil? %>
-                  <% if timeline.progress > timeline.expected_progress%>
-                    <div style="background-color: rgb(220,220,220); border-radius: 10px; height: 15px; font-size: 12px;" class="d-flex">
-                      <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.expected_progress %>%; border-radius: 10px 0 0 10px;" aria-valuenow="<%= timeline.expected_progress %>" aria-valuemin="0" aria-valuemax="100">
-                        <span class="progress-text text-white"><%= timeline.expected_progress %>%</span>
-                      </div>
-                      <div class="progress-bar bg-success text-white" role="progressbar" style="width: <%= timeline.progress - timeline.expected_progress %>%; border-radius: <%= timeline.progress == 0 ? '10px' :  '0 10px 10px 0'%>;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
-                        <%= timeline.progress - timeline.expected_progress %>%
-                      </div>
-                    </div>
-                  <% elsif timeline.progress < timeline.expected_progress%>
-                    <div style="background-color: rgb(220,220,220); border-radius: 10px; height: 15px; font-size: 12px;" class="d-flex">
-                      <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.progress %>%; border-radius: 10px 0 0 10px;" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
-                        <span class="progress-text text-white"><%= timeline.progress %>%</span>
-                      </div>
-                      <div class="progress-bar bg-danger text-white" role="progressbar" style="width: <%= timeline.expected_progress - timeline.progress %>%; border-radius: <%= timeline.progress == 0 ? '10px' :  '0 10px 10px 0'%>;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
-                        <%= timeline.expected_progress - timeline.progress %>%
-                      </div>
-                    </div>
-                  <% else %>
-                    <div style="background-color: rgb(220,220,220); border-radius: 10px; height: 15px; font-size: 12px;">
-                      <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.progress%>%; border-radius: 10px;" aria-valuenow="<%= timeline.progress%>" aria-valuemin="0" aria-valuemax="100">
-                        <span class="progress-text text-white"><%= timeline.progress %>%</span>
-                      </div>
-                    </div>
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </h2>
-        <div id="collapse<%= index %>" class="accordion-collapse collapse" aria-labelledby="heading<%= index %>" data-bs-parent="#parentAccordion">
-          <div class="accordion-body p-2">
-            <div class="card shadow-sm px-2" style="border-radius: 10px;">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th><%= is_lws ? 'Project' : 'Unit' %></th>
-                    <th>Topic</th>
-                    <% if !is_lws %>
-                      <th>Hours</th>
-                      <th width = "120px" >Date</th>
-                    <% end %>
-                    <th>Done</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% previous_unit = nil %>
-                  <% timeline.subject.topics.order(:order, id: :asc).each_with_index do |topic, index| %>
-                    <% user_topic = @learner.user_topics.find_or_initialize_by(topic: topic) %>
-                    <% subject_category = topic.subject.category %>
-                    <% background_color = if !user_topic.done && user_topic.deadline && user_topic.deadline < Date.today && !['lws8', 'lws9'].include?(subject_category)
-                        'background-color: lightcoral;'
-                      elsif !user_topic.done && user_topic.deadline && Date.today.monday < user_topic.deadline && user_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws8', 'lws9'].include?(subject_category)
-                        'background-color: lightgrey;'
-                      elsif user_topic.done
-                        'background-color: lightgreen;'
-                      else
-                        ''
-                      end
-                    %>
-
-                    <tr style="<%= background_color %>">
-                      <td>
-                        <% if topic.unit != previous_unit %>
-                          <%= topic.unit %>
-                          <% previous_unit = topic.unit %>
-                        <% end %>
-                      </td>
-                      <td style="<%= background_color %>"><%= topic.name %></td>
-                      <% if !user_topic.deadline.nil? %>
-                        <% if !is_lws%>
-                          <td style="<%= background_color %>"><%= topic.time %></td>
-                          <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
-                        <% else %>
-                          <td style="<%= background_color %>"><%= topic.time %></td>
-                        <% end %>
-                      <% else %>
-                        <td style="<%= background_color %>"><%= topic.time %></td>
-                      <% end %>
-                      <td style="<%= background_color %>">
-                        <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
-                          <%= form_with model: user_topic, url: timeline_path(timeline), method: :patch, local: true do |form| %>
-                            <div class="form-check">
-                              <%= form.check_box :done, class: "form-check-input",
-                                                      data: {
-                                                        action: "change->toggle-done#toggle",
-                                                        toggle_done_target: "checkbox",
-                                                        user_topic_id: user_topic.id,
-                                                        timeline_id: timeline.id
-                                                      } %>
-                            </div>
-                          <% end %>
-                        </div>
-                      </td>
-                      <% (user_topic.calculate_percentage * 100).round(3)%>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    <% end %>
+  <div>
+    <%= render 'pages/partials/knowledges' %>
   </div>
 
 
 
   <h2>Weekly Goals</h2>
   <div>
-    <%= render 'weekly_goals',
+    <%= render 'pages/partials/weekly_goals',
         weekly_goal: @weekly_goal,
         current_week: @current_week,
         learner: @learner,
         current_date: @current_weekly_goal_date %>
   </div>
 
+  <h2>Holidays</h2>
+  <div>
+    <%= render 'pages/partials/holidays',
+        holidays: @holidays %>
+  </div>
+
 
   <h2>Skills & Community</h2>
   <p>Check your skills and community goals for the sprint below.</p>
-  <div class="card mb-5" style="border-radius: 10px">
-    <div class="px-2">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Activity</th>
-            <th>Your Goals for this Activity</th>
-            <th>The challenges you might encounter.</th>
-            <th>The plan to overcome the challenges</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if @skills && @communities %>
-            <% @skills.each do |skill| %>
-              <tr>
-                <td><%= skill.extracurricular %></td>
-                <td><%= skill.smartgoals %></td>
-                <td><%= skill.difficulties %></td>
-                <td><%= skill.plan %></td>
-              </tr>
-            <% end %>
-            <% @communities.each do |community| %>
-              <tr>
-                <td><%= community.involved %></td>
-                <td><%= community.smartgoals %></td>
-                <td><%= community.difficulties %></td>
-                <td><%= community.plan %></td>
-              </tr>
-            <% end %>
-          <% else %>
-            <tr>
-              <td colspan="4">
-                <div class="text-center py-5">
-                  <h2>No Sprint Goals yet...</h2>
-                  <p>Please help <%= @learner.full_name %> fill out their sprint goals.</p>
-                </div>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+  <div>
+    <%= render 'pages/partials/skills_and_communities' %>
   </div>
 
 </div>

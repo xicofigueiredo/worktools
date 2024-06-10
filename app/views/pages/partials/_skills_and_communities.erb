@@ -1,0 +1,43 @@
+<div class="card mb-5" style="border-radius: 10px">
+  <div class="px-2">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Activity</th>
+          <th>Your Goals for this Activity</th>
+          <th>The challenges you might encounter.</th>
+          <th>The plan to overcome the challenges</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @skills && @communities %>
+          <% @skills.each do |skill| %>
+            <tr>
+              <td><%= skill.extracurricular %></td>
+              <td><%= skill.smartgoals %></td>
+              <td><%= skill.difficulties %></td>
+              <td><%= skill.plan %></td>
+            </tr>
+          <% end %>
+          <% @communities.each do |community| %>
+            <tr>
+              <td><%= community.involved %></td>
+              <td><%= community.smartgoals %></td>
+              <td><%= community.difficulties %></td>
+              <td><%= community.plan %></td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="4">
+              <div class="text-center py-5">
+                <h2>No Sprint Goals yet...</h2>
+                <p>Please help <%= @learner.full_name %> fill out their sprint goals.</p>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
