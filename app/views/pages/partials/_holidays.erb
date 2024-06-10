@@ -1,43 +1,42 @@
  <div class="card mb-5" style="border-radius: 10px">
-    <div class="px-2">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Holiday Name</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if holidays %>
-            <% holidays.each do |holiday| %>
-              <% today = Date.today %>
-              <tr>
-                <td><%= holiday.name  %></td>
-                <td><%= holiday.start_date.strftime('%d-%m-%Y') %></td>
-                <td><%= holiday.end_date.strftime('%d-%m-%Y') %></td>
-                <td>
-                  <% if holiday.start_date > today %>
-                    <span class="badge text-bg-success text-white" style="width: 74px; border-radius: 10px">upcoming</span>
-                  <% elsif holiday.end_date < today %>
-                    <span class="badge text-bg-secondary" style="width: 74px; border-radius: 10px">passed</span>
-                  <% else %>
-                    <span class="badge text-bg-primary" style="width: 74px; border-radius: 10px">ongoing</span>
-                  <% end %>
-                </td>
-              </tr>
-            <% end %>
-          <% else %>
+  <div class="px-2">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Holiday Name</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if holidays.length > 0 %>
+          <% holidays.each do |holiday| %>
+            <% today = Date.today %>
             <tr>
-              <td colspan="4">
-                <div class="text-center py-5">
-                  <h2>Learner has no holidays</h2>
-                </div>
+              <td><%= holiday.name  %></td>
+              <td><%= holiday.start_date.strftime('%d-%m-%Y') %></td>
+              <td><%= holiday.end_date.strftime('%d-%m-%Y') %></td>
+              <td>
+                <% if holiday.start_date > today %>
+                  <span class="badge text-bg-success text-white" style="width: 74px; border-radius: 10px">upcoming</span>
+                <% elsif holiday.end_date < today %>
+                  <span class="badge text-bg-secondary" style="width: 74px; border-radius: 10px">passed</span>
+                <% else %>
+                  <span class="badge text-bg-primary" style="width: 74px; border-radius: 10px">ongoing</span>
+                <% end %>
               </td>
             </tr>
           <% end %>
-        </tbody>
-      </table>
-    </div>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if holidays.length == 0 %>
+      <div class="text-center py-5">
+        <h2>Learner has no holidays...</h2>
+      </div>
+    <% end %>
+
   </div>
+</div>

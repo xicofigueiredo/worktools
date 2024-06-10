@@ -36,9 +36,13 @@
           <% end %>
         </tbody>
       </table>
-      <div class="text-center py-5">
-        <h2>No Notes available...</h2>
-      </div>
+      <% if !@notes.exists? %>
+        <div class="text-center py-5">
+          <h2>No Notes available...</h2>
+          <p>Click on 'Create New Note' to create a new note</p>
+        </div>
+      <% end %>
+
     </div>
   </div>
   <div style="width: 100%" class="d-flex justify-content-end">

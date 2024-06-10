@@ -10,34 +10,29 @@
         </tr>
       </thead>
       <tbody>
-        <% if @skills && @communities %>
-          <% @skills.each do |skill| %>
-            <tr>
-              <td><%= skill.extracurricular %></td>
-              <td><%= skill.smartgoals %></td>
-              <td><%= skill.difficulties %></td>
-              <td><%= skill.plan %></td>
-            </tr>
-          <% end %>
-          <% @communities.each do |community| %>
-            <tr>
-              <td><%= community.involved %></td>
-              <td><%= community.smartgoals %></td>
-              <td><%= community.difficulties %></td>
-              <td><%= community.plan %></td>
-            </tr>
-          <% end %>
-        <% else %>
+        <% @skills&.each do |skill| %>
           <tr>
-            <td colspan="4">
-              <div class="text-center py-5">
-                <h2>No Sprint Goals yet...</h2>
-                <p>Please help <%= @learner.full_name %> fill out their sprint goals.</p>
-              </div>
-            </td>
+            <td><%= skill.extracurricular %></td>
+            <td><%= skill.smartgoals %></td>
+            <td><%= skill.difficulties %></td>
+            <td><%= skill.plan %></td>
+          </tr>
+        <% end %>
+        <% @communities&.each do |community| %>
+          <tr>
+            <td><%= community.involved %></td>
+            <td><%= community.smartgoals %></td>
+            <td><%= community.difficulties %></td>
+            <td><%= community.plan %></td>
           </tr>
         <% end %>
       </tbody>
     </table>
+    <% if @skills.empty? && @communities.empty? %>
+      <div class="text-center py-5">
+        <h2>No Skills or Community Goals yet...</h2>
+        <p>Please help <%= @learner.full_name %> fill out their Skills and Community goals</p>
+      </div>
+    <% end %>
   </div>
 </div>
