@@ -25,7 +25,6 @@ ActiveRecord::Schema[7.0].define(version: 2024_06_11_180427) do
     t.datetime "updated_at", null: false
     t.string "absence"
     t.index ["user_id", "attendance_date"], name: "index_attendances_on_user_id_and_attendance_date", unique: true
-    t.index ["user_id", "attendance_date"], name: "index_attendances_on_user_id_and_attendance_date", unique: true
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
