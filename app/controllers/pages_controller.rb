@@ -113,6 +113,7 @@ class PagesController < ApplicationController
     @skills = @sprint_goals&.skills
     @communities = @sprint_goals&.communities
     @hub_lcs = @learner.hubs.first.users.where(role: 'lc')
+    @holidays = @learner.holidays
 
     @yearly_presence = calc_yearly_presence(@learner)
 
@@ -165,7 +166,7 @@ class PagesController < ApplicationController
   def update_weekly_goal(weekly_goal, week, learner, date)
     render turbo_stream:
       turbo_stream.replace("lp_weekly_goal",
-                            partial: "pages/weekly_goals",
+                            partial: "pages/partials/weekly_goals",
                             locals: {weekly_goal: weekly_goal,
                                     current_week: week,
                                     learner: learner,
