@@ -28,7 +28,7 @@
         <% end %>
       </tbody>
     </table>
-    <% if @skills.empty? && @communities.empty? %>
+    <% if (@skills.nil? || @skills.empty?) && (@communities.nil? || @communities.empty?) %>
       <div class="text-center py-5">
         <h2>No Skills or Community Goals yet...</h2>
         <p>Please help <%= @learner.full_name %> fill out their Skills and Community goals</p>
