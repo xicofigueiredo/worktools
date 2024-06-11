@@ -1,5 +1,8 @@
 <!-- app/views/pages/hub_selection.html.erb -->
 <div class="container mt-5">
+  <div class="d-flex justify-content-center">
+    <h2>Check Your Hubs Here!</h2>
+  </div>
   <% @hubs.each_slice(3) do |hubs_slice| %>
     <div class="row"> <!-- Start a new row for every slice of 3 hubs -->
       <% hubs_slice.each do |hub| %>
