@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_06_10_180856) do
+ActiveRecord::Schema[7.0].define(version: 2024_06_11_180427) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -24,6 +24,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_06_10_180856) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "absence"
+    t.index ["user_id", "attendance_date"], name: "index_attendances_on_user_id_and_attendance_date", unique: true
     t.index ["user_id", "attendance_date"], name: "index_attendances_on_user_id_and_attendance_date", unique: true
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
@@ -379,6 +380,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_06_10_180856) do
     t.date "start_date"
     t.date "end_date"
     t.bigint "week_id"
+    t.index ["user_id", "week_id"], name: "index_weekly_goals_on_user_id_and_week_id", unique: true
     t.index ["user_id"], name: "index_weekly_goals_on_user_id"
     t.index ["week_id"], name: "index_weekly_goals_on_week_id"
   end
