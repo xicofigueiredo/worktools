@@ -53,7 +53,10 @@
         </div>
         <div style="margin-right: 130px;">
           <% if @has_lws %>
-              <h5 class="mb-0" style="margin-top: 12px">Blocks per day: <%= (@total_blocks_per_day * 1.2).round(1)  %></h5>
+              <div class="flex">
+                <h5 class="mb-0" style="margin-top: 12px">Blocks per day: <%= (@total_blocks_per_day * 1.2).round(1)  %></h5>
+                <h5 class="mb-0" style="margin-top: 12px">Total Hours: <%= (@total_remaining_hours).round(1)  %></h5>
+              </div>
           <% end %>
         </div>
         <div>

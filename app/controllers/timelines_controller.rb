@@ -17,6 +17,7 @@ class TimelinesController < ApplicationController
     @timelines = current_user.timelines_sorted_by_balance
     @has_lws = false
     @total_blocks_per_day = 0
+    @total_remaining_hours = 0
     @timelines.each do |timeline|
       unless timeline.personalized_name
         # generate_topic_deadlines(timeline) --- this is needed when holidays update/create
@@ -27,6 +28,9 @@ class TimelinesController < ApplicationController
           blocks_per_day = remaining_topics.to_f / remaining_days.count
           @total_blocks_per_day += blocks_per_day
           @has_lws = true
+        else
+          remaining_hours_count = calc_remaining_timeline_hours(timeline)
+          @total_remaining_hours += remaining_hours_count
         end
         timeline.calculate_total_time
         timeline.save

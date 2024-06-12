@@ -54,4 +54,18 @@ module ProgressCalculations
 
     remaining_topics_count
   end
+
+  def calc_remaining_timeline_hours(timeline)
+    topics = timeline.subject.topics
+    remaining_hours_count = 0
+
+    topics.each do |topic|
+      user_topic = current_user.user_topics.find_by(topic_id: topic.id)
+      if user_topic && !user_topic.done
+        remaining_hours_count += topic.time
+      end
+    end
+    remaining_hours_count
+
+  end
 end
