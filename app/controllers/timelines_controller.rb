@@ -17,7 +17,8 @@ class TimelinesController < ApplicationController
     @timelines = current_user.timelines_sorted_by_balance
     @has_lws = false
     @total_blocks_per_day = 0
-    @total_remaining_hours = 0
+    @total_hours_per_week = 0
+    weekly_percentages = []
     @timelines.each do |timeline|
       unless timeline.personalized_name
         # generate_topic_deadlines(timeline) --- this is needed when holidays update/create
@@ -29,13 +30,22 @@ class TimelinesController < ApplicationController
           @total_blocks_per_day += blocks_per_day
           @has_lws = true
         else
-          remaining_hours_count = calc_remaining_timeline_hours(timeline)
-          @total_remaining_hours += remaining_hours_count
+          remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours(timeline)
+          remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
+                              .where.not("name LIKE ?", "%Build Week%").count
+
+          @total_hours_per_week += remaining_hours_count / remaining_weeks_count
+
+          weekly_percentages.push((remaining_percentage / remaining_weeks_count * 100).round(2))
+
+
         end
         timeline.calculate_total_time
         timeline.save
       end
     end
+
+    @average_weekly_percentage = calc_array_average(weekly_percentages).round(1)
 
     calculate_progress_and_balance(@timelines)
 

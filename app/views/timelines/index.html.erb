@@ -55,8 +55,9 @@
           <% if @has_lws %>
               <div class="flex">
                 <h5 class="mb-0" style="margin-top: 12px">Blocks per day: <%= (@total_blocks_per_day * 1.2).round(1)  %></h5>
-                <h5 class="mb-0" style="margin-top: 12px">Total Hours: <%= (@total_remaining_hours).round(1)  %></h5>
               </div>
+          <% else %>
+              <h5 class="mb-0" style="margin-top: 12px">Expected weekly progress: <%= @average_weekly_percentage %>% / <%= (@total_hours_per_week).round() %>h</h5>
           <% end %>
         </div>
         <div>

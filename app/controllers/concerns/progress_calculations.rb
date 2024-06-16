@@ -58,14 +58,21 @@ module ProgressCalculations
   def calc_remaining_timeline_hours(timeline)
     topics = timeline.subject.topics
     remaining_hours_count = 0
+    remaining_percentage = 0
 
     topics.each do |topic|
       user_topic = current_user.user_topics.find_by(topic_id: topic.id)
       if user_topic && !user_topic.done
         remaining_hours_count += topic.time
+        remaining_percentage += user_topic.percentage
       end
     end
-    remaining_hours_count
 
+    [remaining_hours_count, remaining_percentage]
+
+  end
+
+  def calc_array_average(array)
+    array.inject{ |sum, el| sum + el }.to_f / array.size
   end
 end
