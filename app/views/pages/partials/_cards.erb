@@ -3,7 +3,7 @@
     <p><%= Date.today.strftime("%Y")%> Presence: <%= @yearly_presence %>%</p>
     <p>Hub: <%= @learner.hubs.first.name %></p>
     <p>Email: <%= @learner.email %></p>
-    <% @hub_lcs.first(2).each do |lc| %>
+    <% @hub_lcs.each do |lc| %>
       <p>LC: <%= lc.full_name %></p>
     <% end %>
   </div>
