@@ -30,7 +30,7 @@ class TimelinesController < ApplicationController
           @total_blocks_per_day += blocks_per_day
           @has_lws = true
         else
-          remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours(timeline)
+          remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours_and_percentage(timeline)
           remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
                               .where.not("name LIKE ?", "%Build Week%").count
 

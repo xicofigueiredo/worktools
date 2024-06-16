@@ -51,13 +51,15 @@
             <h2>Timelines</h2>
           <p>Create your Timelines here</p>
         </div>
-        <div style="margin-right: 130px;">
+        <div>
           <% if @has_lws %>
-              <div class="flex">
+              <div style="margin-right: 130px;">
                 <h5 class="mb-0" style="margin-top: 12px">Blocks per day: <%= (@total_blocks_per_day * 1.2).round(1)  %></h5>
               </div>
           <% else %>
+            <div >
               <h5 class="mb-0" style="margin-top: 12px">Expected weekly progress: <%= @average_weekly_percentage %>% / <%= (@total_hours_per_week).round() %>h</h5>
+            </div>
           <% end %>
         </div>
         <div>

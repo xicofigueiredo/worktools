@@ -55,7 +55,7 @@ module ProgressCalculations
     remaining_topics_count
   end
 
-  def calc_remaining_timeline_hours(timeline)
+  def calc_remaining_timeline_hours_and_percentage(timeline)
     topics = timeline.subject.topics
     remaining_hours_count = 0
     remaining_percentage = 0
