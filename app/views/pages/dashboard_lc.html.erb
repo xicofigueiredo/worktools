@@ -20,35 +20,33 @@
                         SG
                       </div>
                       <div class="text-center">
-                        <% if user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)).present?
-                            sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
-                              if sg.knowledges.count < 1 || sg.skills.count < 1 || sg.communities.count < 1
-                                result = 1
-                              end
-                              sg.knowledges.each do |knowledge|
-                              max +=1
-                                if knowledge.difficulties != '' && knowledge.plan != ''
-                                    result += 1
-                                end
-                              end
-                              sg.skills.each do |skill|
-                                max +=1
-                                if skill.extracurricular != ''
-                                  if skill.difficulties != '' && skill.plan != '' && skill.smartgoals != ''
-                                      result += 1
-                                  end
-                                end
-                              end
-                              sg.communities.each do |community|
-                              max +=1
-                                if community.involved != ''
-                                  if community.difficulties != '' && community.plan != '' && community.smartgoals != ''
-                                      result += 1
-                                  end
-                                end
-                              end
-                          end %>
-                        <% if result == max%>
+                     <%
+                        def fields_populated?(object, fields)
+                          fields.all? { |field| object.send(field).present? }
+                        end
+
+                        sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
+
+                        all_fields_populated = false
+
+                        if sg.present?
+                          required_fields = {
+                            knowledge: [:difficulties, :plan],
+                            skill: [:extracurricular, :difficulties, :plan, :smartgoals],
+                            community: [:involved, :difficulties, :plan, :smartgoals]
+                          }
+
+                          # Ensure there's at least one of each category
+                          if sg.knowledges.any? && sg.skills.any? && sg.communities.any?
+                            knowledges_populated = sg.knowledges.all? { |knowledge| fields_populated?(knowledge, required_fields[:knowledge]) }
+                            skills_populated = sg.skills.all? { |skill| fields_populated?(skill, required_fields[:skill]) }
+                            communities_populated = sg.communities.all? { |community| fields_populated?(community, required_fields[:community]) }
+
+                            all_fields_populated = knowledges_populated && skills_populated && communities_populated
+                          end
+                        end
+                        %>
+                        <% if all_fields_populated%>
                           <i class="fa-solid fa-check text-success"></i>
                         <% else %>
                           <i class="fa-solid fa-x text-danger"></i>
