@@ -58,20 +58,12 @@
                         WG
                       </div>
                       <div class="text-center">
-                        <% wg = user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))%>
-                        <% count = 0 %>
-                        <% if wg %>
-                          <% wg.weekly_slots.each do |slot|
-                              if slot.subject_name != ''
-                                count += 1
-                              end
-                            end
-                          %>
-                          <% if count >= 1 %>
-                            <i class="fa-solid fa-check text-success"></i>
-                          <% else %>
-                            <i class="fa-solid fa-x text-danger"></i>
-                          <% end %>
+                        <%
+                        wg = user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
+                        %>
+
+                        <% if wg && wg.weekly_slots.any? { |slot| slot.subject_name.present? } %>
+                          <i class="fa-solid fa-check text-success"></i>
                         <% else %>
                           <i class="fa-solid fa-x text-danger"></i>
                         <% end %>
@@ -82,33 +74,30 @@
                         KDA
                       </div>
                       <div class="text-center">
-                        <% if user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)) %>
-                        <% result = 0 %>
-                          <% kda = user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
-                              if kda.sdl.why != '' && kda.sdl.improve != ''
-                                result += 1
-                              end
-                              if kda.ini.why != '' && kda.ini.improve != ''
-                                result += 1
-                              end
-                              if kda.mot.why != '' && kda.mot.improve != ''
-                                result += 1
-                              end
-                              if kda.p2p.why != '' && kda.p2p.improve != ''
-                                result += 1
-                              end
-                              if kda.hubp.why != '' && kda.hubp.improve != ''
-                                result += 1
-                              end
-                          %>
-                          <% if result == 5%>
-                            <i class="fa-solid fa-check text-success"></i>
-                          <% else %>
-                            <i class="fa-solid fa-x text-danger"></i>
-                          <% end %>
+                        <%
+                        def fields_populated?(object, fields)
+                          fields.all? { |field| object.send(field).present? }
+                        end
+
+                        current_week = Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)
+                        kda = user.kdas.find_by(week: current_week)
+                        required_fields = [:sdl, :ini, :mot, :p2p, :hubp]
+                        populated = false
+
+                        if kda
+                          populated = required_fields.all? do |field|
+                            kda_field = kda.send(field)
+                            fields_populated?(kda_field, [:why, :improve])
+                          end
+                        end
+                        %>
+
+                        <% if populated %>
+                          <i class="fa-solid fa-check text-success"></i>
                         <% else %>
                           <i class="fa-solid fa-x text-danger"></i>
                         <% end %>
+
                       </div>
                     </div>
                     <div>
