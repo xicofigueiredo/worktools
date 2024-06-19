@@ -45,6 +45,19 @@ class WeeklyGoalsController < ApplicationController
     @weekly_goal = current_user.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
     @weekly_slots = @weekly_goal&.weekly_slots
     @current_week = Week.find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
+    @timelines = current_user.timelines
+
+    @subjects = []
+
+    @timelines.each do |timeline|
+      subject = Subject.find_by("id = ?", timeline.subject_id)
+      @subjects.append(subject)
+    end
+  end
+
+  def color_picker
+    @timelines = current_user.timelines
+    @date = params[:date]
   end
 
   def show

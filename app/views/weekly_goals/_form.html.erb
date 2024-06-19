@@ -56,11 +56,9 @@
                 </tbody>
               </table>
             </div>
-
-            <!-- Form Actions -->
           </div>
         </div>
-        <div class="d-flex justify-content-center  gap-2 mt-3">
+        <div class="d-flex justify-content-center gap-2 mt-3 mb-5">
           <%= link_to "Back", weekly_goals_navigator_path(@weekly_goal.week.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
           <%= form.submit 'Save Weekly Goal', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
         </div>

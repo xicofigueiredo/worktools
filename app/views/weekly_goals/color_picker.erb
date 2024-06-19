@@ -1,0 +1,39 @@
+<%= turbo_frame_tag "modal" do %>
+  <div class="modal-backdrop">
+    <div class="custom-modal">
+      <div class="d-flex justify-content-between mb-3" style="width: 26rem">
+        <h1>Settings</h1>
+        <div>
+          <%= link_to 'X', '#', data: {
+            controller: "modals",
+            action: "modals#close"
+          }, class: "btn btn-secondary",
+          style: "border-radius: 10px" %>
+        </div>
+      </div>
+
+      <h3 class="mb-3">Color Picker</h3>
+
+      <div class="container">
+        <%= form_with(model: @timelines, url: update_colors_timelines_path(date: @date), method: :patch, data: { controller: "modals", action: "submit->modals#submit" }) do %>
+          <% @timelines.each do |timeline| %>
+            <div class="d-flex justify-content-between mb-2" data-controller="color-reset">
+              <p><%= timeline.subject.name %></p>
+              <div class="d-flex gap-2">
+                <div style="width: 60px;">
+                  <%= color_field_tag "timelines[#{timeline.id}][color]", timeline.color, id: "color_picker_#{timeline.id}", class: "form-control", data: { target: "color-reset.colorPicker" } %>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" style="border-radius: 10px; --bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;" data-action="color-reset#reset">reset</i></button>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="text-center mt-3">
+            <%= submit_tag "Save", class: "btn btn-primary", style: "border-radius: 10px;" %>
+          </div>
+        <% end %>
+      </div>
+  </div>
+<% end %>
