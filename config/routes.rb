@@ -54,6 +54,7 @@ Rails.application.routes.draw do
     collection do
       get :personalized_new
       post :personalized_create
+      patch :update_colors
     end
     member do
       get :personalized_edit
@@ -62,6 +63,7 @@ Rails.application.routes.draw do
   end
 
   get 'weekly_goals/week/', to: 'weekly_goals#navigator', as: :weekly_goals_navigator
+  get 'weekly_goals/week/color_picker', to: 'weekly_goals#color_picker', as: :weekly_goals_color_picker
 
   resources :weekly_goals do
     resources :weekly_slots

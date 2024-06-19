@@ -119,6 +119,16 @@ class TimelinesController < ApplicationController
     end
   end
 
+  def update_colors
+    params[:timelines].each do |id, timeline_params|
+      timeline = Timeline.find(id)
+      timeline.update(timeline_params.permit(:color))
+    end
+    # TODO
+    response.headers["Turbo-Frame"] = "_top"
+    redirect_to weekly_goals_navigator_path(date: params[:date]), notice: "Colors updated successfully!"
+  end
+
   def destroy
     @timeline.destroy
     redirect_to timelines_url, notice: 'Timeline was successfully destroyed.'
