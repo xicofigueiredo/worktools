@@ -36,7 +36,13 @@
       <div class="row justify-content-center">
         <div class="col-md-12">
           <div class="card shadow-sm mb-5" style="border-radius: 10px;">
-            <div class="card-body">
+            <div class="card-body position-relative">
+
+              <%= link_to weekly_goals_color_picker_path(date: @current_week.start_date), data: { turbo_frame: "modal" }, class: 'btn btn-primary position-absolute', style: 'right: 12px; top: 12px; border-radius: 10px;' do %>
+                <i class="fa-solid fa-gear"></i>
+              <% end %>
+
+
               <div class="container">
                   <div class="row">
                     <div class="col-md-6">
@@ -69,9 +75,18 @@
                           <tr>
                             <td class="align-middle"><%= time.to_s.humanize.titleize %></td>
                             <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                              <td id="<%= time.downcase %>_<%= day.downcase %>">
-                                <div class="form-group">
-                                  <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
+                              <td id="<%= time.downcase %>_<%= day.downcase %>" style="height: 1px">
+                                <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
+
+                                <% if !slot.subject_name.empty?%>
+                                  <% subject = @subjects.find {|subject| subject.name == slot.subject_name} %>
+
+                                  <% if subject %>
+                                    <% timeline = @timelines.find {|timeline| timeline.subject_id == subject.id} %>
+                                  <% end %>
+                                <% end %>
+
+                                <div class="form-group h-100 align-content-center" style="background-color: <%= timeline&.color || 'none'%>">
                                   <% if slot %>
                                     <%= slot.subject_name %><br>
                                     <%= slot.topic_name %>
@@ -90,7 +105,7 @@
 
             </div>
           </div>
-          <div class="text-center">
+          <div class="text-center mb-5">
             <%= link_to "Edit Weekly Goal", edit_weekly_goal_path(@weekly_goal), class: "btn btn-primary mr-2", style: 'border-radius: 10px;' %>
           </div>
         </div>
