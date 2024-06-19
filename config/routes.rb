@@ -10,7 +10,6 @@ Rails.application.routes.draw do
 
   get 'after_signup', to: 'users/registrations#after_signup', as: 'after_signup'
   get 'profile', to: 'pages#profile'
-  get 'report', to: 'pages#report'
   get 'edit_profile', to: 'pages#edit_profile'
   post '/update_profile', to: 'pages#update_profile', as: :update_profile
   get '/get_topics', to: 'subjects#get_topics'
@@ -35,6 +34,8 @@ Rails.application.routes.draw do
   end
 
   post 'sprint_goals/bulk_destroy', to: 'sprint_goals#bulk_destroy'
+
+  # get 'report', to: 'reports#learner_view'
 
 
   resources :users do

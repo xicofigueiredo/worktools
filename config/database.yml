@@ -15,7 +15,7 @@ development:
 
   test:
   <<: *default
-  database: worktools_test
+  database: worktools_production_copy
   username: <%= ENV["POSTGRES_USER"] %>
   password: <%= ENV["POSTGRES_PASSWORD"] %>
 
