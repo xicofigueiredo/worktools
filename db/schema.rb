@@ -278,7 +278,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_06_18_192800) do
     t.datetime "mock50"
     t.datetime "mock100"
     t.string "personalized_name"
-    t.string "color", default: "#FFFFFF"
+    t.string "color", default: "#F4F4F4"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
