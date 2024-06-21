@@ -78,7 +78,7 @@
                               <td id="<%= time.downcase %>_<%= day.downcase %>" style="height: 1px">
                                 <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
 
-                                <% if !slot.subject_name.empty?%>
+                                <% if slot && slot.subject_name.present?%>
                                   <% subject = @subjects.find {|subject| subject.name == slot.subject_name} %>
                                     <% if subject %>
                                       <% timeline = @timelines.find {|timeline| timeline.subject_id == subject.id} %>
