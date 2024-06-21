@@ -87,12 +87,35 @@
                                     <% end %>
                                 <% end %>
 
-                                <div class="form-group h-100 align-content-center" style="background-color: <%= timeline&.color || 'none'%>">
-                                  <% if slot %>
-                                    <%= slot.subject_name %><br>
-                                    <%= slot.topic_name %>
+                                <div class="form-group h-100 align-content-center" style="position: relative;">
+                                  <% if timeline&.color %>
+                                    <div class="background-overlay" style="background-color: <%= timeline.color %>;"></div>
                                   <% end %>
+                                  <div class="content">
+                                    <% if slot %>
+                                      <%= slot.subject_name %><br>
+                                      <%= slot.topic_name %>
+                                    <% end %>
+                                  </div>
                                 </div>
+
+                                <style>
+                                  .form-group .background-overlay {
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    right: 0;
+                                    bottom: 0;
+                                    opacity: 0.65;
+                                    z-index: 1;
+                                  }
+
+                                  .form-group .content {
+                                    position: relative;
+                                    z-index: 2;
+                                  }
+                                </style>
+
                               </td>
                             <% end %>
                           </tr>
