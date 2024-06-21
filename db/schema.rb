@@ -86,6 +86,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_06_18_235352) do
     t.string "country"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "time_zone", default: "Europe/Lisbon"
   end
 
   create_table "inis", force: :cascade do |t|
@@ -353,7 +354,6 @@ ActiveRecord::Schema[7.0].define(version: 2024_06_18_235352) do
     t.string "nationality"
     t.string "native_language"
     t.string "profile_pic"
-    t.datetime "last_login_at"
     t.string "confirmation_token"
     t.datetime "confirmed_at"
     t.datetime "confirmation_sent_at"

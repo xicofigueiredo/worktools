@@ -80,10 +80,11 @@
 
                                 <% if !slot.subject_name.empty?%>
                                   <% subject = @subjects.find {|subject| subject.name == slot.subject_name} %>
-
-                                  <% if subject %>
-                                    <% timeline = @timelines.find {|timeline| timeline.subject_id == subject.id} %>
-                                  <% end %>
+                                    <% if subject %>
+                                      <% timeline = @timelines.find {|timeline| timeline.subject_id == subject.id} %>
+                                    <% else %>
+                                      <% timeline = @timelines.find {|timeline| timeline.personalized_name == slot.subject_name} %>
+                                    <% end %>
                                 <% end %>
 
                                 <div class="form-group h-100 align-content-center" style="background-color: <%= timeline&.color || 'none'%>">
