@@ -36,7 +36,9 @@ class TimelinesController < ApplicationController
 
           @total_hours_per_week += remaining_weeks_count.zero? ? 0 : remaining_hours_count / remaining_weeks_count
 
-          weekly_percentages.push((remaining_percentage / remaining_weeks_count * 100).round(2))
+          weekly_percentage = remaining_weeks_count.zero? ? remaining_percentage * 100 : remaining_percentage / remaining_weeks_count * 100
+
+          weekly_percentages.push((weekly_percentage).round(2))
 
 
         end
