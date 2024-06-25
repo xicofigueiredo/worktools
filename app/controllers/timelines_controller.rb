@@ -34,9 +34,11 @@ class TimelinesController < ApplicationController
           remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
                               .where.not("name LIKE ?", "%Build Week%").count
 
-          @total_hours_per_week += remaining_weeks_count.zero? ? 0 : remaining_hours_count / remaining_weeks_count
+          @total_hours_per_week += remaining_weeks_count.zero? ? remaining_hours_count : remaining_hours_count / remaining_weeks_count
 
-          weekly_percentages.push((remaining_percentage / remaining_weeks_count * 100).round(2))
+          weekly_percentage = remaining_weeks_count.zero? ? remaining_percentage * 100 : remaining_percentage / remaining_weeks_count * 100
+
+          weekly_percentages.push((weekly_percentage).round(2))
 
 
         end
