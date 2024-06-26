@@ -18,14 +18,18 @@
                               input_html: { class: "form-control form-control-lg", autocomplete: "email" } %>
                 </div>
 
-                <div class="form-outline form-white mb-4">
+                <div class="form-outline form-white mb-4" data-controller="password-toggle">
                   <%= f.input :password,
                               required: false,
-                              input_html: { class: "form-control form-control-lg", autocomplete: "current-password" } %>
+                              input_html: { class: "form-control form-control-lg",
+                                            autocomplete: "current-password",
+                                            type: "password",
+                                            id: "password",
+                                            data: { password_toggle_target: "password" } } %>
+                  <span toggle="#password" class="fa fa-fw fa-eye field-icon toggle-password"
+                        data-action="click->password-toggle#toggle"
+                        data-password-toggle-target="icon"></span>
                 </div>
-
-                <%# <p class="small mb-5 pb-lg-2"><%= link_to "Forgot password?", new_password_path(resource_name), class: "text-black-50" %>
-
                 <%= f.button :submit, "Login", class: "btn btn-outline-green btn-lg px-5 text-black-50" %>
               <% end %>
 
@@ -39,3 +43,4 @@
     </div>
   </div>
 </section>
+<%= render 'devise/shared/see_password' %>

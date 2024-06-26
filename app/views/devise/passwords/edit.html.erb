@@ -16,20 +16,22 @@
 
                 <%= f.input :reset_password_token, as: :hidden, input_html: { value: params[:reset_password_token] } %>
                 <br>
-                <div class="form-outline form-black mb-4">
+                <div class="form-outline form-black mb-4" data-controller="password-toggle">
                   <%= f.input :password,
                               label: "New password",
                               required: true,
                               autofocus: true,
                               hint: ("#{@minimum_password_length} characters minimum" if @minimum_password_length),
-                              input_html: { class: "form-control form-control-lg", autocomplete: "new-password" } %>
+                              input_html: { class: "form-control form-control-lg", autocomplete: "new-password", type: "password", id: "password" } %>
+                  <span class="fa fa-fw fa-eye field-icon toggle-icon" data-action="click->password-toggle#toggle"></span>
                 </div>
 
-                <div class="form-outline form-black mb-4">
+                <div class="form-outline form-black mb-4" data-controller="password-toggle">
                   <%= f.input :password_confirmation,
                               label: "Confirm your new password",
                               required: true,
-                              input_html: { class: "form-control form-control-lg", autocomplete: "new-password" } %>
+                              input_html: { class: "form-control form-control-lg", autocomplete: "new-password", type: "password", id: "password_confirmation" } %>
+                  <span class="fa fa-fw fa-eye field-icon toggle-icon" data-action="click->password-toggle#toggle"></span>
                 </div>
 
                 <div class="form-actions">
@@ -44,3 +46,4 @@
     </div>
   </div>
 </section>
+<%= render 'devise/shared/see_password' %>
