@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <% current_user ? name = current_user.role + "'s " : '' %>
+    <% current_user ? name = current_user.role.capitalize + "'s " : '' %>
     <title><%= name %>Worktools</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
