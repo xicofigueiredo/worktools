@@ -28,7 +28,7 @@ class PagesController < ApplicationController
       @selected_hub = Hub.find_by(id: params[:hub_id])
     end
 
-    @users = @selected_hub.users.where(role: 'learner')
+    @users = @selected_hub.users.where(role: 'learner', deactivate: [false, nil])
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     @total_balance = {}
 

@@ -12,10 +12,15 @@
                     <%= image_tag "profile.jpeg", class: "rounded-circle", width: "150" %>
                     <div class="mt-3">
                       <h4> <%= user.full_name %></h4>
-                      <%user.hubs.each do |hub| %>
+                      <% user.hubs.each do |hub| %>
                         <p><%= user.role.upcase %> at <%= hub.name %> Hub</p>
                       <% end %>
                       <p><%= user.email %></p>
+                      <% if user.deactivate %>
+                        <i class="fa-regular fa-eye-slash"></i>
+                      <% else %>
+                        <i class="fa-solid fa-eye"></i>
+                      <% end %>
                     </div>
                   </div>
                 </div>
