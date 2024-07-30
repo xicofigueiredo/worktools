@@ -14,7 +14,7 @@ class TimelinesController < ApplicationController
 
     @timelines_with_names = current_user.timelines.where.not(personalized_name: nil)
 
-    @timelines = current_user.timelines_sorted_by_balance
+    @timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
     @has_lws = false
     @total_blocks_per_day = 0
     @total_hours_per_week = 0

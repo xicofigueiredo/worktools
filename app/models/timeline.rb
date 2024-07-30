@@ -20,6 +20,11 @@ class Timeline < ApplicationRecord
   validates :end_date, presence: true
   validate :dates_cannot_be_holidays
 
+  def check_and_hide_if_completed
+    if user_topics.all?(&:done)
+      update(hidden: true)
+    end
+  end
 
   def create_user_topics
     self.subject.topics.order(:order).find_each do |topic|

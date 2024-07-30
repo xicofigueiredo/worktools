@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_07_29_133101) do
+ActiveRecord::Schema[7.0].define(version: 2024_07_29_144841) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -324,6 +324,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_07_29_133101) do
     t.datetime "mock100"
     t.string "personalized_name"
     t.string "color", default: "#F4F4F4"
+    t.boolean "hidden", default: false
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
     t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
