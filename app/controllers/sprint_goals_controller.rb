@@ -1,7 +1,6 @@
 class SprintGoalsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_sprint_goal, only: [:update]
-  before_action :set_sprint_deadlines, only: [:index, :new, :edit]
 
   # GET /sprint_goals
   def index
@@ -22,7 +21,7 @@ class SprintGoalsController < ApplicationController
     @has_prev_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @prev_date, @prev_date).present?
     @has_next_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @next_date, @next_date).present?
     @edit = false
-
+    set_sprint_deadlines(@sprint)
   end
 
   # GET /sprint_goals/new
@@ -35,6 +34,8 @@ class SprintGoalsController < ApplicationController
     @sprint_goal = current_user.sprint_goals.find_or_create_by(sprint: @sprint) do |sg|
       sg.sprint = @sprint
     end
+    set_sprint_deadlines(@sprint)
+
 
     # # Check if a sprint goal already exists for this sprint and user
     # existing_goal = @sprint.sprint_goals.find_by(user: current_user)
@@ -63,6 +64,8 @@ class SprintGoalsController < ApplicationController
     @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find(params[:id])
     @knowledges_subject_names = @sprint_goal.knowledges.pluck(:subject_name)
     @number_of_timelines = current_user.timelines.count
+    set_sprint_deadlines(@sprint_goal.sprint)
+
 
     Rails.logger.debug @sprint_goal.knowledges.inspect  # Add this line to check what's loaded
 
@@ -206,14 +209,14 @@ class SprintGoalsController < ApplicationController
     Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)
   end
 
-  def set_sprint_deadlines
+  def set_sprint_deadlines(sprint)
     @sprint_deadlines = current_user.timelines.map do |timeline|
       # Group topics by their deadlines within the current sprint
       topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
                                             .where(user_topics: { user_id: current_user.id })
                                             .select { |topic|
                                               user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
-                                              user_topic && user_topic.deadline && user_topic.deadline >= current_sprint.start_date && user_topic.deadline <= current_sprint.end_date
+                                              user_topic && user_topic.deadline && user_topic.deadline >= sprint.start_date && user_topic.deadline <= sprint.end_date
                                             }
                                             .group_by { |topic|
                                               topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline
