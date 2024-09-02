@@ -21,7 +21,7 @@ class UserTopic < ApplicationRecord
   end
 
   def check_timeline_completion
-    timeline.check_and_hide_if_completed
+    timeline.check_and_hide_if_completed if timeline
   end
 
 end
