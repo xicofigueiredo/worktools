@@ -6,12 +6,9 @@ class TimelinesController < ApplicationController
   include GenerateTopicDeadlines
 
   before_action :authenticate_user!
-  before_action :set_timeline, only: [:show, :edit, :update, :destroy]
-
-
+  before_action :set_timeline, only: [:show, :edit, :update, :destroy, :archive]
 
   def index
-
     @timelines_with_names = current_user.timelines.where.not(personalized_name: nil)
 
     @timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
@@ -177,6 +174,15 @@ class TimelinesController < ApplicationController
       redirect_to timelines_path, notice: 'Personalized Timeline was successfully updated.'
     else
       render :personalized_edit
+    end
+  end
+
+  def archive
+    @timeline = Timeline.find(params[:id])
+    if @timeline.update(hidden: true)
+      redirect_to timelines_path, notice: "Timeline successfully archived."
+    else
+      redirect_to timelines_path, alert: "Failed to archive the timeline."
     end
   end
 

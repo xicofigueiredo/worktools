@@ -58,6 +58,7 @@ Rails.application.routes.draw do
       patch :update_colors
     end
     member do
+      patch :archive
       get :personalized_edit
       patch :personalized_update
     end

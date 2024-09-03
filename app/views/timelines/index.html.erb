@@ -96,15 +96,18 @@
                             <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
                           <% end %>
                       <% else %>
-                         <div class="d-flex gap-2 fs-2">
+                        <div class="d-flex gap-2 fs-2">
                           <%= link_to personalized_edit_timeline_path(timeline) do %>
                             <i class="fa-solid fa-pencil" style="font-size: 20px; color: gray;"></i>
                           <% end %>
                       <% end %>
-                        <%= link_to timeline_path(timeline), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } do %>
-                          <i class="fa-solid fa-trash" style="font-size: 20px; color: gray;"></i>
-                        <% end %>
-                      </div>
+                          <%= link_to archive_timeline_path(timeline), data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to archive this timeline?" }  do %>
+                            <i class="fa-solid fa-box-archive" style="font-size: 20px; color: #808080;"></i>
+                          <% end %>
+                          <%= link_to timeline_path(timeline), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this timeline?" } do %>
+                            <i class="fa-solid fa-trash" style="font-size: 20px; color: gray;"></i>
+                          <% end %>
+                        </div>
                     </div>
                     <div class="d-flex justify-content-between align-middle">
                       <div>
