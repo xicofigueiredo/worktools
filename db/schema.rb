@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_07_29_144841) do
+ActiveRecord::Schema[7.0].define(version: 2024_08_26_105227) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -343,6 +343,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_07_29_144841) do
     t.boolean "Mock50"
     t.boolean "Mock100"
     t.integer "order"
+    t.bigint "moodle_id"
     t.index ["subject_id"], name: "index_topics_on_subject_id"
   end
 
@@ -395,6 +396,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_07_29_144841) do
     t.datetime "confirmation_sent_at"
     t.string "unconfirmed_email"
     t.boolean "deactivate", default: false
+    t.bigint "moodle_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
