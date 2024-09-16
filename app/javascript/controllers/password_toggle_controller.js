@@ -2,6 +2,10 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["password", "icon"]
+  // console log controller name
+  connect() {
+    console.log(this.identifier)
+  }
 
   toggle(event) {
     const icon = event.currentTarget;

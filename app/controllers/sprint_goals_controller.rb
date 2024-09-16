@@ -29,7 +29,7 @@ class SprintGoalsController < ApplicationController
     @is_edit = false
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
-    @number_of_timelines = current_user.timelines.count
+    @number_of_timelines = current_user.timelines.where(hidden: false).count
 
     @sprint_goal = current_user.sprint_goals.find_or_create_by(sprint: @sprint) do |sg|
       sg.sprint = @sprint
@@ -63,7 +63,7 @@ class SprintGoalsController < ApplicationController
     @is_edit = true
     @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find(params[:id])
     @knowledges_subject_names = @sprint_goal.knowledges.pluck(:subject_name)
-    @number_of_timelines = current_user.timelines.count
+    @number_of_timelines = current_user.timelines.where(hidden: false).count
     set_sprint_deadlines(@sprint_goal.sprint)
 
 

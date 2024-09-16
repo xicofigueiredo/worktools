@@ -5,6 +5,8 @@ export default class extends Controller {
 
   connect() {
     this.updateTopics();
+    console.log(this.identifier)
+
   }
 
   updateTopics() {

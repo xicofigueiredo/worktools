@@ -34,9 +34,9 @@
                 </tr>
               </thead>
               <tbody data-nested-form-target="knowledgesContainer">
-                <% personalized_timelines = current_user.timelines.joins(:subject).where(subjects: { name: '' }) %>
                 <% count = 0 %>
-                <% max = personalized_timelines.count%>
+                <% max = @number_of_timelines%>
+
                 <%= form.fields_for :knowledges,  @sprint_goal.knowledges do |knowledge_form| %>
                   <tr>
                     <% if knowledge_form.object.subject_name.blank? && count < max %>
@@ -90,7 +90,7 @@
                     <div data-subject-cell>
                       <select name="Timeline Select" id="Timeline Select" class="form-select" data-action="change->nested-form#createKnowledge">
                         <option value="" disabled selected>Select timeline</option>
-                        <% current_user.timelines.each do |timeline| %>
+                        <% current_user.timelines.where(hidden: false).each do |timeline| %>
                           <% exam_date = timeline.exam_date&.date %>
 
                           <% matched_sprint_goal = @sprint_deadlines.find do |sprint_goal|

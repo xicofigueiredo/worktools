@@ -136,8 +136,8 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def set_subject_names
-    @subject_names = current_user.timelines.map(&:subject).uniq.pluck(:name)
-    personalized_names = current_user.timelines.where(subject_id: 666).map(&:personalized_name)
+    @subject_names = current_user.timelines.where(hidden: false).map(&:subject).uniq.pluck(:name)
+    personalized_names = current_user.timelines.where(subject_id: 666, hidden: false).map(&:personalized_name)
     current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     skill_names = current_sprint.sprint_goals.where(user: current_user).map(&:skills).flatten.uniq.pluck(:extracurricular).reject(&:blank?).map(&:capitalize)
     communities_names = current_sprint.sprint_goals.where(user: current_user).map(&:communities).flatten.uniq.pluck(:involved).reject(&:blank?).map(&:capitalize)

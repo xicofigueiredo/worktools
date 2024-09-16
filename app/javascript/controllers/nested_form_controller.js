@@ -13,12 +13,14 @@ export default class extends Controller {
   connect() {
     const innitialKnowledgesData = this.data.get("knowledges");
     this.numberOfTimelines = this.data.get("numberOfTimelines");
-    this.createdKnowldges = JSON.parse(innitialKnowledgesData);
+    this.createdKnowledges = JSON.parse(innitialKnowledgesData);
     this.sprintGoalId = this.element.dataset.sprintGoalId;
     this.communityId = this.element.dataset.communityId;
     this.deletedCommunityIds = [];
     this.deletedSkillsIds = [];
     this.deletedKnowledgeIds = [];
+
+    console.log(this.identifier);
   }
 
   formatDate(dateString) {
@@ -61,7 +63,7 @@ export default class extends Controller {
       if (select) {
         const options = Array.from(select.options);
         options.forEach((option) => {
-          if (this.createdKnowldges.includes(option.innerHTML.trim())) {
+          if (this.createdKnowledges.includes(option.innerHTML.trim())) {
             option.disabled = true;
           }
         });
@@ -92,7 +94,7 @@ export default class extends Controller {
       if (select) {
         const options = Array.from(select.options);
         options.forEach((option) => {
-          if (this.createdKnowldges.includes(option.innerHTML.trim())) {
+          if (this.createdKnowledges.includes(option.innerHTML.trim())) {
             option.disabled = true;
           } else {
             option.removeAttribute("disabled");
@@ -135,7 +137,7 @@ export default class extends Controller {
         new Date().getTime()
       );
 
-      content = this.disableOptions(content, this.createdKnowldges);
+      content = this.disableOptions(content, this.createdKnowledges);
 
       if (kind === "skills") {
         this.skillsContainerTarget.insertAdjacentHTML("beforeend", content);
@@ -169,7 +171,7 @@ export default class extends Controller {
     } else if (kind === "knowledges") {
       const subject = row.querySelector("[data-subject-cell]").innerText;
 
-      this.createdKnowldges = this.createdKnowldges.filter(
+      this.createdKnowledges = this.createdKnowledges.filter(
         (subjectName) => subjectName !== subject
       );
 
@@ -199,7 +201,7 @@ export default class extends Controller {
 
     const row = event.target.closest("tr");
 
-    this.createdKnowldges.push(subjectName);
+    this.createdKnowledges.push(subjectName);
 
     this.disableOptionsInSubjectCells(true);
 

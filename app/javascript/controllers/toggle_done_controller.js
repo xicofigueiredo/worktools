@@ -4,6 +4,10 @@ import { Controller } from "@hotwired/stimulus";
 export default class extends Controller {
   static targets = ["checkbox"]; // Assuming you have 'data-toggle-done-target="checkbox"' on your checkbox
 
+    // console log controller name
+    connect() {
+      console.log(this.identifier)
+    }
   toggle(event) {
     const userTopicId = this.checkboxTarget.dataset.userTopicId; // Correctly access the userTopicId
     const timelineId = this.checkboxTarget.dataset.timelineId;
