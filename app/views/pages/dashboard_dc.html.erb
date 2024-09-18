@@ -14,7 +14,7 @@
                 <div class="d-flex flex-column align-items-center text-center">
                   <div class="mt-3">
                     <h4><%= hub.name.capitalize %> Hub</h4>
-                    <p>Members: <%= hub.users.count %></p>
+                    <p>Learners: <%= hub.users.where(role: 'learner', deactivate: [false, nil]).count %></p>
                   </div>
                 </div>
               </div>
