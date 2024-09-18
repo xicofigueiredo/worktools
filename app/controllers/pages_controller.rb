@@ -106,7 +106,7 @@ class PagesController < ApplicationController
     @learner = User.find_by(id: params[:id])
     @learner_flag = @learner.learner_flag
     @notes = @learner.notes.order(created_at: :desc)
-    @timelines = @learner.timelines
+    @timelines = @learner.timelines.where(hidden: false)
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", current_date, current_date).first
     @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
     @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
