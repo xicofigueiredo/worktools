@@ -9,6 +9,7 @@ class TimelinesController < ApplicationController
   before_action :set_timeline, only: [:show, :edit, :update, :destroy, :archive]
 
   def index
+    @archived_timelines = Timeline.where(user: current_user, hidden: true)
     @timelines_with_names = current_user.timelines.where.not(personalized_name: nil)
 
     @timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
@@ -79,7 +80,7 @@ class TimelinesController < ApplicationController
     end.compact
 
 
-    @holidays = current_user.holidays
+    @holidays = current_user.holidays.where("end_date >= ?", 4.months.ago)
   end
 
   def new
@@ -184,6 +185,23 @@ class TimelinesController < ApplicationController
     else
       redirect_to timelines_path, alert: "Failed to archive the timeline."
     end
+  end
+
+  def toggle_archive
+    @timeline = Timeline.find(params[:id])
+    new_state = !@timeline.hidden
+
+    if @timeline.update(hidden: new_state)
+      message = new_state ? "Timeline successfully archived." : "Timeline successfully reactivated."
+      redirect_to timelines_path, notice: message
+    else
+      redirect_to timelines_path, alert: "Failed to toggle the state of the timeline."
+    end
+  end
+
+  def archived
+    @archived_timelines = Timeline.where(user: current_user, hidden: true)
+    @past_holidays = current_user.holidays.where("end_date <= ?", Date.today)
   end
 
   private
