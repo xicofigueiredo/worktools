@@ -56,9 +56,10 @@ Rails.application.routes.draw do
       get :personalized_new
       post :personalized_create
       patch :update_colors
+      get :archived
     end
     member do
-      patch :archive
+      patch :toggle_archive
       get :personalized_edit
       patch :personalized_update
     end
@@ -98,7 +99,7 @@ Rails.application.routes.draw do
     end
   end
 
-  match '*path', via: :all, to: 'pages#not_found'
+  # match '*path', via: :all, to: 'pages#not_found'
 
 
 end
