@@ -27,9 +27,9 @@ class User < ApplicationRecord
   has_many :notes, dependent: :destroy
   has_one :learner_flag, dependent: :destroy
   has_many :reports
-  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', dc: 'Development Coach' }
+  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', dc: 'Development Coach', guardian: 'Parent' }
   validate :email_domain_check, on: :create
-
+  validate :validate_kids_are_integers
 
   after_create :associate_with_hubs, :create_learner_flag
   # after_commit :send_welcome_email, on: :create
@@ -68,6 +68,10 @@ class User < ApplicationRecord
     unless email.ends_with?('@edubga.com')
       errors.add(:email, :invalid_domain)
     end
+  end
+
+  def validate_kids_are_integers
+    errors.add(:kids, "must only contain integers") unless kids.all? { |k| k.is_a?(Integer) }
   end
 
 end
