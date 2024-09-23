@@ -52,7 +52,7 @@ class PagesController < ApplicationController
   end
 
   def profile
-    if current_user.role != "lc"
+    if current_user.role == "learner" && current_user.role == "admin"
       @learner = current_user
       @learner_flag = @learner.learner_flag
       @timelines = @learner.timelines
@@ -80,8 +80,14 @@ class PagesController < ApplicationController
       unless @learner
         redirect_to some_fallback_path, alert: "Learner not found."
       end
-    else
+    elsif current_user.role == "lc"
       redirect_to dashboard_lc_path
+    elsif current_user.role == "guardian"
+      kids = []
+      current_user.kids.each do |kid|
+        kids << User.find_by(id: kid)
+      end
+      redirect_to learner_profile_path(kids.first)
     end
   end
 
