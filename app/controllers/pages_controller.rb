@@ -50,7 +50,7 @@ class PagesController < ApplicationController
   end
 
   def profile
-    if current_user.role == "learner" && current_user.role == "admin"
+    if current_user.role == "learner" || current_user.role == "admin"
       @learner = current_user
       @learner_flag = @learner.learner_flag
       @timelines = @learner.timelines
@@ -59,7 +59,14 @@ class PagesController < ApplicationController
       @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
       @skills = @sprint_goals&.skills
       @communities = @sprint_goals&.communities
-      @hub_lcs = @learner.hubs.first.users.where(role: 'lc')
+      @lcs = @learner.hubs.first.users.where(role: 'lc').first(3)
+      @hub_lcs = []
+
+      @lcs.each do |lc|
+        if lc.hubs.count < 40
+          @hub_lcs << lc
+        end
+      end
 
       @yearly_presence = calc_yearly_presence(@learner)
 
