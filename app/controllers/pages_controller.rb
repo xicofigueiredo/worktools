@@ -59,11 +59,11 @@ class PagesController < ApplicationController
       @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
       @skills = @sprint_goals&.skills
       @communities = @sprint_goals&.communities
-      @lcs = @learner.hubs.first.users.where(role: 'lc').first(3)
+      @lcs = @learner.hubs.first.users.where(role: 'lc')
       @hub_lcs = []
 
       @lcs.each do |lc|
-        if lc.hubs.count < 40
+        if lc.hubs.count < 5
           @hub_lcs << lc
         end
       end
@@ -123,7 +123,15 @@ class PagesController < ApplicationController
     @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
     @skills = @sprint_goals&.skills
     @communities = @sprint_goals&.communities
-    @hub_lcs = @learner.hubs.first.users.where(role: 'lc')
+    @lcs = @learner.hubs.first.users.where(role: 'lc')
+    @hub_lcs = []
+
+    @lcs.each do |lc|
+      if lc.hubs.count < 2
+        @hub_lcs << lc
+      end
+    end
+    
     @holidays = @learner.holidays
 
     @yearly_presence = calc_yearly_presence(@learner)
