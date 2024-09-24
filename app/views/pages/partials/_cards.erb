@@ -1,70 +1,76 @@
 <div class="d-flex row gap-3 mb-5">
-  <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-    <p><%= Date.today.strftime("%Y")%> Presence: <%= @yearly_presence %>%</p>
-    <p>Hub: <%= @learner.hubs.first.name %></p>
-    <p>Email: <%= @learner.email %></p>
-    <% @hub_lcs.each do |lc| %>
-      <p>LC: <%= lc.full_name %></p>
-    <% end %>
-  </div>
-  <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-    <% @average_items.each do |average_item| %>
-      <div class="d-flex justify-content-between">
-        <p><%= average_item[:title] %></p>
-        <p><%= average_item[:average] %></p>
-      </div>
-    <% end %>
-  </div>
-  <%# FIXME add dynamic numbers when attendance is ready %>
-  <%# <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-    <div class="d-flex justify-content-between">
-      <p>Attendance</p>
-      <p>80%</p>
-    </div>
-    <div class="d-flex justify-content-between">
-      <p>Weekly Meetings</p>
-      <p>80%</p>
-    </div>
-    <div class="d-flex justify-content-between">
-      <p>Average Progress</p>
-      <p>50%</p>
-    </div>
-    <div class="d-flex justify-content-between">
-      <p>Progress/Week</p>
-      <p>2%</p>
-    </div>
-  </div> %>
-  <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-    <%= form_with(model: @learner_flag, local: true) do |form| %>
-      <div class="d-flex justify-content-between align-items-center">
-        <p>Asks for Help</p>
-        <%= form.check_box :asks_for_help, onchange: "this.form.submit();" %>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Takes notes</p>
-        <%= form.check_box :takes_notes, onchange: "this.form.submit();" %>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Goes to live lessons?</p>
-        <%= form.check_box :goes_to_live_lessons, onchange: "this.form.submit();" %>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Does Peer to Peer?</p>
-        <%= form.check_box :does_p2p, onchange: "this.form.submit();" %>
-      </div>
-      <div class="d-flex justify-content-between">
-        <p>Life Experiences</p>
-        <%= form.check_box :life_experiences, onchange: "this.form.submit();" %>
-      </div>
-    <% end %>
-  </div>
-  <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-    <div class="d-flex justify-content-between">
-      <p>Action Plan</p>
-      <%= link_to edit_learner_flag_path(@learner_flag), data: { turbo_frame: "modal" } do %>
-        <i class="fa-solid fa-pencil"></i>
+  <div class="col-md-4">
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <p><%= Date.today.strftime("%Y")%> Presence: <%= @yearly_presence %>%</p>
+      <p>Hub: <%= @learner.hubs.first.name %></p>
+      <p>Email: <%= @learner.email %></p>
+      <% @hub_lcs.each do |lc| %>
+        <p>LC: <%= lc.full_name %> <br> <i class="fa-regular fa-envelope"></i> <%= lc.email %></p>
       <% end %>
     </div>
-    <p><%= @learner_flag.action_plan %></p>
   </div>
+
+
+  <% unless current_user.role == 'guardian' %>
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <% @average_items.each do |average_item| %>
+        <div class="d-flex justify-content-between">
+          <p><%= average_item[:title] %></p>
+          <p><%= average_item[:average] %></p>
+        </div>
+      <% end %>
+    </div>
+    <%# FIXME add dynamic numbers when attendance is ready %>
+    <%# <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <div class="d-flex justify-content-between">
+        <p>Attendance</p>
+        <p>80%</p>
+      </div>
+      <div class="d-flex justify-content-between">
+        <p>Weekly Meetings</p>
+        <p>80%</p>
+      </div>
+      <div class="d-flex justify-content-between">
+        <p>Average Progress</p>
+        <p>50%</p>
+      </div>
+      <div class="d-flex justify-content-between">
+        <p>Progress/Week</p>
+        <p>2%</p>
+      </div>
+    </div> %>
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <%= form_with(model: @learner_flag, local: true) do |form| %>
+        <div class="d-flex justify-content-between align-items-center">
+          <p>Asks for Help</p>
+          <%= form.check_box :asks_for_help, onchange: "this.form.submit();" %>
+        </div>
+        <div class="d-flex justify-content-between">
+          <p>Takes notes</p>
+          <%= form.check_box :takes_notes, onchange: "this.form.submit();" %>
+        </div>
+        <div class="d-flex justify-content-between">
+          <p>Goes to live lessons?</p>
+          <%= form.check_box :goes_to_live_lessons, onchange: "this.form.submit();" %>
+        </div>
+        <div class="d-flex justify-content-between">
+          <p>Does Peer to Peer?</p>
+          <%= form.check_box :does_p2p, onchange: "this.form.submit();" %>
+        </div>
+        <div class="d-flex justify-content-between">
+          <p>Life Experiences</p>
+          <%= form.check_box :life_experiences, onchange: "this.form.submit();" %>
+        </div>
+      <% end %>
+    </div>
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+      <div class="d-flex justify-content-between">
+        <p>Action Plan</p>
+        <%= link_to edit_learner_flag_path(@learner_flag), data: { turbo_frame: "modal" } do %>
+          <i class="fa-solid fa-pencil"></i>
+        <% end %>
+      </div>
+      <p><%= @learner_flag.action_plan %></p>
+    </div>
+  <% end %>
 </div>

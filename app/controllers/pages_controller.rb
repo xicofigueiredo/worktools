@@ -8,9 +8,7 @@ class PagesController < ApplicationController
   before_action :check_lc_role, only: [:dashboard_lc, :learner_profile, :attendance, :attendances, :learner_attendances, :update_attendance, :update_absence_attendance, :update_start_time_attendance, :update_end_time_attendance, :update_comments_attendance]
 
   def dashboard_admin
-    if current_user.role == "admin"
-      @hubs = Hub.all.order(:name)
-    end
+    @hubs = Hub.all.order(:name)
   end
 
   def hub_selection

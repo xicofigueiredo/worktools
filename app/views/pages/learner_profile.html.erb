@@ -16,29 +16,38 @@
     <%= render 'pages/partials/sprint_overview' %>
   </div>
 
-  <h2>Notes</h2>
-  <p>Create and save your notes below.</p>
-  <div>
-    <%= render 'pages/partials/notes' %>
-  </div>
+  <% if current_user.role == 'lc' %>
+    <h2>Notes</h2>
+    <p>Create and save your notes below.</p>
+    <div>
+      <%= render 'pages/partials/notes' %>
+    </div>
 
-  <h2>Knowledge</h2>
-  <p>Check your learner's academic goals below.</p>
-  <div>
-    <%= render 'pages/partials/knowledges' %>
-  </div>
+    <h2>Knowledge</h2>
+    <p>Check your learner's academic goals below.</p>
+    <div>
+      <%= render 'pages/partials/knowledges' %>
+    </div>
 
+    <h2>Weekly Goals</h2>
+    <p>Check your learner's Weekly Goals below.</p>
+    <div>
+      <%= render 'pages/partials/weekly_goals',
+          weekly_goal: @weekly_goal,
+          current_week: @current_week,
+          learner: @learner,
+          current_date: @current_weekly_goal_date %>
+    </div>
 
+  <% else %>
 
-  <h2>Weekly Goals</h2>
-  <p>Check your learner's Weekly Goals below.</p>
-  <div>
-    <%= render 'pages/partials/weekly_goals',
-        weekly_goal: @weekly_goal,
-        current_week: @current_week,
-        learner: @learner,
-        current_date: @current_weekly_goal_date %>
-  </div>
+    <h2>Knowledge</h2>
+    <p>Check the learner's academic goals below.</p>
+    <div>
+      <%= render 'pages/partials/timelines_display' %>
+    </div>
+
+  <% end %>
 
   <h2>Holidays</h2>
   <p>Check your learner's Holidays below.</p>
