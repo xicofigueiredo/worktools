@@ -16,32 +16,43 @@
         </thead>
         <tbody>
           <% if @timelines.exists? %>
+
             <% @timelines.each do |timeline| %>
               <tr>
                 <td><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %></td>
                 <td style="width: 200px;">
+
                   <% if timeline.progress > timeline.expected_progress%>
                     <div style="background-color: rgb(220,220,220); border-radius: 10px;" class="d-flex">
-                      <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [timeline.expected_progress, 5].max %>%; border-radius: 10px 0 0 10px;" aria-valuenow="<%= timeline.expected_progress %>" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [timeline.expected_progress, 15].max %>%; border-radius: 10px 0 0 10px;" aria-valuenow="<%= timeline.expected_progress %>" aria-valuemin="0" aria-valuemax="100">
                         <span class="progress-text text-white"><%= timeline.expected_progress %>%</span>
                       </div>
-                      <div class="progress-bar bg-success text-white" role="progressbar" style="width: <%= [timeline.progress - timeline.expected_progress, 5].max %>%; border-radius: <%= timeline.progress == 0 ? '10px' :  '0 10px 10px 0'%>;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
-                        <% unless timeline.progress - timeline.expected_progress < 5 %>
-                          <%= timeline.progress - timeline.expected_progress %>%
-                        <% end %>
+                      <div class="progress-bar bg-success text-white" role="progressbar" style="width: <%= [timeline.progress - timeline.expected_progress, 15].max %>%; border-radius: <%= timeline.progress == 0 ? '10px' :  '0 10px 10px 0'%>;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
+                        <%= timeline.progress - timeline.expected_progress %>%
                       </div>
                     </div>
-                  <% elsif timeline.progress < timeline.expected_progress%>
+
+                  <% elsif timeline.progress < timeline.expected_progress && timeline.progress > 0 %>
                     <div style="background-color: rgb(220,220,220); border-radius: 10px;" class="d-flex">
-                      <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [timeline.expected_progress, 5].max %>%; border-radius: 10px 0 0 10px;" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
+                      <div class="progress-bar bg-primary" role="progressbar" style="width: <%= [timeline.progress, 15].max %>%; border-radius: 10px 0 0 10px;" aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
                         <span class="progress-text text-white"><%= timeline.progress %>%</span>
                       </div>
-                      <div class="progress-bar bg-danger text-white" role="progressbar" style="width: <%= [timeline.expected_progress - timeline.progress, 5].max %>%; border-radius: <%= timeline.progress == 0 ? '10px' :  '0 10px 10px 0'%>;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
-                        <% unless timeline.expected_progress - timeline.progress < 5 %>
+                      <div class="progress-bar bg-danger text-white" role="progressbar" style="width: <%= [timeline.expected_progress - timeline.progress, 15].max %>%; border-radius: 0 10px 10px 0;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
                           <%= timeline.expected_progress - timeline.progress %>%
-                        <% end %>
                       </div>
                     </div>
+
+                  <%elsif timeline.progress == 0 %>
+                    <div style="background-color: rgb(220,220,220); border-radius: 10px;" class="d-flex">
+                        <div class="progress-bar bg-danger text-white" role="progressbar" style="width: <%= [timeline.expected_progress - timeline.progress, 15].max %>%; border-radius: 10px;" aria-valuenow="<%= timeline.expected_progress - timeline.progress %>">
+                          <% unless timeline.expected_progress < 1%>
+                            <%= timeline.expected_progress %>%
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+
+
                   <% else %>
                     <div style="background-color: rgb(220,220,220); border-radius: 10px;">
                       <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.progress%>%; border-radius: 10px;" aria-valuenow="<%= timeline.progress%>" aria-valuemin="0" aria-valuemax="100">
@@ -51,16 +62,19 @@
                   <% end %>
 
                 </td>
+
                 <% if timeline.mock50 != nil %>
                   <td><%= timeline.mock50.strftime("%d/%m/%Y") %></td>
                 <% else %>
                   <td></td>
                 <% end %>
+
                 <% if timeline.mock100 != nil %>
                   <td><%= timeline.mock100.strftime("%d/%m/%Y") %></td>
                 <% else %>
                   <td></td>
                 <% end %>
+
                 <% if @has_exam_date %>
                   <td>
                     <% if timeline.exam_date.present? %>
@@ -76,11 +90,15 @@
                     <% end %>
                   </td>
                 <% end %>
+
                 <td><%= timeline.start_date.strftime("%d/%m/%Y") %></td>
                 <td><%= timeline.end_date.strftime("%d/%m/%Y") %></td>
               </tr>
+
             <% end %>
+
           <% else %>
+
             <tr>
               <td colspan="7">
                 <div class="text-center py-5">
@@ -89,7 +107,9 @@
                 </div>
               </td>
             </tr>
+
           <% end %>
+
         </tbody>
       </table>
     </div>
