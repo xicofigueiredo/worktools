@@ -29,7 +29,6 @@ class User < ApplicationRecord
   has_many :reports
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', dc: 'Development Coach', guardian: 'Parent' }
   validate :email_domain_check, on: :create
-  validate :validate_kids_are_integers
 
   after_create :associate_with_hubs, :create_learner_flag
   # after_commit :send_welcome_email, on: :create
@@ -50,8 +49,10 @@ class User < ApplicationRecord
   private
 
   def associate_with_hubs
-    self.hub_ids.each do |hub_id|
-      UsersHub.create(user: self, hub_id: hub_id) unless hub_id.blank?
+    if self.role != 'Parent'
+      self.hub_ids.each do |hub_id|
+        UsersHub.create(user: self, hub_id: hub_id) unless hub_id.blank?
+      end
     end
   end
 
@@ -61,17 +62,15 @@ class User < ApplicationRecord
 
   def create_learner_flag
     #FIXME adjust to create only for learners later
-    build_learner_flag.save
+    if self.role == 'Parent'
+      build_learner_flag.save
+    end
   end
 
   def email_domain_check
     unless email.ends_with?('@edubga.com')
       errors.add(:email, :invalid_domain)
     end
-  end
-
-  def validate_kids_are_integers
-    errors.add(:kids, "must only contain integers") unless kids.all? { |k| k.is_a?(Integer) }
   end
 
 end

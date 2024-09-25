@@ -103,7 +103,7 @@ class AttendancesController < ApplicationController
     current_date = Date.today
 
     return if current_date.saturday? || current_date.sunday?
-    learners = User.where(role: 'learner')
+    learners = User.where(role: 'learner', deactivate: false)
 
 
     learners.each do |learner|
@@ -118,7 +118,7 @@ class AttendancesController < ApplicationController
   end
 
   def ensure_weekly_attendance_records(start_date, end_date)
-    learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner')
+    learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner', deactivate: false)
     (start_date..end_date).each do |date|
       # Checking for saturday and sunday
       next if date.wday == 6 || date.wday == 0
@@ -133,7 +133,7 @@ class AttendancesController < ApplicationController
 
   def ensure_daily_attendance_records(date)
     return if date.saturday? || date.sunday?
-    learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner')
+    learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner', deactivate: false)
     learners.each do |learner|
       unless learner.attendances.exists?(attendance_date: date)
         learner.attendances.create(attendance_date: date)
@@ -145,7 +145,7 @@ class AttendancesController < ApplicationController
     ensure_daily_attendance_records(date)
 
     daily_attendances = Attendance.joins(user: :hubs)
-                                   .where(users: { hubs: { id: current_user.hubs.first.id } },
+                                   .where(users: { hubs: { id: current_user.hubs.first.id }, role: 'learner' },
                                           attendance_date: date)
                                    .order(:created_at)
 
@@ -158,7 +158,7 @@ class AttendancesController < ApplicationController
     ensure_weekly_attendance_records(start_of_week, end_of_week)
 
     weekly_attendances = Attendance.joins(user: :hubs)
-                                    .where(users: { hubs: { id: current_user.hubs.first.id } },
+                                    .where(users: { hubs: { id: current_user.hubs.first.id }, role: 'learner' },
                                            attendance_date: start_of_week..end_of_week)
                                     .order('attendance_date, users.full_name ASC')
 
