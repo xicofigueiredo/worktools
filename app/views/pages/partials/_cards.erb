@@ -1,17 +1,15 @@
 <div class="d-flex row gap-3 mb-5">
-  <div class="col-md-4">
-    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-      <p><%= Date.today.strftime("%Y")%> Presence: <%= @yearly_presence %>%</p>
-      <p>Hub: <%= @learner.hubs.first.name %></p>
-      <p>Email: <%= @learner.email %></p>
-      <% @hub_lcs.each do |lc| %>
-        <p>LC: <%= lc.full_name %> <br> <i class="fa-regular fa-envelope"></i> <%= lc.email %></p>
-      <% end %>
+  <% if current_user.role != 'guardian' %>
+    <div class="col-md-4">
+      <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+        <p><%= Date.today.strftime("%Y")%> Attendance: <%= @yearly_presence %>%</p>
+        <p>Hub: <%= @learner.hubs.first.name %></p>
+        <p>Email: <%= @learner.email %></p>
+        <% @hub_lcs.each do |lc| %>
+          <p>LC: <%= lc.full_name %> <br> <i class="fa-regular fa-envelope"></i> <%= lc.email %></p>
+        <% end %>
+      </div>
     </div>
-  </div>
-
-
-  <% unless current_user.role == 'guardian' %>
     <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
       <% @average_items.each do |average_item| %>
         <div class="d-flex justify-content-between">
@@ -72,5 +70,20 @@
       </div>
       <p><%= @learner_flag.action_plan %></p>
     </div>
+  <% else %>
+      <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+        <p><%= Date.today.strftime("%Y")%> Attendance: <%= @yearly_presence %>%</p>
+        <p>Email: <%= @learner.email %></p>
+      </div>
+    <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+        <p>Hub: <%= @learner.hubs.first.name %></p>
+        <p><%= @learner.hubs.first.country %></p>
+    </div>
+    <% @hub_lcs.each do |lc| %>
+      <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+        <p>LC: <%= lc.full_name %> </p>
+        <p><i class="fa-regular fa-envelope"></i> <%= lc.email %></p>
+      </div>
+    <% end %>
   <% end %>
 </div>

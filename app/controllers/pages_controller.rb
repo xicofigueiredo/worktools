@@ -112,9 +112,17 @@ class PagesController < ApplicationController
   end
 
   def learner_profile
-    current_date = Date.today
-
     @learner = User.find_by(id: params[:id])
+
+    if @learner.nil?
+      redirect_to root_path and return
+    end
+
+    unless current_user.kids.include?(@learner.id) || current_user.role == "admin" || current_user.role == "lc"
+      redirect_to root_path and return
+    end
+
+    current_date = Date.today
     @learner_flag = @learner.learner_flag
     @notes = @learner.notes.order(created_at: :desc)
     @timelines = @learner.timelines.where(hidden: false)
@@ -131,7 +139,7 @@ class PagesController < ApplicationController
         @hub_lcs << lc
       end
     end
-    
+
     @holidays = @learner.holidays
 
     @yearly_presence = calc_yearly_presence(@learner)

@@ -2,7 +2,7 @@
 <div class="container">
   <div class="d-flex gap-3 align-items-center mb-3 mt-3">
     <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
-    <h4><%= @learner.full_name %>'s Profile</h4>
+    <h4><%= @learner.full_name %></h4>
   </div>
 
   <%# Card Section %>
@@ -16,7 +16,7 @@
     <%= render 'pages/partials/sprint_overview' %>
   </div>
 
-  <% if current_user.role == 'lc' %>
+  <% if current_user.role != 'guardian' %>
     <h2>Notes</h2>
     <p>Create and save your notes below.</p>
     <div>
@@ -40,7 +40,6 @@
     </div>
 
   <% else %>
-
     <h2>Knowledge</h2>
     <p>Check the learner's academic goals below.</p>
     <div>
