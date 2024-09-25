@@ -72,8 +72,8 @@
     </div>
   <% else %>
       <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-        <p><%= Date.today.strftime("%Y")%> Attendance: <%= @yearly_presence %>%</p>
         <p>Email: <%= @learner.email %></p>
+        <p><%= Date.today.strftime("%Y")%> Attendance: <%= @yearly_presence %>%</p>
       </div>
     <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
         <p>Hub: <%= @learner.hubs.first.name %></p>
