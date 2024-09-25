@@ -145,7 +145,7 @@ class AttendancesController < ApplicationController
     ensure_daily_attendance_records(date)
 
     daily_attendances = Attendance.joins(user: :hubs)
-                                   .where(users: { hubs: { id: current_user.hubs.first.id }, role: 'learner' },
+                                   .where(users: { hubs: { id: current_user.hubs.first.id }, role: 'learner', deactivate: false },
                                           attendance_date: date)
                                    .order(:created_at)
 
@@ -158,7 +158,7 @@ class AttendancesController < ApplicationController
     ensure_weekly_attendance_records(start_of_week, end_of_week)
 
     weekly_attendances = Attendance.joins(user: :hubs)
-                                    .where(users: { hubs: { id: current_user.hubs.first.id }, role: 'learner' },
+                                    .where(users: { hubs: { id: current_user.hubs.first.id }, role: 'learner', deactivate: false },
                                            attendance_date: start_of_week..end_of_week)
                                     .order('attendance_date, users.full_name ASC')
 
