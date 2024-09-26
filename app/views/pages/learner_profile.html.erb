@@ -1,22 +1,21 @@
 <%= turbo_page_requires_reload %>
 <div class="container">
-  <div class="d-flex gap-3 align-items-center mb-3 mt-3">
-    <%# <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
-    <h1><%= @learner.full_name %></h1>
-  </div>
-
-  <%# Card Section %>
-  <div>
-    <%= render 'pages/partials/cards' %>
-  </div>
-
-  <h2>Sprint Overview</h2>
-  <p>Keep track of your learner below.</p>
-  <div>
-    <%= render 'pages/partials/sprint_overview' %>
-  </div>
-
   <% if current_user.role != 'guardian' %>
+
+    <div class="d-flex gap-3 align-items-center mb-3 mt-3">
+      <%# <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
+      <h2><%= @learner.full_name %></h2>
+    </div>
+    <div>
+      <%= render 'pages/partials/cards' %>
+    </div>
+
+    <h2>Sprint Overview</h2>
+    <p>Keep track of your learner below.</p>
+    <div>
+      <%= render 'pages/partials/sprint_overview' %>
+    </div>
+
     <h2>Notes</h2>
     <p>Create and save your notes below.</p>
     <div>
@@ -40,6 +39,39 @@
     </div>
 
   <% else %>
+  <div class="container mt-3 mb-3" style="padding-left: 0;">
+      <div class="row">
+          <!-- Learner's Name Column -->
+          <div class="col-md-4">
+              <%# image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
+              <h2><%= @learner.full_name %></h2>
+              <p><%= Date.today.strftime("%Y")%> Attendance: <%= @yearly_presence %>%</p>
+          </div>
+
+          <!-- Hub Information Column -->
+          <div class="col-md-4 text-center">
+            <% hub = @learner.hubs.first %>
+            <h3><%= hub.name %> Hub</h3> <h5><%= hub.country %></h5>
+          </div>
+
+          <!-- LC Information Column -->
+          <div class="col-md-4" style="text-align: right;">
+              <% @hub_lcs.each do |lc| %>
+                  <p><%= lc.full_name %>: <%= lc.email %></p>
+              <% end %>
+          </div>
+      </div>
+  </div>
+
+
+
+
+    <h2>Sprint Overview</h2>
+    <p>Keep track of your learner below.</p>
+    <div>
+      <%= render 'pages/partials/sprint_overview' %>
+    </div>
+
     <h2>Knowledge</h2>
     <p>Check the learner's academic goals below.</p>
     <div>
