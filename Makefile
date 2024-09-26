@@ -42,3 +42,6 @@ backup:
 
 restore:
 		# rsync -av -e "ssh" ./databackup/data/* worktools_server_new:~/worktools/data
+
+parent:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake user:create_parents"
