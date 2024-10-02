@@ -26,7 +26,8 @@ Devise.setup do |config|
   # with default "from" parameter.
   config.navigational_formats = ['*/*', :html, :turbo_stream]
 
-  config.mailer_sender = 'UserMailer'
+  config.mailer_sender = 'worktools@bravegenerationacademy.com'
+  config.mailer = 'UserMailer'
 
   # Configure the class responsible to send e-mails.
   # config.mailer = 'Devise::Mailer'

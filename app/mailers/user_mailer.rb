@@ -1,4 +1,4 @@
-class UserMailer < ApplicationMailer
+class UserMailer < Devise::Mailer
 
   def confirmation_instructions(record, token, opts={})
     @token = token
@@ -11,10 +11,9 @@ class UserMailer < ApplicationMailer
   end
 
   # Send password reset instructions
-  def password_reset(user)
-    @user = user
-    @token = user.reset_password_token # Assuming you have a method to generate this
-    mail(to: @user.email, subject: 'Your Password Reset Instructions')
+  def reset_password_instructions(record, token, opts={})
+    @token = token
+    devise_mail(record, :reset_password_instructions, opts)
   end
 
   # Send a notification to the userz
