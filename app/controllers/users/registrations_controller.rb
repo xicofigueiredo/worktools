@@ -16,6 +16,14 @@ class Users::RegistrationsController < Devise::RegistrationsController
     end
   end
 
+  def update
+    super do |resource|
+      if resource.errors.empty? && resource.saved_change_to_encrypted_password?
+        resource.update(changed_password: true)
+      end
+    end
+  end
+
   private
 
   def sign_up_params
