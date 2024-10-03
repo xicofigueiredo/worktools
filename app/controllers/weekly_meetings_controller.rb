@@ -101,7 +101,7 @@ class WeeklyMeetingsController < ApplicationController
   def build_day_slots_for_meeting
     days = %w[monday tuesday wednesday thursday friday]
     days.each do |day|
-      @weekly_meeting.send("#{day}_slots").build
+      @weekly_meeting.send(:"#{day}_slots").build
     end
   end
 

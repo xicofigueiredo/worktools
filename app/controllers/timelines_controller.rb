@@ -58,7 +58,7 @@ class TimelinesController < ApplicationController
     start_of_current_month = Date.today.beginning_of_month
     end_of_current_month = Date.today.end_of_month
 
-    @monthly_goals = @timelines.map do |timeline|
+    @monthly_goals = @timelines.filter_map do |timeline|
       # Group topics by their deadlines within the current month
       topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
                                             .where(user_topics: { user_id: current_user.id })
