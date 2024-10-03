@@ -56,13 +56,15 @@
                 </div>
 
 
-                <%= f.button :submit, "Sign up", class: "btn btn-outline-green btn-lg px-5" %>
+
+                <%= f.button :submit, "Sign up", class: "btn btn-lg btn-outline-success px-5 rounded-pill shadow-sm" %>
+
               <% end %>
 
             </div>
 
             <div>
-              <p class="mb-0">Already have an account? <%= link_to "Login", new_session_path(resource_name), class: "text-black-50 fw-bold" %></p>
+              <p class="mb-0">Already have an account? <%= link_to "Login", new_session_path(resource_name), class: "btn btn-lg btn-outline-info px-3 rounded-pill shadow-sm" %></p>
             </div>
 
           </div>

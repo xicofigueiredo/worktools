@@ -34,6 +34,7 @@ class User < ApplicationRecord
   # after_commit :send_welcome_email, on: :create
   # after_commit :post_create_actions, on: :create
 
+
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable, :confirmable
 
