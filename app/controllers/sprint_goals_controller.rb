@@ -210,7 +210,7 @@ class SprintGoalsController < ApplicationController
   end
 
   def set_sprint_deadlines(sprint)
-    @sprint_deadlines = current_user.timelines.map do |timeline|
+    @sprint_deadlines = current_user.timelines.filter_map do |timeline|
       # Group topics by their deadlines within the current sprint
       topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
                                             .where(user_topics: { user_id: current_user.id })

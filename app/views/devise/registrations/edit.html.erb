@@ -21,6 +21,17 @@
                   <p>Currently waiting confirmation for: <%= resource.unconfirmed_email %></p>
                 <% end %>
 
+                <div class="form-outline form-black mb-4" data-controller="password-toggle">
+                  <%= f.input :current_password,
+                              hint: "We need your current password to confirm your changes",
+                              required: true,
+                              input_html: { class: "form-control form-control-lg", autocomplete: "current-password" } %>
+                  <span class="fa fa-fw fa-eye field-icon toggle-password"
+                        data-action="click->password-toggle#toggle"
+                        data-password-toggle-target="icon"
+                        toggle="#"></span>
+                </div>
+
                 <div class="form-outline form-black mb-2 align-items-center" data-controller="password-toggle">
                   <%= f.input :password,
                               required: false,
@@ -47,17 +58,6 @@
                         data-action="click->password-toggle#toggle"
                         data-password-toggle-target="icon"
                         toggle="#password_confirmation"></span>
-                </div>
-
-                <div class="form-outline form-black mb-4" data-controller="password-toggle">
-                  <%= f.input :current_password,
-                              hint: "We need your current password to confirm your changes",
-                              required: true,
-                              input_html: { class: "form-control form-control-lg", autocomplete: "current-password" } %>
-                  <span class="fa fa-fw fa-eye field-icon toggle-password"
-                        data-action="click->password-toggle#toggle"
-                        data-password-toggle-target="icon"
-                        toggle="#"></span>
                 </div>
 
                 <div class="form-actions">
