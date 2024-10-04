@@ -73,6 +73,6 @@ module ProgressCalculations
   end
 
   def calc_array_average(array)
-    array.inject{ |sum, el| sum + el }.to_f / array.size
+    array.sum.to_f / array.size
   end
 end
