@@ -72,7 +72,7 @@
                   </button>
                 </div>
               </div>
-              <% unless timeline.expected_progress.nil? %>
+              <% unless timeline.expected_progress.nil? && timeline.progress.nil? %>
                 <% if timeline.progress > timeline.expected_progress%>
                   <div style="background-color: rgb(220,220,220); border-radius: 10px; height: 15px; font-size: 12px;" class="d-flex">
                     <div class="progress-bar bg-primary" role="progressbar" style="width: <%= timeline.expected_progress %>%; border-radius: 10px 0 0 10px;" aria-valuenow="<%= timeline.expected_progress %>" aria-valuemin="0" aria-valuemax="100">

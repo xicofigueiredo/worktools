@@ -39,41 +39,42 @@
     </div>
 
   <% else %>
-  <div class="container mt-3 mb-3" style="padding-left: 0;">
-      <div class="row">
-          <!-- Learner's Name Column -->
-          <div class="col-md-4">
-              <%# image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
-              <h2><%= @learner.full_name %></h2>
-              <p><%= Date.today.strftime("%Y")%> Attendance: <%= @yearly_presence %>%</p>
-          </div>
-
-          <!-- Hub Information Column -->
-          <div class="col-md-4 text-center">
-            <% hub = @learner.hubs.first %>
-            <h3><%= hub.name %> Hub</h3> <h5><%= hub.country %></h5>
-          </div>
-
-          <!-- LC Information Column -->
-          <div class="col-md-4" style="text-align: right;">
-              <% @hub_lcs.each do |lc| %>
-                  <p><%= lc.full_name %>: <%= lc.email %></p>
-              <% end %>
-          </div>
+    <div class="d-flex row gap-3 mb-5">
+      <div class="col-md-6">
+        <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
+          <h2><%= @learner.full_name %></h2>
+          <p>Hub: <%= @learner.hubs.any? ? @learner.hubs.first.name : ''  %></p>
+          <p>Email: <%= @learner.email %></p>
+          <% if @hub_lcs.any? %>
+            <% @hub_lcs.each do |lc| %>
+              <p>LC: <%= lc.full_name %> <br> <i class="fa-regular fa-envelope"></i> <%= lc.email %></p>
+            <% end %>
+          <% end %>
+        </div>
       </div>
-  </div>
+    </div>
 
-
+    <h2>Attendance</h2>
+    <p><%= Date.today.strftime("%Y")%>: <%= @yearly_presence %>%</p>
+    <div>
+      <div>
+        <%= render 'pages/partials/attendance',
+            learner: @learner,
+            current_date: @current_date,
+            current_week: @current_week,
+            attendances: @attendances %>
+      </div>
+    </div>
 
 
     <h2>Sprint Overview</h2>
-    <p>Keep track of your learner below.</p>
+    <p>Keep track of your learner.</p>
     <div>
       <%= render 'pages/partials/sprint_overview' %>
     </div>
 
     <h2>Knowledge</h2>
-    <p>Check the learner's academic goals below.</p>
+    <p>Check your learner's academic performance.</p>
     <div>
       <%= render 'pages/partials/timelines_display' %>
     </div>
@@ -81,7 +82,7 @@
   <% end %>
 
   <h2>Holidays</h2>
-  <p>Check your learner's Holidays below.</p>
+  <p>Check your learner's holidays below.</p>
   <div>
     <%= render 'pages/partials/holidays',
         holidays: @holidays %>
@@ -89,7 +90,7 @@
 
 
   <h2>Skills & Community</h2>
-  <p>Check your learner's skills and community goals for the sprint below.</p>
+  <p>Check your learner's goals for this sprint.</p>
   <div>
     <%= render 'pages/partials/skills_and_communities' %>
   </div>
