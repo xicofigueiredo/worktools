@@ -8,7 +8,21 @@ class PagesController < ApplicationController
   before_action :check_lc_role, only: [:dashboard_lc, :learner_profile, :attendance, :attendances, :learner_attendances, :update_attendance, :update_absence_attendance, :update_start_time_attendance, :update_end_time_attendance, :update_comments_attendance]
 
   def dashboard_admin
-    @hubs = Hub.all.order(:name)
+    hubs_with_users = Hub.all.order(:name).includes(users: :hubs)  # Eager load users and their hubs
+
+    # Transform data into a format suitable for the view
+    @hubs = hubs_with_users.map do |hub|
+      {
+        "name" => hub.name,
+        "users_count" => hub.users.size,  # Directly count users preloaded by 'includes'
+        "users" => hub.users.as_json(
+          only: [:id, :full_name, :role, :deactivate, :email],
+          include: {
+            hubs: { only: [:name] }  # Include each user's associated hubs with only the name field
+          }
+        )
+      }
+    end
   end
 
   def hub_selection
@@ -122,11 +136,11 @@ class PagesController < ApplicationController
       redirect_to root_path and return
     end
 
-    current_date = Date.today
+    today = Date.today
     @learner_flag = @learner.learner_flag
     @notes = @learner.notes.order(created_at: :desc)
     @timelines = @learner.timelines.where(hidden: false)
-    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", current_date, current_date).first
+    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
     @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
     @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
     @skills = @sprint_goals&.skills
@@ -153,12 +167,12 @@ class PagesController < ApplicationController
 
     @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
-    @current_weekly_goal_date = current_date
+    @current_weekly_goal_date = today
 
-    if current_date.saturday?
-      @current_weekly_goal_date = current_date - 1.day
-    elsif current_date.sunday?
-      @current_weekly_goal_date = current_date - 2.days
+    if today.saturday?
+      @current_weekly_goal_date = today - 1.day
+    elsif today.sunday?
+      @current_weekly_goal_date = today - 2.days
     end
 
     @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
@@ -166,12 +180,62 @@ class PagesController < ApplicationController
     @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
 
 
+    @attendances = @learner.attendances.where(attendance_date: @current_sprint.start_date..@current_sprint.end_date)
+
     get_kda_averages(@learner.kdas, @current_sprint)
 
     unless @learner
       redirect_to some_fallback_path, alert: "Learner not found."
     end
   end
+
+    # ##render json
+    # respond_to do |format|
+    #   format.html
+    #   format.json { render learner: @learner,
+    #   weekly_goal: @weekly_goal,
+    #   current_week: @current_week,
+    #   current_date: @current_weekly_goal_date,
+    #   weekly_goals_percentage: @weekly_goals_percentage,
+    #   kdas_percentage: @kdas_percentage,
+    #   average_items: @average_items,
+    #   has_exam_date: @has_exam_date,
+    #   has_mock50: @has_mock50,
+    #   has_mock100: @has_mock100,
+    #   yearly_presence: @yearly_presence,
+    #   notes: @notes,
+    #   timelines: @timelines,
+    #   current_sprint: @current_sprint,
+    #   current_sprint_weeks: @current_sprint_weeks,
+    #   sprint_goals: @sprint_goals,
+    #   skills: @skills,
+    #   communities: @communities,
+    #   lcs: @lcs,
+    #   hub_lcs: @hub_lcs,
+    #   holidays: @holidays
+    #   }
+    # end
+
+  # app/controllers/pages_controller.rb
+  def change_weekly_attendance
+    date = params[:date] ? Date.parse(params[:date]) : Date.today
+    week = Week.find_by("start_date <= ? AND end_date >= ?", date, date)
+    learner = User.find_by(id: params[:learner_id])
+
+    if learner.nil? || week.nil?
+      render turbo_stream: turbo_stream.replace("lp_weekly_attendance", partial: "pages/partials/error_message", locals: { message: "Learner or week not found" })
+      return
+    end
+
+    attendances = learner.attendances.where(attendance_date: week.start_date..week.end_date)
+
+    render turbo_stream:
+      turbo_stream.replace("lp_weekly_attendance",
+                            partial: "pages/partials/attendance",
+                            locals: { attendances: attendances, current_week: week, learner: learner, current_date: date })
+  end
+
+
 
   def change_weekly_goal
     date = params[:date] ? Date.parse(params[:date]) : Date.today

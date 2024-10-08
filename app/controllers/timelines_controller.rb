@@ -9,17 +9,15 @@ class TimelinesController < ApplicationController
   before_action :set_timeline, only: [:show, :edit, :update, :destroy, :archive]
 
   def index
-    @archived_timelines = Timeline.where(user: current_user, hidden: true)
-    @timelines_with_names = current_user.timelines.where.not(personalized_name: nil)
+    @archived = Timeline.where(user: current_user, hidden: true).any?
 
-    @timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
+    timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
     @has_lws = false
     @total_blocks_per_day = 0
     @total_hours_per_week = 0
     weekly_percentages = []
-    @timelines.each do |timeline|
+=begin     timelines.each do |timeline|
       unless timeline.personalized_name
-        # generate_topic_deadlines(timeline) --- this is needed when holidays update/create
         if timeline.subject.category.include?("lws")
           timeframe = Timeframe.new(Date.today, timeline.end_date)
           remaining_days = calculate_working_days(timeframe)
@@ -43,44 +41,51 @@ class TimelinesController < ApplicationController
         timeline.calculate_total_time
         timeline.save
       end
+
     end
+=end
 
     @average_weekly_percentage = calc_array_average(weekly_percentages).round(1)
 
-    calculate_progress_and_balance(@timelines)
+    calculate_progress_and_balance(timelines)
 
-    if @timelines.count.positive?
-      @total_progress = (@timelines.sum(&:progress).to_f / @timelines.count) / 100
+    if timelines.count.positive?
+      @total_progress = (timelines.sum(&:progress).to_f / timelines.count) / 100
     else
       @total_progress = 0
     end
 
-    start_of_current_month = Date.today.beginning_of_month
-    end_of_current_month = Date.today.end_of_month
+    @monthly_goals = calculate_monthly_goals(timelines)
 
-    @monthly_goals = @timelines.filter_map do |timeline|
-      # Group topics by their deadlines within the current month
-      topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
-                                            .where(user_topics: { user_id: current_user.id })
-                                            .select { |topic|
-                                              user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
-                                              user_topic && user_topic.deadline && user_topic.deadline >= start_of_current_month && user_topic.deadline <= end_of_current_month
-                                            }
-                                            .group_by { |topic|
-                                              topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline
-                                            }
-
-      # Find the latest deadline
-      latest_deadline = topics_grouped_by_deadline.keys.max
-
-      # Select the last topic with the latest deadline
-      last_relevant_topic = topics_grouped_by_deadline[latest_deadline]&.last
-
-      { timeline: timeline, topic: last_relevant_topic } if last_relevant_topic.present?
-    end.compact
 
 
     @holidays = current_user.holidays.where("end_date >= ?", 4.months.ago)
+
+    @timelines = timelines.map do |timeline|
+      {
+        "id" => timeline.id,
+        "subject_id" => timeline.subject_id,
+        "subject_name" => timeline.subject.name,
+        "personalized_name" => timeline.personalized_name,
+        "category" => timeline.subject.category,
+        "start_date" => timeline.start_date,
+        "end_date" => timeline.end_date,
+        "progress" => timeline.progress,
+        "balance" => timeline.balance,
+        "topics" => timeline.subject.topics.order(:order, id: :asc).map do |topic|
+          user_topic = current_user.user_topics.find_or_initialize_by(topic: topic)
+          {
+            "id" => topic.id,
+            "name" => topic.name,
+            "unit" => topic.unit,
+            "time" => topic.time,
+            "deadline" => user_topic.deadline,
+            "done" => user_topic.done,
+            "user_topic_id" => user_topic.id,
+          }
+        end
+      }
+    end
   end
 
   def new
@@ -226,6 +231,26 @@ class TimelinesController < ApplicationController
   def timeline_params
     params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_date_id, :mock100, :mock50, :personalized_name)
   end
+
+  def calculate_monthly_goals(timelines)
+    Rails.cache.fetch("monthly_goals_#{Date.today.beginning_of_month}", expires_in: 1.month) do
+      timelines.filter_map do |timeline|
+        topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
+          .where(user_topics: { user_id: current_user.id })
+          .select { |topic|
+            user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
+            user_topic && user_topic.deadline && user_topic.deadline >= Date.today.beginning_of_month && user_topic.deadline <= Date.today.end_of_month
+          }
+          .group_by { |topic| topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline }
+
+        latest_deadline = topics_grouped_by_deadline.keys.max
+        last_relevant_topic = topics_grouped_by_deadline[latest_deadline]&.last
+
+        { timeline: timeline, topic: last_relevant_topic } if last_relevant_topic.present?
+      end.compact
+    end
+  end
+
 
 
   # FIXME remove if everything is alright after merge
