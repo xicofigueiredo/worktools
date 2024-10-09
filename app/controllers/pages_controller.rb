@@ -219,23 +219,7 @@ class PagesController < ApplicationController
   end
 
     # app/controllers/pages_controller.rb
-    def change_weekly_attendance
-      date = params[:date] ? Date.parse(params[:date]) : Date.today
-      week = Week.find_by("start_date <= ? AND end_date >= ?", date, date)
-      learner = User.find_by(id: params[:learner_id])
 
-      if learner.nil? || week.nil?
-        render turbo_stream: turbo_stream.replace("lp_weekly_attendance", partial: "pages/partials/error_message", locals: { message: "Learner or week not found" })
-        return
-      end
-
-      attendances = learner.attendances.where(attendance_date: week.start_date..week.end_date)
-
-      render turbo_stream:
-        turbo_stream.replace("lp_weekly_attendance",
-                             partial: "pages/partials/attendance",
-                             locals: { attendances: attendances, current_week: week, learner: learner, current_date: date })
-    end
 
 
 

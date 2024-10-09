@@ -5,70 +5,55 @@
         <div class="card text-black" style="border-radius: 1rem;">
           <div class="card-body p-5 text-center">
 
-            <div class="mb-md-2 mt-md-1 pb-5">
+            <div class="mb-md-5 mt-md-4 pb-5">
 
               <h2 class="fw-bold mb-1 text-uppercase">Update Password</h2>
-              <p class="text-black-50 mb-2">Please update your password below.</p>
+              <p class="text-black-50 mb-2">Please update your password for security reasons.</p>
+              <br>
 
               <%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
                 <%= f.error_notification %>
 
-                <div class="form-outline form-black mb-2">
-                  <%= f.input :email, required: true, autofocus: true, input_html: { class: "form-control form-control-lg", autocomplete: "email" } %>
-                </div>
-
-                <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-                  <p>Currently waiting confirmation for: <%= resource.unconfirmed_email %></p>
-                <% end %>
-
-                <div class="form-outline form-black mb-4" data-controller="password-toggle">
+                <div class="form-outline form-black mb-4" data-controller="password-toggle" style="position: relative;">
                   <%= f.input :current_password,
-                              hint: "We need your current password to confirm your changes",
                               required: true,
                               input_html: { class: "form-control form-control-lg", autocomplete: "current-password" } %>
                   <span class="fa fa-fw fa-eye field-icon toggle-password"
                         data-action="click->password-toggle#toggle"
                         data-password-toggle-target="icon"
-                        toggle="#"></span>
+                        toggle="#current_password"
+                        style="position: absolute; right: 10px; top: 70%; transform: translateY(-50%); cursor: pointer;"></span>
                 </div>
 
-                <div class="form-outline form-black mb-2 align-items-center" data-controller="password-toggle">
+                <div class="form-outline form-white mb-4 align-items-center" data-controller="password-toggle" style="position: relative;">
                   <%= f.input :password,
-                              required: false,
-                              input_html: { class: "form-control form-control-lg",
-                                            autocomplete: "new-password",
-                                            type: "password",
-                                            id: "password",
-                                            data: { password_toggle_target: "password" } } %>
+                              label: "New Password",
+                              required: true,
+                              input_html: { class: "form-control form-control-lg", autocomplete: "new-password", type: "password", id: "password", data: { password_toggle_target: "password" } } %>
                   <span class="fa fa-fw fa-eye field-icon toggle-password"
                         data-action="click->password-toggle#toggle"
                         data-password-toggle-target="icon"
-                        toggle="#password"></span>
+                        toggle="#password"
+                        style="position: absolute; right: 10px; top: 70%; transform: translateY(-50%); cursor: pointer;"></span>
                 </div>
 
-                <div class="form-outline form-black mb-2" data-controller="password-toggle">
+                <div class="form-outline form-white mb-4" data-controller="password-toggle" style="position: relative;">
                   <%= f.input :password_confirmation,
-                              required: false,
-                              input_html: { class: "form-control form-control-lg",
-                                            autocomplete: "new-password",
-                                            type: "password",
-                                            id: "password_confirmation",
-                                            data: { password_toggle_target: "password" } } %>
+                              required: true,
+                              input_html: { class: "form-control form-control-lg", autocomplete: "new-password", type: "password", id: "password_confirmation", data: { password_toggle_target: "password" } } %>
                   <span class="fa fa-fw fa-eye field-icon toggle-password"
                         data-action="click->password-toggle#toggle"
                         data-password-toggle-target="icon"
-                        toggle="#password_confirmation"></span>
+                        toggle="#password_confirmation"
+                        style="position: absolute; right: 10px; top: 70%; transform: translateY(-50%); cursor: pointer;"></span>
                 </div>
-
-                <div class="form-actions">
                   <%= f.button :submit, "Update", class: "btn btn-lg btn-outline-success px-5 rounded-pill shadow-sm" %>
-                </div>
               <% end %>
 
             </div>
 
             <div>
-              <%= link_to "Back", :back, class: "text-black-50 fw-bold" %>
+              <%= link_to "Ignore", :back, class: "text-black-50 fw-bold" %>
             </div>
 
           </div>

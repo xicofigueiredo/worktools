@@ -54,17 +54,18 @@
       </div>
     </div>
 
-    <h2>Attendance</h2>
-    <p><%= Date.today.strftime("%Y")%>: <%= @yearly_presence %>%</p>
-    <div>
+    <% if @attendances %>
+      <h2>Attendance</h2>
       <div>
-        <%= render 'pages/partials/attendance',
-            learner: @learner,
-            current_date: @current_date,
-            current_week: @current_week,
-            attendances: @attendances %>
+        <div>
+          <%= render 'pages/partials/attendance',
+              learner: @learner,
+              current_date: @current_date,
+              current_week: @current_week,
+              attendances: @attendances %>
+        </div>
       </div>
-    </div>
+    <% end %>
 
 
     <h2>Sprint Overview</h2>
