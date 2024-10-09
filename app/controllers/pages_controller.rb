@@ -190,7 +190,6 @@ class PagesController < ApplicationController
       redirect_to some_fallback_path, alert: "Learner not found."
     end
 
-    @current_date = current_date
 
     # ##render json
     # respond_to do |format|
