@@ -1,38 +1,40 @@
-<div class="card mb-5" style="border-radius: 10px">
-  <div class="px-2">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Activity</th>
-          <th>Your Goals for this Activity</th>
-          <th>The challenges you might encounter.</th>
-          <th>The plan to overcome the challenges</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @skills&.each do |skill| %>
+<div class="mb-5">
+  <div class="card mb-2 shadow-sm px-2 responsive-card" style="border-radius: 10px">
+    <div class="px-2 overflow-auto">
+      <table class="table">
+        <thead>
           <tr>
-            <td><%= skill.extracurricular %></td>
-            <td><%= skill.smartgoals %></td>
-            <td><%= skill.difficulties %></td>
-            <td><%= skill.plan %></td>
+            <th style="text-align: left;">Activity</th>
+            <th>Your Goals for this Activity</th>
+            <th>The challenges you might encounter.</th>
+            <th>The plan to overcome the challenges</th>
           </tr>
-        <% end %>
-        <% @communities&.each do |community| %>
-          <tr>
-            <td><%= community.involved %></td>
-            <td><%= community.smartgoals %></td>
-            <td><%= community.difficulties %></td>
-            <td><%= community.plan %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-    <% if (@skills.nil? || @skills&.empty?) && (@communities.nil? || @communities&.empty?) %>
-      <div class="text-center py-5">
-        <h2>No Skills or Community Goals yet...</h2>
-        <p>Please help <%= @learner.full_name %> fill out their Skills and Community goals</p>
-      </div>
-    <% end %>
+        </thead>
+        <tbody>
+          <% @skills&.each do |skill| %>
+            <tr>
+              <td style="text-align: left;"><%= skill.extracurricular %></td>
+              <td><%= skill.smartgoals %></td>
+              <td><%= skill.difficulties %></td>
+              <td><%= skill.plan %></td>
+            </tr>
+          <% end %>
+          <% @communities&.each do |community| %>
+            <tr>
+              <td style="text-align: left;"><%= community.involved %></td>
+              <td><%= community.smartgoals %></td>
+              <td><%= community.difficulties %></td>
+              <td><%= community.plan %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <% if (@skills.nil? || @skills&.empty?) && (@communities.nil? || @communities&.empty?) %>
+        <div class="text-center py-5">
+          <h2>No Skills or Community Goals yet...</h2>
+          <p>Please help <%= @learner.full_name %> fill out their Skills and Community goals</p>
+        </div>
+      <% end %>
+    </div>
   </div>
 </div>

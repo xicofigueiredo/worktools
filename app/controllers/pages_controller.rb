@@ -25,6 +25,7 @@ class PagesController < ApplicationController
     end
   end
 
+
   def hub_selection
     @hubs = current_user.hubs
   end
@@ -179,6 +180,7 @@ class PagesController < ApplicationController
 
     @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
 
+    @attendances = @learner.attendances.where(attendance_date: @current_sprint.start_date..@current_sprint.end_date)
 
     @attendances = @learner.attendances.where(attendance_date: @current_sprint.start_date..@current_sprint.end_date)
 
@@ -187,6 +189,35 @@ class PagesController < ApplicationController
     unless @learner
       redirect_to some_fallback_path, alert: "Learner not found."
     end
+
+    @current_date = current_date
+
+    # ##render json
+    # respond_to do |format|
+    #   format.html
+    #   format.json { render learner: @learner,
+    #   weekly_goal: @weekly_goal,
+    #   current_week: @current_week,
+    #   current_date: @current_weekly_goal_date,
+    #   weekly_goals_percentage: @weekly_goals_percentage,
+    #   kdas_percentage: @kdas_percentage,
+    #   average_items: @average_items,
+    #   has_exam_date: @has_exam_date,
+    #   has_mock50: @has_mock50,
+    #   has_mock100: @has_mock100,
+    #   yearly_presence: @yearly_presence,
+    #   notes: @notes,
+    #   timelines: @timelines,
+    #   current_sprint: @current_sprint,
+    #   current_sprint_weeks: @current_sprint_weeks,
+    #   sprint_goals: @sprint_goals,
+    #   skills: @skills,
+    #   communities: @communities,
+    #   lcs: @lcs,
+    #   hub_lcs: @hub_lcs,
+    #   holidays: @holidays
+    #   }
+    # end
   end
 
     # ##render json
@@ -234,7 +265,6 @@ class PagesController < ApplicationController
                             partial: "pages/partials/attendance",
                             locals: { attendances: attendances, current_week: week, learner: learner, current_date: date })
   end
-
 
 
   def change_weekly_goal

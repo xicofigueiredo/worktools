@@ -21,9 +21,13 @@ class Sprint < ApplicationRecord
 
     passed_weeks_in_sprint_count = Week.where(start_date: date_range).count
 
-    percent_rate = weekly_goals_count.zero? ? 0 : (weekly_goals_count / passed_weeks_in_sprint_count.to_f * 100).round
+    percent_rate = if weekly_goals_count.zero? || passed_weeks_in_sprint_count.zero?
+      0
+    else
+      (weekly_goals_count.to_f / passed_weeks_in_sprint_count * 100).round
+    end
 
-    percent_rate
+percent_rate
   end
 
   def count_kdas_total(user)
