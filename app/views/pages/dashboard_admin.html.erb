@@ -4,7 +4,7 @@
     <div class="row mb-4">
       <% hub["users"].each do |user| %>
         <div class="col-md-4 mb-4">
-          <%= link_to learner_profile_path(user["id"]), class: "text-decoration-none" do %>
+          <%= link_to learner_profile_path(user["id"]), class: "text-decoration-none", data: { turbo: false } do %>
             <div class="card on-card-hover" style="border-radius: 10px;">
               <div class="card-body">
                 <div class="d-flex flex-column align-items-center text-center">

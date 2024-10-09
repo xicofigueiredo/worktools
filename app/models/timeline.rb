@@ -3,6 +3,8 @@ class Timeline < ApplicationRecord
   belongs_to :subject, optional: true
 
   after_create :create_user_topics
+  after_save :clear_monthly_goals_cache, if: :dates_changed?
+
 
   has_many :knowledges, dependent: :destroy
   before_destroy :destroy_associated_user_topics
@@ -57,5 +59,13 @@ class Timeline < ApplicationRecord
     if holidays.include?(start_date) && holidays.include?(end_date)
       errors.add(:base, "Start date and end date cannot be on a holiday")
     end
+  end
+
+  def dates_changed?
+    saved_change_to_start_date? || saved_change_to_end_date?
+  end
+
+  def clear_monthly_goals_cache
+    Rails.cache.delete("monthly_goals_#{Date.today.beginning_of_month}")
   end
 end
