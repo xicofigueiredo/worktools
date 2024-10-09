@@ -8,8 +8,23 @@ class PagesController < ApplicationController
   before_action :check_lc_role, only: [:dashboard_lc, :learner_profile, :attendance, :attendances, :learner_attendances, :update_attendance, :update_absence_attendance, :update_start_time_attendance, :update_end_time_attendance, :update_comments_attendance]
 
   def dashboard_admin
-    @hubs = Hub.all.order(:name)
+    hubs_with_users = Hub.all.order(:name).includes(users: :hubs)  # Eager load users and their hubs
+
+    # Transform data into a format suitable for the view
+    @hubs = hubs_with_users.map do |hub|
+      {
+        "name" => hub.name,
+        "users_count" => hub.users.size,  # Directly count users preloaded by 'includes'
+        "users" => hub.users.as_json(
+          only: [:id, :full_name, :role, :deactivate, :email],
+          include: {
+            hubs: { only: [:name] }  # Include each user's associated hubs with only the name field
+          }
+        )
+      }
+    end
   end
+
 
   def hub_selection
     @hubs = current_user.hubs
@@ -165,13 +180,48 @@ class PagesController < ApplicationController
 
     @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
 
+    @attendances = @learner.attendances.where(attendance_date: @current_sprint.start_date..@current_sprint.end_date)
 
     get_kda_averages(@learner.kdas, @current_sprint)
 
     unless @learner
       redirect_to some_fallback_path, alert: "Learner not found."
     end
+
+    @current_date = current_date
+
+    # ##render json
+    # respond_to do |format|
+    #   format.html
+    #   format.json { render learner: @learner,
+    #   weekly_goal: @weekly_goal,
+    #   current_week: @current_week,
+    #   current_date: @current_weekly_goal_date,
+    #   weekly_goals_percentage: @weekly_goals_percentage,
+    #   kdas_percentage: @kdas_percentage,
+    #   average_items: @average_items,
+    #   has_exam_date: @has_exam_date,
+    #   has_mock50: @has_mock50,
+    #   has_mock100: @has_mock100,
+    #   yearly_presence: @yearly_presence,
+    #   notes: @notes,
+    #   timelines: @timelines,
+    #   current_sprint: @current_sprint,
+    #   current_sprint_weeks: @current_sprint_weeks,
+    #   sprint_goals: @sprint_goals,
+    #   skills: @skills,
+    #   communities: @communities,
+    #   lcs: @lcs,
+    #   hub_lcs: @hub_lcs,
+    #   holidays: @holidays
+    #   }
+    # end
   end
+
+    # app/controllers/pages_controller.rb
+
+
+
 
   def change_weekly_goal
     date = params[:date] ? Date.parse(params[:date]) : Date.today

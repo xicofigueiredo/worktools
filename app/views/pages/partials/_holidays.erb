@@ -3,7 +3,7 @@
     <table class="table">
       <thead>
         <tr>
-          <th>Holiday Name</th>
+          <th style="text-align: left;">Holiday Name</th>
           <th>Start Date</th>
           <th>End Date</th>
           <th>Status</th>
@@ -14,7 +14,7 @@
           <% holidays.each do |holiday| %>
             <% today = Date.today %>
             <tr>
-              <td><%= holiday.name  %></td>
+              <td style="text-align: left;"><%= holiday.name  %></td>
               <td><%= holiday.start_date.strftime('%d-%m-%Y') %></td>
               <td><%= holiday.end_date.strftime('%d-%m-%Y') %></td>
               <td>

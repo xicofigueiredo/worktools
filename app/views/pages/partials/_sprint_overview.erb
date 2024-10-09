@@ -1,30 +1,23 @@
-<div class="mb-5">
-  <div class="card mb-2 shadow-sm px-2" style="border-radius: 10px">
+<div class="mb-4">
+  <div class="card mb-2 shadow-sm px-2 responsive-card" style="border-radius: 10px">
     <div class="px-2 overflow-auto">
       <table class="table">
         <thead>
           <tr>
             <th></th>
             <% @current_sprint_weeks.each do |week| %>
-              <th style="vertical-align: middle;">
-                <div class="d-flex">
-                  <% if week.name.include?("Build") %>
-                    <%= week.week_name_abbr %>
-                    <p style="font-size: 10px; margin-bottom: -1;">BW</p>
-                  <% else %>
-                    <div style="margin-bottom: 3px"><%= week.week_name_abbr %></div>
-                  <% end %>
+              <th class="week-header" >
+                <div class="week-name-container">
+                  <div class="week-name"><%= week.week_name_abbr %></div>
                 </div>
               </th>
             <% end %>
-            <th>
-              Overall
-            </th>
+            <%# <th>Overall</th> %>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Weekly Goals</td>
+            <td style="text-align: left;">Weekly Goals</td>
             <% @current_sprint_weeks.each do |week| %>
               <% if week.weekly_goals.where(user: @learner).exists? %>
                 <% if week.start_date <= Date.today %>
@@ -32,6 +25,8 @@
                 <% else %>
                   <td></td>
                 <% end %>
+              <% elsif week.name.include?("Build") %>
+                <td><i class="fa-solid fa-hammer"></i></td>
               <% else %>
                 <% if week.start_date <= Date.today %>
                   <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
@@ -40,10 +35,10 @@
                 <% end %>
               <% end %>
             <% end %>
-            <td><%= @weekly_goals_percentage %>%</td>
+            <%# <td><%= @weekly_goals_percentage %>
           </tr>
           <tr>
-            <td>KDAs</td>
+            <td style="text-align: left;">KDAs</td>
             <% @current_sprint_weeks.each do |week| %>
               <% if week.kdas.where(user: @learner).exists? %>
                 <% if week.start_date <= Date.today %>
@@ -51,6 +46,8 @@
                 <% else %>
                   <td></td>
                 <% end %>
+              <% elsif week.name.include?("Build") %>
+                <td><i class="fa-solid fa-hammer"></i></td>
               <% else %>
                 <% if week.start_date <= Date.today %>
                   <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
@@ -59,10 +56,10 @@
                 <% end %>
               <% end %>
             <% end %>
-            <td><%= @kdas_percentage %>%</td>
+            <%# <td><%= @kdas_percentage %>
           </tr>
           <tr>
-            <td>Unjustified Absences</td>
+            <td style="text-align: left;">Unjustified Absences</td>
             <% @current_sprint_weeks.each do |week| %>
               <% if week.start_date <= Date.today %>
                 <td><%= week.count_absences(@learner) %></td>
@@ -70,28 +67,16 @@
                 <td></td>
               <% end %>
             <% end %>
-            <td><%= @current_sprint.count_absences(@learner) %></td>
+            <%# <td><%= @current_sprint.count_absences(@learner) %>
           </tr>
-          <%# <tr>
-            <td>Weekly Progress</td>
-            <% @current_sprint_weeks.each do |week| %>
-              <%# <td>
-                <% relative_progress = week.calc_relative_average_timeline_progress(@learner) %>
-                <%# FIXME The logic below is temporary to hide initial
-                    progress without previous week progress.
-                    Logic can be removed after Sprint 3
-                %>
-                <%# <% if relative_progress > 10 || relative_progress < 0 %>
-                  <%# N/A
-                <% else %>
-                  <%# <%= "#{relative_progress}%" %>
-                <%# <% end %>
-              <%# </td> %>
-            <%# <% end %>
-            <%# <td><%= @current_sprint.count_weekly_progress_average(@learner)%</td> %>
-          <%# </tr> %>
         </tbody>
       </table>
+
     </div>
+      <div class="d-flex align-items-center gap-4 small mt-2 build-week justify-content-center" style="padding-top: 12px; padding-bottom: 24px;">
+        <div><span class="text-success"><i class="fa-regular fa-circle-check"></i></span>  Done</div>
+        <div><span class="text-danger"><i class="fa-regular fa-circle-xmark"></i></span>  Not done</div>
+        <div><i class="fa-solid fa-hammer"></i>  Build Week</div>
+      </div>
   </div>
 </div>
