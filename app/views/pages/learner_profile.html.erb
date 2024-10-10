@@ -47,7 +47,7 @@
           <p>Email: <%= @learner.email %></p>
           <% if @hub_lcs.any? %>
             <% @hub_lcs.each do |lc| %>
-              <p>LC: <%= lc.full_name %> <br> <i class="fa-regular fa-envelope"></i> <%= lc.email %></p>
+              <p>LC: <%= lc.full_name %> <br> <i class="fa-regular fa-envelope"></i> <a href="mailto:<%= lc.email %>"><%= lc.email %></a></p>
             <% end %>
           <% end %>
         </div>
