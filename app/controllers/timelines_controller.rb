@@ -55,7 +55,7 @@ class TimelinesController < ApplicationController
       @total_progress = 0
     end
 
-    @monthly_goals = calculate_monthly_goals(timelines)
+    # @monthly_goals = calculate_monthly_goals(timelines)
 
 
 

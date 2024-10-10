@@ -7,6 +7,7 @@ class TimelineUpdater
   include WorkingDaysAndHolidays
 
   def update_timeline(timeline)
+
     assign_mock_deadlines(timeline)
     timeline.save!
   end
@@ -15,14 +16,7 @@ end
 namespace :timelines do
   desc "Update timelines where mock50 and mock100 are not set"
   task simulate_update: :environment do
-    updater = TimelineUpdater.new
-    Timeline.where(mock50: nil, mock100: nil).find_each do |timeline|
-      begin
-        updater.update_timeline(timeline)
-        puts "Updated Timeline #{timeline.id}"
-      rescue => e
-        puts "Failed to update Timeline #{timeline.id}: #{e.message}"
-      end
-    end
+    timelines = Timeline.where(user: 620, hidden: false)
+    calculate_progress_and_balance(timelines)
   end
 end
