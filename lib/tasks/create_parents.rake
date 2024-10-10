@@ -23,6 +23,7 @@ namespace :db do
           )
         parent.save!
         puts "Parent account for #{email} created successfully."
+        UserMailer.welcome_parent(parent, password).deliver_now
       else
         parent.password = password
         parent.password_confirmation = password

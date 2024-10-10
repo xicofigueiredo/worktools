@@ -26,6 +26,8 @@ class UserMailer < Devise::Mailer
   def welcome_parent(parent, password)
     @parent = parent
     @password = password
-    mail(to: @parent.email, subject: 'Welcome to Our Awesome App!')
+    mail(to: @parent.email,
+          from: 'worktools@bravegenerationacademy.com',
+          subject: 'Welcome to the new BGA App!')
   end
 end
