@@ -11,6 +11,8 @@ Rails.application.configure do
     authentication:       'login',
     user_name:            ENV['OUTLOOK_USERNAME'],
     password:             ENV['OUTLOOK_PASSWORD'],
+    open_timeout:         5,
+    read_timeout:         10,
     enable_starttls_auto: true}
     config.action_mailer.default_url_options = {:host =>"http://worktools.site"}  # Settings specified here will take precedence over those in config/application.rb.
     config.action_mailer.raise_delivery_errors = true
@@ -64,6 +66,8 @@ Rails.application.configure do
   # Include generic and useful information about system operation, but avoid logging too much
   # information to avoid inadvertent exposure of personally identifiable information (PII).
   config.log_level = :info
+  config.logger = Logger.new(STDOUT)
+
 
   # Prepend all log lines with the following tags.
   config.log_tags = [ :request_id ]

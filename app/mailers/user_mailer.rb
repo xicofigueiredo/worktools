@@ -22,4 +22,10 @@ class UserMailer < Devise::Mailer
     @message = message
     mail(to: @user.email, subject: 'You Have a New Notification')
   end
+
+  def welcome_parent(parent, password)
+    @parent = parent
+    @password = password
+    mail(to: @parent.email, subject: 'Welcome to Our Awesome App!')
+  end
 end

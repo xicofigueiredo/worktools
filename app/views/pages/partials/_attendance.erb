@@ -8,7 +8,12 @@
                 <%= @current_sprint.name %>
               </div>
               <div style="text-align: right;">
-                <%= Date.today.strftime("%Y") %>: <%= @yearly_presence %>%
+                <%= Date.today.strftime("%Y") %>:
+                <% if @yearly_presence %>
+                  <%= @yearly_presence %>%
+                <% else %>
+                  0%
+                <% end %>
               </div>
             </div>
             <div class="table-responsive">
@@ -25,8 +30,14 @@
                       <% next if date.saturday? || date.sunday? %>
                       <% attendance = @attendances.find { |a| a.attendance_date == date } %>
                       <td>
-                        <% if attendance && attendance.start_time %>
+                        <% if attendance && attendance.start_time && attendance.end_time %>
                           <div> <%= attendance.start_time.strftime("%H:%M") %></div>
+                          <div><%= attendance.end_time.strftime("%H:%M") %></div>
+                        <% elsif attendance && attendance.start_time && !attendance.end_time %>
+                          <div> <%= attendance.start_time.strftime("%H:%M") %></div>
+                          <div>-</div>
+                        <% elsif attendance && !attendance.start_time && attendance.end_time %>
+                          <div>-</div>
                           <div><%= attendance.end_time.strftime("%H:%M") %></div>
                         <% elsif attendance && attendance.absence == "Justified Leave" %>
                           <span class="text-primary"><i class="fa-regular fa-circle-xmark"></i></span>
@@ -37,7 +48,7 @@
                         <% elsif  attendance && attendance.absence == "Unjustified Leave" %>
                           <span class="text-danger"><i class="fa-regular fa-circle-xmark"></i></span>
                         <% else %>
-                          -
+                          X
                         <% end %>
                       </td>
                     <% end %>
