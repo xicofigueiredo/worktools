@@ -25,12 +25,9 @@ namespace :db do
         puts "Parent account for #{email} created successfully."
         UserMailer.welcome_parent(parent, password).deliver_now
       else
-        parent.password = password
-        parent.password_confirmation = password
-        parent.save!
         puts "Parent account for #{email} already exists, updating kids."
       end
-
+      
       if kid
         unless parent.kids.include?(kid.id)
           parent.kids << kid.id
@@ -63,7 +60,7 @@ namespace :db do
       create_parent_method.call(parent_name, parent1_email, parent1_password, kid_email)
 
       # Create or update the second parent if present
-      unless row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil?
+      unless row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil? || row['Parent 2'] == 0 || row['Email 2'] == 0 || row['Password 2'] == 0
         parent2_name = row['Parent 2'].strip.capitalize
         parent2_email = row['Email 2'].strip.downcase
         parent2_password = row['Password 2'].strip
