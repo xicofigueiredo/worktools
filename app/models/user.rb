@@ -69,9 +69,9 @@ class User < ApplicationRecord
   end
 
   def email_domain_check
-    # unless email.ends_with?('@edubga.com')
-    #   errors.add(:email, :invalid_domain)
-    # end
+    unless email.ends_with?('@edubga.com')
+      errors.add(:email, :invalid_domain)
+    end
   end
 
 end
