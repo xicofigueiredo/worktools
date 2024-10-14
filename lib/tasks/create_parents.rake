@@ -9,10 +9,11 @@ namespace :db do
       return if email.blank? || password.blank?
 
       # Find or create the parent
-      parent = User.find_or_initialize_by(email: email)
-      kid = User.find_by(email: kid_email)
+      parent = User.find_or_initialize_by(email: email.strip.downcase)
 
-      if parent.new_record?
+      kid = User.find_by(email: kid_email.strip.downcase)
+
+      if parent.new_record? && kid.present?
         parent.assign_attributes(
           full_name: name,
           password: password,
@@ -25,9 +26,9 @@ namespace :db do
         puts "Parent account for #{email} created successfully."
         UserMailer.welcome_parent(parent, password).deliver_now
       else
-        puts "Parent account for #{email} already exists, updating kids."
+        puts "Parent account for #{email} already exists, or kids not found."
       end
-      
+
       if kid
         unless parent.kids.include?(kid.id)
           parent.kids << kid.id
@@ -51,16 +52,18 @@ namespace :db do
 
     # Process each row in the CSV
     CSV.foreach(file_path, headers: true) do |row|
-      parent_name = row['Parent 1'].strip.capitalize
-      parent1_email = row['Email 1'].strip.downcase
-      parent1_password = row['Password'].strip
-      kid_email = row['Email'].strip.downcase
+      unless row['Email'].nil? || row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil? || row['Parent 2'] == 0 || row['Email 2'] == 0 || row['Password 2'] == 0
+        parent_name = row['Parent 1'].strip.capitalize
+        parent1_email = row['Email 1'].strip.downcase
+        parent1_password = row['Password'].strip
+        kid_email = row['Email'].strip.downcase
 
-      # Create or update the first parent
-      create_parent_method.call(parent_name, parent1_email, parent1_password, kid_email)
+        # Create or update the first parent
+        create_parent_method.call(parent_name, parent1_email, parent1_password, kid_email)
+      end
 
       # Create or update the second parent if present
-      unless row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil? || row['Parent 2'] == 0 || row['Email 2'] == 0 || row['Password 2'] == 0
+      unless row['Email'].nil? || row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil? || row['Parent 2'] == 0 || row['Email 2'] == 0 || row['Password 2'] == 0
         parent2_name = row['Parent 2'].strip.capitalize
         parent2_email = row['Email 2'].strip.downcase
         parent2_password = row['Password 2'].strip

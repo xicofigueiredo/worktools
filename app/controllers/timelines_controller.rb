@@ -9,7 +9,7 @@ class TimelinesController < ApplicationController
   before_action :set_timeline, only: [:show, :edit, :update, :destroy, :archive]
 
   def index
-    @archived = Timeline.where(user: current_user, hidden: true).any?
+    @archived = current_user.timelines.exists?( hidden: true)
 
     timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
     @has_lws = false

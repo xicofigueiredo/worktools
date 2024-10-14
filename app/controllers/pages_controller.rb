@@ -7,22 +7,23 @@ class PagesController < ApplicationController
   before_action :check_admin_role, only: [:dashboard_admin]
   before_action :check_lc_role, only: [:dashboard_lc, :learner_profile, :attendance, :attendances, :learner_attendances, :update_attendance, :update_absence_attendance, :update_start_time_attendance, :update_end_time_attendance, :update_comments_attendance]
 
+
   def dashboard_admin
-    hubs_with_users = Hub.all.order(:name).includes(users: :hubs)  # Eager load users and their hubs
+    @hubs = Hub.order(:name).includes(users: { users_hubs: :hub }).references(:users)
 
     # Transform data into a format suitable for the view
-    @hubs = hubs_with_users.map do |hub|
-      {
-        "name" => hub.name,
-        "users_count" => hub.users.size,  # Directly count users preloaded by 'includes'
-        "users" => hub.users.as_json(
-          only: [:id, :full_name, :role, :deactivate, :email],
-          include: {
-            hubs: { only: [:name] }  # Include each user's associated hubs with only the name field
-          }
-        )
-      }
-    end
+    # @hubs = hubs_with_users.map do |hub|
+    #   {
+    #     "name" => hub.name,
+    #     "users_count" => hub.users.size,  # Directly count users preloaded by 'includes'
+    #     "users" => hub.users.as_json(
+    #       only: [:id, :full_name, :role, :deactivate, :email],
+    #       include: {
+    #         hubs: { only: [:name] }  # Include each user's associated hubs with only the name field
+    #       }
+    #     )
+    #   }
+    # end
   end
 
 
@@ -65,6 +66,10 @@ class PagesController < ApplicationController
   end
 
   def profile
+    kids = []
+    current_user.kids.each do |kid|
+      kids << User.find_by(id: kid)
+    end
     if current_user.role == "learner" || current_user.role == "admin"
       @learner = current_user
       @learner_flag = @learner.learner_flag
@@ -102,12 +107,10 @@ class PagesController < ApplicationController
       end
     elsif current_user.role == "lc"
       redirect_to dashboard_lc_path
-    elsif current_user.role == "guardian"
-      kids = []
-      current_user.kids.each do |kid|
-        kids << User.find_by(id: kid)
-      end
+    elsif current_user.role == "guardian" && kids.count > 0
       redirect_to learner_profile_path(kids.first)
+    else
+      redirect_to about_path
     end
   end
 
