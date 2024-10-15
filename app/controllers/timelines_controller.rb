@@ -57,41 +57,15 @@ class TimelinesController < ApplicationController
 
     # @monthly_goals = calculate_monthly_goals(timelines)
 
-
-
     @holidays = current_user.holidays.where("end_date >= ?", 4.months.ago)
 
-    @timelines = timelines.map do |timeline|
-      {
-        "id" => timeline.id,
-        "subject_id" => timeline.subject_id,
-        "subject_name" => timeline.subject.name,
-        "personalized_name" => timeline.personalized_name,
-        "category" => timeline.subject.category,
-        "start_date" => timeline.start_date,
-        "end_date" => timeline.end_date,
-        "progress" => timeline.progress,
-        "balance" => timeline.balance,
-        "topics" => timeline.subject.topics.order(:order, id: :asc).map do |topic|
-          user_topic = current_user.user_topics.find_or_initialize_by(topic: topic)
-          {
-            "id" => topic.id,
-            "name" => topic.name,
-            "unit" => topic.unit,
-            "time" => topic.time,
-            "deadline" => user_topic.deadline,
-            "done" => user_topic.done,
-            "user_topic_id" => user_topic.id,
-          }
-        end
-      }
-    end
+    @timelines = current_user.timelines_sorted_by_balance.where(hidden: false).includes(:topics)
   end
 
   def new
     @timeline = Timeline.new
     set_exam_dates
-    @subjects = Subject.all.order(:category, :name).reject do |subject|
+    @subjects = Subject.order(:category, :name).reject do |subject|
       subject.name.blank? || subject.name.match?(/^P\d/)
     end
     @max_date = Date.today + 5.year
@@ -117,7 +91,7 @@ class TimelinesController < ApplicationController
   def edit
     @edit = true
     set_exam_dates
-    @subjects = Subject.all.order(:category, :name)
+    @subjects = Subject.order(:category, :name)
     @max_date = Date.today + 5.year
     @min_date = Date.today - 5.year
     @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
