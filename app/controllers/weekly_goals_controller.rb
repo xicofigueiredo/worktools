@@ -4,28 +4,6 @@ class WeeklyGoalsController < ApplicationController
   before_action :set_subject_names, only: [:new, :edit]
   before_action :set_topic_names, only: [:new, :edit]
 
-  def topics_for_subject
-    # Assume subject_name is passed correctly and you find the subject by its name
-    subject = Subject.find_by(name: params[:subject_name])
-
-    if subject.present?
-      # Fetch the topics based on the found subject's id
-      topics = Topic.joins(:user_topics)
-      .where(user_topics: { user_id: current_user.id, done: false })
-      .where(subject_id: subject.id)
-      .select(:id, :name)
-
-
-      render json: topics
-    else
-      # If no subject is found, respond with an error message
-      render json: { error: "Subject not found" }, status: :not_found
-    end
-  rescue => e
-    # Log the error and respond with a generic 500 error message
-    Rails.logger.error "Error in topics_for_subject: #{e.message}"
-    render json: { error: "Internal Server Error" }, status: :internal_server_error
-  end
 
   def index
     @weekly_goals = current_user.weekly_goals.order(created_at: :desc)
@@ -113,6 +91,31 @@ class WeeklyGoalsController < ApplicationController
     redirect_to weekly_goals_url, notice: 'Weekly goal was successfully destroyed.'
   end
 
+  def topics_for_subject
+    # Assume subject_name is passed correctly and you find the subject by its name
+    subject = Subject.find_by(name: params[:subject_name])
+
+    if subject.present?
+      # Fetch the topics based on the found subject's id
+      topics = Topic.joins(:subject)
+                  .joins(:user_topics)
+                  .where(user_topics: { user_id: current_user.id })
+                  .where(subject_id: subject.id)
+                  .where("user_topics.done = ? OR user_topics.done IS NULL", false)
+                  .select(:id, :name)
+                  .order(:order)
+
+      render json: topics
+    else
+      # If no subject is found, respond with an error message
+      render json: { error: "Subject not found" }, status: :not_found
+    end
+  rescue => e
+    # Log the error and respond with a generic 500 error message
+    Rails.logger.error "Error in topics_for_subject: #{e.message}"
+    render json: { error: "Internal Server Error" }, status: :internal_server_error
+  end
+
 
   private
 
@@ -151,12 +154,13 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def set_topic_names
-    @topics = Topic.joins(:subject)
+    topics = Topic.joins(:subject)
                   .joins(:user_topics)
-                  .where(user_topics: { user_id: current_user.id, done: false })
-                  .select('topics.id, topics.name, topics.order, topics.unit, subjects.category as subject_category')
-                  .order('topics.order')
-    @topic_names = @topics.map do |topic|
+                  .where(user_topics: { user_id: current_user.id })
+                  .where("user_topics.done = ? OR user_topics.done IS NULL", false)
+                  .select('topics.id, topics.name, topics.unit, subjects.category as subject_category')
+                  .order(:order)
+    @topic_names = topics.map do |topic|
       if topic.subject_category == 'lws'
         "#{topic.unit} - #{topic.name}"
       else

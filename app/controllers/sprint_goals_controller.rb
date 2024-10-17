@@ -63,7 +63,7 @@ class SprintGoalsController < ApplicationController
     @is_edit = true
     @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find(params[:id])
     @knowledges_subject_names = @sprint_goal.knowledges.pluck(:subject_name)
-    @number_of_timelines = current_user.timelines.where(hidden: false).count
+    @number_of_timelines = current_user.timelines.count
     set_sprint_deadlines(@sprint_goal.sprint)
 
 

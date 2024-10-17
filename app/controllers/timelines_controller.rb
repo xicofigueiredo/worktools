@@ -16,34 +16,6 @@ class TimelinesController < ApplicationController
     @total_blocks_per_day = 0
     @total_hours_per_week = 0
     weekly_percentages = []
-=begin     timelines.each do |timeline|
-      unless timeline.personalized_name
-        if timeline.subject.category.include?("lws")
-          timeframe = Timeframe.new(Date.today, timeline.end_date)
-          remaining_days = calculate_working_days(timeframe)
-          remaining_topics = calc_remaining_blocks(timeline)
-          blocks_per_day = remaining_topics.to_f / remaining_days.count
-          @total_blocks_per_day += blocks_per_day
-          @has_lws = true
-        else
-          remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours_and_percentage(timeline)
-          remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
-                              .where.not("name LIKE ?", "%Build Week%").count
-
-          @total_hours_per_week += remaining_weeks_count.zero? ? 0 : remaining_hours_count / remaining_weeks_count
-
-          weekly_percentage = remaining_weeks_count.zero? ? remaining_percentage * 100 : remaining_percentage / remaining_weeks_count * 100
-
-          weekly_percentages.push((weekly_percentage).round(2))
-
-
-        end
-        timeline.calculate_total_time
-        timeline.save
-      end
-
-    end
-=end
 
     @average_weekly_percentage = calc_array_average(weekly_percentages).round(1)
 
@@ -59,7 +31,7 @@ class TimelinesController < ApplicationController
 
     @holidays = current_user.holidays.where("end_date >= ?", 4.months.ago)
 
-        @timelines = timelines.map do |timeline|
+    @timelines = timelines.map do |timeline|
       {
         "id" => timeline.id,
         "subject_id" => timeline.subject_id,
@@ -84,6 +56,34 @@ class TimelinesController < ApplicationController
         end
       }
     end
+=begin     timelines.each do |timeline|
+          unless timeline.personalized_name
+            if timeline.subject.category.include?("lws")
+              timeframe = Timeframe.new(Date.today, timeline.end_date)
+              remaining_days = calculate_working_days(timeframe)
+              remaining_topics = calc_remaining_blocks(timeline)
+              blocks_per_day = remaining_topics.to_f / remaining_days.count
+              @total_blocks_per_day += blocks_per_day
+              @has_lws = true
+            else
+              remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours_and_percentage(timeline)
+              remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
+                                  .where.not("name LIKE ?", "%Build Week%").count
+
+              @total_hours_per_week += remaining_weeks_count.zero? ? 0 : remaining_hours_count / remaining_weeks_count
+
+              weekly_percentage = remaining_weeks_count.zero? ? remaining_percentage * 100 : remaining_percentage / remaining_weeks_count * 100
+
+              weekly_percentages.push((weekly_percentage).round(2))
+
+
+            end
+            timeline.calculate_total_time
+            timeline.save
+          end
+
+        end
+=end
   end
 
   def new
@@ -100,7 +100,6 @@ class TimelinesController < ApplicationController
   def create
     @timeline = current_user.timelines.new(timeline_params)
     set_exam_dates
-
 
     if @timeline.save
       generate_topic_deadlines(@timeline)
@@ -122,6 +121,7 @@ class TimelinesController < ApplicationController
   end
 
   def update
+    ## i want to add a method that if i add a topic on dbeaver, it will automatically add the user_topic to all the users after update timeline
     if @timeline.update(timeline_params)
       set_exam_dates
 
@@ -130,6 +130,7 @@ class TimelinesController < ApplicationController
 
       @timeline.save
       redirect_to timelines_path, notice: 'Timeline was successfully updated.'
+
     else
       flash.now[:alert] = @timeline.errors.full_messages.to_sentence
       render :edit

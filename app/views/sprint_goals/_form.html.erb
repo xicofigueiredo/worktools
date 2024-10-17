@@ -56,13 +56,25 @@
                       <% end %>
                     </td>
                     <td class="custom-font-size">
-                      <p><%= knowledge_form.object.exam_season %></p>
+                      <% if knowledge_form.object.exam_season %>
+                        <p><%= knowledge_form.object.exam_season %></p>
+                      <% else %>
+                        N/A
+                      <% end %>
                     </td>
                     <td class="custom-font-size">
-                      <p><%= knowledge_form.object.mock50 %></p>
+                      <% if knowledge_form.object.mock50.present? && knowledge_form.object.mock50.is_a?(Date) %>
+                        <p><%= knowledge_form.object.mock50 %></p>
+                      <% else %>
+                        N/A
+                      <% end %>
                     </td>
                     <td class="custom-font-size">
-                      <p><%= knowledge_form.object.mock100 %></p>
+                      <% if knowledge_form.object.mock100.present? && knowledge_form.object.mock100.is_a?(Date) %>
+                        <p><%= knowledge_form.object.mock100 %></p>
+                      <% else %>
+                        N/A
+                      <% end %>
                     </td>
                     <td class="custom-font-size">
                       <%= knowledge_form.text_area :difficulties, class: 'form-control' %>
