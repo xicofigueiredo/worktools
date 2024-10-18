@@ -21,11 +21,6 @@ class TimelinesController < ApplicationController
 
     calculate_progress_and_balance(timelines)
 
-    if timelines.count.positive?
-      @total_progress = (timelines.sum(&:progress).to_f / timelines.count) / 100
-    else
-      @total_progress = 0
-    end
 
     # @monthly_goals = calculate_monthly_goals(timelines)
 
@@ -56,33 +51,39 @@ class TimelinesController < ApplicationController
         end
       }
     end
-=begin     timelines.each do |timeline|
-          unless timeline.personalized_name
-            if timeline.subject.category.include?("lws")
-              timeframe = Timeframe.new(Date.today, timeline.end_date)
-              remaining_days = calculate_working_days(timeframe)
-              remaining_topics = calc_remaining_blocks(timeline)
-              blocks_per_day = remaining_topics.to_f / remaining_days.count
-              @total_blocks_per_day += blocks_per_day
-              @has_lws = true
-            else
-              remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours_and_percentage(timeline)
-              remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
-                                  .where.not("name LIKE ?", "%Build Week%").count
+=begin
+    timelines.each do |timeline|
+      unless timeline.personalized_name
+        if timeline.subject.category.include?("lws")
+          timeframe = Timeframe.new(Date.today, timeline.end_date)
+          remaining_days = calculate_working_days(timeframe)
+          remaining_topics = calc_remaining_blocks(timeline)
+          blocks_per_day = remaining_topics.to_f / remaining_days.count
+          @total_blocks_per_day += blocks_per_day
+          @has_lws = true
+        else
+          remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours_and_percentage(timeline)
+          remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
+          .where.not("name LIKE ?", "%Build Week%").count
 
-              @total_hours_per_week += remaining_weeks_count.zero? ? 0 : remaining_hours_count / remaining_weeks_count
+          @total_hours_per_week += remaining_weeks_count.zero? ? 0 : remaining_hours_count / remaining_weeks_count
 
-              weekly_percentage = remaining_weeks_count.zero? ? remaining_percentage * 100 : remaining_percentage / remaining_weeks_count * 100
+          weekly_percentage = remaining_weeks_count.zero? ? remaining_percentage * 100 : remaining_percentage / remaining_weeks_count * 100
 
-              weekly_percentages.push((weekly_percentage).round(2))
+          weekly_percentages.push((weekly_percentage).round(2))
 
-
-            end
-            timeline.calculate_total_time
-            timeline.save
-          end
 
         end
+        timeline.calculate_total_time
+        timeline.save
+      end
+
+    end
+    if timelines.count.positive?
+      @total_progress = (timelines.sum(&:progress).to_f / timelines.count) / 100
+    else
+      @total_progress = 0
+    end
 =end
   end
 
