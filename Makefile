@@ -49,8 +49,5 @@ parent:
 check_emails:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake db:check_emails_exist"
 
-find_flags:
-	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake users:find_learners_without_flags"
-
 flags:
-	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake learner_flags:create_for_all_users"
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake users:find_learners_without_flags"
