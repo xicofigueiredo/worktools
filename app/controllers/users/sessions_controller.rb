@@ -10,17 +10,13 @@ class Users::SessionsController < Devise::SessionsController
 
   def create
     super do |resource|
-      unless resource.changed_password?
-        redirect_to edit_user_registration_path and return
-      end
+      redirect_to edit_user_registration_path and return unless resource.changed_password?
     end
   end
 
   def update
     super do |resource|
-      if resource.errors.empty?
-        resource.update(changed_password: true)
-      end
+      resource.update(changed_password: true) if resource.errors.empty?
     end
   end
 

@@ -10,9 +10,8 @@ class Holiday < ApplicationRecord
   end
 
   def start_date_before_end_date
-    if start_date && end_date && start_date > end_date
-      errors.add(:end_date, "must be after the start date")
-    end
-  end
+    return unless start_date && end_date && start_date > end_date
 
+    errors.add(:end_date, "must be after the start date")
+  end
 end

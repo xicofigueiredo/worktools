@@ -4,7 +4,8 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals
   def index
-    @sprint_goals = current_user.sprint_goals.joins(:sprint).includes(:knowledges, :skills, :communities).order('sprints.start_date DESC')
+    @sprint_goals = current_user.sprint_goals.joins(:sprint).includes(:knowledges, :skills,
+                                                                      :communities).order('sprints.start_date DESC')
     @all_sprints = Sprint.all
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
@@ -36,7 +37,6 @@ class SprintGoalsController < ApplicationController
     end
     set_sprint_deadlines(@sprint)
 
-
     # # Check if a sprint goal already exists for this sprint and user
     # existing_goal = @sprint.sprint_goals.find_by(user: current_user)
     # if existing_goal
@@ -57,7 +57,6 @@ class SprintGoalsController < ApplicationController
     # end
   end
 
-
   # GET /sprint_goals/1/edit
   def edit
     @is_edit = true
@@ -66,8 +65,7 @@ class SprintGoalsController < ApplicationController
     @number_of_timelines = current_user.timelines.count
     set_sprint_deadlines(@sprint_goal.sprint)
 
-
-    Rails.logger.debug @sprint_goal.knowledges.inspect  # Add this line to check what's loaded
+    Rails.logger.debug @sprint_goal.knowledges.inspect # Add this line to check what's loaded
 
     # If the @sprint_goal doesn't have associated knowledges for each timeline, you need to build them here
     # current_user.timelines.each do |timeline|
@@ -93,12 +91,12 @@ class SprintGoalsController < ApplicationController
     @sprint_goal.sprint = current_sprint
 
     if @sprint_goal.save
-      redirect_to sprint_goals_path(date: @sprint_goal.sprint.start_date), notice: 'Sprint goal was successfully created.'
+      redirect_to sprint_goals_path(date: @sprint_goal.sprint.start_date),
+                  notice: 'Sprint goal was successfully created.'
     else
       render :new, status: :unprocessable_entity
     end
   end
-
 
   # PATCH/PUT /sprint_goals/1
   def update
@@ -152,7 +150,6 @@ class SprintGoalsController < ApplicationController
     render json: { status: "success", message: "Communities, skills and knowledges successfully deleted" }
   end
 
-
   private
 
   def calc_nav_dates(current_sprint)
@@ -190,17 +187,15 @@ class SprintGoalsController < ApplicationController
   #   end
   # end
 
-
-
   def set_sprint_goal
     @sprint_goal = SprintGoal.find(params[:id])
   end
 
   def sprint_goal_params
     params.require(:sprint_goal).permit(:name, :start_date, :end_date, :sprint_id,
-                                        knowledges_attributes: [:id, :difficulties, :plan, :_destroy, :subject_name, :mock50, :mock100, :exam_season],
-                                        skills_attributes: [:id, :extracurricular, :smartgoals, :difficulties, :plan, :_destroy],
-                                        communities_attributes: [:id, :involved, :smartgoals, :difficulties, :plan, :_destroy])
+                                        knowledges_attributes: %i[id difficulties plan _destroy subject_name mock50 mock100 exam_season],
+                                        skills_attributes: %i[id extracurricular smartgoals difficulties plan _destroy],
+                                        communities_attributes: %i[id involved smartgoals difficulties plan _destroy])
   end
 
   def current_sprint
@@ -213,14 +208,14 @@ class SprintGoalsController < ApplicationController
     @sprint_deadlines = current_user.timelines.filter_map do |timeline|
       # Group topics by their deadlines within the current sprint
       topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
-                                            .where(user_topics: { user_id: current_user.id })
-                                            .select { |topic|
-                                              user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
-                                              user_topic && user_topic.deadline && user_topic.deadline >= sprint.start_date && user_topic.deadline <= sprint.end_date
-                                            }
-                                            .group_by { |topic|
+                                           .where(user_topics: { user_id: current_user.id })
+                                           .select do |topic|
+        user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
+        user_topic && user_topic.deadline && user_topic.deadline >= sprint.start_date && user_topic.deadline <= sprint.end_date
+      end
+                                            .group_by do |topic|
                                               topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline
-                                            }
+                                            end
 
       # Find the latest deadline
       latest_deadline = topics_grouped_by_deadline.keys.max
@@ -228,8 +223,7 @@ class SprintGoalsController < ApplicationController
       # Select the last topic with the latest deadline
       last_relevant_topic = topics_grouped_by_deadline[latest_deadline]&.last
 
-      { timeline: timeline, topic: last_relevant_topic } if last_relevant_topic.present?
+      { timeline:, topic: last_relevant_topic } if last_relevant_topic.present?
     end.compact
   end
-
 end

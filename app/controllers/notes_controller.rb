@@ -1,5 +1,5 @@
 class NotesController < ApplicationController
-  before_action :set_learner, only: [:new, :create, :edit, :update, :destroy]
+  before_action :set_learner, only: %i[new create edit update destroy]
 
   def index
     @notes = Note.all
@@ -59,15 +59,16 @@ class NotesController < ApplicationController
   end
 
   private
-    def set_learner
-      @learner = User.find(params[:user_id])
-    end
 
-    def set_note
-      @note = Note.find(params[:id])
-    end
+  def set_learner
+    @learner = User.find(params[:user_id])
+  end
 
-    def note_params
-      params.require(:note).permit(:category, :topic, :follow_up_action, :status)
-    end
+  def set_note
+    @note = Note.find(params[:id])
+  end
+
+  def note_params
+    params.require(:note).permit(:category, :topic, :follow_up_action, :status)
+  end
 end

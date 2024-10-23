@@ -2,11 +2,10 @@ module GenerateTopicDeadlines
   extend ActiveSupport::Concern
   include WorkingDaysAndHolidays
 
-
   def generate_topic_deadlines(timeline)
     subject = timeline.subject
     user_topics = subject.topics.order(:order).map do |topic|
-      current_user.user_topics.find_or_initialize_by(topic: topic)
+      current_user.user_topics.find_or_initialize_by(topic:)
     end
 
     working_days = calculate_working_days(timeline)
@@ -28,7 +27,7 @@ module GenerateTopicDeadlines
     end
   end
 
-  def calculate_deadline_date(index, time_per_topic, working_days, total_time)
+  def calculate_deadline_date(index, time_per_topic, working_days, _total_time)
     # Ensure index does not exceed the bounds of working days
     final_index = index + time_per_topic
     working_days[final_index] || working_days.last

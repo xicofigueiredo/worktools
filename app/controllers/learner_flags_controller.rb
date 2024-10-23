@@ -1,5 +1,5 @@
 class LearnerFlagsController < ApplicationController
-  before_action :set_learner_flag, only: [:edit, :update]
+  before_action :set_learner_flag, only: %i[edit update]
 
   def edit
     # View for editing learner flags
@@ -8,7 +8,9 @@ class LearnerFlagsController < ApplicationController
   def update
     if @learner_flag.update(learner_flag_params)
       respond_to do |format|
-        format.html { redirect_to learner_profile_path(@learner_flag.user), notice: 'Settings were successfully updated.' }
+        format.html do
+          redirect_to learner_profile_path(@learner_flag.user), notice: 'Settings were successfully updated.'
+        end
       end
     else
       render :edit
@@ -22,6 +24,7 @@ class LearnerFlagsController < ApplicationController
   end
 
   def learner_flag_params
-    params.require(:learner_flag).permit(:asks_for_help, :takes_notes, :goes_to_live_lessons, :does_p2p, :life_experiences, :action_plan)
+    params.require(:learner_flag).permit(:asks_for_help, :takes_notes, :goes_to_live_lessons, :does_p2p,
+                                         :life_experiences, :action_plan)
   end
 end

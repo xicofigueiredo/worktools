@@ -1,5 +1,5 @@
 class SubjectsController < ApplicationController
-  before_action :set_subject, only: [:show, :edit, :update, :destroy]
+  before_action :set_subject, only: %i[show edit update destroy]
 
   def index
     @subjects = Subject.all
@@ -28,7 +28,7 @@ class SubjectsController < ApplicationController
 
   def update
     if @subject.update(subject_params)
-      redirect_to subjects_path , notice: 'Subject was successfully updated.'
+      redirect_to subjects_path, notice: 'Subject was successfully updated.'
     else
       render :edit, status: :unprocessable_entity
     end
@@ -46,14 +46,13 @@ class SubjectsController < ApplicationController
     render json: @topics
   end
 
-
-
   private
-    def set_subject
-      @subject = Subject.find(params[:id])
-    end
 
-    def subject_params
-      params.require(:subject).permit(:name, :category, :exam_dates)
-    end
+  def set_subject
+    @subject = Subject.find(params[:id])
+  end
+
+  def subject_params
+    params.require(:subject).permit(:name, :category, :exam_dates)
+  end
 end

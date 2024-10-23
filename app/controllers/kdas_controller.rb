@@ -1,7 +1,7 @@
 class KdasController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_kda, only: [:show, :edit, :update, :destroy, :show]
-  before_action :set_available_weeks, only: [:new, :edit, :create, :update, :show]
+  before_action :set_kda, only: %i[show edit update destroy show]
+  before_action :set_available_weeks, only: %i[new edit create update show]
 
   # GET /kdas
   def index
@@ -20,7 +20,6 @@ class KdasController < ApplicationController
   def show
     @kda = current_user.kdas.find(params[:id])
   end
-
 
   # GET /kdas/new
   def new
@@ -45,7 +44,6 @@ class KdasController < ApplicationController
   def create
     @kda = current_user.kdas.new(kda_params)
 
-
     if @kda.save
       redirect_to kdas_path(date: @kda.week.start_date), notice: 'Kda was successfully created.'
     else
@@ -59,7 +57,7 @@ class KdasController < ApplicationController
     if @kda.update(kda_params)
       redirect_to kdas_path(date: @kda.week.start_date), notice: 'Kda was successfully updated.'
     else
-      flash.now[:alert] =  'KDA could not be updated. Please check your input.'
+      flash.now[:alert] = 'KDA could not be updated. Please check your input.'
       render :new, status: :unprocessable_entity
     end
   end
@@ -72,33 +70,34 @@ class KdasController < ApplicationController
 
   private
 
-    # Use callbacks to share common setup or constraints between actions.
-    def set_kda
-      @kda = Kda.find(params[:id])
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_kda
+    @kda = Kda.find(params[:id])
+  end
 
-    def kda_params
-      params.require(:kda).permit(
-                    :week_id, :user_id, :date,
-                    sdl_attributes: [:id, :rating, :why, :improve, :_destroy],
-                    ini_attributes: [:id, :rating, :why, :improve, :_destroy],
-                    mot_attributes: [:id, :rating, :why, :improve, :_destroy],
-                    p2p_attributes: [:id, :rating, :why, :improve, :_destroy],
-                    hubp_attributes: [:id, :rating, :why, :improve, :_destroy])
-    end
+  def kda_params
+    params.require(:kda).permit(
+      :week_id, :user_id, :date,
+      sdl_attributes: %i[id rating why improve _destroy],
+      ini_attributes: %i[id rating why improve _destroy],
+      mot_attributes: %i[id rating why improve _destroy],
+      p2p_attributes: %i[id rating why improve _destroy],
+      hubp_attributes: %i[id rating why improve _destroy]
+    )
+  end
 
-    def set_available_weeks(edit_week_id = nil)
-      used_week_ids = current_user.kdas.pluck(:week_id)
-      @available_weeks = Week.where.not(id: used_week_ids).order(start_date: :asc)
+  def set_available_weeks(edit_week_id = nil)
+    used_week_ids = current_user.kdas.pluck(:week_id)
+    @available_weeks = Week.where.not(id: used_week_ids).order(start_date: :asc)
 
-      current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+    current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
 
-      # Exclude the edit_week_id from used_week_ids if provided
-      used_week_ids.delete(edit_week_id) if edit_week_id.present?
-      @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
-      # Ensure the current week is included if we're editing
-      if edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
-        @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
-      end
-    end
+    # Exclude the edit_week_id from used_week_ids if provided
+    used_week_ids.delete(edit_week_id) if edit_week_id.present?
+    @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
+    # Ensure the current week is included if we're editing
+    return unless edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
+
+    @available_weeks = Week.where(sprint_id: current_sprint.id).where.not(id: used_week_ids)
+  end
 end

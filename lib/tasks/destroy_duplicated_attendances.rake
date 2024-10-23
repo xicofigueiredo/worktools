@@ -4,14 +4,14 @@ namespace :attendances do
     puts "Starting duplicate removal process..."
 
     duplicates = Attendance
-                   .select('user_id, attendance_date')
-                   .group('user_id, attendance_date')
-                   .having('COUNT(*) > 1')
+                 .select('user_id, attendance_date')
+                 .group('user_id, attendance_date')
+                 .having('COUNT(*) > 1')
 
     duplicates.each do |duplicate|
       user_id = duplicate.user_id
       date = duplicate.attendance_date
-      records = Attendance.where(user_id: user_id, attendance_date: date).order(:created_at)
+      records = Attendance.where(user_id:, attendance_date: date).order(:created_at)
 
       records_to_destroy = records[1..]
 

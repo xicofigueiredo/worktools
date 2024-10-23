@@ -1,7 +1,7 @@
 class HolidaysController < ApplicationController
   include GenerateTopicDeadlines
 
-  before_action :set_holiday, only: [ :edit, :update, :destroy]
+  before_action :set_holiday, only: %i[edit update destroy]
 
   def new
     @holiday = current_user.holidays.new
@@ -49,11 +49,12 @@ class HolidaysController < ApplicationController
   end
 
   private
-    def set_holiday
-      @holiday = Holiday.find(params[:id])
-    end
 
-    def holiday_params
-      params.require(:holiday).permit(:user_id, :start_date, :end_date, :name, :bga)
-    end
+  def set_holiday
+    @holiday = Holiday.find(params[:id])
+  end
+
+  def holiday_params
+    params.require(:holiday).permit(:user_id, :start_date, :end_date, :name, :bga)
+  end
 end

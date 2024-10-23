@@ -6,7 +6,7 @@ class Subject < ApplicationRecord
   has_many :timelines
   has_many :users, through: :timelines
 
-  enum category: [ :lws7, :lws8, :lws9, :igcse, :as, :al, :up, :lang, :other]
+  enum category: %i[lws7 lws8 lws9 igcse as al up lang other]
 
   def category_long_form
     self.class.category_options[category.to_sym]

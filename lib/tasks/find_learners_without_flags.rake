@@ -16,8 +16,8 @@ namespace :users do
     else
       puts "No learners found without flags."
     end
-    puts "Total users: #{User.where(role: "learner").count}"
-    puts "Total users with flags: #{User.where(role: "learner").joins(:learner_flag).count}"
+    puts "Total users: #{User.where(role: 'learner').count}"
+    puts "Total users with flags: #{User.where(role: 'learner').joins(:learner_flag).count}"
 
     if learners_without_flags.any?
       learners_without_flags.each do |user|

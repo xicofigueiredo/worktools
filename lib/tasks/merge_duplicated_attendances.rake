@@ -4,24 +4,22 @@ namespace :attendances do
     puts "Starting deduplication process..."
 
     duplicates = Attendance
-                   .select('user_id, attendance_date')
-                   .group('user_id, attendance_date')
-                   .having('COUNT(*) > 1')
+                 .select('user_id, attendance_date')
+                 .group('user_id, attendance_date')
+                 .having('COUNT(*) > 1')
 
     duplicates.each do |duplicate|
       user_id = duplicate.user_id
       date = duplicate.attendance_date
-      records = Attendance.where(user_id: user_id, attendance_date: date)
+      records = Attendance.where(user_id:, attendance_date: date)
 
       merged_attributes = {}
 
       records.each do |record|
         record.attributes.each do |key, value|
-          next if key == 'id' || key == 'created_at' || key == 'updated_at'
+          next if ['id', 'created_at', 'updated_at'].include?(key)
 
-          if value.present?
-            merged_attributes[key] ||= value
-          end
+          merged_attributes[key] ||= value if value.present?
         end
       end
 

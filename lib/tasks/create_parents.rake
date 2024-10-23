@@ -3,7 +3,7 @@ require 'csv'
 namespace :db do
   desc "Create or update parent accounts in bulk from a CSV file"
   task create_parents: :environment do
-    file_path = 'lib/tasks/parents.csv'  # Adjust the path as necessary
+    file_path = 'lib/tasks/parents.csv' # Adjust the path as necessary
 
     create_parent_method = lambda do |name, email, password, kid_email|
       return if email.blank? || password.blank?
@@ -16,12 +16,12 @@ namespace :db do
       if parent.new_record? && kid.present?
         parent.assign_attributes(
           full_name: name,
-          password: password,
+          password:,
           password_confirmation: password,
           confirmed_at: Time.now,
           role: 'Parent',
           kids: kid ? [kid.id] : []
-          )
+        )
         parent.save!
         puts "Parent account for #{email} created successfully."
         UserMailer.welcome_parent(parent, password).deliver_now
@@ -30,9 +30,7 @@ namespace :db do
       end
 
       if kid
-        unless parent.kids.include?(kid.id)
-          parent.kids << kid.id
-        end
+        parent.kids << kid.id unless parent.kids.include?(kid.id)
       else
         puts "Kid with email #{kid_email} not found, skipping."
       end

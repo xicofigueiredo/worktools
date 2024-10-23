@@ -1,9 +1,8 @@
 class WeeklyGoalsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_weekly_goal, only: [:show, :edit, :update, :destroy]
-  before_action :set_subject_names, only: [:new, :edit]
-  before_action :set_topic_names, only: [:new, :edit]
-
+  before_action :set_weekly_goal, only: %i[show edit update destroy]
+  before_action :set_subject_names, only: %i[new edit]
+  before_action :set_topic_names, only: %i[new edit]
 
   def index
     @weekly_goals = current_user.weekly_goals.order(created_at: :desc)
@@ -20,7 +19,8 @@ class WeeklyGoalsController < ApplicationController
     end
 
     @user_goals = current_user.weekly_goals
-    @weekly_goal = current_user.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
+    @weekly_goal = current_user.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?",
+                                                                  @current_date, @current_date)
     @weekly_slots = @weekly_goal&.weekly_slots
     @current_week = Week.find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
     @timelines = current_user.timelines
@@ -70,7 +70,8 @@ class WeeklyGoalsController < ApplicationController
     @weekly_goal = current_user.weekly_goals.new(weekly_goal_params)
     if @weekly_goal.save
       save_weekly_slots
-      redirect_to weekly_goals_navigator_path(date: @weekly_goal.week.start_date), notice: 'Weekly goal was successfully created.'
+      redirect_to weekly_goals_navigator_path(date: @weekly_goal.week.start_date),
+                  notice: 'Weekly goal was successfully created.'
     else
       render :new
     end
@@ -80,7 +81,8 @@ class WeeklyGoalsController < ApplicationController
     if @weekly_goal.update(weekly_goal_params)
       Rails.logger.debug "Updated Weekly Goal Week Start Date: #{@weekly_goal.week.start_date}"
       save_weekly_slots
-      redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date), notice: 'Weekly goal was successfully updated.'
+      redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date),
+                  notice: 'Weekly goal was successfully updated.'
     else
       render :edit
     end
@@ -98,24 +100,23 @@ class WeeklyGoalsController < ApplicationController
     if subject.present?
       # Fetch the topics based on the found subject's id
       topics = Topic.joins(:subject)
-                  .joins(:user_topics)
-                  .where(user_topics: { user_id: current_user.id })
-                  .where(subject_id: subject.id)
-                  .where("user_topics.done = ? OR user_topics.done IS NULL", false)
-                  .select(:id, :name)
-                  .order(:order)
+                    .joins(:user_topics)
+                    .where(user_topics: { user_id: current_user.id })
+                    .where(subject_id: subject.id)
+                    .where("user_topics.done = ? OR user_topics.done IS NULL", false)
+                    .select(:id, :name)
+                    .order(:order)
 
       render json: topics
     else
       # If no subject is found, respond with an error message
       render json: { error: "Subject not found" }, status: :not_found
     end
-  rescue => e
+  rescue StandardError => e
     # Log the error and respond with a generic 500 error message
     Rails.logger.error "Error in topics_for_subject: #{e.message}"
     render json: { error: "Internal Server Error" }, status: :internal_server_error
   end
-
 
   private
 
@@ -135,7 +136,8 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def weekly_goal_params
-    params.require(:weekly_goal).permit(:week_id, :start_date, :end_date, :user_id, :name, :subject_skill, weekly_slots_attributes: [:id, :day_of_week, :time_slot, :subject_name, :topic_name])
+    params.require(:weekly_goal).permit(:week_id, :start_date, :end_date, :user_id, :name, :subject_skill,
+                                        weekly_slots_attributes: %i[id day_of_week time_slot subject_name topic_name])
   end
 
   def set_subject_names
@@ -147,8 +149,8 @@ class WeeklyGoalsController < ApplicationController
 
     # Combine subjects and skills, prefixing each for clarity
     @combined_options = @subject_names.select { |name| name != '' } +
-                        skill_names.map { |name| name} +
-                        communities_names.map { |name| name} +
+                        skill_names.map { |name| name } +
+                        communities_names.map { |name| name } +
                         personalized_names +
                         ["Other"]
   end
@@ -172,8 +174,8 @@ class WeeklyGoalsController < ApplicationController
   def build_weekly_slots
     WeeklySlot.day_of_weeks.keys.each do |day_of_week|
       WeeklySlot.time_slots.keys.each do |time_slot|
-        unless @weekly_goal.weekly_slots.exists?(day_of_week: day_of_week, time_slot: time_slot)
-          @weekly_goal.weekly_slots.build(day_of_week: day_of_week, time_slot: time_slot)
+        unless @weekly_goal.weekly_slots.exists?(day_of_week:, time_slot:)
+          @weekly_goal.weekly_slots.build(day_of_week:, time_slot:)
         end
       end
     end
@@ -211,5 +213,4 @@ class WeeklyGoalsController < ApplicationController
     end
     allowed_params
   end
-
 end

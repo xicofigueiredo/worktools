@@ -10,6 +10,7 @@ class User < ApplicationRecord
   has_many :user_topics, dependent: :destroy
   has_many :topics, through: :user_topics, dependent: :destroy
   attr_accessor :weekly_goal_completed
+
   has_many :kdas, dependent: :destroy
   # has_many :weekly_meetings, dependent: :destroy
   # has_many :monday_slots_as_lc, class_name: 'MondaySlot', foreign_key: 'lc_id', dependent: :destroy
@@ -34,7 +35,6 @@ class User < ApplicationRecord
   # after_commit :send_welcome_email, on: :create
   # after_commit :post_create_actions, on: :create
 
-
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable, :confirmable
 
@@ -46,14 +46,13 @@ class User < ApplicationRecord
     timelines.order(balance: :asc, start_date: :asc)
   end
 
-
   private
 
   def associate_with_hubs
-    if self.role != 'Parent'
-      self.hub_ids.each do |hub_id|
-        UsersHub.create(user: self, hub_id: hub_id) unless hub_id.blank?
-      end
+    return unless role != 'Parent'
+
+    hub_ids.each do |hub_id|
+      UsersHub.create(user: self, hub_id:) unless hub_id.blank?
     end
   end
 
@@ -62,16 +61,15 @@ class User < ApplicationRecord
   end
 
   def create_learner_flag
-    #FIXME adjust to create only for learners later
-    if self.role == 'Parent'
-      build_learner_flag.save
-    end
+    # FIXME: adjust to create only for learners later
+    return unless role != 'Parent'
+
+    build_learner_flag.save
   end
 
   def email_domain_check
-    unless email.ends_with?('@edubga.com')
-      errors.add(:email, :invalid_domain)
-    end
-  end
+    return if email.ends_with?('@edubga.com')
 
+    errors.add(:email, :invalid_domain)
+  end
 end

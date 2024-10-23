@@ -7,7 +7,6 @@ class TimelineUpdater
   include WorkingDaysAndHolidays
 
   def update_timeline(timeline)
-
     assign_mock_deadlines(timeline)
     timeline.save!
   end

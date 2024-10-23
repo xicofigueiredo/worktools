@@ -6,10 +6,10 @@ class TimelinesController < ApplicationController
   include GenerateTopicDeadlines
 
   before_action :authenticate_user!
-  before_action :set_timeline, only: [:show, :edit, :update, :destroy, :archive]
+  before_action :set_timeline, only: %i[show edit update destroy archive]
 
   def index
-    @archived = current_user.timelines.exists?( hidden: true)
+    @archived = current_user.timelines.exists?(hidden: true)
 
     timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
     @has_lws = false
@@ -20,7 +20,6 @@ class TimelinesController < ApplicationController
     @average_weekly_percentage = calc_array_average(weekly_percentages).round(1)
 
     calculate_progress_and_balance(timelines)
-
 
     # @monthly_goals = calculate_monthly_goals(timelines)
 
@@ -38,7 +37,7 @@ class TimelinesController < ApplicationController
         "progress" => timeline.progress,
         "balance" => timeline.balance,
         "topics" => timeline.subject.topics.order(:order, id: :asc).map do |topic|
-          user_topic = current_user.user_topics.find_or_initialize_by(topic: topic)
+          user_topic = current_user.user_topics.find_or_initialize_by(topic:)
           {
             "id" => topic.id,
             "name" => topic.name,
@@ -46,45 +45,43 @@ class TimelinesController < ApplicationController
             "time" => topic.time,
             "deadline" => user_topic.deadline,
             "done" => user_topic.done,
-            "user_topic_id" => user_topic.id,
+            "user_topic_id" => user_topic.id
           }
         end
       }
     end
-=begin
-    timelines.each do |timeline|
-      unless timeline.personalized_name
-        if timeline.subject.category.include?("lws")
-          timeframe = Timeframe.new(Date.today, timeline.end_date)
-          remaining_days = calculate_working_days(timeframe)
-          remaining_topics = calc_remaining_blocks(timeline)
-          blocks_per_day = remaining_topics.to_f / remaining_days.count
-          @total_blocks_per_day += blocks_per_day
-          @has_lws = true
-        else
-          remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours_and_percentage(timeline)
-          remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
-          .where.not("name LIKE ?", "%Build Week%").count
-
-          @total_hours_per_week += remaining_weeks_count.zero? ? 0 : remaining_hours_count / remaining_weeks_count
-
-          weekly_percentage = remaining_weeks_count.zero? ? remaining_percentage * 100 : remaining_percentage / remaining_weeks_count * 100
-
-          weekly_percentages.push((weekly_percentage).round(2))
-
-
-        end
-        timeline.calculate_total_time
-        timeline.save
-      end
-
-    end
-    if timelines.count.positive?
-      @total_progress = (timelines.sum(&:progress).to_f / timelines.count) / 100
-    else
-      @total_progress = 0
-    end
-=end
+    #     timelines.each do |timeline|
+    #       unless timeline.personalized_name
+    #         if timeline.subject.category.include?("lws")
+    #           timeframe = Timeframe.new(Date.today, timeline.end_date)
+    #           remaining_days = calculate_working_days(timeframe)
+    #           remaining_topics = calc_remaining_blocks(timeline)
+    #           blocks_per_day = remaining_topics.to_f / remaining_days.count
+    #           @total_blocks_per_day += blocks_per_day
+    #           @has_lws = true
+    #         else
+    #           remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours_and_percentage(timeline)
+    #           remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
+    #           .where.not("name LIKE ?", "%Build Week%").count
+    #
+    #           @total_hours_per_week += remaining_weeks_count.zero? ? 0 : remaining_hours_count / remaining_weeks_count
+    #
+    #           weekly_percentage = remaining_weeks_count.zero? ? remaining_percentage * 100 : remaining_percentage / remaining_weeks_count * 100
+    #
+    #           weekly_percentages.push((weekly_percentage).round(2))
+    #
+    #
+    #         end
+    #         timeline.calculate_total_time
+    #         timeline.save
+    #       end
+    #
+    #     end
+    #     if timelines.count.positive?
+    #       @total_progress = (timelines.sum(&:progress).to_f / timelines.count) / 100
+    #     else
+    #       @total_progress = 0
+    #     end
   end
 
   def new
@@ -174,7 +171,7 @@ class TimelinesController < ApplicationController
   def personalized_update
     @timeline = Timeline.find(params[:id])
     @timeline.assign_attributes(timeline_params)
-    @timeline.subject_id = 666  # Ensure subject ID remains 666 even if not included in form
+    @timeline.subject_id = 666 # Ensure subject ID remains 666 even if not included in form
 
     if @timeline.save
       redirect_to timelines_path, notice: 'Personalized Timeline was successfully updated.'
@@ -229,31 +226,30 @@ class TimelinesController < ApplicationController
   end
 
   def timeline_params
-    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_date_id, :mock100, :mock50, :personalized_name)
+    params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_date_id,
+                                     :mock100, :mock50, :personalized_name)
   end
 
   def calculate_monthly_goals(timelines)
     Rails.cache.fetch("monthly_goals_#{Date.today.beginning_of_month}", expires_in: 1.month) do
       timelines.filter_map do |timeline|
         topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
-          .where(user_topics: { user_id: current_user.id })
-          .select { |topic|
-            user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
-            user_topic && user_topic.deadline && user_topic.deadline >= Date.today.beginning_of_month && user_topic.deadline <= Date.today.end_of_month
-          }
+                                             .where(user_topics: { user_id: current_user.id })
+                                             .select do |topic|
+          user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
+          user_topic && user_topic.deadline && user_topic.deadline >= Date.today.beginning_of_month && user_topic.deadline <= Date.today.end_of_month
+        end
           .group_by { |topic| topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline }
 
         latest_deadline = topics_grouped_by_deadline.keys.max
         last_relevant_topic = topics_grouped_by_deadline[latest_deadline]&.last
 
-        { timeline: timeline, topic: last_relevant_topic } if last_relevant_topic.present?
+        { timeline:, topic: last_relevant_topic } if last_relevant_topic.present?
       end.compact
     end
   end
 
-
-
-  # FIXME remove if everything is alright after merge
+  # FIXME: remove if everything is alright after merge
   # def calculate_holidays_array
   #   user_holidays ||= current_user.holidays.flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
   #   bga_holidays ||= Holiday.where(bga: true).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }

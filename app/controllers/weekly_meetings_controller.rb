@@ -1,10 +1,9 @@
 class WeeklyMeetingsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_weekly_meeting, only: %i[show edit update destroy]
-  before_action :set_available_weeks, only: [:new, :edit, :create, :update]
-  before_action :set_time_slots, only: [:new, :show, :edit, :create, :update]
-  before_action :set_lc_and_learner_users, only: [:new, :create, :edit, :update]
-
+  before_action :set_available_weeks, only: %i[new edit create update]
+  before_action :set_time_slots, only: %i[new show edit create update]
+  before_action :set_lc_and_learner_users, only: %i[new create edit update]
 
   def index
     @weekly_meetings = WeeklyMeeting.all
@@ -65,15 +64,14 @@ class WeeklyMeetingsController < ApplicationController
     params.require(:weekly_meeting).permit(
       :week_id,
       :hub_id,
-      monday_slots_attributes: [:id, :time_slot, :lc_id, :learner_id, :_destroy],
-      tuesday_slots_attributes: [:id, :time_slot, :lc_id, :learner_id, :_destroy],
-      wednesday_slots_attributes: [:id, :time_slot, :lc_id, :learner_id, :_destroy],
-      thursday_slots_attributes: [:id, :time_slot, :lc_id, :learner_id, :_destroy],
-      friday_slots_attributes: [:id, :time_slot, :lc_id, :learner_id, :_destroy]
+      monday_slots_attributes: %i[id time_slot lc_id learner_id _destroy],
+      tuesday_slots_attributes: %i[id time_slot lc_id learner_id _destroy],
+      wednesday_slots_attributes: %i[id time_slot lc_id learner_id _destroy],
+      thursday_slots_attributes: %i[id time_slot lc_id learner_id _destroy],
+      friday_slots_attributes: %i[id time_slot lc_id learner_id _destroy]
       # Add additional days if you have more
     )
   end
-
 
   def set_available_weeks(edit_week_id = nil)
     used_week_ids = current_user.weekly_goals.pluck(:week_id)
@@ -84,9 +82,9 @@ class WeeklyMeetingsController < ApplicationController
     @available_weeks = Week.where.not(id: used_week_ids)
 
     # Ensure the current week is included if we're editing
-    if edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
-      @available_weeks = @available_weeks.or(Week.where(id: edit_week_id))
-    end
+    return unless edit_week_id.present? && !@available_weeks.exists?(edit_week_id)
+
+    @available_weeks = @available_weeks.or(Week.where(id: edit_week_id))
   end
 
   def set_user_options
@@ -95,7 +93,8 @@ class WeeklyMeetingsController < ApplicationController
   end
 
   def set_time_slots
-    @time_slots = %w[ 08:00 08:30 09:00 09:30 10:00 10:30 11:00 11:30 12:00 12:30 13:00 13:30 14:00 14:30 15:00 15:30 16:00 16:30 17:00 17:30 ]
+    @time_slots = %w[08:00 08:30 09:00 09:30 10:00 10:30 11:00 11:30 12:00 12:30 13:00 13:30 14:00 14:30 15:00 15:30
+                     16:00 16:30 17:00 17:30]
   end
 
   def build_day_slots_for_meeting
@@ -110,5 +109,4 @@ class WeeklyMeetingsController < ApplicationController
     @learner_users = User.where(role: 'Learner').order(:full_name)
     # Ensure you adjust the query to correctly reflect how you determine who is a learning coach or learner
   end
-
 end

@@ -9,7 +9,7 @@ class SoapClientService
   end
 
   def get_user_details(user_id)
-    response = @client.call(:get_user_details, message: { user_id: user_id })
+    response = @client.call(:get_user_details, message: { user_id: })
     response.body[:get_user_details_response]
   rescue Savon::SOAPFault => e
     Rails.logger.error "SOAP Fault: #{e.message}"

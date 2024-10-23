@@ -5,8 +5,9 @@ class PagesController < ApplicationController
 
   skip_before_action :authenticate_user!
   before_action :check_admin_role, only: [:dashboard_admin]
-  before_action :check_lc_role, only: [:dashboard_lc, :learner_profile, :attendance, :attendances, :learner_attendances, :update_attendance, :update_absence_attendance, :update_start_time_attendance, :update_end_time_attendance, :update_comments_attendance]
-
+  before_action :check_lc_role,
+                only: %i[dashboard_lc learner_profile attendance attendances learner_attendances update_attendance
+                         update_absence_attendance update_start_time_attendance update_end_time_attendance update_comments_attendance]
 
   def dashboard_admin
     @hubs = Hub.order(:name).includes(users: { users_hubs: :hub }).references(:users)
@@ -26,15 +27,12 @@ class PagesController < ApplicationController
     # end
   end
 
-
   def hub_selection
     @hubs = current_user.hubs
   end
 
   def dashboard_lc
-    if current_user.hubs.count > 1 && params[:hub_id].nil?
-      redirect_to dashboard_dc_path
-    end
+    redirect_to dashboard_dc_path if current_user.hubs.count > 1 && params[:hub_id].nil?
 
     if params[:hub_id].nil?
       @selected_hub = current_user.hubs.first
@@ -49,16 +47,13 @@ class PagesController < ApplicationController
     @users.each do |user|
       total_balance_for_user = 0
       user.timelines.each do |timeline|
-        if timeline.balance != nil
-          total_balance_for_user += timeline.balance
-        end
+        total_balance_for_user += timeline.balance unless timeline.balance.nil?
       end
       user.topics_balance = total_balance_for_user
       user.save
     end
 
     @users = @users.order(topics_balance: :asc)
-
   end
 
   def dashboard_dc
@@ -83,9 +78,7 @@ class PagesController < ApplicationController
       @hub_lcs = []
 
       @lcs.each do |lc|
-        if lc.hubs.count < 5
-          @hub_lcs << lc
-        end
+        @hub_lcs << lc if lc.hubs.count < 5
       end
 
       @yearly_presence = calc_yearly_presence(@learner)
@@ -102,9 +95,7 @@ class PagesController < ApplicationController
       @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
       get_kda_averages(@learner.kdas, @current_sprint)
-      unless @learner
-        redirect_to some_fallback_path, alert: "Learner not found."
-      end
+      redirect_to some_fallback_path, alert: "Learner not found." unless @learner
     elsif current_user.role == "lc"
       redirect_to dashboard_lc_path
     elsif current_user.role == "guardian" && kids.count > 0
@@ -132,9 +123,7 @@ class PagesController < ApplicationController
   def learner_profile
     @learner = User.find_by(id: params[:id])
 
-    if @learner.nil?
-      redirect_to root_path and return
-    end
+    redirect_to root_path and return if @learner.nil?
 
     unless current_user.kids.include?(@learner.id) || current_user.role == "admin" || current_user.role == "lc"
       redirect_to root_path and return
@@ -153,9 +142,7 @@ class PagesController < ApplicationController
     @hub_lcs = []
 
     @lcs.each do |lc|
-      if lc.hubs.count < 2
-        @hub_lcs << lc
-      end
+      @hub_lcs << lc if lc.hubs.count < 2
     end
 
     @holidays = @learner.holidays
@@ -179,9 +166,11 @@ class PagesController < ApplicationController
       @current_weekly_goal_date = today - 2.days
     end
 
-    @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
+    @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @current_weekly_goal_date,
+                                 @current_weekly_goal_date)
 
-    @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
+    @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?",
+                                                              @current_weekly_goal_date, @current_weekly_goal_date)
 
     @attendances = @learner.attendances.where(attendance_date: @current_sprint.start_date..@current_sprint.end_date)
 
@@ -189,10 +178,9 @@ class PagesController < ApplicationController
 
     get_kda_averages(@learner.kdas, @current_sprint)
 
-    unless @learner
-      redirect_to some_fallback_path, alert: "Learner not found."
-    end
+    return if @learner
 
+    redirect_to some_fallback_path, alert: "Learner not found."
 
     # ##render json
     # respond_to do |format|
@@ -222,32 +210,32 @@ class PagesController < ApplicationController
     # end
   end
 
-    # ##render json
-    # respond_to do |format|
-    #   format.html
-    #   format.json { render learner: @learner,
-    #   weekly_goal: @weekly_goal,
-    #   current_week: @current_week,
-    #   current_date: @current_weekly_goal_date,
-    #   weekly_goals_percentage: @weekly_goals_percentage,
-    #   kdas_percentage: @kdas_percentage,
-    #   average_items: @average_items,
-    #   has_exam_date: @has_exam_date,
-    #   has_mock50: @has_mock50,
-    #   has_mock100: @has_mock100,
-    #   yearly_presence: @yearly_presence,
-    #   notes: @notes,
-    #   timelines: @timelines,
-    #   current_sprint: @current_sprint,
-    #   current_sprint_weeks: @current_sprint_weeks,
-    #   sprint_goals: @sprint_goals,
-    #   skills: @skills,
-    #   communities: @communities,
-    #   lcs: @lcs,
-    #   hub_lcs: @hub_lcs,
-    #   holidays: @holidays
-    #   }
-    # end
+  # ##render json
+  # respond_to do |format|
+  #   format.html
+  #   format.json { render learner: @learner,
+  #   weekly_goal: @weekly_goal,
+  #   current_week: @current_week,
+  #   current_date: @current_weekly_goal_date,
+  #   weekly_goals_percentage: @weekly_goals_percentage,
+  #   kdas_percentage: @kdas_percentage,
+  #   average_items: @average_items,
+  #   has_exam_date: @has_exam_date,
+  #   has_mock50: @has_mock50,
+  #   has_mock100: @has_mock100,
+  #   yearly_presence: @yearly_presence,
+  #   notes: @notes,
+  #   timelines: @timelines,
+  #   current_sprint: @current_sprint,
+  #   current_sprint_weeks: @current_sprint_weeks,
+  #   sprint_goals: @sprint_goals,
+  #   skills: @skills,
+  #   communities: @communities,
+  #   lcs: @lcs,
+  #   hub_lcs: @hub_lcs,
+  #   holidays: @holidays
+  #   }
+  # end
 
   # app/controllers/pages_controller.rb
   def change_weekly_attendance
@@ -256,7 +244,8 @@ class PagesController < ApplicationController
     learner = User.find_by(id: params[:learner_id])
 
     if learner.nil? || week.nil?
-      render turbo_stream: turbo_stream.replace("lp_weekly_attendance", partial: "pages/partials/error_message", locals: { message: "Learner or week not found" })
+      render turbo_stream: turbo_stream.replace("lp_weekly_attendance", partial: "pages/partials/error_message",
+                                                                        locals: { message: "Learner or week not found" })
       return
     end
 
@@ -264,16 +253,16 @@ class PagesController < ApplicationController
 
     render turbo_stream:
       turbo_stream.replace("lp_weekly_attendance",
-                            partial: "pages/partials/attendance",
-                            locals: { attendances: attendances, current_week: week, learner: learner, current_date: date })
+                           partial: "pages/partials/attendance",
+                           locals: { attendances:, current_week: week, learner:,
+                                     current_date: date })
   end
-
 
   def change_weekly_goal
     date = params[:date] ? Date.parse(params[:date]) : Date.today
     week = Week.find_by("start_date <= ? AND end_date >= ?", date, date)
     learner = User.find_by(id: params[:learner_id])
-    current_date = params[:current_date] ? Date.parse(params[:current_date]) : Date.today
+    params[:current_date] ? Date.parse(params[:current_date]) : Date.today
     weekly_goal = learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", date, date)
 
     update_weekly_goal(weekly_goal, week, learner, date)
@@ -283,17 +272,16 @@ class PagesController < ApplicationController
     render 'not_found', status: :not_found
   end
 
-
   private
 
   def update_weekly_goal(weekly_goal, week, learner, date)
     render turbo_stream:
       turbo_stream.replace("lp_weekly_goal",
-                            partial: "pages/partials/weekly_goals",
-                            locals: {weekly_goal: weekly_goal,
-                                    current_week: week,
-                                    learner: learner,
-                                    current_date: date})
+                           partial: "pages/partials/weekly_goals",
+                           locals: { weekly_goal:,
+                                     current_week: week,
+                                     learner:,
+                                     current_date: date })
   end
 
   def user_params
@@ -335,25 +323,25 @@ class PagesController < ApplicationController
       { title: 'Hub Participation', average: avg_hubp },
       { title: 'Peer-to-Peer Learning', average: avg_p2p }
     ]
-
   end
 
   def check_admin_role
-    unless current_user.role == "admin"
-      redirect_to root_path, alert: "You are not authorized to access this page."
-    end
+    return if current_user.role == "admin"
+
+    redirect_to root_path, alert: "You are not authorized to access this page."
   end
 
   def check_lc_role
-    unless current_user.role != "learner"
-      redirect_to root_path, alert: "You are not authorized to access this page."
-    end
+    return if current_user.role != "learner"
+
+    redirect_to root_path, alert: "You are not authorized to access this page."
   end
 
   def check_sprint_goal(user)
     result = false
-    user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)).knowledges.each do |knowledge|
-      if knowledge.difficulties != nil && knowledge.plan != nil
+    user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today,
+                                                     Date.today)).knowledges.each do |knowledge|
+      if !knowledge.difficulties.nil? && !knowledge.plan.nil?
         result = true
       else
         result = false
@@ -376,11 +364,10 @@ class PagesController < ApplicationController
     date_range = earliest_start_date..Date.today
 
     absence_count = Attendance.where(user_id: user.id, attendance_date: date_range)
-              .where(absence: ['Unjustified Leave', 'Justified Leave', 'Working Away']).count
+                              .where(absence: ['Unjustified Leave', 'Justified Leave', 'Working Away']).count
 
     present_count = Attendance.where(user_id: user.id, attendance_date: date_range)
-    .where(absence: 'Present').count
-
+                              .where(absence: 'Present').count
 
     if (absence_count == 0 && present_count == 0) || present_count == 0
       presence = 0

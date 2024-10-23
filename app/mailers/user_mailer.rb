@@ -1,6 +1,5 @@
 class UserMailer < Devise::Mailer
-
-  def confirmation_instructions(record, token, opts={})
+  def confirmation_instructions(record, token, opts = {})
     @token = token
     devise_mail(record, :confirmation_instructions, opts)
   end
@@ -11,7 +10,7 @@ class UserMailer < Devise::Mailer
   end
 
   # Send password reset instructions
-  def reset_password_instructions(record, token, opts={})
+  def reset_password_instructions(record, token, opts = {})
     @token = token
     devise_mail(record, :reset_password_instructions, opts)
   end
@@ -27,7 +26,7 @@ class UserMailer < Devise::Mailer
     @parent = parent
     @password = password
     mail(to: @parent.email,
-          from: 'worktools@bravegenerationacademy.com',
-          subject: 'Welcome to the new BGA App!')
+         from: 'worktools@bravegenerationacademy.com',
+         subject: 'Welcome to the new BGA App!')
   end
 end
