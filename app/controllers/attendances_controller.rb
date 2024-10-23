@@ -4,7 +4,7 @@ class AttendancesController < ApplicationController
   def attendance
     create_daily_attendance
     @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
-    @isWeekend = @current_date.saturday? || @current_date.sunday?
+    @isweekend = @current_date.saturday? || @current_date.sunday?
     @prev_date = calculate_prev_date(@current_date, 'daily')
     @next_date = calculate_next_date(@current_date, 'daily')
     @attendances = fetch_daily_attendances(@current_date).sort_by { |attendance| attendance.user.full_name.downcase }
@@ -27,14 +27,11 @@ class AttendancesController < ApplicationController
     learner = User.find(params[:learner_id])
     attendance_date = params[:attendance_date]
     attendance = learner.attendances.find_by(attendance_date:)
-
     if attendance.nil?
       learner.attendances.create(attendance_date:, start_time: Time.now, present: true,
                                  absence: 'Present')
     elsif attendance.start_time.present? && attendance.end_time.blank?
-      # If start time is present but end time is not, set end time
       attendance.update(end_time: Time.now)
-      # If start time is not present, set start time
     elsif attendance.start_time.blank?
       attendance.update(start_time: Time.now, present: true, absence: 'Present')
     end
@@ -44,14 +41,11 @@ class AttendancesController < ApplicationController
 
   def update_absence
     attendance = Attendance.find(params[:id])
-
     if params[:attendance][:absence].blank?
       attendance.update(absence: nil)
-      raise
     else
       attendance.update(absence: params[:attendance][:absence])
     end
-
     attendance.update(start_time: nil, end_time: nil) if params[:absence] != 'Present'
 
     render json: { status: "success", message: "Absence updated successfully" }
@@ -116,7 +110,7 @@ class AttendancesController < ApplicationController
     learners = User.joins(:hubs).where(hubs: { id: current_user.hubs.first.id }, role: 'learner', deactivate: false)
     (start_date..end_date).each do |date|
       # Checking for saturday and sunday
-      next if date.wday == 6 || date.wday == 0
+      next if date.wday == 6 || date.wday.zero?
 
       learners.each do |learner|
         learner.attendances.create(attendance_date: date) unless learner.attendances.exists?(attendance_date: date)
@@ -154,7 +148,7 @@ class AttendancesController < ApplicationController
                                           attendance_date: start_of_week..end_of_week)
                                    .order('attendance_date, users.full_name ASC')
 
-    weekly_attendances.group_by { |attendance| attendance.attendance_date }
+    weekly_attendances.group_by(&:attendance_date)
   end
 
   def calculate_prev_date(current_date, time_frame)

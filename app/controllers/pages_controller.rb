@@ -7,7 +7,8 @@ class PagesController < ApplicationController
   before_action :check_admin_role, only: [:dashboard_admin]
   before_action :check_lc_role,
                 only: %i[dashboard_lc learner_profile attendance attendances learner_attendances update_attendance
-                         update_absence_attendance update_start_time_attendance update_end_time_attendance update_comments_attendance]
+                         update_absence_attendance update_start_time_attendance update_end_time_attendance
+                         update_comments_attendance]
 
   def dashboard_admin
     @hubs = Hub.order(:name).includes(users: { users_hubs: :hub }).references(:users)
@@ -61,10 +62,7 @@ class PagesController < ApplicationController
   end
 
   def profile
-    kids = []
-    current_user.kids.each do |kid|
-      kids << User.find_by(id: kid)
-    end
+    kids = current_user.kids.map { |kid| User.find_by(id: kid) }
     if current_user.role == "learner" || current_user.role == "admin"
       @learner = current_user
       @learner_flag = @learner.learner_flag
@@ -98,7 +96,7 @@ class PagesController < ApplicationController
       redirect_to some_fallback_path, alert: "Learner not found." unless @learner
     elsif current_user.role == "lc"
       redirect_to dashboard_lc_path
-    elsif current_user.role == "guardian" && kids.count > 0
+    elsif current_user.role == "guardian" && kids.count.positive?
       redirect_to learner_profile_path(kids.first)
     else
       redirect_to about_path
@@ -296,7 +294,7 @@ class PagesController < ApplicationController
     sum_sdl = 0
 
     filtered_kdas = kdas.filter do |kda|
-      kda.week.sprint === current_sprint
+      kda.week.sprint == current_sprint
     end
 
     filtered_kdas.each do |kda|
@@ -310,11 +308,11 @@ class PagesController < ApplicationController
     kdas_count = filtered_kdas.count
 
     # Calculate averages
-    avg_mot = kdas_count > 0 ? sum_mot.to_f.round / kdas_count : 0
-    avg_p2p = kdas_count > 0 ? sum_p2p.to_f.round / kdas_count : 0
-    avg_ini = kdas_count > 0 ? sum_ini.to_f.round / kdas_count : 0
-    avg_hubp = kdas_count > 0 ? sum_hubp.to_f.round / kdas_count : 0
-    avg_sdl = kdas_count > 0 ? sum_sdl.to_f.round / kdas_count : 0
+    avg_mot = kdas_count.positive? ? sum_mot.to_f.round / kdas_count : 0
+    avg_p2p = kdas_count.positive? ? sum_p2p.to_f.round / kdas_count : 0
+    avg_ini = kdas_count.positive? ? sum_ini.to_f.round / kdas_count : 0
+    avg_hubp = kdas_count.positive? ? sum_hubp.to_f.round / kdas_count : 0
+    avg_sdl = kdas_count.positive? ? sum_sdl.to_f.round / kdas_count : 0
 
     @average_items = [
       { title: 'Self-Directed Learning', average: avg_sdl },
@@ -369,7 +367,7 @@ class PagesController < ApplicationController
     present_count = Attendance.where(user_id: user.id, attendance_date: date_range)
                               .where(absence: 'Present').count
 
-    if (absence_count == 0 && present_count == 0) || present_count == 0
+    if (absence_count.zero? && present_count.zero?) || present_count.zero?
       presence = 0
     else
       presence = ((present_count.to_f / (present_count + absence_count)) * 100).round

@@ -57,8 +57,8 @@ class WeeklyGoalsController < ApplicationController
     @is_edit = true
 
     # Pre-populate or build missing slots if necessary
-    WeeklySlot.time_slots.keys.each do |time|
-      WeeklySlot.day_of_weeks.keys.each do |day|
+    WeeklySlot.time_slots.each_key do |time|
+      WeeklySlot.day_of_weeks.each_key do |day|
         unless @weekly_goal.weekly_slots.any? { |slot| slot.day_of_week == day && slot.time_slot == time }
           @weekly_goal.weekly_slots.build(day_of_week: day, time_slot: time)
         end
@@ -148,7 +148,7 @@ class WeeklyGoalsController < ApplicationController
     communities_names = current_sprint.sprint_goals.where(user: current_user).map(&:communities).flatten.uniq.pluck(:involved).reject(&:blank?).map(&:capitalize)
 
     # Combine subjects and skills, prefixing each for clarity
-    @combined_options = @subject_names.select { |name| name != '' } +
+    @combined_options = @subject_names.reject { |name| name == '' } +
                         skill_names.map { |name| name } +
                         communities_names.map { |name| name } +
                         personalized_names +
@@ -172,8 +172,8 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def build_weekly_slots
-    WeeklySlot.day_of_weeks.keys.each do |day_of_week|
-      WeeklySlot.time_slots.keys.each do |time_slot|
+    WeeklySlot.day_of_weeks.each_key do |day_of_week|
+      WeeklySlot.time_slots.each_key do |time_slot|
         unless @weekly_goal.weekly_slots.exists?(day_of_week:, time_slot:)
           @weekly_goal.weekly_slots.build(day_of_week:, time_slot:)
         end
@@ -184,8 +184,8 @@ class WeeklyGoalsController < ApplicationController
   def save_weekly_slots
     return unless params[:weekly_goal].present?
 
-    WeeklySlot.day_of_weeks.keys.each do |day|
-      WeeklySlot.time_slots.keys.each do |time|
+    WeeklySlot.day_of_weeks.each_key do |day|
+      WeeklySlot.time_slots.each_key do |time|
         # Build keys for subject and topic
         subject_key = "#{day.downcase}_#{time.downcase}_subject"
         topic_key = "#{day.downcase}_#{time.downcase}_topic"
@@ -205,8 +205,8 @@ class WeeklyGoalsController < ApplicationController
 
   def dynamic_slot_params
     allowed_params = []
-    WeeklySlot.day_of_weeks.keys.each do |day|
-      WeeklySlot.time_slots.keys.each do |time|
+    WeeklySlot.day_of_weeks.each_key do |day|
+      WeeklySlot.time_slots.each_key do |time|
         allowed_params << "#{day.downcase}_#{time.downcase}_subject"
         allowed_params << "#{day.downcase}_#{time.downcase}_topic"
       end

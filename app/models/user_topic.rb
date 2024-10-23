@@ -22,7 +22,7 @@ class UserTopic < ApplicationRecord
   end
 
   def check_timeline_completion
-    timeline.check_and_hide_if_completed if timeline
+    timeline&.check_and_hide_if_completed
   end
 
   def deadline_changed_for_current_user?

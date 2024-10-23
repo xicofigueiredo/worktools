@@ -236,8 +236,12 @@ class TimelinesController < ApplicationController
         topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
                                              .where(user_topics: { user_id: current_user.id })
                                              .select do |topic|
-          user_topic = topic.user_topics.find { |ut| ut.user_id == current_user.id }
-          user_topic && user_topic.deadline && user_topic.deadline >= Date.today.beginning_of_month && user_topic.deadline <= Date.today.end_of_month
+          user_topic = topic.user_topics.find do |ut|
+            ut.user_id == current_user.id
+          end
+          user_topic && user_topic.deadline &&
+            user_topic.deadline >= Date.today.beginning_of_month &&
+            user_topic.deadline <= Date.today.end_of_month
         end
           .group_by { |topic| topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline }
 

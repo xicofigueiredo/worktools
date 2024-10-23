@@ -39,7 +39,7 @@ class Week < ApplicationRecord
       relative_average = current_week_average
     end
 
-    if relative_average < 0
+    if relative_average.negative?
       0
     else
       relative_average

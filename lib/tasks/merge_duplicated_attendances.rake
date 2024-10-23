@@ -21,9 +21,7 @@ namespace :attendances do
 
           merged_attributes[key] ||= value if value.present?
         end
-      end
 
-      records.each do |record|
         record.update!(merged_attributes)
         puts "updated attendance: #{record.id}"
       end

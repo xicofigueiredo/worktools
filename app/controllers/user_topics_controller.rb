@@ -16,7 +16,7 @@ class UserTopicsController < ApplicationController
     if @user_topic.update(done: params[:user_topic][:done])
       calculate_progress_and_balance([current_timeline])
       current_timeline.update_weekly_progress(current_week)
-      render json: { status: "success", timeline_id: "#{params[:timeline_id]}" }, status: :ok
+      render json: { status: "success", timeline_id: params[:timeline_id].to_s }, status: :ok
     else
       render json: { status: "error", message: @user_topic.errors.full_messages.to_sentence },
              status: :unprocessable_entity
