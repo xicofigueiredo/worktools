@@ -1,10 +1,37 @@
-<!DOCTYPE html>
+<div class="container mt-3">
+  <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+
+    <div>
+      <h1>Report</h1>
+    </div>
+
+    <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
+      <%= link_to '<i class="fa-solid fa-chevron-left"></i>'.html_safe, reports_path(date: @prev_date), class: "btn btn-outline-secondary rounded d-flex align-items-center #{'disabled' unless @has_prev_sprint}" %>
+      <%= link_to 'This Sprint', reports_path(Date.today), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+      <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe, reports_path(date: @next_date), class: "btn btn-outline-secondary rounded d-flex align-items-center #{'disabled' unless @has_next_sprint}" %>
+    </div>
+
+    <div class="">
+      <%= link_to new_holiday_path, class: "btn btn-primary", style: 'border-radius: 10px;' do %>
+        <i class="fa-solid fa-file-arrow-down"></i> Download
+      <% end %>
+    </div>
+
+  </div>
+
+  <br>
+
+  <% if !@report %>
+    <div class="d-flex flex-column gap-3 mt-5">
+      <div class="text-center">
+        <h1>There is currently no Report for <%= @sprint.name %></h1>
+        <%= link_to "Create Report", new_report_path(date: @date), class: "btn btn-primary mb-3"  %>
+      </div>
+    </div>
+  <% else %>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -74,7 +101,6 @@
     </style>
 </head>
 <body>
-    <div class="container">
         <div class="header">
             <div>
                 <div><%= current_user.full_name %></div>
@@ -85,14 +111,16 @@
                 <br>
                 <%= @report.sprint.start_date.strftime("%d %b") %> - <%= @report.sprint.end_date.strftime("%d %b") %>
             </div>
-            <div>
-                <i class="fa-solid fa-box-archive"></i> <span>Dashboard</span>
-            </div>
+        <div>
+          <%= image_tag "logoreport.png", width: "130", height: "65" %>
+        </div>
         </div>
 
         <div class="section">
             <div class="section-title">General comment</div>
-            <textarea class="comment-box"></textarea>
+            <textarea class="comment-box">
+                <%= @report.general %>
+            </textarea>
         </div>
 
         <div class="section">
@@ -117,41 +145,29 @@
                 <thead>
                     <tr>
                         <th>Subject</th>
-                        <th>Progress</th>
-                        <th>Mock 50%</th>
-                        <th>Mock 100%</th>
-                        <th>Exam Season</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
+                        <th>Current Progress</th>
+                        <th>Expected Progress</th>
+                        <th>+/-</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Chemistry IGCSE</td>
-                        <td><progress value="10" max="100">10%</progress></td>
-                        <td>28/05/2025</td>
-                        <td>30/01/2026</td>
-                        <td>May/Jun 2026</td>
-                        <td>05/03/2024</td>
-                        <td>01/02/2026</td>
+                        <td>67%</td>
+                        <td>56%</td>
+                        <td>+11%</td>
                     </tr>
                     <tr>
                         <td>Financial Literacy</td>
-                        <td><progress value="0" max="100">0%</progress></td>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                        <td>01/09/2023</td>
-                        <td>30/06/2024</td>
+                        <td>50%</td>
+                        <td>52%</td>
+                        <td>+2%</td>
                     </tr>
                     <tr>
                         <td>Biology IGCSE</td>
-                        <td><progress value="59" max="100">59%</progress></td>
-                        <td>20/05/2024</td>
-                        <td>31/01/2025</td>
-                        <td>May/Jun 2025</td>
-                        <td>01/09/2023</td>
-                        <td>01/02/2025</td>
+                        <td>59%</td>
+                        <td>50%</td>
+                        <td>-9%</td>
                     </tr>
                 </tbody>
             </table>
@@ -246,6 +262,15 @@
                 <div>Soralia Morgado: soralia.morgado@edubga.com | Joseph Cannon: joseph.cannon@edubga.com | Bianca Visser: bianca.visser@edubga.com</div>
             </div>
         </footer>
-    </div>
 </body>
 </html>
+
+
+
+
+    <div class="d-flex justify-content-center mb-5">
+      <%= link_to 'Edit Report', edit_report_path(@report), class: "btn btn-primary", style: 'border-radius: 10px;' %>
+    </div>
+
+  <% end %>
+</div>
