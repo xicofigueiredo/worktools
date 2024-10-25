@@ -99,6 +99,7 @@ Rails.application.routes.draw do
     # match '*path', via: :all, to: 'pages#not_found'
 
     resources :reports
+    get 'reports_lc_view', to: 'reports#lc_view', as: 'lc_view'
 
 
 end

@@ -117,70 +117,70 @@
         </div>
 
         <div class="section">
-            <div class="section-title">General comment</div>
-            <textarea class="comment-box">
-                <%= @report.general %>
-            </textarea>
+          <div class="section-title">General comment</div>
+          <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
+            <p>
+              <%= @report.general %>
+            </p>
+          </div>
         </div>
 
         <div class="section">
             <div class="section-title">Knowledge</div>
-            <p>
-                To ensure that learners are adequately prepared for their final exams that are following the British Curriculum, every subject will have two stages of mock exams. These mock exams will cover the first 50% and 100% of the course, respectively.
-            </p>
-            <p>
-                The dates for the mock exams will be chosen by the learners based on their course completion goals.
-            </p>
-            <p>
-                In order to take the mock exams, learners must complete certain assignments as determined by the course manager (CM). Once these assignments have been completed, learners may submit a request to take the mock exams.
-            </p>
-            <p>
-                The following table provides more information about the learners' exam series and the expectations for completing the mocks. It is important that learners take the mock exams seriously as they will provide valuable feedback on their progress and highlight areas that may need further attention.
-            </p>
+<p>At Brave Generation Academy, the Knowledge Block focuses primarily on academic content to equip learners with the skills needed for future education and career opportunities. The curriculum encompasses a wide range of subjects and prepares students for final exams. The table below provides insight into your child’s progress in each subject, helping them track their development and identify areas that may need further attention to ensure readiness for exams.</p>
+<p>If your child is pursuing the UP curriculum or the American curriculum, they will receive an additional separate academic report detailing their achievements and progress.</p>
         </div>
 
         <div class="section">
             <div class="section-title">Knowledge Overview</div>
             <table class="knowledge-table">
                 <thead>
-                    <tr>
-                        <th>Subject</th>
-                        <th>Current Progress</th>
-                        <th>Expected Progress</th>
-                        <th>+/-</th>
-                    </tr>
+                  <tr>
+                      <th>Subject</th>
+                      <th>Progress</th>
+                      <th>+/-</th>
+                      <th>Grade</th>
+                      <th>Exam</th>
+                  </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Chemistry IGCSE</td>
-                        <td>67%</td>
-                        <td>56%</td>
-                        <td>+11%</td>
-                    </tr>
-                    <tr>
-                        <td>Financial Literacy</td>
-                        <td>50%</td>
-                        <td>52%</td>
-                        <td>+2%</td>
-                    </tr>
-                    <tr>
-                        <td>Biology IGCSE</td>
-                        <td>59%</td>
-                        <td>50%</td>
-                        <td>-9%</td>
-                    </tr>
+                <% @timelines.each do |timeline|  %>
+                  <tr>
+                      <td><%= timeline.subject.name %> <%= timeline.personalized_name %></td>
+                      <td><%= timeline.progress %>%</td>
+                      <td><% number = timeline.progress - timeline.expected_progress %>
+                      <%= number.positive? ? "+#{number}%" : "#{number}%" %></td>
+                      <td></td>
+                      <% if timeline.exam_date && (timeline.exam_date.date.year < Date.today.year ||
+                            (timeline.exam_date.date.year == Date.today.year &&
+                            timeline.exam_date.date.month <= Date.today.month)) %>
+                        <%# <td><%= form.text_area :grade, class: "form-control"%></td> %>
+                        <td></td>
+                      <% else %>
+                        <td><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A' %></td>
+                      <% end %>
+                  </tr>
+                <% end %>
                 </tbody>
             </table>
         </div>
 
         <div class="flex-container">
             <div class="flex-item">
-                <div class="section-title">Learning Coach Comment</div>
-                <textarea class="comment-box"></textarea>
+              <div class="section-title">Learning Coach Comment</div>
+              <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <p>
+                  <%= @report.lc_comment %>
+                </p>
+              </div>
             </div>
             <div class="flex-item">
-                <div class="section-title">Learner's Reflection</div>
-                <textarea class="comment-box"></textarea>
+              <div class="section-title">Learner's Reflection</div>
+              <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <p>
+                  <%= @report.reflection %>
+                </p>
+              </div>
             </div>
         </div>
 
@@ -216,10 +216,7 @@
         <div class="section">
             <div class="section-title">Key Development Areas</div>
             <p>
-                At BGA, we understand that learners may have areas where they require extra assistance and support to become independent learners. Therefore, we have identified Key Development Areas (KDAs) as a means of reflecting on the learner's progress throughout a Sprint.
-            </p>
-            <p>
-                KDAs are the areas in which learners need to improve, and they may vary from one learner to another. By focusing on these KDAs, we aim to help learners become more independent and confident in their learning journey. Through regular assessments and feedback, learners can track their progress in each KDA and work on improving these areas with the help of their Learning Coaches.
+              At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner’s entire study experience and impact their broader life journey. These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success.
             </p>
             <table class="kda-table">
                 <thead>

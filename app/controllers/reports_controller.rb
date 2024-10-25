@@ -1,7 +1,9 @@
 class ReportsController < ApplicationController
   before_action :authenticate_user!
+  before_action :set_report, only: [:edit, :update]
 
-  def learner_view
+
+  def lc_view
     @current_sprint = Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)
 
     if @current_sprint
@@ -14,6 +16,7 @@ class ReportsController < ApplicationController
   end
 
   def index
+    @timelines = current_user.timelines.where(hidden: false)
     @reports = current_user.reports.joins(:sprint)
     @all_sprints = Sprint.all
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
@@ -34,9 +37,12 @@ class ReportsController < ApplicationController
   end
 
   def new
+    @timelines = current_user.timelines.where(hidden: false)
     @is_edit = false
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+    @skills = @report.user.sprint_goals.find_by(sprint: @sprint).skills
+    @communities = @report.user.sprint_goals.find_by(sprint: @sprint).communities
 
     @report = current_user.reports.find_or_create_by(sprint: @sprint) do |report|
       report.sprint = @sprint
@@ -45,14 +51,42 @@ class ReportsController < ApplicationController
 
   def edit
     @is_edit = true
-    @report = current_user.reports.find(params[:id])
+    @timelines = @report.user.timelines.where(hidden: false)
+    @date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+    @skills = @report.user.sprint_goals.find_by(sprint: @sprint).skills
+    @communities = @report.user.sprint_goals.find_by(sprint: @sprint).communities
+    @learner = @report.user
+
+    # Check if the current user has access to edit the report
+    if current_user.role == 'learner' && @report.user_id == current_user.id
+      # The learner can edit their report
+      @role = 'learner'
+    elsif current_user.role == 'lc' && (current_user.hubs & @report.user.hubs).any?
+      # The LC can edit the report related to them
+      @role = 'lc'
+    elsif current_user.role == 'admin'
+      # The admin can edit any report
+      @role = 'learner'
+    else
+      # Handle unauthorized access, e.g., redirect or show an error
+      redirect_to root_path, alert: 'You do not have permission to edit this report.'
+    end
+  end
+
+  def update
+    if @report.update(report_params)
+      redirect_to reports_path, notice: 'Report was successfully updated.'
+    else
+      render :edit
+    end
   end
 
 
   private
 
   def report_params
-    params.require(:report).permit(:user_id, :sprint_id)
+    params.require(:report).permit(:user_id, :sprint_id, :general, :lc_comment, :reflection)
   end
 
   def calc_nav_dates(current_sprint)
@@ -62,5 +96,9 @@ class ReportsController < ApplicationController
 
   def current_sprint
     Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)
+  end
+
+  def set_report
+    @report = Report.find(params[:id])
   end
 end

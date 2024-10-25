@@ -86,17 +86,17 @@ class SprintGoalsController < ApplicationController
   end
 
   # POST /sprint_goals
-  def create
-    @sprint_goal = current_user.sprint_goals.new(sprint_goal_params)
-    @sprint_goal.sprint = current_sprint
+  # def create
+  #   @sprint_goal = current_user.sprint_goals.new(sprint_goal_params)
+  #   @sprint_goal.sprint = current_sprint
 
-    if @sprint_goal.save
-      redirect_to sprint_goals_path(date: @sprint_goal.sprint.start_date),
-                  notice: 'Sprint goal was successfully created.'
-    else
-      render :new, status: :unprocessable_entity
-    end
-  end
+  #   if @sprint_goal.save
+  #     redirect_to sprint_goals_path(date: @sprint_goal.sprint.start_date),
+  #                 notice: 'Sprint goal was successfully created.'
+  #   else
+  #     render :new, status: :unprocessable_entity
+  #   end
+  # end
 
   # PATCH/PUT /sprint_goals/1
   def update

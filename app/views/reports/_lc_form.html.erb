@@ -1,0 +1,216 @@
+<%= form_with(model: @report) do |form| %>
+      <div class="header">
+          <div>
+              <div><%= current_user.full_name %></div>
+              <div><%= current_user.hubs.first.name %> Hub</div>
+          </div>
+          <div class="report-period">
+              <%= @report.sprint.name %> / <%= Date.today.year %>
+              <br>
+              <%= @report.sprint.start_date.strftime("%d %b") %> - <%= @report.sprint.end_date.strftime("%d %b") %>
+          </div>
+
+      <div>
+        <%= image_tag "logoreport.png", width: "130", height: "65" %>
+      </div>
+
+      </div>
+
+      <div class="section">
+          <div class="section-title">General comment</div>
+          <%= form.text_area :general, class: "form-control", rows: 12 %>
+      </div>
+
+      <div class="section">
+          <div class="section-title">Knowledge</div>
+          <p>
+              To ensure that learners are adequately prepared for their final exams that are following the British Curriculum, every subject will have two stages of mock exams. These mock exams will cover the first 50% and 100% of the course, respectively.
+          </p>
+          <p>
+              The dates for the mock exams will be chosen by the learners based on their course completion goals.
+          </p>
+          <p>
+              In order to take the mock exams, learners must complete certain assignments as determined by the course manager (CM). Once these assignments have been completed, learners may submit a request to take the mock exams.
+          </p>
+          <p>
+              The following table provides more information about the learners' exam series and the expectations for completing the mocks. It is important that learners take the mock exams seriously as they will provide valuable feedback on their progress and highlight areas that may need further attention.
+          </p>
+      </div>
+
+      <div class="section">
+          <div class="section-title">Knowledge Overview</div>
+          <table class="knowledge-table">
+              <thead>
+                  <tr>
+                      <th>Subject</th>
+                      <th>Progress</th>
+                      <th>+/-</th>
+                      <th>Grade</th>
+                      <th>Exam</th>
+                  </tr>
+              </thead>
+              <tbody>
+                <% @timelines.each do |timeline|  %>
+                  <tr>
+                      <td><%= timeline.subject.name %> <%= timeline.personalized_name %></td>
+                      <% number = timeline.progress - timeline.expected_progress %>
+                      <% if !timeline.progress? %>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                      <% elsif number.positive?%>
+                        <td><%= timeline.progress %></td>
+                        <td>+<%= number %>%</td>
+                        <td></td>
+                      <% else  %>
+                        <td><%= timeline.progress %></td>
+                        <td><%= number %>%</td>
+                        <td></td>
+                      <% end %>
+                      <% if timeline.exam_date && (timeline.exam_date.date.year < Date.today.year ||
+                            (timeline.exam_date.date.year == Date.today.year &&
+                            timeline.exam_date.date.month <= Date.today.month)) %>
+                        <%# <td><%= form.text_area :grade, class: "form-control"%>
+                        <td></td>
+                      <% else %>
+                        <td><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A' %></td>
+                      <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+          </table>
+      </div>
+
+      <div class="flex-container">
+          <div class="flex-item">
+              <div class="section-title">Learning Coach Comment</div>
+              <%= form.text_area :lc_comment, class: "form-control", rows: 15 %>
+          </div>
+
+          <div class="flex-item">
+              <div class="section-title">Learner's Reflection</div>
+              <%= form.text_area :reflection, class: "form-control", rows: 15 %>
+          </div>
+      </div>
+
+      <div class="section">
+          <div class="section-title">Skills & Community</div>
+          <p>
+              The Learner decides with their Learning Coach what their potential goals and targets may be in these three areas. One of the goals for BGA is that Learners explore different activities in all three Pillars. Below is the information on the goals that they have been working on for the last Sprint, and what some of the outcomes have been!
+          </p>
+          <table class="skill-table">
+              <thead>
+                  <tr>
+                      <th>Goal</th>
+                      <th>Learner's Reflection</th>
+                  </tr>
+              </thead>
+              <tbody>
+                <% @skills.each do |skill| %>
+                  <tr>
+                    <td><b><%= skill.extracurricular.capitalize %></b> - <%= skill.smartgoals %></td>
+                    <td><%= form.text_area :da, class: "form-control", rows: 5, style: "width: 100%;" %></td>
+                  </tr>
+                <% end %>
+                <% @communities.each do |community| %>
+                  <tr>
+                    <td><b><%= community.involved.capitalize %></b> - <%= community.smartgoals %></td>
+                    <td><%= form.text_area :da, class: "form-control", rows: 5, style: "width: 100%;" %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+          </table>
+      </div>
+
+      <div class="section">
+          <div class="section-title">Key Development Areas</div>
+            <p>
+              At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner’s entire study experience and impact their broader life journey. These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success.
+            </p>
+          <table class="skill-table">
+              <thead>
+                  <tr>
+                      <th>KDA</th>
+                      <th>Learner's Reflection</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td>Self-Directed Learning</td>
+                      <td><%= form.text_area :da, class: "form-control", rows: 3 %></td>
+                  </tr>
+                  <tr>
+                      <td>Initiative</td>
+                      <td><%= form.text_area :da, class: "form-control", rows: 3 %>
+                  </tr>
+                  <tr>
+                      <td>Motivation</td>
+                      <td><%= form.text_area :da, class: "form-control", rows: 3 %>
+                  </tr>
+                  <tr>
+                      <td>Peer-to-Peer Learning</td>
+                      <td><%= form.text_area :da, class: "form-control", rows: 3 %>
+                  </tr>
+                  <tr>
+                      <td>Hub Participation</td>
+                      <td><%= form.text_area :da, class: "form-control", rows: 3 %>
+                  </tr>
+              </tbody>
+          </table>
+      </div>
+
+      <div class="rubric-section">
+        <h2>Learning Coach's Rubric</h2>
+        <table class="rubric-table">
+          <thead>
+            <tr>
+              <th>KDA</th>
+              <th>Level</th>
+              <th>Area of Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Self-Directed Learning</td>
+              <td>Consistently</td>
+              <td>Able to independently set effective long-term Sprint Goals</td>
+            </tr>
+            <tr>
+              <td>Self-Directed Learning</td>
+              <td>Consistently</td>
+              <td>Able to independently create an effective weekly plan</td>
+            </tr>
+            <tr>
+              <td>Self-Directed Learning</td>
+              <td>Consistently</td>
+              <td>Includes activities from all three Learning Blocks (Knowledge, Skills, and Community) in their weekly plan</td>
+            </tr>
+            <tr>
+              <td>Self-Directed Learning</td>
+              <td>Consistently</td>
+              <td>Completes set tasks and executes their weekly plan</td>
+            </tr>
+            <tr>
+              <td>Self-Directed Learning</td>
+              <td>Occasionally</td>
+              <td>Participates in Live Session discussions and activities</td>
+            </tr>
+            <!-- Add more rows as needed -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-group d-flex justify-content-center gap-2 mb-5">
+        <%= link_to 'Back', reports_path(date: @report.sprint.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+        <div data-nested-form-target="submit">
+          <%= form.submit "Save Report", class: "btn btn-primary", style: "border-radius: 10px;"%>
+        </div>
+      </div>
+
+      <footer>
+          <div style="text-align:center; padding:20px;">
+              <div>www.bravegenerationacademy.com</div>
+              <div>Soralia Morgado: soralia.morgado@edubga.com | Joseph Cannon: joseph.cannon@edubga.com | Bianca Visser: bianca.visser@edubga.com</div>
+          </div>
+      </footer>
+<% end%>
