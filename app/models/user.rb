@@ -62,7 +62,7 @@ class User < ApplicationRecord
 
   def create_learner_flag
     # FIXME: adjust to create only for learners later
-    return unless role != 'Parent'
+    return if role != 'Learner'
 
     build_learner_flag.save
   end
