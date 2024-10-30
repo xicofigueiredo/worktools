@@ -86,7 +86,7 @@ class ReportsController < ApplicationController
   private
 
   def report_params
-    params.require(:report).permit(:user_id, :sprint_id, :general, :lc_comment, :reflection)
+    params.require(:report).permit(:user_id, :sprint_id, :general, :lc_comment, :reflection, :sdl, :ini, :mot, :p2p, :hubp)
   end
 
   def calc_nav_dates(current_sprint)

@@ -53,18 +53,17 @@
                 <% @timelines.each do |timeline|  %>
                   <tr>
                       <td><%= timeline.subject.name %> <%= timeline.personalized_name %></td>
-                      <% number = timeline.progress - timeline.expected_progress %>
                       <% if !timeline.progress? %>
                         <td>N/A</td>
                         <td>N/A</td>
                         <td>N/A</td>
-                      <% elsif number.positive?%>
+                      <% elsif timeline.difference.positive?%>
                         <td><%= timeline.progress %></td>
-                        <td>+<%= number %>%</td>
+                        <td>+<%= timeline.difference %>%</td>
                         <td></td>
                       <% else  %>
                         <td><%= timeline.progress %></td>
-                        <td><%= number %>%</td>
+                        <td><%= timeline.difference %>%</td>
                         <td></td>
                       <% end %>
                       <% if timeline.exam_date && (timeline.exam_date.date.year < Date.today.year ||
@@ -106,18 +105,7 @@
                   </tr>
               </thead>
               <tbody>
-                <% @skills.each do |skill| %>
-                  <tr>
-                    <td><b><%= skill.extracurricular.capitalize %></b> - <%= skill.smartgoals %></td>
-                    <td><%= form.text_area :da, class: "form-control", rows: 5, style: "width: 100%;" %></td>
-                  </tr>
-                <% end %>
-                <% @communities.each do |community| %>
-                  <tr>
-                    <td><b><%= community.involved.capitalize %></b> - <%= community.smartgoals %></td>
-                    <td><%= form.text_area :da, class: "form-control", rows: 5, style: "width: 100%;" %></td>
-                  </tr>
-                <% end %>
+
               </tbody>
           </table>
       </div>
@@ -137,23 +125,23 @@
               <tbody>
                   <tr>
                       <td>Self-Directed Learning</td>
-                      <td><%= form.text_area :da, class: "form-control", rows: 3 %></td>
+                      <td><%= form.text_area :sdl, class: "form-control", rows: 3 %></td>
                   </tr>
                   <tr>
                       <td>Initiative</td>
-                      <td><%= form.text_area :da, class: "form-control", rows: 3 %>
+                      <td><%= form.text_area :ini, class: "form-control", rows: 3 %>
                   </tr>
                   <tr>
                       <td>Motivation</td>
-                      <td><%= form.text_area :da, class: "form-control", rows: 3 %>
+                      <td><%= form.text_area :mot, class: "form-control", rows: 3 %>
                   </tr>
                   <tr>
                       <td>Peer-to-Peer Learning</td>
-                      <td><%= form.text_area :da, class: "form-control", rows: 3 %>
+                      <td><%= form.text_area :p2p, class: "form-control", rows: 3 %>
                   </tr>
                   <tr>
                       <td>Hub Participation</td>
-                      <td><%= form.text_area :da, class: "form-control", rows: 3 %>
+                      <td><%= form.text_area :hubp, class: "form-control", rows: 3 %>
                   </tr>
               </tbody>
           </table>

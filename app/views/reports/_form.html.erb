@@ -58,13 +58,12 @@
                   <tr>
                       <td><%= timeline.subject.name %> <%= timeline.personalized_name %></td>
                       <td><%= timeline.progress %>%</td>
-                      <td><% number = timeline.progress - timeline.expected_progress %>
-                      <%= number.positive? ? "+#{number}%" : "#{number}%" %></td>
+                      <td><%= timeline.difference.positive? ? "+#{timeline.difference}%" : "#{timeline.difference}%" %></td>
                       <td></td>
                       <% if timeline.exam_date && (timeline.exam_date.date.year < Date.today.year ||
                             (timeline.exam_date.date.year == Date.today.year &&
                             timeline.exam_date.date.month <= Date.today.month)) %>
-                        <%# <td><%= form.text_area :grade, class: "form-control"%></td> %>
+                        <%# <td><%= form.text_area :grade, class: "form-control"%>
                         <td></td>
                       <% else %>
                         <td><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A' %></td>

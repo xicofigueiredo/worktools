@@ -48,7 +48,7 @@ class PagesController < ApplicationController
     @users.each do |user|
       total_balance_for_user = 0
       user.timelines.each do |timeline|
-        total_balance_for_user += timeline.balance unless timeline.balance.nil?
+        total_balance_for_user += timeline.difference unless timeline.difference.nil?
       end
       user.topics_balance = total_balance_for_user
       user.save
@@ -362,10 +362,10 @@ class PagesController < ApplicationController
     date_range = earliest_start_date..Date.today
 
     absence_count = Attendance.where(user_id: user.id, attendance_date: date_range)
-                              .where(absence: ['Unjustified Leave', 'Justified Leave', 'Working Away']).count
+                              .where(absence: ['Unjustified Leave', 'Justified Leave']).count
 
     present_count = Attendance.where(user_id: user.id, attendance_date: date_range)
-                              .where(absence: 'Present').count
+                              .where(absence: ['Present', 'Working Away']).count
 
     if (absence_count.zero? && present_count.zero?) || present_count.zero?
       presence = 0

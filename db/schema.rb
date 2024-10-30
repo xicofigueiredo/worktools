@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_10_03_130747) do
+ActiveRecord::Schema[7.0].define(version: 2024_10_29_163927) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -235,6 +235,11 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_03_130747) do
     t.text "reflection"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "sdl"
+    t.text "ini"
+    t.text "mot"
+    t.text "p2p"
+    t.text "hubp"
     t.index ["sprint_id"], name: "index_reports_on_sprint_id"
     t.index ["user_id"], name: "index_reports_on_user_id"
   end
@@ -325,6 +330,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_03_130747) do
     t.string "personalized_name"
     t.string "color", default: "#F4F4F4"
     t.boolean "hidden", default: false
+    t.integer "difference"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
     t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"

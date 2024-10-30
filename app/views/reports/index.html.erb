@@ -34,70 +34,121 @@
 <head>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        .container {
-            width: 80%;
-            margin: auto;
-            background-color: white;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .header div {
-            font-size: 18px;
-        }
-        .header .report-period {
-            font-weight: bold;
-        }
-        .section {
-            margin-bottom: 20px;
-        }
-        .section-title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .comment-box {
-            width: 100%;
-            height: 150px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            font-size: 14px;
-            resize: none;
-        }
-        .knowledge-table, .kda-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        .knowledge-table th, .knowledge-table td, .kda-table th, .kda-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .knowledge-table th, .kda-table th {
-            background-color: #f2f2f2;
-        }
-        .flex-container {
-            display: flex;
-            justify-content: space-between;
-        }
-        .flex-item {
-            width: 48%;
-        }
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+    }
+    .container {
+        width: 80%;
+        margin: auto;
+        background-color: white;
+        padding: 20px;
+        margin-top: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .header div {
+        font-size: 18px;
+    }
+    .header .report-period {
+        font-weight: bold;
+    }
+    .section {
+        margin-bottom: 20px;
+    }
+    .section-title {
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .comment-box {
+        width: 100%;
+        height: 150px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        font-size: 14px;
+        resize: none;
+    }
+    .knowledge-table, .kda-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    .knowledge-table th, .knowledge-table td, .kda-table th, .kda-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .knowledge-table th, .kda-table th {
+        background-color: #f2f2f2;
+    }
+    .skill-table, .kda-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    .skill-table th, .skill-table td, .kda-table th, .kda-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .skill-table th, .kda-table th {
+        background-color: #f2f2f2;
+    }
+    .flex-container {
+        display: flex;
+        justify-content: space-between;
+    }
+    .flex-item {
+        width: 48%;
+    }
+    .skill-table th:first-child {
+      width: 30%; /* Adjust proportion as needed */
+    }
+
+    .skill-table th:last-child {
+      width: 70%;
+    }
+
+    /* CSS for the rubric table */
+    .rubric-section {
+      margin: 20px 0;
+    }
+
+    .rubric-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    .rubric-table th,
+    .rubric-table td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .rubric-table th {
+      background-color: #f4f4f4;
+      font-weight: bold;
+    }
+
+    .rubric-table td {
+      background-color: #fff;
+    }
+
+    .rubric-table tr:nth-child(even) td {
+      background-color: #f9f9f9; /* Alternate row color */
+    }
     </style>
 </head>
 <body>
@@ -126,9 +177,9 @@
         </div>
 
         <div class="section">
-            <div class="section-title">Knowledge</div>
-<p>At Brave Generation Academy, the Knowledge Block focuses primarily on academic content to equip learners with the skills needed for future education and career opportunities. The curriculum encompasses a wide range of subjects and prepares students for final exams. The table below provides insight into your child’s progress in each subject, helping them track their development and identify areas that may need further attention to ensure readiness for exams.</p>
-<p>If your child is pursuing the UP curriculum or the American curriculum, they will receive an additional separate academic report detailing their achievements and progress.</p>
+          <div class="section-title">Knowledge</div>
+          <p>At Brave Generation Academy, the Knowledge Block focuses primarily on academic content to equip learners with the skills needed for future education and career opportunities. The curriculum encompasses a wide range of subjects and prepares students for final exams. The table below provides insight into your child’s progress in each subject, helping them track their development and identify areas that may need further attention to ensure readiness for exams.</p>
+          <p>If your child is pursuing the UP curriculum or the American curriculum, they will receive an additional separate academic report detailing their achievements and progress.</p>
         </div>
 
         <div class="section">
@@ -213,42 +264,43 @@
             </table>
         </div>
 
-        <div class="section">
-            <div class="section-title">Key Development Areas</div>
+
+      <div class="section">
+          <div class="section-title">Key Development Areas</div>
             <p>
               At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner’s entire study experience and impact their broader life journey. These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success.
             </p>
-            <table class="kda-table">
-                <thead>
-                    <tr>
-                        <th>KDA</th>
-                        <th>Learner's Reflection</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Self-Directed Learning</td>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis. Mauris vitae ultricies leo integer malesuada nunc. Imperdiet sed euismod nisi porta lorem mollis aliquam. Volutpat odio facilisis mauris sit. Ut lectus arcu bibendum at. Imperdiet massa tincidunt nunc pulvinar sapien. Egestas quis ipsum suspendisse ultrices gravida dictum fusce.</td>
-                    </tr>
-                    <tr>
-                        <td>Initiative</td>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis. Mauris vitae ultricies leo integer malesuada nunc. Imperdiet sed euismod nisi porta lorem mollis aliquam. Volutpat odio facilisis mauris sit. Ut lectus arcu bibendum at. Imperdiet massa tincidunt nunc pulvinar sapien. Egestas quis ipsum suspendisse ultrices gravida dictum fusce.</td>
-                    </tr>
-                    <tr>
-                        <td>Motivation</td>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis. Mauris vitae ultricies leo integer malesuada nunc. Imperdiet sed euismod nisi porta lorem mollis aliquam. Volutpat odio facilisis mauris sit. Ut lectus arcu bibendum at. Imperdiet massa tincidunt nunc pulvinar sapien. Egestas quis ipsum suspendisse ultrices gravida dictum fusce.</td>
-                    </tr>
-                    <tr>
-                        <td>Peer-to-Peer Learning</td>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis. Mauris vitae ultricies leo integer malesuada nunc. Imperdiet sed euismod nisi porta lorem mollis aliquam. Volutpat odio facilisis mauris sit. Ut lectus arcu bibendum at. Imperdiet massa tincidunt nunc pulvinar sapien. Egestas quis ipsum suspendisse ultrices gravida dictum fusce.</td>
-                    </tr>
-                    <tr>
-                        <td>Hub Participation</td>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis. Mauris vitae ultricies leo integer malesuada nunc. Imperdiet sed euismod nisi porta lorem mollis aliquam. Volutpat odio facilisis mauris sit. Ut lectus arcu bibendum at. Imperdiet massa tincidunt nunc pulvinar sapien. Egestas quis ipsum suspendisse ultrices gravida dictum fusce.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+          <table class="skill-table">
+              <thead>
+                  <tr>
+                      <th>KDA</th>
+                      <th>Learner's Reflection</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td>Self-Directed Learning</td>
+                      <td><%= @report.sdl %></td>
+                  </tr>
+                  <tr>
+                      <td>Initiative</td>
+                      <td><%= @report.ini %> </td>
+                  </tr>
+                  <tr>
+                      <td>Motivation</td>
+                      <td><%= @report.mot %> </td>
+                  </tr>
+                  <tr>
+                      <td>Peer-to-Peer Learning</td>
+                      <td><%= @report.p2p %> </td>
+                  </tr>
+                  <tr>
+                      <td>Hub Participation</td>
+                      <td><%= @report.hubp %> </td>
+                  </tr>
+              </tbody>
+          </table>
+      </div>
 
         <div class="section">
             <div class="section-title">Learning Coach's Rubric</div>
