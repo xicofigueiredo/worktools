@@ -78,6 +78,9 @@
         font-size: 14px;
         resize: none;
     }
+    .knowledge-table tr:nth-child(even) td {
+      background-color: #f9f9f9; /* Alternate row color */
+    }
     .knowledge-table, .kda-table {
         width: 100%;
         border-collapse: collapse;
@@ -142,10 +145,6 @@
       font-weight: bold;
     }
 
-    .rubric-table td {
-      background-color: #fff;
-    }
-
     .rubric-table tr:nth-child(even) td {
       background-color: #f9f9f9; /* Alternate row color */
     }
@@ -170,7 +169,7 @@
         <div class="section">
           <div class="section-title">General comment</div>
           <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
-            <p>
+            <p style="text-align: justify;">
               <%= @report.general %>
             </p>
           </div>
@@ -220,7 +219,7 @@
             <div class="flex-item">
               <div class="section-title">Learning Coach Comment</div>
               <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
-                <p>
+                <p style="text-align: justify;">
                   <%= @report.lc_comment %>
                 </p>
               </div>
@@ -228,41 +227,33 @@
             <div class="flex-item">
               <div class="section-title">Learner's Reflection</div>
               <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
-                <p>
+                <p style="text-align: justify;">
                   <%= @report.reflection %>
                 </p>
               </div>
             </div>
         </div>
+      <br>
 
-        <div class="section">
-            <div class="section-title">Skills & Community</div>
-            <p>
-                The Learner decides with their Learning Coach what their potential goals and targets may be in these three areas. One of the goals for BGA is that Learners explore different activities in all three Pillars. Below is the information on the goals that they have been working on for the last Sprint, and what some of the outcomes have been!
-            </p>
-            <table class="knowledge-table">
-                <thead>
-                    <tr>
-                        <th>Goal</th>
-                        <th>Learner's Reflection</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis.</td>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis. Mauris vitae ultricies leo integer malesuada nunc. Imperdiet sed euismod nisi porta lorem mollis aliquam. Volutpat odio facilisis mauris sit. Ut lectus arcu bibendum at. Imperdiet massa tincidunt nunc pulvinar sapien. Egestas quis ipsum suspendisse ultrices gravida dictum fusce. Sollicitudin tempor id eu nisl nunc mi. Nisi porta lorem mollis aliquam. Nibh mauris cursus mattis molestie a. Feugiat vivamus at augue eget arcu dictum varius duis at. Egestas erat imperdiet sed euismod nisi porta lorem. A diam maecenas sed enim ut sem viverra aliquet. Ac turpis egestas maecenas pharetra convallis posuere morbi. At in tellus integer feugiat scelerisque.</td>
-                    </tr>
-                    <tr>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis.</td>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis. Mauris vitae ultricies leo integer malesuada nunc. Imperdiet sed euismod nisi porta lorem mollis aliquam. Volutpat odio facilisis mauris sit. Ut lectus arcu bibendum at. Imperdiet massa tincidunt nunc pulvinar sapien. Egestas quis ipsum suspendisse ultrices gravida dictum fusce. Sollicitudin tempor id eu nisl nunc mi. Nisi porta lorem mollis aliquam. Nibh mauris cursus mattis molestie a. Feugiat vivamus at augue eget arcu dictum varius duis at. Egestas erat imperdiet sed euismod nisi porta lorem. A diam maecenas sed enim ut sem viverra aliquet. Ac turpis egestas maecenas pharetra convallis posuere morbi. At in tellus integer feugiat scelerisque.</td>
-                    </tr>
-                    <tr>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis.</td>
-                        <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Diam vulputate ut pharetra sit. Et malesuada fames ac turpis. Mauris vitae ultricies leo integer malesuada nunc. Imperdiet sed euismod nisi porta lorem mollis aliquam. Volutpat odio facilisis mauris sit. Ut lectus arcu bibendum at. Imperdiet massa tincidunt nunc pulvinar sapien. Egestas quis ipsum suspendisse ultrices gravida dictum fusce. Sollicitudin tempor id eu nisl nunc mi. Nisi porta lorem mollis aliquam. Nibh mauris cursus mattis molestie a. Feugiat vivamus at augue eget arcu dictum varius duis at. Egestas erat imperdiet sed euismod nisi porta lorem. A diam maecenas sed enim ut sem viverra aliquet. Ac turpis egestas maecenas pharetra convallis posuere morbi. At in tellus integer feugiat scelerisque.</td>
-                    </tr>
-                </tbody>
-            </table>
+      <div class="section">
+        <div class="section-title">Skills & Community <i class="fa-regular fa-circle-question"
+            title="           The Learner decides with their Learning Coach what their potential goals and targets may be in these three areas. One of the goals for BGA is that Learners explore different activities in all three Pillars.
+
+            Below is the information on the goals that they have been working on for the last Sprint, and what some of the outcomes have been!"></i>
         </div>
+          <table class="skill-table">
+              <thead>
+                  <tr>
+                      <th>Goal</th>
+                      <th>Learner's Reflection</th>
+                  </tr>
+              </thead>
+              <tbody>
+
+              </tbody>
+          </table>
+      </div>
+      <br>
 
 
       <div class="section">
@@ -280,31 +271,117 @@
               <tbody>
                   <tr>
                       <td>Self-Directed Learning</td>
-                      <td><%= @report.sdl %></td>
+                      <td style="text-align: justify;"><%= @report.sdl %></td>
                   </tr>
                   <tr>
                       <td>Initiative</td>
-                      <td><%= @report.ini %> </td>
+                      <td style="text-align: justify;"><%= @report.ini %> </td>
                   </tr>
                   <tr>
                       <td>Motivation</td>
-                      <td><%= @report.mot %> </td>
+                      <td style="text-align: justify;"><%= @report.mot %> </td>
                   </tr>
                   <tr>
                       <td>Peer-to-Peer Learning</td>
-                      <td><%= @report.p2p %> </td>
+                      <td style="text-align: justify;"><%= @report.p2p %> </td>
                   </tr>
                   <tr>
                       <td>Hub Participation</td>
-                      <td><%= @report.hubp %> </td>
+                      <td style="text-align: justify;"><%= @report.hubp %> </td>
                   </tr>
               </tbody>
           </table>
       </div>
 
-        <div class="section">
-            <div class="section-title">Learning Coach's Rubric</div>
-        </div>
+      <div class="rubric-section">
+        <div class="section-title">Learning Coach's Rubric</div>
+        <table class="rubric-table">
+          <thead>
+            <tr>
+              <th>KDA</th>
+              <th>Level</th>
+              <th>Area of Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Self-Directed Learning Section -->
+            <tr>
+              <td rowspan="5" style="background-color: white;">Self-Directed Learning</td>
+              <td><%= @report.sdl_long_term_plans&.titleize %></td>
+              <td>The learner sets effective long-term plans.</td>
+            </tr>
+            <tr>
+              <td><%= @report.sdl_week_organization&.titleize %></td>
+              <td>The learner organizes their week effectively.</td>
+            </tr>
+            <tr>
+              <td><%= @report.sdl_achieve_goals&.titleize %></td>
+              <td>The learner achieves their goals.</td>
+            </tr>
+            <tr>
+              <td><%= @report.sdl_study_techniques&.titleize %></td>
+              <td>The learner uses effective study techniques.</td>
+            </tr>
+            <tr>
+              <td><%= @report.sdl_initiative_office_hours&.titleize %></td>
+              <td>The learner takes initiative to arrange office hours with Course Managers (CMs).</td>
+            </tr>
+
+            <!-- Initiative Section -->
+            <tr>
+              <td rowspan="2" style="background-color: white;">Initiative</td>
+              <td><%= @report.ini_new_activities&.titleize %></td>
+              <td>The learner seeks out new activities and experiences.</td>
+            </tr>
+            <tr>
+              <td><%= @report.ini_goal_setting&.titleize %></td>
+              <td>The learner sets goals across the three key pillars.</td>
+            </tr>
+
+            <!-- Motivation Section -->
+            <tr>
+              <td rowspan="2" style="background-color: white;">Motivation</td>
+              <td><%= @report.mot_integrity&.titleize %></td>
+              <td>The learner completes work with integrity and to the best of their ability.</td>
+            </tr>
+            <tr>
+              <td><%= @report.mot_improvement&.titleize %></td>
+              <td>The learner actively seeks ways to improve in all areas.</td>
+            </tr>
+
+            <!-- Peer-to-Peer Learning Section -->
+            <tr>
+              <td rowspan="2" style="background-color: white;">Peer-to-Peer Learning</td>
+              <td><%= @report.p2p_support_from_peers&.titleize %></td>
+              <td>The learner seeks support from peers when needed.</td>
+            </tr>
+            <tr>
+              <td><%= @report.p2p_support_to_peers&.titleize %></td>
+              <td>The learner offers support to peers when needed.</td>
+            </tr>
+
+            <!-- Hub Participation Section -->
+            <tr>
+              <td rowspan="4" style="background-color: white;">Hub Participation</td>
+              <td><%= @report.hub_cleanliness&.titleize %></td>
+              <td>The learner actively contributes to keeping the hub clean and organized.</td>
+            </tr>
+            <tr>
+              <td><%= @report.hub_respectful_behavior&.titleize %></td>
+              <td>The learner behaves respectfully and is not disruptive.</td>
+            </tr>
+            <tr>
+              <td><%= @report.hub_welcome_others&.titleize %></td>
+              <td>The learner makes efforts to welcome others to the hub.</td>
+            </tr>
+            <tr>
+              <td><%= @report.hub_participation&.titleize %></td>
+              <td>The learner actively participates in hub activities.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
         <footer>
             <div style="text-align:center; padding:20px;">
                 <div>www.bravegenerationacademy.com</div>

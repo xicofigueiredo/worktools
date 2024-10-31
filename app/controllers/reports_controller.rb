@@ -57,6 +57,8 @@ class ReportsController < ApplicationController
     @skills = @report.user.sprint_goals.find_by(sprint: @sprint).skills
     @communities = @report.user.sprint_goals.find_by(sprint: @sprint).communities
     @learner = @report.user
+    @lcs = @learner.hubs.first.users.where(role: 'lc')
+
 
     # Check if the current user has access to edit the report
     if current_user.role == 'learner' && @report.user_id == current_user.id
@@ -86,7 +88,12 @@ class ReportsController < ApplicationController
   private
 
   def report_params
-    params.require(:report).permit(:user_id, :sprint_id, :general, :lc_comment, :reflection, :sdl, :ini, :mot, :p2p, :hubp)
+    params.require(:report).permit(:user_id, :sprint_id, :general, :lc_comment, :reflection, :sdl, :ini, :mot, :p2p,
+      :hubp, :sdl_long_term_plans, :sdl_week_organization, :sdl_achieve_goals, :sdl_study_techniques,
+      :sdl_initiative_office_hours, :ini_new_activities, :ini_goal_setting, :mot_integrity, :mot_improvement,
+      :p2p_support_from_peers, :p2p_support_to_peers, :hub_cleanliness, :hub_respectful_behavior, :hub_welcome_others,
+      :hub_participation
+    )
   end
 
   def calc_nav_dates(current_sprint)

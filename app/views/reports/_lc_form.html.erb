@@ -20,25 +20,17 @@
           <div class="section-title">General comment</div>
           <%= form.text_area :general, class: "form-control", rows: 12 %>
       </div>
-
+      <br>
       <div class="section">
-          <div class="section-title">Knowledge</div>
-          <p>
-              To ensure that learners are adequately prepared for their final exams that are following the British Curriculum, every subject will have two stages of mock exams. These mock exams will cover the first 50% and 100% of the course, respectively.
-          </p>
-          <p>
+          <div class="section-title">Knowledge <i class="fa-regular fa-circle-question"
+              title="             To ensure that learners are adequately prepared for their final exams that are following the British Curriculum, every subject will have two stages of mock exams. These mock exams will cover the first 50% and 100% of the course, respectively.
+
               The dates for the mock exams will be chosen by the learners based on their course completion goals.
-          </p>
-          <p>
-              In order to take the mock exams, learners must complete certain assignments as determined by the course manager (CM). Once these assignments have been completed, learners may submit a request to take the mock exams.
-          </p>
-          <p>
-              The following table provides more information about the learners' exam series and the expectations for completing the mocks. It is important that learners take the mock exams seriously as they will provide valuable feedback on their progress and highlight areas that may need further attention.
-          </p>
-      </div>
 
-      <div class="section">
-          <div class="section-title">Knowledge Overview</div>
+              In order to take the mock exams, learners must complete certain assignments as determined by the course manager (CM). Once these assignments have been completed, learners may submit a request to take the mock exams.
+
+              The following table provides more information about the learners' exam series and the expectations for completing the mocks. It is important that learners take the mock exams seriously as they will provide valuable feedback on their progress and highlight areas that may need further attention."></i>
+          </div>
           <table class="knowledge-table">
               <thead>
                   <tr>
@@ -91,12 +83,13 @@
               <%= form.text_area :reflection, class: "form-control", rows: 15 %>
           </div>
       </div>
-
+      <br>
       <div class="section">
-          <div class="section-title">Skills & Community</div>
-          <p>
-              The Learner decides with their Learning Coach what their potential goals and targets may be in these three areas. One of the goals for BGA is that Learners explore different activities in all three Pillars. Below is the information on the goals that they have been working on for the last Sprint, and what some of the outcomes have been!
-          </p>
+        <div class="section-title">Skills & Community <i class="fa-regular fa-circle-question"
+            title="           The Learner decides with their Learning Coach what their potential goals and targets may be in these three areas. One of the goals for BGA is that Learners explore different activities in all three Pillars.
+
+            Below is the information on the goals that they have been working on for the last Sprint, and what some of the outcomes have been!"></i>
+        </div>
           <table class="skill-table">
               <thead>
                   <tr>
@@ -105,16 +98,28 @@
                   </tr>
               </thead>
               <tbody>
-
+                <% @skills.each do |skill| %>
+                  <tr>
+                    <td><b><%= skill.extracurricular.capitalize %></b> - <%= skill.smartgoals %></td>
+                    <td><%= form.text_area :da, class: "form-control", rows: 5, style: "width: 100%;" %></td>
+                  </tr>
+                <% end %>
+                <% @communities.each do |community| %>
+                  <tr>
+                    <td><b><%= community.involved.capitalize %></b> - <%= community.smartgoals %></td>
+                    <td><%= form.text_area :da, class: "form-control", rows: 5, style: "width: 100%;" %></td>
+                  </tr>
+                <% end %>
               </tbody>
           </table>
       </div>
-
+      <br>
       <div class="section">
-          <div class="section-title">Key Development Areas</div>
-            <p>
-              At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner’s entire study experience and impact their broader life journey. These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success.
-            </p>
+          <div class="section-title">Key Development Areas <i class="fa-regular fa-circle-question"
+            title="            At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner’s entire study experience and impact their broader life journey.
+
+            These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success."></i>
+          </div>
           <table class="skill-table">
               <thead>
                   <tr>
@@ -146,9 +151,10 @@
               </tbody>
           </table>
       </div>
+      <br>
 
       <div class="rubric-section">
-        <h2>Learning Coach's Rubric</h2>
+        <div class="section-title">Learning Coach's Rubric</div>
         <table class="rubric-table">
           <thead>
             <tr>
@@ -158,35 +164,85 @@
             </tr>
           </thead>
           <tbody>
+            <!-- Self-Directed Learning Section -->
             <tr>
-              <td>Self-Directed Learning</td>
-              <td>Consistently</td>
-              <td>Able to independently set effective long-term Sprint Goals</td>
+              <td rowspan="5" style="background-color: white;">Self-Directed Learning</td>
+              <td><%= form.select :sdl_long_term_plans, Report.sdl_long_term_plans.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner sets effective long-term plans.</td>
             </tr>
             <tr>
-              <td>Self-Directed Learning</td>
-              <td>Consistently</td>
-              <td>Able to independently create an effective weekly plan</td>
+              <td><%= form.select :sdl_week_organization, Report.sdl_week_organizations.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner organizes their week effectively.</td>
             </tr>
             <tr>
-              <td>Self-Directed Learning</td>
-              <td>Consistently</td>
-              <td>Includes activities from all three Learning Blocks (Knowledge, Skills, and Community) in their weekly plan</td>
+              <td><%= form.select :sdl_achieve_goals, Report.sdl_achieve_goals.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner achieves their goals.</td>
             </tr>
             <tr>
-              <td>Self-Directed Learning</td>
-              <td>Consistently</td>
-              <td>Completes set tasks and executes their weekly plan</td>
+              <td><%= form.select :sdl_study_techniques, Report.sdl_study_techniques.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner uses effective study techniques.</td>
             </tr>
             <tr>
-              <td>Self-Directed Learning</td>
-              <td>Occasionally</td>
-              <td>Participates in Live Session discussions and activities</td>
+              <td><%= form.select :sdl_initiative_office_hours, Report.sdl_initiative_office_hours.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner takes initiative to arrange office hours with Course Managers (CMs).</td>
             </tr>
-            <!-- Add more rows as needed -->
+
+            <!-- Initiative Section -->
+            <tr>
+              <td rowspan="2" style="background-color: white;">Initiative</td>
+              <td><%= form.select :ini_new_activities, Report.ini_new_activities.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner seeks out new activities and experiences.</td>
+            </tr>
+            <tr>
+              <td><%= form.select :ini_goal_setting, Report.ini_goal_settings.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner sets goals across the three key pillars.</td>
+            </tr>
+
+            <!-- Motivation Section -->
+            <tr>
+              <td rowspan="2" style="background-color: white;">Motivation</td>
+              <td><%= form.select :mot_integrity, Report.mot_integrities.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner completes work with integrity and to the best of their ability.</td>
+            </tr>
+            <tr>
+              <td><%= form.select :mot_improvement, Report.mot_improvements.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner actively seeks ways to improve in all areas.</td>
+            </tr>
+
+            <!-- Peer-to-Peer Learning Section -->
+            <tr>
+              <td rowspan="2" style="background-color: white;">Peer-to-Peer Learning</td>
+              <td><%= form.select :p2p_support_from_peers, Report.p2p_support_from_peers.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner seeks support from peers when needed.</td>
+            </tr>
+            <tr>
+              <td><%= form.select :p2p_support_to_peers, Report.p2p_support_to_peers.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner offers support to peers when needed.</td>
+            </tr>
+
+            <!-- Hub Participation Section -->
+            <tr>
+              <td rowspan="4" style="background-color: white;">Hub Participation</td>
+              <td><%= form.select :hub_cleanliness, Report.hub_cleanlinesses.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner actively contributes to keeping the hub clean and organized.</td>
+            </tr>
+            <tr>
+              <td><%= form.select :hub_respectful_behavior, Report.hub_respectful_behaviors.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner behaves respectfully and is not disruptive.</td>
+            </tr>
+            <tr>
+              <td><%= form.select :hub_welcome_others, Report.hub_welcome_others.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner makes efforts to welcome others to the hub.</td>
+            </tr>
+            <tr>
+              <td><%= form.select :hub_participation, Report.hub_participations.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown" %></td>
+              <td>The learner actively participates in hub activities.</td>
+            </tr>
           </tbody>
         </table>
       </div>
+
+
 
       <div class="form-group d-flex justify-content-center gap-2 mb-5">
         <%= link_to 'Back', reports_path(date: @report.sprint.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
@@ -195,10 +251,22 @@
         </div>
       </div>
 
-      <footer>
-          <div style="text-align:center; padding:20px;">
-              <div>www.bravegenerationacademy.com</div>
-              <div>Soralia Morgado: soralia.morgado@edubga.com | Joseph Cannon: joseph.cannon@edubga.com | Bianca Visser: bianca.visser@edubga.com</div>
-          </div>
-      </footer>
+    <footer style="border-top: 1px solid #ccc; padding: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <!-- Left-aligned website link -->
+        <div style="text-align: left;">
+          <a href="http://www.bravegenerationacademy.com" target="_blank" style="text-decoration: none; color: #333;">
+            www.bravegenerationacademy.com
+          </a>
+        </div>
+
+        <!-- Right-aligned LCs' information -->
+        <div style="text-align: right;">
+          <% @lcs.each do |lc| %>
+            <div><%= lc.full_name %>: <%= lc.email %></div>
+          <% end %>
+        </div>
+      </div>
+    </footer>
+
 <% end%>

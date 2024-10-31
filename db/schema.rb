@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_10_29_163927) do
+ActiveRecord::Schema[7.0].define(version: 2024_10_31_122936) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -240,6 +240,21 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_29_163927) do
     t.text "mot"
     t.text "p2p"
     t.text "hubp"
+    t.integer "sdl_long_term_plans"
+    t.integer "sdl_week_organization"
+    t.integer "sdl_achieve_goals"
+    t.integer "sdl_study_techniques"
+    t.integer "sdl_initiative_office_hours"
+    t.integer "ini_new_activities"
+    t.integer "ini_goal_setting"
+    t.integer "mot_integrity"
+    t.integer "mot_improvement"
+    t.integer "p2p_support_from_peers"
+    t.integer "p2p_support_to_peers"
+    t.integer "hub_cleanliness"
+    t.integer "hub_respectful_behavior"
+    t.integer "hub_welcome_others"
+    t.integer "hub_participation"
     t.index ["sprint_id"], name: "index_reports_on_sprint_id"
     t.index ["user_id"], name: "index_reports_on_user_id"
   end
