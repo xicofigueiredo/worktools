@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_10_31_122936) do
+ActiveRecord::Schema[7.0].define(version: 2024_11_04_011949) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -227,6 +227,28 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_31_122936) do
     t.index ["kda_id"], name: "index_p2ps_on_kda_id"
   end
 
+  create_table "report_activities", force: :cascade do |t|
+    t.bigint "report_id", null: false
+    t.string "activity"
+    t.string "goal"
+    t.text "reflection"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["report_id"], name: "index_report_activities_on_report_id"
+  end
+
+  create_table "report_knowledges", force: :cascade do |t|
+    t.bigint "report_id", null: false
+    t.string "subject_name"
+    t.integer "progress"
+    t.integer "difference"
+    t.integer "grade"
+    t.string "exam_season"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["report_id"], name: "index_report_knowledges_on_report_id"
+  end
+
   create_table "reports", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "sprint_id", null: false
@@ -255,6 +277,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_31_122936) do
     t.integer "hub_respectful_behavior"
     t.integer "hub_welcome_others"
     t.integer "hub_participation"
+    t.boolean "hide", default: true
     t.index ["sprint_id"], name: "index_reports_on_sprint_id"
     t.index ["user_id"], name: "index_reports_on_user_id"
   end
@@ -511,6 +534,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_31_122936) do
   add_foreign_key "mots", "kdas"
   add_foreign_key "notes", "users"
   add_foreign_key "p2ps", "kdas"
+  add_foreign_key "report_activities", "reports"
+  add_foreign_key "report_knowledges", "reports"
   add_foreign_key "reports", "sprints"
   add_foreign_key "reports", "users"
   add_foreign_key "sdls", "kdas"

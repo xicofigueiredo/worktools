@@ -2,6 +2,9 @@ class Report < ApplicationRecord
   belongs_to :user
   belongs_to :sprint
 
+  # has_many :report_knowledges, dependent: :destroy
+  has_many :report_activities, dependent: :destroy
+
   enum sdl_long_term_plans: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :sdl_long_term_plans
   enum sdl_week_organization: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :sdl_week_organization
   enum sdl_achieve_goals: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :sdl_achieve_goals
@@ -17,4 +20,7 @@ class Report < ApplicationRecord
   enum hub_respectful_behavior: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :hub_respectful_behavior
   enum hub_welcome_others: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :hub_welcome_others
   enum hub_participation: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :hub_participation
+
+  # accepts_nested_attributes_for :report_knowledges, allow_destroy: true
+  accepts_nested_attributes_for :report_activities, allow_destroy: true
 end

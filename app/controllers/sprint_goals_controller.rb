@@ -27,7 +27,6 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals/new
   def new
-    @is_edit = false
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
     @number_of_timelines = current_user.timelines.where(hidden: false).count
@@ -59,7 +58,6 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals/1/edit
   def edit
-    @is_edit = true
     @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find(params[:id])
     @knowledges_subject_names = @sprint_goal.knowledges.pluck(:subject_name)
     @number_of_timelines = current_user.timelines.count

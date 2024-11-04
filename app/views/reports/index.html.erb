@@ -12,9 +12,10 @@
     </div>
 
     <div class="">
-      <%= link_to new_holiday_path, class: "btn btn-primary", style: 'border-radius: 10px;' do %>
-        <i class="fa-solid fa-file-arrow-down"></i> Download
-      <% end %>
+      <%# <%= link_to new_holiday_path, class: "btn btn-primary", style: 'border-radius: 10px;' do %>
+        <%# <i class="fa-solid fa-file-arrow-down"></i> Download %>
+      <%# <% end %>
+      <%= button_to "Toggle Visibility", toggle_hide_report_path(@report), method: :post, class: "btn btn-primary" %>
     </div>
 
   </div>
@@ -153,8 +154,8 @@
 <body>
         <div class="header">
             <div>
-                <div><%= current_user.full_name %></div>
-                <div><%= current_user.hubs.first.name %> Hub</div>
+                <div><%= @learner.full_name %></div>
+                <div><%= @learner.hubs.first.name %> Hub</div>
             </div>
             <div class="report-period">
                 <%= @report.sprint.name %> / <%= Date.today.year %>
@@ -166,6 +167,7 @@
         </div>
         </div>
 
+      <% if @hide != true || current_user.role == 'lc' %>
         <div class="section">
           <div class="section-title">General comment</div>
           <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
@@ -174,17 +176,20 @@
             </p>
           </div>
         </div>
+      <% end %>
 
-        <div class="section">
-          <div class="section-title">Knowledge</div>
-          <p>At Brave Generation Academy, the Knowledge Block focuses primarily on academic content to equip learners with the skills needed for future education and career opportunities. The curriculum encompasses a wide range of subjects and prepares students for final exams. The table below provides insight into your child’s progress in each subject, helping them track their development and identify areas that may need further attention to ensure readiness for exams.</p>
-          <p>If your child is pursuing the UP curriculum or the American curriculum, they will receive an additional separate academic report detailing their achievements and progress.</p>
-        </div>
+      <div class="section">
+          <div class="section-title">Knowledge <i class="fa-regular fa-circle-question"
+              title="             To ensure that learners are adequately prepared for their final exams that are following the British Curriculum, every subject will have two stages of mock exams. These mock exams will cover the first 50% and 100% of the course, respectively.
 
-        <div class="section">
-            <div class="section-title">Knowledge Overview</div>
-            <table class="knowledge-table">
-                <thead>
+              The dates for the mock exams will be chosen by the learners based on their course completion goals.
+
+              In order to take the mock exams, learners must complete certain assignments as determined by the course manager (CM). Once these assignments have been completed, learners may submit a request to take the mock exams.
+
+              The following table provides more information about the learners' exam series and the expectations for completing the mocks. It is important that learners take the mock exams seriously as they will provide valuable feedback on their progress and highlight areas that may need further attention."></i>
+          </div>
+          <table class="knowledge-table">
+              <thead>
                   <tr>
                       <th>Subject</th>
                       <th>Progress</th>
@@ -192,8 +197,8 @@
                       <th>Grade</th>
                       <th>Exam</th>
                   </tr>
-                </thead>
-                <tbody>
+              </thead>
+              <tbody>
                 <% @timelines.each do |timeline|  %>
                   <tr>
                       <td><%= timeline.subject.name %> <%= timeline.personalized_name %></td>
@@ -204,7 +209,7 @@
                       <% if timeline.exam_date && (timeline.exam_date.date.year < Date.today.year ||
                             (timeline.exam_date.date.year == Date.today.year &&
                             timeline.exam_date.date.month <= Date.today.month)) %>
-                        <%# <td><%= form.text_area :grade, class: "form-control"%></td> %>
+                        <%# <td><%= form.text_area :grade, class: "form-control"%></td>
                         <td></td>
                       <% else %>
                         <td><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A' %></td>

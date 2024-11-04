@@ -1,3 +1,6 @@
+<%= button_to "Update Activities", update_report_activities_report_path(@report), method: :post, class: "btn btn-primary" %>
+<%= button_to "Toggle Visibility", toggle_hide_report_path(@report), method: :post, class: "btn btn-primary" %>
+
 <%= form_with(model: @report) do |form| %>
       <div class="header">
           <div>
@@ -98,16 +101,10 @@
                   </tr>
               </thead>
               <tbody>
-                <% @skills.each do |skill| %>
+                <%= form.fields_for :report_activities do |activity_form| %>
                   <tr>
-                    <td><b><%= skill.extracurricular.capitalize %></b> - <%= skill.smartgoals %></td>
-                    <td><%= form.text_area :da, class: "form-control", rows: 5, style: "width: 100%;" %></td>
-                  </tr>
-                <% end %>
-                <% @communities.each do |community| %>
-                  <tr>
-                    <td><b><%= community.involved.capitalize %></b> - <%= community.smartgoals %></td>
-                    <td><%= form.text_area :da, class: "form-control", rows: 5, style: "width: 100%;" %></td>
+                    <td><b><%= activity_form.object.activity.capitalize %></b> - <%= activity_form.object.goal %></td>
+                    <td><%= activity_form.text_area :reflection, class: "form-control", rows: 5, style: "width: 100%;" %></td>
                   </tr>
                 <% end %>
               </tbody>
