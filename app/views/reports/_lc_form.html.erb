@@ -1,4 +1,3 @@
-<%= button_to "Update Activities", update_report_activities_report_path(@report), method: :post, class: "btn btn-primary" %>
 <%= button_to "Toggle Visibility", toggle_hide_report_path(@report), method: :post, class: "btn btn-primary" %>
 
 <%= form_with(model: @report) do |form| %>
@@ -45,32 +44,23 @@
                   </tr>
               </thead>
               <tbody>
-                <% @timelines.each do |timeline|  %>
+                <%= form.fields_for :report_knowledges do |knowledge_form| %>
                   <tr>
-                      <td><%= timeline.subject.name %> <%= timeline.personalized_name %></td>
-                      <% if !timeline.progress? %>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                      <% elsif timeline.difference.positive?%>
-                        <td><%= timeline.progress %></td>
-                        <td>+<%= timeline.difference %>%</td>
-                        <td></td>
-                      <% else  %>
-                        <td><%= timeline.progress %></td>
-                        <td><%= timeline.difference %>%</td>
-                        <td></td>
-                      <% end %>
-                      <% if timeline.exam_date && (timeline.exam_date.date.year < Date.today.year ||
-                            (timeline.exam_date.date.year == Date.today.year &&
-                            timeline.exam_date.date.month <= Date.today.month)) %>
-                        <%# <td><%= form.text_area :grade, class: "form-control"%>
-                        <td></td>
-                      <% else %>
-                        <td><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A' %></td>
-                      <% end %>
+
+                    <td><%= knowledge_form.object.subject_name %></td>
+                    <% if knowledge_form.object.progress.nil? %>
+                      <td>N/A</td>
+                      <td>N/A</td>
+                      <td><%= knowledge_form.text_area :grade, class: "form-control", rows: 1 %></td>
+                    <% else %>
+                      <td><%= knowledge_form.object.progress %>%</td>
+                      <td><%= knowledge_form.object.difference %>%</td>
+                      <td><%= knowledge_form.text_area :grade, class: "form-control", rows: 1 %></td>
+                    <% end %>
+                    <td><%= knowledge_form.text_field :exam_season, value: knowledge_form.object.exam_season.presence || 'N/A', class: "form-control" %></td>
                   </tr>
                 <% end %>
+
               </tbody>
           </table>
       </div>

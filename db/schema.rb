@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_11_04_011949) do
+ActiveRecord::Schema[7.0].define(version: 2024_11_04_143133) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -278,6 +278,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_11_04_011949) do
     t.integer "hub_welcome_others"
     t.integer "hub_participation"
     t.boolean "hide", default: true
+    t.date "last_update_check"
     t.index ["sprint_id"], name: "index_reports_on_sprint_id"
     t.index ["user_id"], name: "index_reports_on_user_id"
   end

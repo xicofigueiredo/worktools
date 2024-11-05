@@ -1,6 +1,6 @@
 class ReportsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_report, only: [:edit, :update, :update_report_activities, :toggle_hide]
+  before_action :set_report, only: [:edit, :update, :update_report_progress, :toggle_hide]
 
 
   def lc_view
@@ -17,17 +17,21 @@ class ReportsController < ApplicationController
 
   def index
     @learner = current_user
-    @timelines = current_user.timelines.where(hidden: false)
+    @timelines = current_user.timelines.where(hidden: false).order(difference: :asc)
     @reports = current_user.reports.joins(:sprint)
     @all_sprints = Sprint.all
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
     @all_sprints = Sprint.all
     calc_nav_dates(@sprint)
+    @report = current_user.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
+    @report.save
+
+    @lcs = @learner.hubs.first.users.where(role: 'lc')
+
 
     if @sprint
       @report = current_user.reports.find_by(sprint: @sprint)
-
     else
       @report = nil
     end
@@ -42,6 +46,51 @@ class ReportsController < ApplicationController
     elsif current_user.role == 'parent'
       @hide = @report.hide
     end
+
+    if @report
+
+      @sprint_goal = @learner.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: @sprint)
+
+      activities = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
+      activities += @sprint_goal.communities.pluck(:involved, :smartgoals)
+      @report_activities = @report.report_activities
+
+      activity_names = activities.map { |activity| activity[0] } # Extracts the name part of each activity
+
+      @report.report_activities.where.not(activity: activity_names).destroy_all
+
+      activities.each do |activity|
+        # Assuming activity[0] is the activity name and activity[1] is the goal
+        @report_activities.find_or_create_by(activity: activity[0]) do |report_activity|
+          report_activity.goal = activity[1]
+        end
+      end
+
+      @knowledges = @timelines.left_outer_joins(:subject, :exam_date).pluck('subjects.name', :personalized_name, :progress, :difference, 'exam_dates.date')
+
+      @knowledges.each do |data|
+        name = data[1] || data[0]
+
+        # Find or initialize a ReportKnowledge record by subject_name
+        knowledge_record = @report.report_knowledges.find_or_initialize_by(subject_name: name)
+
+        # Update or set the attributes as necessary
+        knowledge_record.progress = data[2]
+        knowledge_record.difference = data[3]
+
+        # Set exam_season only if it hasn't been set before
+        if knowledge_record.exam_season.nil?
+          knowledge_record.exam_season = data[4].is_a?(Date) ? data[4].strftime("%B %Y") : data[4]
+        end
+
+        # Save each record individually to persist changes
+        knowledge_record.save
+      end
+    end
+
+    # Optionally, if you want to ensure the main report is saved
+    @report.save
+
 
   end
 
@@ -64,26 +113,10 @@ class ReportsController < ApplicationController
     end
 
     @timelines = @report.user.timelines.where(hidden: false)
-    @date = params[:date] ? Date.parse(params[:date]) : Date.today
-    @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+    @sprint = @report.sprint
 
     @learner = @report.user
     @lcs = @learner.hubs.first.users.where(role: 'lc')
-
-    @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: @sprint)
-    @knowledges = @timelines.joins(:subject).pluck('subjects.name', :personalized_name , :progress, :difference)
-
-    @activities = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
-    @activities += @sprint_goal.communities.pluck(:involved, :smartgoals)
-    @report_activities = @report.report_activities
-
-    @activities.each do |activity|
-      # Assuming activity[0] is the activity name and activity[1] is the goal
-      @report_activities.find_or_create_by(activity: activity[0]) do |report_activity|
-        report_activity.goal = activity[1]
-      end
-    end
-
 
 
     # Check if the current user has access to edit the report
@@ -110,36 +143,7 @@ class ReportsController < ApplicationController
     end
   end
 
-  def update_report_activities
-    # Step 1: Get current activities from sprint goal
-    @sprint_goal = current_user.sprint_goals.includes(:skills, :communities).find_by(sprint: @report.sprint)
-
-    # Collect the current activities
-    current_activities = []
-    @sprint_goal.skills.each do |skill|
-      current_activities << { activity: skill.extracurricular, goal: skill.smartgoals }
-    end
-    @sprint_goal.communities.each do |community|
-      current_activities << { activity: community.involved, goal: community.smartgoals }
-    end
-
-    # Step 2: Identify existing report activities and delete outdated ones
-    # This will delete any ReportActivity that no longer exists in the current_activities list
-    @report.report_activities.each do |existing_activity|
-      unless current_activities.any? { |activity| activity[:activity] == existing_activity.activity && activity[:goal] == existing_activity.goal }
-        existing_activity.destroy
-      end
-    end
-
-    # Step 3: Repopulate missing activities
-    current_activities.each do |activity|
-      @report.report_activities.find_or_create_by(activity: activity[:activity]) do |report_activity|
-        report_activity.goal = activity[:goal]
-      end
-    end
-
-    # Redirect back to edit page
-    redirect_to edit_report_path(@report), notice: 'Activities updated successfully.'
+  def update_report_progress
   end
 
   def toggle_hide
@@ -154,7 +158,8 @@ class ReportsController < ApplicationController
       :hubp, :sdl_long_term_plans, :sdl_week_organization, :sdl_achieve_goals, :sdl_study_techniques,
       :sdl_initiative_office_hours, :ini_new_activities, :ini_goal_setting, :mot_integrity, :mot_improvement,
       :p2p_support_from_peers, :p2p_support_to_peers, :hub_cleanliness, :hub_respectful_behavior, :hub_welcome_others,
-      :hub_participation,report_activities_attributes: [:id, :activity, :goal, :reflection, :_destroy]
+      :hub_participation, report_activities_attributes: [:id, :activity, :goal, :reflection, :_destroy],
+      report_knowledges_attributes: [:id, :subject_name, :progress, :difference, :exam_season, :grade]
     )
   end
 
@@ -169,6 +174,10 @@ class ReportsController < ApplicationController
 
   def set_report
     @report = Report.find(params[:id])
+  end
+
+  def update_knowledges
+
   end
 
 end

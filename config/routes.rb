@@ -100,7 +100,7 @@ Rails.application.routes.draw do
 
     get 'reports_lc_view', to: 'reports#lc_view', as: 'lc_view'
     resources :reports do
-      post 'update_report_activities', on: :member
+      post 'update_report_progress', on: :member
       post 'toggle_hide', on: :member
     end
 

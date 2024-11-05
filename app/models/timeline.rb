@@ -68,11 +68,16 @@ class Timeline < ApplicationRecord
     Rails.cache.delete("monthly_goals_#{Date.today.beginning_of_month}")
   end
 
+  def calculate_difference
+    if progress.present? && expected_progress.present?
+      self.difference = progress - expected_progress
+    else
+      self.difference = nil 
+    end
+  end
+
   private
 
-  def calculate_difference
-    self.difference = progress - expected_progress
-  end
 
   def progress_and_expected_progress_present?
     progress.present? && expected_progress.present?

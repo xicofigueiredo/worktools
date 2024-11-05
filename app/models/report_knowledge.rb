@@ -1,3 +1,3 @@
-class ReportActivity < ApplicationRecord
+class ReportKnowledge < ApplicationRecord
   belongs_to :report
 end
