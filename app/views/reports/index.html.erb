@@ -1,11 +1,13 @@
 <% if current_user.role == 'lc' || current_user.role == "admin" %>
   <div style="padding-top: 20px; padding-bottom: 20px;">
     <%= form_with url: reports_path, method: :get, local: true, class: "d-flex align-items-center justify-content-center gap-2", data: { controller: "auto-submit" } do %>
-      <%= select_tag :learner_id, options_from_collection_for_select(@learners, :id, :full_name, params[:learner_id]),
-          class: "form-select form-select-lg", style: "width: 25%;", prompt: "Select a learner" %>
+      <%= select_tag :learner_id,
+            grouped_options_for_select(@grouped_learners.transform_values { |learners| learners.map { |learner| [learner.full_name, learner.id] } }, params[:learner_id]),
+            class: "form-select form-select-lg", style: "width: 25%;", prompt: "Select a learner" %>
     <% end %>
   </div>
 <% end %>
+
 
 
 <div class="container mt-3">

@@ -11,7 +11,9 @@ class ReportsController < ApplicationController
     if current_user.role == 'learner'
       @learner = current_user
     else
-      @learners = current_user.hubs.flat_map { |hub| hub.users.where(role: 'learner') }.uniq
+      @learners = current_user.hubs.flat_map { |hub| hub.users.where(role: 'learner').order(:full_name) }.uniq
+      @grouped_learners = current_user.hubs.flat_map { |hub| hub.users.where(role: 'learner').order(:full_name) }
+                          .group_by { |learner| learner.hubs.first.name }
       params[:learner_id].present? ? @learner = User.find(params[:learner_id])  : @learner = @learners.first
     end
     @timelines = @learner.timelines.where(hidden: false).order(difference: :asc)
