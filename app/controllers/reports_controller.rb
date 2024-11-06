@@ -28,7 +28,14 @@ class ReportsController < ApplicationController
 
     @attendance = calc_sprint_presence(@learner, @sprint)
 
-    @lcs = @learner.hubs.first.users.where(role: 'lc')
+    @all = @learner.hubs.first.users.where(role: 'lc')
+    @lcs = []
+
+    @all.each do |lc|
+      if lc.hubs.count < 3
+        @lcs << lc 
+      end
+    end
 
     if @sprint
       @report = @learner.reports.find_by(sprint: @sprint)

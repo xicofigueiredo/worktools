@@ -78,7 +78,7 @@ class PagesController < ApplicationController
       @hub_lcs = []
 
       @lcs.each do |lc|
-        @hub_lcs << lc if lc.hubs.count < 5
+        @hub_lcs << lc if lc.hubs.count < 3
       end
 
       @yearly_presence = calc_yearly_presence(@learner)
