@@ -51,3 +51,6 @@ check_emails:
 
 flags:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake users:find_learners_without_flags"
+
+attendance:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake attendances:delete_attendances"
