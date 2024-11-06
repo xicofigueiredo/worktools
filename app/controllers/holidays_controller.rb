@@ -16,7 +16,6 @@ class HolidaysController < ApplicationController
     if @holiday.save
       current_user.timelines.each do |timeline|
         generate_topic_deadlines(timeline)
-        timeline.calculate_total_time
         timeline.save
       end
       redirect_to timelines_path, notice: 'Holiday was successfully created.'
@@ -29,7 +28,6 @@ class HolidaysController < ApplicationController
     if @holiday.update(holiday_params)
       current_user.timelines.each do |timeline|
         generate_topic_deadlines(timeline)
-        timeline.calculate_total_time
         timeline.save
       end
       redirect_to timelines_path, notice: 'Holiday was successfully updated.'
@@ -42,7 +40,6 @@ class HolidaysController < ApplicationController
     @holiday.destroy
     current_user.timelines.each do |timeline|
       generate_topic_deadlines(timeline)
-      timeline.calculate_total_time
       timeline.save
     end
     redirect_to timelines_path, notice: 'Holiday was successfully destroyed.'

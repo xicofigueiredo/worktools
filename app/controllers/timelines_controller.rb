@@ -72,7 +72,6 @@ class TimelinesController < ApplicationController
     #
     #
     #         end
-    #         timeline.calculate_total_time
     #         timeline.save
     #       end
     #

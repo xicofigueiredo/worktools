@@ -34,7 +34,7 @@
               <%= link_to "Sprint Goals", sprint_goals_path(date: Date.today), class: "nav-link" %>
             </div>
           </li>
-          <% if current_user.hubs.first.id == 154 || current_user.hubs.first.id == 174 || current_user.hubs.first.id == 190 %>
+          <% if current_user.hubs.first.id == 154 || current_user.hubs.first.id == 174 || current_user.hubs.first.id == 190 || current_user.hubs.first == 147 %>
             <li class="nav-item">
               <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(reports_path)%>">
                 <%= link_to "Reports", reports_path(date: Date.today), class: "nav-link" %>

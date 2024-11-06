@@ -32,10 +32,6 @@ class Timeline < ApplicationRecord
     end
   end
 
-  def calculate_total_time
-    self.total_time = (end_date - start_date)
-  end
-
   def start_date_before_end_date
     return unless start_date && end_date && start_date >= end_date
 
