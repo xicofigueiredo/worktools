@@ -9,7 +9,8 @@ class Report < ApplicationRecord
   enum sdl_week_organization: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :sdl_week_organization
   enum sdl_achieve_goals: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :sdl_achieve_goals
   enum sdl_study_techniques: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :sdl_study_techniques
-  enum sdl_initiative_office_hours: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :sdl_initiative_office_hours
+  enum sdl_initiative_office_hours: { rarely: 0, occasionally: 1, consistently: 2 },
+       _prefix: :sdl_initiative_office_hours
   enum ini_new_activities: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :ini_new_activities
   enum ini_goal_setting: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :ini_goal_setting
   enum mot_integrity: { rarely: 0, occasionally: 1, consistently: 2 }, _prefix: :mot_integrity
@@ -25,7 +26,8 @@ class Report < ApplicationRecord
   accepts_nested_attributes_for :report_activities, allow_destroy: true
 
   def self.update_daily_knowledge
-    active_reports = Report.joins(:sprint).where("sprints.start_date <= ? AND sprints.end_date > ?", Date.today, Date.today)
+    active_reports = Report.joins(:sprint).where("sprints.start_date <= ? AND sprints.end_date > ?", Date.today,
+                                                 Date.today)
 
     active_reports.each do |report|
       timelines = report.user.timelines.left_outer_joins(:subject, :exam_date)
@@ -50,8 +52,7 @@ class Report < ApplicationRecord
       end
 
       # Update the last check date
-      report.update(last_update_check: (Date.today))
+      report.update(last_update_check: Date.today)
     end
   end
-
 end

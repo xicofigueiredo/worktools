@@ -1,0 +1,15 @@
+<section>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <% @learners.each do |learner| %>
+              <%= link_to learner.full_name, reports_path(learner_id: learner.id), class: "btn btn-primary" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

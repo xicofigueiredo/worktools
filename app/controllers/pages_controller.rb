@@ -382,7 +382,7 @@ class PagesController < ApplicationController
     # Check if any active reports haven't been updated today
 
     reports = Report.joins(:sprint)
-    .where("sprints.start_date <= ? AND sprints.end_date >= ?", Date.today, Date.today)
+                    .where("sprints.start_date <= ? AND sprints.end_date >= ?", Date.today, Date.today)
 
     count_with_last_update_today = reports.where(last_update_check: Date.today).count
     count_with_last_update_not_nil = reports.where.not(last_update_check: nil).count

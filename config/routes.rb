@@ -99,9 +99,12 @@ Rails.application.routes.draw do
     # match '*path', via: :all, to: 'pages#not_found'
 
     get 'reports_lc_view', to: 'reports#lc_view', as: 'lc_view'
+    get 'reports_lc_index', to: 'reports#lc_index', as: 'lc_index'
     resources :reports do
       post 'update_report_progress', on: :member
-      post 'toggle_hide', on: :member
+      member do
+        post 'toggle_hide'
+      end
     end
 
 

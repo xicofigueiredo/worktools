@@ -1,10 +1,20 @@
-<%= button_to "Toggle Visibility", toggle_hide_report_path(@report), method: :post, class: "btn btn-primary" %>
-
 <%= form_with(model: @report) do |form| %>
+    <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+
+      <h1 class="text-center">Report</h1>
+
+      <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+          <%= link_to 'Back', reports_path(date: @report.sprint.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+          <div data-nested-form-target="submit">
+            <%= form.submit "Save Report", class: "btn btn-primary", style: "border-radius: 10px; margin-left: 2px;" %>
+          </div>
+      </div>
+
+    </div>
       <div class="header">
           <div>
-              <div><%= current_user.full_name %></div>
-              <div><%= current_user.hubs.first.name %> Hub</div>
+              <div><%= @learner.full_name %></div>
+              <div><%= @learner.hubs.first.name %> Hub</div>
           </div>
           <div class="report-period">
               <%= @report.sprint.name %> / <%= Date.today.year %>
@@ -29,7 +39,7 @@
       <% end %>
       <br>
       <div class="section">
-          <div class="section-title">Knowledge <i class="fa-regular fa-circle-question"
+          <div class="section-title">Knowledge <i class="fa-solid fa-circle-info"
               title="             To ensure that learners are adequately prepared for their final exams that are following the British Curriculum, every subject will have two stages of mock exams. These mock exams will cover the first 50% and 100% of the course, respectively.
 
               The dates for the mock exams will be chosen by the learners based on their course completion goals.
@@ -101,7 +111,7 @@
         </div>
       <br>
       <div class="section">
-        <div class="section-title">Skills & Community <i class="fa-regular fa-circle-question"
+        <div class="section-title">Skills & Community <i class="fa-solid fa-circle-info"
             title="           The Learner decides with their Learning Coach what their potential goals and targets may be in these three areas. One of the goals for BGA is that Learners explore different activities in all three Pillars.
 
             Below is the information on the goals that they have been working on for the last Sprint, and what some of the outcomes have been!"></i>
@@ -126,7 +136,7 @@
       <br>
 
       <div class="section">
-          <div class="section-title">Key Development Areas <i class="fa-regular fa-circle-question"
+          <div class="section-title">Key Development Areas <i class="fa-solid fa-circle-info"
             title="            At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner’s entire study experience and impact their broader life journey.
 
             These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success."></i>
@@ -140,23 +150,24 @@
               </thead>
               <tbody>
                   <tr>
-                      <td>Self-Directed Learning</td>
+                    <td>Self-Directed Learning <i class="fa-solid fa-circle-info" title="Are you able to learn independently? This KDA refers to your ability to set your learning goals, assign deadlines, and complete them, whether the goals are academic in nature or not. From an academic perspective this relates to the BGA Moodle platform and its subjects; are you keeping up with your deadlines and setting effective goals each week and adhering to them."></i></td>
                       <td><%= form.text_area :sdl, class: "form-control", rows: 3 %></td>
                   </tr>
                   <tr>
-                      <td>Initiative</td>
+                    <td>Initiative <i class="fa-solid fa-circle-info" title="Are you trying any new things? Or taking on any new challenges. This area is related to trying to get out of your comfort zone and try new activities/courses to see if these are things you might be interested in! This KDA is key to Learners discovering their passions, and how to pursue them."></i></td>
                       <td><%= form.text_area :ini, class: "form-control", rows: 3 %>
                   </tr>
                   <tr>
-                      <td>Motivation</td>
+                    <td>Motivation <i class="fa-solid fa-circle-info" title="Are you approaching your learning with motivation, and trying to complete your goals to the best of your ability? Are your pushing yourself and trying your best in the challenges that you encounter? Are you persevering, and not dropping new courses or activities too soon?" ></i></td>
                       <td><%= form.text_area :mot, class: "form-control", rows: 3 %>
                   </tr>
                   <tr>
-                      <td>Peer-to-Peer Learning</td>
+                    <td>P2P <i class="fa-solid fa-circle-info" title="This section refers to learning: are you helping others with their courses and learning? Are you asking for help from other learners as opposed to the Learning Coach?
+This would also refer to participation on the Forum for the BGA online courses."></i> </td>
                       <td><%= form.text_area :p2p, class: "form-control", rows: 3 %>
                   </tr>
                   <tr>
-                      <td>Hub Participation</td>
+                    <td title="Are you participating in the Hub activities? Are you contributing to any projects or events that are being run in their Hub? And are you helping to contribute to the Hub being a safe and clean environment for other learners? This KDA relates to respect of fellow peers and of the educational space." >Hub Participation <i class="fa-solid fa-circle-info"></i></td>
                       <td><%= form.text_area :hubp, class: "form-control", rows: 3 %>
                   </tr>
               </tbody>
@@ -254,32 +265,23 @@
           </table>
         </div>
       <% end %>
+          <footer style="border-top: 1px solid #ccc; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <!-- Left-aligned website link -->
+              <div style="text-align: left;">
+                <a href="http://www.bravegenerationacademy.com" target="_blank" style="text-decoration: none; color: #333;">
+                  www.bravegenerationacademy.com
+                </a>
+              </div>
 
+              <!-- Right-aligned LCs' information -->
+              <div style="text-align: right;">
+                <% @lcs.each do |lc| %>
+                  <div><%= lc.full_name %>: <%= lc.email %></div>
+                <% end %>
+              </div>
+            </div>
+          </footer>
 
-
-      <div class="form-group d-flex justify-content-center gap-2 mb-5">
-        <%= link_to 'Back', reports_path(date: @report.sprint.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
-        <div data-nested-form-target="submit">
-          <%= form.submit "Save Report", class: "btn btn-primary", style: "border-radius: 10px;"%>
-        </div>
-      </div>
-
-    <footer style="border-top: 1px solid #ccc; padding: 20px;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <!-- Left-aligned website link -->
-        <div style="text-align: left;">
-          <a href="http://www.bravegenerationacademy.com" target="_blank" style="text-decoration: none; color: #333;">
-            www.bravegenerationacademy.com
-          </a>
-        </div>
-
-        <!-- Right-aligned LCs' information -->
-        <div style="text-align: right;">
-          <% @lcs.each do |lc| %>
-            <div><%= lc.full_name %>: <%= lc.email %></div>
-          <% end %>
-        </div>
-      </div>
-    </footer>
 
 <% end%>

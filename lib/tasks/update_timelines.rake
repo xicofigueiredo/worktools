@@ -19,5 +19,6 @@ namespace :timelines do
     timelines.each do |timeline|
       timeline.calculate_difference
       timeline.save!
-    end  end
+    end
+  end
 end
