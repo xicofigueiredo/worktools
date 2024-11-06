@@ -15,7 +15,10 @@ end
 namespace :timelines do
   desc "Update timelines where mock50 and mock100 are not set"
   task simulate_update: :environment do
-    timelines = Timeline.where(user: 620, hidden: false)
-    calculate_progress_and_balance(timelines)
+    timelines = Timeline.where(difference: nil)
+    timelines.each do |timeline|
+      timeline.calculate_difference
+      timeline.save!
+    end
   end
 end

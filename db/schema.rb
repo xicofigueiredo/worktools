@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_10_03_130747) do
+ActiveRecord::Schema[7.0].define(version: 2024_11_05_174721) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -227,6 +227,28 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_03_130747) do
     t.index ["kda_id"], name: "index_p2ps_on_kda_id"
   end
 
+  create_table "report_activities", force: :cascade do |t|
+    t.bigint "report_id", null: false
+    t.string "activity"
+    t.string "goal"
+    t.text "reflection"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["report_id"], name: "index_report_activities_on_report_id"
+  end
+
+  create_table "report_knowledges", force: :cascade do |t|
+    t.bigint "report_id", null: false
+    t.string "subject_name"
+    t.integer "progress"
+    t.integer "difference"
+    t.string "grade"
+    t.string "exam_season"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["report_id"], name: "index_report_knowledges_on_report_id"
+  end
+
   create_table "reports", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "sprint_id", null: false
@@ -235,6 +257,28 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_03_130747) do
     t.text "reflection"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "sdl"
+    t.text "ini"
+    t.text "mot"
+    t.text "p2p"
+    t.text "hubp"
+    t.integer "sdl_long_term_plans"
+    t.integer "sdl_week_organization"
+    t.integer "sdl_achieve_goals"
+    t.integer "sdl_study_techniques"
+    t.integer "sdl_initiative_office_hours"
+    t.integer "ini_new_activities"
+    t.integer "ini_goal_setting"
+    t.integer "mot_integrity"
+    t.integer "mot_improvement"
+    t.integer "p2p_support_from_peers"
+    t.integer "p2p_support_to_peers"
+    t.integer "hub_cleanliness"
+    t.integer "hub_respectful_behavior"
+    t.integer "hub_welcome_others"
+    t.integer "hub_participation"
+    t.boolean "hide", default: true
+    t.date "last_update_check"
     t.index ["sprint_id"], name: "index_reports_on_sprint_id"
     t.index ["user_id"], name: "index_reports_on_user_id"
   end
@@ -325,6 +369,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_03_130747) do
     t.string "personalized_name"
     t.string "color", default: "#F4F4F4"
     t.boolean "hidden", default: false
+    t.integer "difference"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
     t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
@@ -490,6 +535,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_10_03_130747) do
   add_foreign_key "mots", "kdas"
   add_foreign_key "notes", "users"
   add_foreign_key "p2ps", "kdas"
+  add_foreign_key "report_activities", "reports"
+  add_foreign_key "report_knowledges", "reports"
   add_foreign_key "reports", "sprints"
   add_foreign_key "reports", "users"
   add_foreign_key "sdls", "kdas"

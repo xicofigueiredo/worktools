@@ -4,6 +4,7 @@ class Timeline < ApplicationRecord
 
   after_create :create_user_topics
   after_save :clear_monthly_goals_cache, if: :dates_changed?
+  before_save :calculate_difference, if: :progress_and_expected_progress_present?
 
   has_many :knowledges, dependent: :destroy
   before_destroy :destroy_associated_user_topics
@@ -64,5 +65,19 @@ class Timeline < ApplicationRecord
 
   def clear_monthly_goals_cache
     Rails.cache.delete("monthly_goals_#{Date.today.beginning_of_month}")
+  end
+
+  def calculate_difference
+    if progress.present? && expected_progress.present?
+      self.difference = progress - expected_progress
+    else
+      self.difference = nil
+    end
+  end
+
+  private
+
+  def progress_and_expected_progress_present?
+    progress.present? && expected_progress.present?
   end
 end

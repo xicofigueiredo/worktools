@@ -28,7 +28,7 @@
                 <%= form.hidden_field :week_id, value: @current_week.id %>
                 <%= form.fields_for :sdl do |sdl_fields| %>
                   <tr>
-                    <td>Self-Directed Learning <i class="fa-regular fa-circle-question" title="Are you able to learn independently? This KDA refers to your ability to set your learning goals, assign deadlines, and complete them, whether the goals are academic in nature or not. From an academic perspective this relates to the BGA Moodle platform and its subjects; are you keeping up with your deadlines and setting effective goals each week and adhering to them."></i></td>
+                    <td>Self-Directed Learning <i class="fa-solid fa-circle-info" title="Are you able to learn independently? This KDA refers to your ability to set your learning goals, assign deadlines, and complete them, whether the goals are academic in nature or not. From an academic perspective this relates to the BGA Moodle platform and its subjects; are you keeping up with your deadlines and setting effective goals each week and adhering to them."></i></td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
                         <%= sdl_fields.select :rating, options_for_select(0..5, sdl_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
@@ -40,7 +40,7 @@
                 <% end %>
                 <%= form.fields_for :ini do |ini_fields| %>
                   <tr>
-                    <td>Initiative <i class="fa-regular fa-circle-question" title="Are you trying any new things? Or taking on any new challenges. This area is related to trying to get out of your comfort zone and try new activities/courses to see if these are things you might be interested in! This KDA is key to Learners discovering their passions, and how to pursue them."></i></td>
+                    <td>Initiative <i class="fa-solid fa-circle-info" title="Are you trying any new things? Or taking on any new challenges. This area is related to trying to get out of your comfort zone and try new activities/courses to see if these are things you might be interested in! This KDA is key to Learners discovering their passions, and how to pursue them."></i></td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
                         <%= ini_fields.select :rating, options_for_select(0..5, ini_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
@@ -52,7 +52,7 @@
                 <% end %>
                 <%= form.fields_for :mot do |mot_fields| %>
                   <tr>
-                    <td>Motivation <i class="fa-regular fa-circle-question" title="Are you approaching your learning with motivation, and trying to complete your goals to the best of your ability? Are your pushing yourself and trying your best in the challenges that you encounter? Are you persevering, and not dropping new courses or activities too soon?" ></i></td>
+                    <td>Motivation <i class="fa-solid fa-circle-info" title="Are you approaching your learning with motivation, and trying to complete your goals to the best of your ability? Are your pushing yourself and trying your best in the challenges that you encounter? Are you persevering, and not dropping new courses or activities too soon?" ></i></td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
                         <%= mot_fields.select :rating, options_for_select(0..5, mot_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>
@@ -64,7 +64,7 @@
                 <% end %>
                 <%= form.fields_for :p2p do |p2p_fields| %>
                   <tr>
-                    <td>P2P <i class="fa-regular fa-circle-question" title="This section refers to learning: are you helping others with their courses and learning? Are you asking for help from other learners as opposed to the Learning Coach?
+                    <td>P2P <i class="fa-solid fa-circle-info" title="This section refers to learning: are you helping others with their courses and learning? Are you asking for help from other learners as opposed to the Learning Coach?
 This would also refer to participation on the Forum for the BGA online courses."></i> </td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
@@ -77,7 +77,7 @@ This would also refer to participation on the Forum for the BGA online courses."
                 <% end %>
                 <%= form.fields_for :hubp do |hubp_fields| %>
                   <tr>
-                    <td title="Are you participating in the Hub activities? Are you contributing to any projects or events that are being run in their Hub? And are you helping to contribute to the Hub being a safe and clean environment for other learners? This KDA relates to respect of fellow peers and of the educational space." >Hub Participation <i class="fa-regular fa-circle-question"></i></td>
+                    <td title="Are you participating in the Hub activities? Are you contributing to any projects or events that are being run in their Hub? And are you helping to contribute to the Hub being a safe and clean environment for other learners? This KDA relates to respect of fellow peers and of the educational space." >Hub Participation <i class="fa-solid fa-circle-info"></i></td>
                     <td>
                       <div class="shadow-sm" style="border-radius: 10px;">
                         <%= hubp_fields.select :rating, options_for_select(0..5, hubp_fields.object.rating), {}, { class: "form-control text-center", required: true, style: "border-radius: 10px" } %>

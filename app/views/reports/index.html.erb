@@ -1,0 +1,471 @@
+<% if current_user.role == 'lc' || current_user.role == "admin" %>
+  <div style="padding-top: 20px; padding-bottom: 20px;">
+    <%= form_with url: reports_path, method: :get, local: true, class: "d-flex align-items-center justify-content-center gap-2", data: { controller: "auto-submit" } do %>
+      <%= select_tag :learner_id, options_from_collection_for_select(@learners, :id, :full_name, params[:learner_id]),
+          class: "form-select form-select-lg", style: "width: 25%;", prompt: "Select a learner" %>
+    <% end %>
+  </div>
+<% end %>
+
+
+<div class="container mt-3">
+  <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+    <div>
+      <% if @report && current_user.role != 'lc' && current_user.role != 'admin'%>
+        <h1 class="text-center">Report</h1>
+      <% else %>
+        <% if @report.hide %>
+          <div class="d-flex justify-content-between mb-3 align-items-center position-relative" style="margin-top: 17px;">
+            <b style="color:black; margin-right:6px;">Visible</b>
+            <%= button_to toggle_hide_report_path(@report), data: { turbo_method: :patch }, class: "btn", style: "border-radius: 10px; font-color: white; background-color: #28a745;", title:"Change this report visibility for the learner and parents" do %>
+              <i class="fa-regular fa-eye" style="color:#28a745"></i>
+              <i class="fa-regular fa-eye-slash" style="color:white"></i>
+            <% end %>
+            <b style="color:black; margin-left:6px;">Hidden</b>
+          </div>
+        <% else %>
+          <div class="d-flex justify-content-between mb-3 align-items-center position-relative" style="margin-top: 17px;">
+            <b style="color:black; margin-right:6px;">Visible</b>
+            <%= button_to toggle_hide_report_path(@report), data: { turbo_method: :patch }, class: "btn", style: "border-radius: 10px; font-color: white; background-color:  #dc3545;", title:"Change this report visibility for the learner and parents" do %>
+              <i class="fa-regular fa-eye" style="color:white"></i>
+              <i class="fa-regular fa-eye-slash" style="color:#dc3545;"></i>
+            <% end %>
+            <b style="color:black; margin-left:6px;">Hidden</b>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
+      <%= link_to '<i class="fa-solid fa-chevron-left"></i>'.html_safe, reports_path(date: @prev_date, learner_id: @learner.id), class: "btn btn-outline-secondary rounded d-flex align-items-center #{'disabled' unless @has_prev_sprint}" %>
+      <%= link_to 'This Sprint', reports_path(Date.today, learner_id: @learner.id), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+      <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe, reports_path(date: @next_date, learner_id: @learner.id), class: "btn btn-outline-secondary rounded d-flex align-items-center #{'disabled' unless @has_next_sprint}" %>
+    </div>
+
+
+      <%= link_to 'Edit Report', edit_report_path(@report), class: "btn btn-primary", style: 'border-radius: 10px; margin-left: 5px;' %>
+
+  </div>
+
+  <br>
+
+  <% if !@report %>
+    <div class="d-flex flex-column gap-3 mt-5">
+      <div class="text-center">
+        <h1>There is currently no Report for <%= @sprint.name %></h1>
+        <%= link_to "Create Report", new_report_path(date: @date), class: "btn btn-primary mb-3"  %>
+      </div>
+    </div>
+  <% else %>
+    <!DOCTYPE html>
+  <html lang="en">
+    <head>
+        <style>
+            body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            background-color: white;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header div {
+            font-size: 18px;
+        }
+        .header .report-period {
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .comment-box {
+            width: 100%;
+            height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 14px;
+            resize: none;
+        }
+        .knowledge-table tr:nth-child(even) td {
+          background-color: #f9f9f9; /* Alternate row color */
+        }
+        .knowledge-table, .kda-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .knowledge-table th, .knowledge-table td, .kda-table th, .kda-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .knowledge-table th, .kda-table th {
+            background-color: #f2f2f2;
+        }
+        .skill-table, .kda-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .skill-table th, .skill-table td, .kda-table th, .kda-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .skill-table th, .kda-table th {
+            background-color: #f2f2f2;
+        }
+        .flex-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .flex-item {
+            width: 48%;
+        }
+        .skill-table th:first-child {
+          width: 30%; /* Adjust proportion as needed */
+        }
+
+        .skill-table th:last-child {
+          width: 70%;
+        }
+
+        /* CSS for the rubric table */
+        .rubric-section {
+          margin: 20px 0;
+        }
+
+        .rubric-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 15px;
+        }
+
+        .rubric-table th,
+        .rubric-table td {
+          border: 1px solid #ccc;
+          padding: 10px;
+          text-align: left;
+        }
+
+        .rubric-table th {
+          background-color: #f4f4f4;
+          font-weight: bold;
+        }
+
+        .rubric-table tr:nth-child(even) td {
+          background-color: #f9f9f9; /* Alternate row color */
+        }
+        </style>
+    </head>
+    <body>
+      <div class="header">
+          <div>
+              <div><%= @learner.full_name %></div>
+              <div><%= @learner.hubs.first.name %> Hub</div>
+              <div> Attendance: <%= @attendance %>% <i class="fa-solid fa-circle-info" title="Presences:
+
+Present - <%=@p%>
+Working away - <%=@wa%>
+
+Absences:
+
+Unjustified absences - <%=@ul%>
+Justified absences - <%=@jl%>
+
+Holidays - <%=@h%>"></i></div>
+          </div>
+          <div class="report-period">
+              <%= @report.sprint.name %> / <%= Date.today.year %>
+              <br>
+              <%= @report.sprint.start_date.strftime("%d %b") %> - <%= @report.sprint.end_date.strftime("%d %b") %>
+          </div>
+      <div>
+        <%= image_tag "logoreport.png", width: "130", height: "65" %>
+      </div>
+      </div>
+
+    <% if @hide != true || current_user.role == 'lc' %>
+      <div class="section">
+        <div class="section-title">General comment</div>
+        <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
+          <p style="text-align: justify;">
+            <%= @report.general %>
+          </p>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="section">
+        <div class="section-title">Knowledge <i class="fa-solid fa-circle-info"
+            title="             To ensure that learners are adequately prepared for their final exams that are following the British Curriculum, every subject will have two stages of mock exams. These mock exams will cover the first 50% and 100% of the course, respectively.
+
+            The dates for the mock exams will be chosen by the learners based on their course completion goals.
+
+            In order to take the mock exams, learners must complete certain assignments as determined by the course manager (CM). Once these assignments have been completed, learners may submit a request to take the mock exams.
+
+            The following table provides more information about the learners' exam series and the expectations for completing the mocks. It is important that learners take the mock exams seriously as they will provide valuable feedback on their progress and highlight areas that may need further attention."></i>
+        </div>
+        <table class="knowledge-table">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Progress</th>
+                    <th>+/-</th>
+                    <th>Grade</th>
+                    <th>Exam</th>
+                </tr>
+            </thead>
+            <tbody>
+              <% @report.report_knowledges.each do |knowledge| %>
+                <tr>
+                  <td><%= knowledge.subject_name %></td>
+
+                  <% if knowledge.progress.nil? %>
+                    <td>N/A</td>
+                    <td>N/A</td>
+                    <td><%= knowledge.grade.presence || 'N/A' %> </td>
+                  <% else %>
+                    <td><%= knowledge.progress %>%</td>
+                    <td><%= knowledge.difference %>%</td>
+                    <td><%= knowledge.grade.presence || 'N/A' %></td>
+                  <% end %>
+
+                  <td><%= knowledge.exam_season.presence || 'N/A' %></td>
+                </tr>
+              <% end %>
+              </tbody>
+          </table>
+      </div>
+      <% if @hide != true || current_user.role == 'lc' %>
+        <div class="flex-container">
+            <div class="flex-item">
+              <div class="section-title">Learning Coach Comment</div>
+              <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <p style="text-align: justify;">
+                  <%= @report.lc_comment %>
+                </p>
+              </div>
+            </div>
+            <div class="flex-item">
+              <div class="section-title">Learner's Reflection</div>
+              <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <p style="text-align: justify;">
+                  <%= @report.reflection %>
+                </p>
+              </div>
+            </div>
+        </div>
+      <% else %>
+        <div class="flex-item" style="width: 100%;">
+          <div class="section-title">Learner's Reflection</div>
+          <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
+            <p style="text-align: justify;">
+              <%= @report.reflection %>
+            </p>
+          </div>
+        </div>
+      <% end %>
+
+    <br>
+
+    <div class="section">
+      <div class="section-title">Skills & Community <i class="fa-solid fa-circle-info"
+          title="           The Learner decides with their Learning Coach what their potential goals and targets may be in these three areas. One of the goals for BGA is that Learners explore different activities in all three Pillars.
+
+          Below is the information on the goals that they have been working on for the last Sprint, and what some of the outcomes have been!"></i>
+      </div>
+      <table class="skill-table">
+        <thead>
+          <tr>
+            <th>Goal</th>
+            <th>Learner's Reflection</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report_activities.each do |activity| %>
+            <tr>
+              <td><b><%= activity.activity.capitalize %></b> - <%= activity.goal %></td>
+              <td><%= activity.reflection %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+
+    </div>
+    <br>
+
+
+    <div class="section">
+      <div class="section-title">Key Development Areas <i class="fa-solid fa-circle-info"
+        title="            At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner’s entire study experience and impact their broader life journey.
+
+        These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success."></i>
+      </div>
+        <table class="skill-table">
+            <thead>
+                <tr>
+                    <th>KDA</th>
+                    <th>Learner's Reflection</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Self-Directed Learning <i class="fa-solid fa-circle-info" title="Are you able to learn independently? This KDA refers to your ability to set your learning goals, assign deadlines, and complete them, whether the goals are academic in nature or not. From an academic perspective this relates to the BGA Moodle platform and its subjects; are you keeping up with your deadlines and setting effective goals each week and adhering to them."></i></td>
+                    <td style="text-align: justify;"><%= @report.sdl %></td>
+                </tr>
+                <tr>
+                    <td>Initiative <i class="fa-solid fa-circle-info" title="Are you trying any new things? Or taking on any new challenges. This area is related to trying to get out of your comfort zone and try new activities/courses to see if these are things you might be interested in! This KDA is key to Learners discovering their passions, and how to pursue them."></i></td>
+                    <td style="text-align: justify;"><%= @report.ini %> </td>
+                </tr>
+                <tr>
+                    <td>Motivation <i class="fa-solid fa-circle-info" title="Are you approaching your learning with motivation, and trying to complete your goals to the best of your ability? Are your pushing yourself and trying your best in the challenges that you encounter? Are you persevering, and not dropping new courses or activities too soon?" ></i></td>
+                    <td style="text-align: justify;"><%= @report.mot %> </td>
+                </tr>
+                <tr>
+                    <td>P2P <i class="fa-solid fa-circle-info" title="This section refers to learning: are you helping others with their courses and learning? Are you asking for help from other learners as opposed to the Learning Coach?
+This would also refer to participation on the Forum for the BGA online courses."></i> </td>
+                    <td style="text-align: justify;"><%= @report.p2p %> </td>
+                </tr>
+                <tr>
+                    <td title="Are you participating in the Hub activities? Are you contributing to any projects or events that are being run in their Hub? And are you helping to contribute to the Hub being a safe and clean environment for other learners? This KDA relates to respect of fellow peers and of the educational space." >Hub Participation <i class="fa-solid fa-circle-info"></i></td>
+                    <td style="text-align: justify;"><%= @report.hubp %> </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br>
+
+    <% if @hide != true || current_user.role == 'lc' || current_user.role == 'admin' %>
+      <div class="rubric-section">
+        <div class="section-title">Learning Coach's Rubric</div>
+        <table class="rubric-table">
+          <thead>
+            <tr>
+              <th>KDA</th>
+              <th>Level</th>
+              <th>Area of Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Self-Directed Learning Section -->
+            <tr>
+              <td rowspan="5" style="background-color: white;">Self-Directed Learning</td>
+              <td><%= @report.sdl_long_term_plans&.titleize %></td>
+              <td>The learner sets effective long-term plans.</td>
+            </tr>
+            <tr>
+              <td><%= @report.sdl_week_organization&.titleize %></td>
+              <td>The learner organizes their week effectively.</td>
+            </tr>
+            <tr>
+              <td><%= @report.sdl_achieve_goals&.titleize %></td>
+              <td>The learner achieves their goals.</td>
+            </tr>
+            <tr>
+              <td><%= @report.sdl_study_techniques&.titleize %></td>
+              <td>The learner uses effective study techniques.</td>
+            </tr>
+            <tr>
+              <td><%= @report.sdl_initiative_office_hours&.titleize %></td>
+              <td>The learner takes initiative to arrange office hours with Course Managers (CMs).</td>
+            </tr>
+
+            <!-- Initiative Section -->
+            <tr>
+              <td rowspan="2" style="background-color: white;">Initiative</td>
+              <td><%= @report.ini_new_activities&.titleize %></td>
+              <td>The learner seeks out new activities and experiences.</td>
+            </tr>
+            <tr>
+              <td><%= @report.ini_goal_setting&.titleize %></td>
+              <td>The learner sets goals across the three key pillars.</td>
+            </tr>
+
+            <!-- Motivation Section -->
+            <tr>
+              <td rowspan="2" style="background-color: white;">Motivation</td>
+              <td><%= @report.mot_integrity&.titleize %></td>
+              <td>The learner completes work with integrity and to the best of their ability.</td>
+            </tr>
+            <tr>
+              <td><%= @report.mot_improvement&.titleize %></td>
+              <td>The learner actively seeks ways to improve in all areas.</td>
+            </tr>
+
+            <!-- Peer-to-Peer Learning Section -->
+            <tr>
+              <td rowspan="2" style="background-color: white;">Peer-to-Peer Learning</td>
+              <td><%= @report.p2p_support_from_peers&.titleize %></td>
+              <td>The learner seeks support from peers when needed.</td>
+            </tr>
+            <tr>
+              <td><%= @report.p2p_support_to_peers&.titleize %></td>
+              <td>The learner offers support to peers when needed.</td>
+            </tr>
+
+            <!-- Hub Participation Section -->
+            <tr>
+              <td rowspan="4" style="background-color: white;">Hub Participation</td>
+              <td><%= @report.hub_cleanliness&.titleize %></td>
+              <td>The learner actively contributes to keeping the hub clean and organized.</td>
+            </tr>
+            <tr>
+              <td><%= @report.hub_respectful_behavior&.titleize %></td>
+              <td>The learner behaves respectfully and is not disruptive.</td>
+            </tr>
+            <tr>
+              <td><%= @report.hub_welcome_others&.titleize %></td>
+              <td>The learner makes efforts to welcome others to the hub.</td>
+            </tr>
+            <tr>
+              <td><%= @report.hub_participation&.titleize %></td>
+              <td>The learner actively participates in hub activities.</td>
+            </tr>
+          </tbody>
+        </table>
+      <% end %>
+      </body>
+    <% end %>
+    <br>
+      <footer style="border-top: 1px solid #ccc; padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <!-- Left-aligned website link -->
+          <div style="text-align: left;">
+            <a href="http://www.bravegenerationacademy.com" target="_blank" style="text-decoration: none; color: #333;">
+              www.bravegenerationacademy.com
+            </a>
+          </div>
+
+          <!-- Right-aligned LCs' information -->
+          <div style="text-align: right;">
+            <% @lcs.each do |lc| %>
+              <div><%= lc.full_name %>: <%= lc.email %></div>
+            <% end %>
+          </div>
+        </div>
+      </footer>
+
+  </html>
+</div>

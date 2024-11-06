@@ -33,9 +33,6 @@ Rails.application.routes.draw do
 
     post 'sprint_goals/bulk_destroy', to: 'sprint_goals#bulk_destroy'
 
-    # get 'report', to: 'reports#learner_view'
-
-
     resources :users do
       resources :notes, except: [:show, :index]
     end
@@ -90,6 +87,8 @@ Rails.application.routes.draw do
       resources :communities, only: [:create, :update, :destroy] # Nested resources for communities
     end
 
+    resources :sprint_goals
+
     resources :kdas
     resources :user_topics do
       member do
@@ -98,6 +97,15 @@ Rails.application.routes.draw do
     end
 
     # match '*path', via: :all, to: 'pages#not_found'
+
+    get 'reports_lc_view', to: 'reports#lc_view', as: 'lc_view'
+    get 'reports_lc_index', to: 'reports#lc_index', as: 'lc_index'
+    resources :reports do
+      post 'update_report_progress', on: :member
+      member do
+        post 'toggle_hide'
+      end
+    end
 
 
 end

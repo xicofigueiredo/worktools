@@ -27,7 +27,6 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals/new
   def new
-    @is_edit = false
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
     @number_of_timelines = current_user.timelines.where(hidden: false).count
@@ -59,7 +58,6 @@ class SprintGoalsController < ApplicationController
 
   # GET /sprint_goals/1/edit
   def edit
-    @is_edit = true
     @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find(params[:id])
     @knowledges_subject_names = @sprint_goal.knowledges.pluck(:subject_name)
     @number_of_timelines = current_user.timelines.count
@@ -86,17 +84,17 @@ class SprintGoalsController < ApplicationController
   end
 
   # POST /sprint_goals
-  def create
-    @sprint_goal = current_user.sprint_goals.new(sprint_goal_params)
-    @sprint_goal.sprint = current_sprint
+  # def create
+  #   @sprint_goal = current_user.sprint_goals.new(sprint_goal_params)
+  #   @sprint_goal.sprint = current_sprint
 
-    if @sprint_goal.save
-      redirect_to sprint_goals_path(date: @sprint_goal.sprint.start_date),
-                  notice: 'Sprint goal was successfully created.'
-    else
-      render :new, status: :unprocessable_entity
-    end
-  end
+  #   if @sprint_goal.save
+  #     redirect_to sprint_goals_path(date: @sprint_goal.sprint.start_date),
+  #                 notice: 'Sprint goal was successfully created.'
+  #   else
+  #     render :new, status: :unprocessable_entity
+  #   end
+  # end
 
   # PATCH/PUT /sprint_goals/1
   def update
