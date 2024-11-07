@@ -310,6 +310,11 @@ Below is the information on the goals that they have been working on for the las
               <td><%= activity.reflection %></td>
             </tr>
           <% end %>
+          <% if @report_activities.empty? %>
+            <tr>
+              <td colspan="2">No goals set for this sprint</td>
+            </tr>
+          <% end %>
         </tbody>
       </table>
 

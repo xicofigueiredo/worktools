@@ -130,6 +130,11 @@
                     <td><%= activity_form.text_area :reflection, class: "form-control", rows: 5, style: "width: 100%;" %></td>
                   </tr>
                 <% end %>
+                <% if @activ.empty? %>
+                  <tr>
+                    <td colspan="2">No goals set for this sprint</td>
+                  </tr>
+                <% end %>
               </tbody>
           </table>
       </div>

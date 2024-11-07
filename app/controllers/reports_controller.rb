@@ -1,6 +1,6 @@
 class ReportsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_report, only: %i[edit update update_report_progress toggle_hide]
+  before_action :set_report, only: %i[edit update update_report_progress toggle_hide save_report_knowledges]
 
   def lc_view
     redirect_to root_path if current_user.role != 'lc' && current_user.role != 'admin'
@@ -33,7 +33,7 @@ class ReportsController < ApplicationController
 
     @all.each do |lc|
       if lc.hubs.count < 3
-        @lcs << lc 
+        @lcs << lc
       end
     end
 
@@ -114,15 +114,26 @@ class ReportsController < ApplicationController
   def edit
     if !@report.nil? && @report.user_id == current_user.id
       @hide = @report.hide
-    elsif current_user.role == 'parent'
+    elsif !@report.nil? && current_user.role == 'parent'
       @hide = @report.hide
     end
+
+
 
     @timelines = @report.user.timelines.where(hidden: false)
     @sprint = @report.sprint
 
+    @sprint_goal = @report.user.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: @sprint)
+    @activ = []
+    if @sprint_goal
+      @activ = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
+      @activ += @sprint_goal.communities.pluck(:involved, :smartgoals)
+    end
+
     @learner = @report.user
     @lcs = @learner.hubs.first.users.where(role: 'lc')
+
+    @report_knowledges = @report.report_knowledges
 
     if current_user.role == 'learner' && @report.user_id == current_user.id
       # The learner can edit their report
@@ -144,11 +155,8 @@ class ReportsController < ApplicationController
     if @report.update(report_params)
       redirect_to params[:redirect_path] || reports_path, notice: 'Report was successfully updated.'
     else
-      render :edit
+      render json: { errors: @report.errors.full_messages }, status: :unprocessable_entity
     end
-  end
-
-  def update_report_progress
   end
 
   def toggle_hide
@@ -156,7 +164,19 @@ class ReportsController < ApplicationController
     redirect_to report_path(@report), notice: "Visibility toggled successfully."
   end
 
+  def save_report_knowledges
+    if @report.update(report_knowledges_params)
+      redirect_to report_path(@report), notice: 'Knowledge block saved successfully.'
+    else
+      redirect_to report_path(@report), alert: 'Failed to save the knowledge block.'
+    end
+  end
+
   private
+
+  def report_knowledges_params
+    params.require(:report).permit(report_knowledges_attributes: %i[id subject_name progress difference exam_season grade])
+  end
 
   def report_params
     params.require(:report).permit(:user_id, :sprint_id, :general, :lc_comment, :reflection, :sdl, :ini, :mot, :p2p,
