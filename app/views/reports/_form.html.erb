@@ -100,12 +100,12 @@
             </div>
             <div class="flex-item">
               <div class="section-title">Learner's Reflection</div>
-              <%= form.text_area :reflection, class: "form-control", rows: 15 %>
+              <%= form.text_area :reflection, class: "form-control", rows: 8, placeholder: "When completing your report, briefly describe the quality of work you've achieved, including any challenges you overcame and skills developed. Note your average daily hours, whether you followed your schedule, and any adjustments you made. Include how often you attended office hours, workshops, or other support sessions, and reflect on how they contributed to your progress. Remember, this reflection should cover trends from the last few months, not just recent weeks, for a fuller perspective on your growth." %>
             </div>
           <% else %>
             <div class="flex-item" style="width: 100%;">
               <div class="section-title">Learner's Reflection</div>
-              <%= form.text_area :reflection, class: "form-control", rows: 8 %>
+              <%= form.text_area :reflection, class: "form-control", rows: 8, placeholder: "When completing your report, briefly describe the quality of work you've achieved, including any challenges you overcame and skills developed. Note your average daily hours, whether you followed your schedule, and any adjustments you made. Include how often you attended office hours, workshops, or other support sessions, and reflect on how they contributed to your progress. Remember, this reflection should cover trends from the last few months, not just recent weeks, for a fuller perspective on your growth." %>
             </div>
           <% end %>
         </div>
