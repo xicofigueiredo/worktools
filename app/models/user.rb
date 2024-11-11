@@ -74,4 +74,8 @@ class User < ApplicationRecord
     errors.add(:email, :invalid_domain, message: 'Email must be from @edubga.com or @bravegenerationacademy.com')
   end
 
+  def can_access_learner?(learner)
+    self == learner || (self.role.in?(['Admin', 'Learning Coach']) && (self.hubs & learner.hubs).present?)
+  end
+
 end

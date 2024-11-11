@@ -8,20 +8,41 @@ class ReportsController < ApplicationController
   end
 
   def index
+    @date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+
+    if @sprint && @sprint.id < 12
+      redirect_to reports_path, alert: "There are no reports from earlier sprints."
+      return
+    end
+
     if current_user.role == 'learner'
       @learner = current_user
     else
       @learners = current_user.hubs.flat_map { |hub| hub.users.where(role: 'learner').order(:full_name) }.uniq
-      @grouped_learners = current_user.hubs.flat_map { |hub| hub.users.where(role: 'learner').order(:full_name) }
-                          .group_by { |learner| learner.hubs.first.name }
-      params[:learner_id].present? ? @learner = User.find(params[:learner_id])  : @learner = @learners.first
+      @grouped_learners = @learners.group_by { |learner| learner.hubs.first.name }
+
+      # Determine which learner's report to show
+      if params[:learner_id].present?
+        @learner = User.find_by(id: params[:learner_id])
+
+        if @learner.nil?
+          redirect_to reports_path, alert: "No valid learner found."
+          return
+        end
+
+        # Ensure the current user has permission to view this learner's report
+        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
+          redirect_to reports_path, alert: "You do not have permission to access this report."
+          return
+        end
+      else
+        @learner = @learners.first
+      end
     end
+
     @timelines = @learner.timelines.where(hidden: false).order(difference: :asc)
     @reports = @learner.reports.joins(:sprint)
-    @all_sprints = Sprint.all
-    @date = params[:date] ? Date.parse(params[:date]) : Date.today
-    @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
-    @all_sprints = Sprint.all
     calc_nav_dates(@sprint)
     @report = @learner.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
 
@@ -47,7 +68,7 @@ class ReportsController < ApplicationController
       @report = nil
     end
 
-    if @sprint.id == 12 ## Sprint 12 was the current sprint when the report feature was added
+    if @sprint.id <= 12 ## Sprint 12 was the current sprint when the report feature was added
       @has_prev_sprint = false
     else
       @has_prev_sprint = Sprint.exists?(['end_date < ?', @sprint.start_date])
