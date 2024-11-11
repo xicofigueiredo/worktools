@@ -2,6 +2,8 @@ class Report < ApplicationRecord
   belongs_to :user
   belongs_to :sprint
 
+  validates :user_id, uniqueness: { scope: :sprint_id, message: "Report already exists for this user and sprint" }
+
   has_many :report_knowledges, dependent: :destroy
   has_many :report_activities, dependent: :destroy
 

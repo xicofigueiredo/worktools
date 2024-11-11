@@ -24,8 +24,12 @@ class ReportsController < ApplicationController
     @all_sprints = Sprint.all
     calc_nav_dates(@sprint)
     @report = @learner.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
-    @report.save
 
+    if @report.new_record?
+      @report.last_update_check = Date.today
+    end
+
+    @report.save
     @attendance = calc_sprint_presence(@learner, @sprint)
 
     @all = @learner.hubs.first.users.where(role: 'lc')
@@ -43,8 +47,13 @@ class ReportsController < ApplicationController
       @report = nil
     end
 
-    @has_prev_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @prev_date, @prev_date).present?
-    @has_next_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @next_date, @next_date).present?
+    if @sprint.id == 12 ## Sprint 12 was the current sprint when the report feature was added
+      @has_prev_sprint = false
+    else
+      @has_prev_sprint = Sprint.exists?(['end_date < ?', @sprint.start_date])
+    end
+    @has_next_sprint = Sprint.exists?(['start_date > ?', @sprint.end_date])
+
     @edit = false
 
     if !@report.nil? && @report.user_id == current_user.id
