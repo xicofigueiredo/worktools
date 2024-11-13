@@ -121,10 +121,10 @@ Below is the information on the goals that they have been working on for the las
       </thead>
       <tbody>
         <%= f.fields_for :report_activities do |activity_form| %>
+          <%= activity_form.hidden_field :id %>
           <tr>
-            <td>
+            <td style="font-size: 16px;">
               <b><%= activity_form.object.activity.capitalize %></b> - <%= activity_form.object.goal %>
-              <%= activity_form.hidden_field :id %>
             </td>
             <td>
               <%= activity_form.text_area :reflection, class: "form-control", rows: 5, style: "width: 100%;" %>
