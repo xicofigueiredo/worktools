@@ -1,6 +1,6 @@
 class ReportsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_report, only: %i[edit update update_report_progress toggle_hide save_report_knowledges]
+  before_action :set_report, only: %i[edit update toggle_hide update_knowledges update_activities]
 
   def lc_view
     redirect_to root_path if current_user.role != 'lc' && current_user.role != 'admin'
@@ -194,18 +194,31 @@ class ReportsController < ApplicationController
     redirect_to report_path(@report), notice: "Visibility toggled successfully."
   end
 
-  def save_report_knowledges
-    if @report.update(report_knowledges_params)
-      redirect_to report_path(@report), notice: 'Knowledge block saved successfully.'
+  def update_knowledges
+    if @report.update(report_knowledge_params)
+      redirect_to edit_report_path(@report), notice: 'Knowledge was successfully updated.'
     else
-      redirect_to report_path(@report), alert: 'Failed to save the knowledge block.'
+      redirect_to edit_report_path(@report), notice: 'Knowledge was successfully updated.'
     end
   end
 
+  def update_activities
+    if @report.update(report_activities_params)
+      redirect_to edit_report_path(@report), notice: 'Activity was successfully updated.'
+    else
+      redirect_to edit_report_path(@report), notice: 'Activity was successfully updated.'
+    end
+  end
+
+
   private
 
-  def report_knowledges_params
-    params.require(:report).permit(report_knowledges_attributes: %i[id subject_name progress difference exam_season grade])
+  def report_knowledge_params
+    params.require(:report).permit(report_knowledges_attributes: [:id, :subject_name, :progress, :difference, :grade, :exam_season])
+  end
+
+  def report_activities_params
+    params.require(:report).permit(report_activities_attributes: [:id, :activity, :goal, :reflection])
   end
 
   def report_params
@@ -214,7 +227,7 @@ class ReportsController < ApplicationController
                                    :sdl_initiative_office_hours, :ini_new_activities, :ini_goal_setting, :mot_integrity, :mot_improvement,
                                    :p2p_support_from_peers, :p2p_support_to_peers, :hub_cleanliness, :hub_respectful_behavior, :hub_welcome_others,
                                    :hub_participation, report_activities_attributes: %i[id activity goal reflection _destroy],
-                                                       report_knowledges_attributes: %i[id subject_name progress difference exam_season grade])
+                                                       report_knowledges_attributes: %i[id subject_name progress difference exam_season grade _destroy])
   end
 
   def calc_nav_dates(current_sprint)

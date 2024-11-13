@@ -27,9 +27,11 @@ export default class extends Controller {
     })
     .then(data => {
       console.log("Field updated successfully", data);
+      // Optionally, display a success message or update the UI
     })
     .catch(error => {
       console.error("Error updating field:", error);
+      // Optionally, display an error message to the user
     });
   }
 }
