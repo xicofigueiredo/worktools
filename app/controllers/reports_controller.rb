@@ -42,7 +42,6 @@ class ReportsController < ApplicationController
     end
 
     @timelines = @learner.timelines.where(hidden: false).order(difference: :asc)
-    @reports = @learner.reports.joins(:sprint)
     calc_nav_dates(@sprint)
     @report = @learner.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
 
