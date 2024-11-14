@@ -3,8 +3,9 @@ class Sprint < ApplicationRecord
   validates :end_date, presence: true
   validates :name, presence: true
 
-  has_many :sprint_goals
-  has_many :weeks
+  has_many :sprint_goals, dependent: :destroy
+  has_many :weeks, dependent: :destroy
+  has_many :reports, dependent: :destroy
 
   def count_absences(user)
     date_range = start_date..end_date
