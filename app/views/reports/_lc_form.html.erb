@@ -51,17 +51,16 @@
       <tbody>
         <%= f.fields_for :report_knowledges do |knowledge_form| %>
           <tr>
+            <%= knowledge_form.hidden_field :id %> <!-- This is the hidden field for the id -->
             <td><%= knowledge_form.object.subject_name %></td>
-            <%= knowledge_form.hidden_field :id %>
-            <% if knowledge_form.object.progress.nil? %>
-              <td>N/A</td>
-              <td>N/A</td>
-              <td><%= knowledge_form.text_area :grade, class: "form-control", rows: 1 %></td>
+            <% if knowledge_form.object.personalized %>
+              <td><%= knowledge_form.number_field :progress, class: "form-control" %></td>
+              <td><%= knowledge_form.number_field :difference, class: "form-control" %></td>
             <% else %>
               <td><%= knowledge_form.object.progress %>%</td>
               <td><%= knowledge_form.object.difference %>%</td>
-              <td><%= knowledge_form.text_field :grade, class: "form-control", rows: 1 %></td>
             <% end %>
+            <td><%= knowledge_form.text_field :grade, class: "form-control", rows: 1 %></td>
             <td><%= knowledge_form.text_field :exam_season, value: knowledge_form.object.exam_season.presence || 'N/A', class: "form-control" %></td>
           </tr>
         <% end %>

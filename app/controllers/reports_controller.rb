@@ -112,9 +112,14 @@ class ReportsController < ApplicationController
         # Find or initialize a ReportKnowledge record by subject_name
         knowledge_record = @report.report_knowledges.find_or_initialize_by(subject_name: name)
 
+        # Set the personalized flag if the personalized_name is present
+        knowledge_record.personalized = !data[1].nil?
+
         # Update or set the attributes as necessary
-        knowledge_record.progress = data[2]
-        knowledge_record.difference = data[3]
+        if !knowledge_record.personalized
+          knowledge_record.progress = data[2]
+          knowledge_record.difference = data[3]
+        end
 
         # Set exam_season only if it hasn't been set before
         if knowledge_record.exam_season.nil?
@@ -205,7 +210,7 @@ class ReportsController < ApplicationController
     if @report.update(report_activities_params)
       redirect_to edit_report_path(@report), notice: 'Activity was successfully updated.'
     else
-      redirect_to edit_report_path(@report), notice: 'Activity was successfully updated.'
+      redirect_to edit_report_path(@report), alert: 'Failed to update Knowledge.' if update fails
     end
   end
 

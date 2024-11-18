@@ -238,13 +238,17 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
                 <tr>
                   <td><%= knowledge.subject_name %></td>
 
-                  <% if knowledge.progress.nil? %>
+                  <% if knowledge.progress.nil? || (knowledge.progress == 0 && knowledge.difference == 0)%>
                     <td>N/A</td>
                     <td>N/A</td>
                     <td><%= knowledge.grade.presence || 'N/A' %> </td>
                   <% else %>
                     <td><%= knowledge.progress %>%</td>
-                    <td><%= knowledge.difference %>%</td>
+                    <% if knowledge.difference > 0 %>
+                      <td>+<%= knowledge.difference %>%</td>
+                    <% else %>
+                      <td><%= knowledge.difference %>%</td>
+                    <% end %>
                     <td><%= knowledge.grade.presence || 'N/A' %></td>
                   <% end %>
 
