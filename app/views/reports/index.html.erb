@@ -244,7 +244,9 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
                     <td><%= knowledge.grade.presence || 'N/A' %> </td>
                   <% else %>
                     <td><%= knowledge.progress %>%</td>
-                    <% if knowledge.difference > 0 %>
+                    <% if knowledge.difference.nil? %>
+                      <td>N/A</td>
+                    <% elsif knowledge.difference > 0 %>
                       <td>+<%= knowledge.difference %>%</td>
                     <% else %>
                       <td><%= knowledge.difference %>%</td>
