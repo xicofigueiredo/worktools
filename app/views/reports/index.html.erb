@@ -211,7 +211,7 @@ Holidays - <%=@h%>"></i></div>
         <div class="section-title">General comment</div>
         <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
           <p style="text-align: justify;">
-            <%= @report.general %>
+          <%= simple_format(@report.general, {}, sanitize: true) %>
           </p>
         </div>
       </div>
