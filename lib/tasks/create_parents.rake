@@ -26,7 +26,7 @@ namespace :db do
         puts "Parent account for #{email} created successfully."
         UserMailer.welcome_parent(parent, password).deliver_now
       else
-        puts "Parent account for #{email} already exists, or kids not found."
+        puts "#{kid_email}  not found."
       end
 
       if kid
@@ -50,7 +50,7 @@ namespace :db do
 
     # Process each row in the CSV
     CSV.foreach(file_path, headers: true) do |row|
-      unless row['Email'].nil? || row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil? || row['Parent 2'].zero? || row['Email 2'].zero? || row['Password 2'].zero?
+      unless row['Email'].nil? || row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil?
         parent_name = row['Parent 1'].strip.capitalize
         parent1_email = row['Email 1'].strip.downcase
         parent1_password = row['Password'].strip
@@ -61,7 +61,7 @@ namespace :db do
       end
 
       # Create or update the second parent if present
-      unless row['Email'].nil? || row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil? || row['Parent 2'].zero? || row['Email 2'].zero? || row['Password 2'].zero?
+      unless row['Email'].nil? || row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil?
         parent2_name = row['Parent 2'].strip.capitalize
         parent2_email = row['Email 2'].strip.downcase
         parent2_password = row['Password 2'].strip
