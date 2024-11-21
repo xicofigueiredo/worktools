@@ -22,11 +22,14 @@ namespace :db do
           role: 'Parent',
           kids: kid ? [kid.id] : []
         )
+        lcs = kid.hubs.first.users.where(role: 'lc')
+        ## only lcs with less than 3 hubs
+        lcs = lcs.select { |lc| lc.hubs.count < 3 }
         parent.save!
         puts "Parent account for #{email} created successfully."
-        UserMailer.welcome_parent(parent, password).deliver_now
+        UserMailer.welcome_parent(parent, password, lcs).deliver_now
       else
-        puts "#{kid_email}  not found."
+        puts "#{parent.email}  already exists."
       end
 
       if kid

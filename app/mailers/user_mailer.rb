@@ -22,10 +22,11 @@ class UserMailer < Devise::Mailer
     mail(to: @user.email, subject: 'You Have a New Notification')
   end
 
-  def welcome_parent(parent, password)
+  def welcome_parent(parent, password, lcs)
     @parent = parent
     @password = password
     mail(to: @parent.email,
+         cc: lcs.map(&:email),
          from: 'worktools@bravegenerationacademy.com',
          subject: 'Welcome to the new BGA App!')
   end
