@@ -42,12 +42,21 @@
                                   { selected: selected_subject, prompt: "" },
                                   { data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control mb-1" } %>
                             </div>
-                            <% selected_topic = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:topic_name) %>
-                            <div data-selects-target="topicContainer" data-selected-topic="<%= selected_topic%>">
-                              <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself,
-                                  { selected: selected_topic, prompt: "" },
-                                  { class: "form-control" } %>
-                            </div>
+                            <% selected_topic = @weekly_goal.new_record? ? "" : (@weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }&.topic_name || "") %>
+<div data-selects-target="topicContainer" data-selected-topic="<%= selected_topic %>">
+  <% if selected_topic == "Other" %>
+    <%= form.text_field "#{day}_#{time}_custom_topic",
+        value: selected_topic,
+        placeholder: "Enter custom topic",
+        class: "form-control",
+        data: { selects_target: "customTopic" } %>
+  <% else %>
+    <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself,
+        { selected: selected_topic, prompt: "" },
+        { class: "form-control" } %>
+  <% end %>
+</div>
+
                           </div>
                         </td>
                       <% end %>
