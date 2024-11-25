@@ -101,10 +101,14 @@ Rails.application.routes.draw do
     get 'reports_lc_view', to: 'reports#lc_view', as: 'lc_view'
     get 'reports_lc_index', to: 'reports#lc_index', as: 'lc_index'
     resources :reports do
-      post 'update_report_progress', on: :member
       member do
         post 'toggle_hide'
         get :Report
+        patch 'update_knowledges'
+        patch 'update_activities'
+
       end
+      resources :report_knowledges, only: [:update]
     end
+
 end

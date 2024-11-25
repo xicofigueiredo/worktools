@@ -68,8 +68,14 @@ class User < ApplicationRecord
   end
 
   def email_domain_check
-    return if email.ends_with?('@edubga.com')
+    valid_domains = ['@edubga.com', '@bravegenerationacademy.com']
+    return if valid_domains.any? { |domain| email.ends_with?(domain) }
 
-    errors.add(:email, :invalid_domain)
+    errors.add(:email, :invalid_domain, message: 'Email must be from @edubga.com or @bravegenerationacademy.com')
   end
+
+  def can_access_learner?(learner)
+    self == learner || (self.role.in?(['Admin', 'Learning Coach']) && (self.hubs & learner.hubs).present?)
+  end
+
 end

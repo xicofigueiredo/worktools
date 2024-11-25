@@ -162,13 +162,14 @@ class WeeklyGoalsController < ApplicationController
                   .where("user_topics.done = ? OR user_topics.done IS NULL", false)
                   .select('topics.id, topics.name, topics.unit, subjects.category as subject_category')
                   .order(:order)
-    @topic_names = topics.map do |topic|
+    topic_names = topics.map do |topic|
       if topic.subject_category == 'lws'
         "#{topic.unit} - #{topic.name}"
       else
         topic.name
       end
     end.uniq
+    @topic_names = ["Other"] + topic_names
   end
 
   def build_weekly_slots
@@ -189,13 +190,14 @@ class WeeklyGoalsController < ApplicationController
         # Build keys for subject and topic
         subject_key = "#{day.downcase}_#{time.downcase}_subject"
         topic_key = "#{day.downcase}_#{time.downcase}_topic"
+        custom_topic_key = "#{day.downcase}_#{time.downcase}_custom_topic"
 
         # Find existing slot or initialize a new one
         slot = @weekly_goal.weekly_slots.find_or_initialize_by(day_of_week: day, time_slot: time)
 
         # Assign new values from parameters
         slot.subject_name = params[:weekly_goal][subject_key].presence || ""
-        slot.topic_name = params[:weekly_goal][topic_key].presence || ""
+        slot.topic_name = params[:weekly_goal][custom_topic_key].presence || params[:weekly_goal][topic_key].presence || ""
 
         # Check if the slot is new or has changes and save it
         slot.save if slot.new_record? || slot.changed?

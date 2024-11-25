@@ -1,6 +1,7 @@
 class ReportsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_report, only: %i[edit update update_report_progress toggle_hide save_report_knowledges download_pdf]
+
+  before_action :set_report, only: %i[edit update toggle_hide update_knowledges update_activities download_pdf]
 
   def lc_view
     redirect_to root_path if current_user.role != 'lc' && current_user.role != 'admin'
@@ -8,24 +9,48 @@ class ReportsController < ApplicationController
   end
 
   def index
+    @date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+
+    if @sprint && @sprint.id < 12
+      redirect_to reports_path, alert: "There are no reports from earlier sprints."
+      return
+    end
+
     if current_user.role == 'learner'
       @learner = current_user
     else
       @learners = current_user.hubs.flat_map { |hub| hub.users.where(role: 'learner').order(:full_name) }.uniq
-      @grouped_learners = current_user.hubs.flat_map { |hub| hub.users.where(role: 'learner').order(:full_name) }
-                          .group_by { |learner| learner.hubs.first.name }
-      params[:learner_id].present? ? @learner = User.find(params[:learner_id])  : @learner = @learners.first
+      @grouped_learners = @learners.group_by { |learner| learner.hubs.first.name }
+
+      # Determine which learner's report to show
+      if params[:learner_id].present?
+        @learner = User.find_by(id: params[:learner_id])
+
+        if @learner.nil?
+          redirect_to reports_path, alert: "No valid learner found."
+          return
+        end
+
+        # Ensure the current user has permission to view this learner's report
+        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
+          redirect_to reports_path, alert: "You do not have permission to access this report."
+          return
+        end
+      else
+        @learner = @learners.first
+      end
     end
+
     @timelines = @learner.timelines.where(hidden: false).order(difference: :asc)
-    @reports = @learner.reports.joins(:sprint)
-    @all_sprints = Sprint.all
-    @date = params[:date] ? Date.parse(params[:date]) : Date.today
-    @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
-    @all_sprints = Sprint.all
     calc_nav_dates(@sprint)
     @report = @learner.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
-    @report.save
 
+    if @report.new_record?
+      @report.last_update_check = Date.today
+    end
+
+    @report.save
     @attendance = calc_sprint_presence(@learner, @sprint)
 
     @all = @learner.hubs.first.users.where(role: 'lc')
@@ -43,8 +68,13 @@ class ReportsController < ApplicationController
       @report = nil
     end
 
-    @has_prev_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @prev_date, @prev_date).present?
-    @has_next_sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @next_date, @next_date).present?
+    if @sprint.id <= 12 ## Sprint 12 was the current sprint when the report feature was added
+      @has_prev_sprint = false
+    else
+      @has_prev_sprint = Sprint.exists?(['end_date < ?', @sprint.start_date])
+    end
+    @has_next_sprint = Sprint.exists?(['start_date > ?', @sprint.end_date])
+
     @edit = false
 
     if !@report.nil? && @report.user_id == current_user.id
@@ -83,9 +113,14 @@ class ReportsController < ApplicationController
         # Find or initialize a ReportKnowledge record by subject_name
         knowledge_record = @report.report_knowledges.find_or_initialize_by(subject_name: name)
 
+        # Set the personalized flag if the personalized_name is present
+        knowledge_record.personalized = !data[1].nil?
+
         # Update or set the attributes as necessary
-        knowledge_record.progress = data[2]
-        knowledge_record.difference = data[3]
+        if !knowledge_record.personalized
+          knowledge_record.progress = data[2]
+          knowledge_record.difference = data[3]
+        end
 
         # Set exam_season only if it hasn't been set before
         if knowledge_record.exam_season.nil?
@@ -164,11 +199,11 @@ class ReportsController < ApplicationController
     redirect_to report_path(@report), notice: "Visibility toggled successfully."
   end
 
-  def save_report_knowledges
-    if @report.update(report_knowledges_params)
-      redirect_to report_path(@report), notice: 'Knowledge block saved successfully.'
+  def update_knowledges
+    if @report.update(report_knowledge_params)
+      redirect_to edit_report_path(@report), notice: 'Knowledge was successfully updated.'
     else
-      redirect_to report_path(@report), alert: 'Failed to save the knowledge block.'
+      redirect_to edit_report_path(@report), notice: 'Knowledge was successfully updated.'
     end
   end
 
@@ -502,11 +537,24 @@ class ReportsController < ApplicationController
 
     justified_line
   end
+=======
+  def update_activities
+    if @report.update(report_activities_params)
+      redirect_to edit_report_path(@report), notice: 'Activity was successfully updated.'
+    else
+      redirect_to edit_report_path(@report), alert: 'Failed to update Knowledge.' if update fails
+    end
+  end
+
 
   private
 
-  def report_knowledges_params
-    params.require(:report).permit(report_knowledges_attributes: %i[id subject_name progress difference exam_season grade])
+  def report_knowledge_params
+    params.require(:report).permit(report_knowledges_attributes: [:id, :subject_name, :progress, :difference, :grade, :exam_season])
+  end
+
+  def report_activities_params
+    params.require(:report).permit(report_activities_attributes: [:id, :activity, :goal, :reflection])
   end
 
   def report_params
@@ -515,7 +563,7 @@ class ReportsController < ApplicationController
                                    :sdl_initiative_office_hours, :ini_new_activities, :ini_goal_setting, :mot_integrity, :mot_improvement,
                                    :p2p_support_from_peers, :p2p_support_to_peers, :hub_cleanliness, :hub_respectful_behavior, :hub_welcome_others,
                                    :hub_participation, report_activities_attributes: %i[id activity goal reflection _destroy],
-                                                       report_knowledges_attributes: %i[id subject_name progress difference exam_season grade])
+                                                       report_knowledges_attributes: %i[id subject_name progress difference exam_season grade _destroy])
   end
 
   def calc_nav_dates(current_sprint)

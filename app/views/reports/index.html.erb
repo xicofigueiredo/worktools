@@ -74,7 +74,8 @@
             width: 80%;
             margin: auto;
             background-color: white;
-            padding: 20px;
+            padding-left: 56px;
+            padding-right: 56px;
             margin-top: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
@@ -211,7 +212,7 @@ Holidays - <%=@h%>"></i></div>
         <div class="section-title">General comment</div>
         <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
           <p style="text-align: justify;">
-            <%= @report.general %>
+          <%= simple_format(@report.general, {}, sanitize: true) %>
           </p>
         </div>
       </div>
@@ -219,14 +220,9 @@ Holidays - <%=@h%>"></i></div>
 
     <div class="section">
         <div class="section-title">Knowledge <i class="fa-solid fa-circle-info"
-            title="
-To ensure that learners are adequately prepared for their final exams that are following the British Curriculum, every subject will have two stages of mock exams. These mock exams will cover the first 50% and 100% of the course, respectively.
+            title="At Brave Generation Academy, the Knowledge Block focuses primarily on academic content to equip learners with the skills needed for future education and career opportunities. The curriculum encompasses a wide range of subjects and prepares students for final exams. The table below provides insight into your child’s progress in each subject, helping them track their development and identify areas that may need further attention to ensure readiness for exams.
 
-The dates for the mock exams will be chosen by the learners based on their course completion goals.
-
-In order to take the mock exams, learners must complete certain assignments as determined by the course manager (CM). Once these assignments have been completed, learners may submit a request to take the mock exams.
-
-The following table provides more information about the learners' exam series and the expectations for completing the mocks. It is important that learners take the mock exams seriously as they will provide valuable feedback on their progress and highlight areas that may need further attention."></i>
+If your child is pursuing the UP curriculum or the American curriculum, they will receive an additional separate academic report detailing their achievements and progress."></i>
         </div>
         <table class="knowledge-table">
             <thead>
@@ -243,17 +239,34 @@ The following table provides more information about the learners' exam series an
                 <tr>
                   <td><%= knowledge.subject_name %></td>
 
-                  <% if knowledge.progress.nil? %>
+                  <% if knowledge.progress.nil? || (knowledge.progress == 0 && knowledge.difference == 0)%>
                     <td>N/A</td>
                     <td>N/A</td>
                     <td><%= knowledge.grade.presence || 'N/A' %> </td>
                   <% else %>
                     <td><%= knowledge.progress %>%</td>
-                    <td><%= knowledge.difference %>%</td>
+                    <% if knowledge.difference.nil? %>
+                      <td>N/A</td>
+                    <% elsif knowledge.difference > 0 %>
+                      <td>+<%= knowledge.difference %>%</td>
+                    <% else %>
+                      <td><%= knowledge.difference %>%</td>
+                    <% end %>
                     <td><%= knowledge.grade.presence || 'N/A' %></td>
                   <% end %>
 
-                  <td><%= knowledge.exam_season.presence || 'N/A' %></td>
+                  <% if knowledge.exam_season.present? && knowledge.exam_season.include?("January")%>
+                    <td><%= knowledge.exam_season.presence %></td>
+                  <% elsif knowledge.exam_season.present? && (knowledge.exam_season.include?("June") || knowledge.exam_season.include?("May")) %>
+                    <% year = knowledge.exam_season.split.last %>
+                    <td>May/June <%= year %></td>
+                  <% elsif knowledge.exam_season.present? && (knowledge.exam_season.include?("October") || knowledge.exam_season.include?("November"))%>
+                    <% year = knowledge.exam_season.split.last %>
+                    <td>October/November <%= year %></td>
+                  <% else %>
+                    <td>N/A</td>
+                  <% end %>
+                  
                 </tr>
               <% end %>
               </tbody>
@@ -327,7 +340,7 @@ Below is the information on the goals that they have been working on for the las
       <div class="section-title">Key Development Areas <i class="fa-solid fa-circle-info"
         title="At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner’s entire study experience and impact their broader life journey.
 
-        These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success."></i>
+These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success."></i>
       </div>
         <table class="skill-table">
             <thead>

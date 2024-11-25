@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_11_07_150237) do
+ActiveRecord::Schema[7.0].define(version: 2024_11_18_181744) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -213,6 +213,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_11_07_150237) do
     t.string "exam_season"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "personalized", default: false, null: false
     t.index ["report_id"], name: "index_report_knowledges_on_report_id"
   end
 

@@ -11,8 +11,8 @@ Rails.application.configure do
     authentication:       'login',
     user_name:            ENV['OUTLOOK_USERNAME'],
     password:             ENV['OUTLOOK_PASSWORD'],
-    open_timeout:         5,
-    read_timeout:         10,
+    open_timeout:         30,
+    read_timeout:         300,
     enable_starttls_auto: true}
     config.action_mailer.default_url_options = {:host =>"http://worktools.site"}  # Settings specified here will take precedence over those in config/application.rb.
     config.action_mailer.raise_delivery_errors = true

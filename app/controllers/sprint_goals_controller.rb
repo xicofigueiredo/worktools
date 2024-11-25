@@ -6,10 +6,8 @@ class SprintGoalsController < ApplicationController
   def index
     @sprint_goals = current_user.sprint_goals.joins(:sprint).includes(:knowledges, :skills,
                                                                       :communities).order('sprints.start_date DESC')
-    @all_sprints = Sprint.all
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
-    @all_sprints = Sprint.all
     calc_nav_dates(@sprint)
 
     if @sprint
