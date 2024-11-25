@@ -44,10 +44,11 @@
       <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe, reports_path(date: @next_date, learner_id: @learner.id), class: "btn btn-outline-secondary rounded d-flex align-items-center #{'disabled' unless @has_next_sprint}" %>
     </div>
 
-
       <%= link_to 'Edit Report', edit_report_path(@report), class: "btn btn-primary", style: 'border-radius: 10px; margin-left: 5px;' %>
 
   </div>
+
+  <%= link_to 'Download PDF', Report_report_url( @report.id), class: 'btn btn-primary', style: 'border-radius: 10px; margin-left: 5px;', target: '_blank'  %>
 
   <br>
 
