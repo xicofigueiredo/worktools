@@ -104,8 +104,7 @@ Rails.application.routes.draw do
       post 'update_report_progress', on: :member
       member do
         post 'toggle_hide'
+        get :Report
       end
     end
-
-
 end
