@@ -55,6 +55,7 @@ class WeeklyGoalsController < ApplicationController
   def edit
     @weekly_goal = WeeklyGoal.find(params[:id])
     @is_edit = true
+    @special_subjects = @combined_options - @subject_names
 
     # Pre-populate or build missing slots if necessary
     WeeklySlot.time_slots.each_key do |time|
@@ -137,7 +138,7 @@ class WeeklyGoalsController < ApplicationController
 
   def weekly_goal_params
     params.require(:weekly_goal).permit(:week_id, :start_date, :end_date, :user_id, :name, :subject_skill,
-                                        weekly_slots_attributes: %i[id day_of_week time_slot subject_name topic_name])
+                                        weekly_slots_attributes: %i[id day_of_week time_slot subject_name topic_name custom_topic])
   end
 
   def set_subject_names
@@ -190,6 +191,7 @@ class WeeklyGoalsController < ApplicationController
         # Build keys for subject and topic
         subject_key = "#{day.downcase}_#{time.downcase}_subject"
         topic_key = "#{day.downcase}_#{time.downcase}_topic"
+        other_topic_key = "#{day.downcase}_#{time.downcase}_other_topic"
         custom_topic_key = "#{day.downcase}_#{time.downcase}_custom_topic"
 
         # Find existing slot or initialize a new one
@@ -197,7 +199,8 @@ class WeeklyGoalsController < ApplicationController
 
         # Assign new values from parameters
         slot.subject_name = params[:weekly_goal][subject_key].presence || ""
-        slot.topic_name = params[:weekly_goal][custom_topic_key].presence || params[:weekly_goal][topic_key].presence || ""
+        slot.topic_name = params[:weekly_goal][other_topic_key].presence || params[:weekly_goal][topic_key].presence || ""
+        slot.custom_topic = params[:weekly_goal][custom_topic_key].presence || ""
 
         # Check if the slot is new or has changes and save it
         slot.save if slot.new_record? || slot.changed?

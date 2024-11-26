@@ -93,8 +93,16 @@
                                   <% end %>
                                   <div class="content">
                                     <% if slot %>
-                                      <%= slot.subject_name %><br>
-                                      <%= slot.topic_name %>
+                                      <% if slot.subject_name == 'Other' %>
+                                        <%= slot.topic_name %>
+                                        <%= slot.custom_topic %>
+                                      <% elsif slot.topic_name.blank? %>
+                                        <%= slot.subject_name %><br>
+                                        <%= slot.custom_topic %>
+                                      <% else %>
+                                        <%= slot.subject_name %><br>
+                                        <%= slot.topic_name %>
+                                      <% end %>
                                     <% end %>
                                   </div>
                                 </div>

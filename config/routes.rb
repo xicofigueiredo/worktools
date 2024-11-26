@@ -103,7 +103,7 @@ Rails.application.routes.draw do
     resources :reports do
       member do
         post 'toggle_hide'
-        get :Report
+        get 'report'
         patch 'update_knowledges'
         patch 'update_activities'
 

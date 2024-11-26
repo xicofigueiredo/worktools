@@ -54,12 +54,16 @@ gem "font-awesome-sass", "~> 6.1"
 gem "simple_form", github: "heartcombo/simple_form"
 gem "sassc-rails"
 gem "ar_lazy_preload"
+gem "prawn"
+gem 'prawn-table'
 
 group :development, :test do
   gem "dotenv-rails"
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[mri mingw x64_mingw]
   gem "bullet"
+  gem "rails_db"
+
 end
 
 group :development do
@@ -78,7 +82,3 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
-
-gem "rails_db"
-gem "prawn"
-gem 'prawn-table'
