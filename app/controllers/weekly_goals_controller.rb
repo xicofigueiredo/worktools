@@ -49,6 +49,7 @@ class WeeklyGoalsController < ApplicationController
     @current_week = Week.where("start_date <= ? AND end_date >= ?", @date, @date).first
     @weekly_goal = current_user.weekly_goals.build(week: @current_week)
     @is_edit = false
+    @special_subjects = @combined_options - @subject_names
     build_weekly_slots
   end
 
@@ -56,7 +57,6 @@ class WeeklyGoalsController < ApplicationController
     @weekly_goal = WeeklyGoal.find(params[:id])
     @is_edit = true
     @special_subjects = @combined_options - @subject_names
-
     # Pre-populate or build missing slots if necessary
     WeeklySlot.time_slots.each_key do |time|
       WeeklySlot.day_of_weeks.each_key do |day|
