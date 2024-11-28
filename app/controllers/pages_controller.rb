@@ -11,8 +11,12 @@ class PagesController < ApplicationController
                          update_comments_attendance]
 
   def dashboard_admin
-    @hubs = Hub.order(:name).includes(users: { users_hubs: :hub }).references(:users)
-
+    @hubs = Hub.order(:name).includes(:users).map do |hub|
+      {
+        hub: hub,
+        learners: hub.users.where(role: 'learner', deactivate: [false, nil]).order(:full_name)
+      }
+    end
     # Transform data into a format suitable for the view
     # @hubs = hubs_with_users.map do |hub|
     #   {

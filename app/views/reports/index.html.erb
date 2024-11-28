@@ -261,14 +261,14 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
                     <td><%= knowledge.grade.presence || 'N/A' %></td>
                   <% end %>
 
-                  <% if knowledge.exam_season.present? && knowledge.exam_season.include?("January")%>
-                    <td><%= knowledge.exam_season.presence %></td>
-                  <% elsif knowledge.exam_season.present? && (knowledge.exam_season.include?("June") || knowledge.exam_season.include?("May")) %>
+                  <% if knowledge.exam_season.present? && (knowledge.exam_season.include?("June") || knowledge.exam_season.include?("May")) %>
                     <% year = knowledge.exam_season.split.last %>
                     <td>May/June <%= year %></td>
                   <% elsif knowledge.exam_season.present? && (knowledge.exam_season.include?("October") || knowledge.exam_season.include?("November"))%>
                     <% year = knowledge.exam_season.split.last %>
                     <td>Oct/Nov <%= year %></td>
+                  <% elsif knowledge.exam_season.present? %>
+                    <td><%= knowledge.exam_season.presence %></td>
                   <% else %>
                     <td>N/A</td>
                   <% end %>
@@ -397,75 +397,135 @@ These KDAs represent critical growth areas unique to each learner, helping them 
             <!-- Self-Directed Learning Section -->
             <tr>
               <td rowspan="5" style="background-color: white;">Self-Directed Learning</td>
-              <td><%= @report.sdl_long_term_plans&.titleize %></td>
+              <% if @report.sdl_long_term_plans != 'na'%>
+                <td><%= @report.sdl_long_term_plans&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner sets effective long-term plans.</td>
             </tr>
             <tr>
-              <td><%= @report.sdl_week_organization&.titleize %></td>
+              <% if @report.sdl_week_organization != 'na'%>
+                <td><%= @report.sdl_week_organization&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner organizes their week effectively.</td>
             </tr>
             <tr>
-              <td><%= @report.sdl_achieve_goals&.titleize %></td>
+              <% if @report.sdl_achieve_goals != 'na'%>
+                <td><%= @report.sdl_achieve_goals&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner achieves their goals.</td>
             </tr>
             <tr>
-              <td><%= @report.sdl_study_techniques&.titleize %></td>
+              <% if @report.sdl_study_techniques != 'na'%>
+                <td><%= @report.sdl_study_techniques&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner uses effective study techniques.</td>
             </tr>
             <tr>
-              <td><%= @report.sdl_initiative_office_hours&.titleize %></td>
+              <% if @report.sdl_initiative_office_hours != 'na'%>
+                <td><%= @report.sdl_initiative_office_hours&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner takes initiative to arrange office hours with Course Managers (CMs).</td>
             </tr>
 
             <!-- Initiative Section -->
             <tr>
               <td rowspan="2" style="background-color: white;">Initiative</td>
-              <td><%= @report.ini_new_activities&.titleize %></td>
+              <% if @report.ini_new_activities != 'na'%>
+                <td><%= @report.ini_new_activities&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner seeks out new activities and experiences.</td>
             </tr>
             <tr>
-              <td><%= @report.ini_goal_setting&.titleize %></td>
+              <% if @report.ini_goal_setting != 'na'%>
+                <td><%= @report.ini_goal_setting&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner sets goals across the three key pillars.</td>
             </tr>
 
             <!-- Motivation Section -->
             <tr>
               <td rowspan="2" style="background-color: white;">Motivation</td>
-              <td><%= @report.mot_integrity&.titleize %></td>
+              <% if @report.mot_integrity != 'na'%>
+                <td><%= @report.mot_integrity&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner completes work with integrity and to the best of their ability.</td>
             </tr>
             <tr>
-              <td><%= @report.mot_improvement&.titleize %></td>
+              <% if @report.mot_improvement != 'na'%>
+                <td><%= @report.mot_improvement&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner actively seeks ways to improve in all areas.</td>
             </tr>
 
             <!-- Peer-to-Peer Learning Section -->
             <tr>
               <td rowspan="2" style="background-color: white;">Peer-to-Peer Learning</td>
-              <td><%= @report.p2p_support_from_peers&.titleize %></td>
+              <% if @report.p2p_support_from_peers != 'na'%>
+                <td><%= @report.p2p_support_from_peers&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner seeks support from peers when needed.</td>
             </tr>
             <tr>
-              <td><%= @report.p2p_support_to_peers&.titleize %></td>
+              <% if @report.p2p_support_to_peers != 'na'%>
+                <td><%= @report.p2p_support_to_peers&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner offers support to peers when needed.</td>
             </tr>
 
             <!-- Hub Participation Section -->
             <tr>
               <td rowspan="4" style="background-color: white;">Hub Participation</td>
-              <td><%= @report.hub_cleanliness&.titleize %></td>
+              <% if @report.hub_cleanliness != 'na'%>
+                <td><%= @report.hub_cleanliness&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner actively contributes to keeping the hub clean and organized.</td>
             </tr>
             <tr>
-              <td><%= @report.hub_respectful_behavior&.titleize %></td>
+              <% if @report.hub_respectful_behavior != 'na'%>
+                <td><%= @report.hub_respectful_behavior&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner behaves respectfully and is not disruptive.</td>
             </tr>
             <tr>
-              <td><%= @report.hub_welcome_others&.titleize %></td>
+              <% if @report.hub_welcome_others != 'na'%>
+                <td><%= @report.hub_welcome_others&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner makes efforts to welcome others to the hub.</td>
             </tr>
             <tr>
-              <td><%= @report.hub_participation&.titleize %></td>
+              <% if @report.hub_participation != 'na'%>
+                <td><%= @report.hub_participation&.titleize %></td>
+              <% else %>
+                <td>N/A</td>
+              <% end %>
               <td>The learner actively participates in hub activities.</td>
             </tr>
           </tbody>

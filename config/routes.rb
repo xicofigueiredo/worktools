@@ -106,9 +106,7 @@ Rails.application.routes.draw do
         get 'report'
         patch 'update_knowledges'
         patch 'update_activities'
-
       end
-      resources :report_knowledges, only: [:update]
     end
 
 end

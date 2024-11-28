@@ -184,75 +184,165 @@ This would also refer to participation on the Forum for the BGA online courses."
           <!-- Self-Directed Learning Section -->
           <tr>
             <td rowspan="5" style="background-color: white;">Self-Directed Learning</td>
-            <td><%= form.select :sdl_long_term_plans, Report.sdl_long_term_plans.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" }, data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :sdl_long_term_plans,
+                Report.sdl_long_term_plans.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner sets effective long-term plans.</td>
           </tr>
           <tr>
-            <td><%= form.select :sdl_week_organization, Report.sdl_week_organizations.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" }, data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :sdl_week_organization,
+                Report.sdl_week_organizations.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner organizes their week effectively.</td>
           </tr>
           <tr>
-            <td><%= form.select :sdl_achieve_goals, Report.sdl_achieve_goals.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :sdl_achieve_goals,
+                Report.sdl_achieve_goals.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner achieves their goals.</td>
           </tr>
           <tr>
-            <td><%= form.select :sdl_study_techniques, Report.sdl_study_techniques.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :sdl_study_techniques,
+                Report.sdl_study_techniques.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner uses effective study techniques.</td>
           </tr>
           <tr>
-            <td><%= form.select :sdl_initiative_office_hours, Report.sdl_initiative_office_hours.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :sdl_initiative_office_hours,
+                Report.sdl_initiative_office_hours.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner takes initiative to arrange office hours with Course Managers (CMs).</td>
           </tr>
 
           <!-- Initiative Section -->
           <tr>
             <td rowspan="2" style="background-color: white;">Initiative</td>
-            <td><%= form.select :ini_new_activities, Report.ini_new_activities.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :ini_new_activities,
+                Report.ini_new_activities.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner seeks out new activities and experiences.</td>
           </tr>
           <tr>
-            <td><%= form.select :ini_goal_setting, Report.ini_goal_settings.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :ini_goal_settings,
+                Report.ini_goal_settings.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner sets goals across the three key pillars.</td>
           </tr>
 
           <!-- Motivation Section -->
           <tr>
             <td rowspan="2" style="background-color: white;">Motivation</td>
-            <td><%= form.select :mot_integrity, Report.mot_integrities.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :mot_integrity,
+                Report.mot_integrities.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner completes work with integrity and to the best of their ability.</td>
           </tr>
           <tr>
-            <td><%= form.select :mot_improvement, Report.mot_improvements.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :mot_improvement,
+                Report.mot_improvements.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner actively seeks ways to improve in all areas.</td>
           </tr>
 
           <!-- Peer-to-Peer Learning Section -->
           <tr>
             <td rowspan="2" style="background-color: white;">Peer-to-Peer Learning</td>
-            <td><%= form.select :p2p_support_from_peers, Report.p2p_support_from_peers.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :p2p_support_from_peers,
+                Report.p2p_support_from_peers.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner seeks support from peers when needed.</td>
           </tr>
           <tr>
-            <td><%= form.select :p2p_support_to_peers, Report.p2p_support_to_peers.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :p2p_support_to_peers,
+                Report.p2p_support_to_peers.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner offers support to peers when needed.</td>
           </tr>
 
           <!-- Hub Participation Section -->
           <tr>
             <td rowspan="4" style="background-color: white;">Hub Participation</td>
-            <td><%= form.select :hub_cleanliness, Report.hub_cleanlinesses.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :hub_cleanliness,
+                Report.hub_cleanlinesses.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner actively contributes to keeping the hub clean and organized.</td>
           </tr>
           <tr>
-            <td><%= form.select :hub_respectful_behavior, Report.hub_respectful_behaviors.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :hub_respectful_behavior,
+                Report.hub_respectful_behaviors.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner behaves respectfully and is not disruptive.</td>
           </tr>
           <tr>
-            <td><%= form.select :hub_welcome_others, Report.hub_welcome_others.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :hub_welcome_others,
+                Report.hub_welcome_others.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner makes efforts to welcome others to the hub.</td>
           </tr>
           <tr>
-            <td><%= form.select :hub_participation, Report.hub_participations.keys.map { |level| [level.titleize, level] }, { include_blank: "" }, class: "level-dropdown", data: { controller: "auto-save", action: "change->auto-save#save" } %></td>
+            <td>
+              <%= form.select :hub_participation,
+                Report.hub_participations.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
+                { include_blank: "" },
+                class: "level-dropdown",
+                data: { controller: "auto-save", action: "change->auto-save#save" } %>
+            </td>
             <td>The learner actively participates in hub activities.</td>
           </tr>
         </tbody>

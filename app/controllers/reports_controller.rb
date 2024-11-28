@@ -5,8 +5,10 @@ class ReportsController < ApplicationController
 
   def lc_view
     redirect_to root_path if current_user.role != 'lc' && current_user.role != 'admin'
-    @learners = current_user.hubs.flat_map { |hub| hub.users.where(role: 'learner') }.uniq
-  end
+    @learners = User.joins(:hubs)
+    .where(hubs: { id: current_user.hubs.ids }, role: 'learner', diactivate: [false, nil])
+    .distinct
+end
 
   def index
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
@@ -20,8 +22,13 @@ class ReportsController < ApplicationController
     if current_user.role == 'learner'
       @learner = current_user
     else
-      @learners = current_user.hubs.flat_map { |hub| hub.users.where(role: 'learner').order(:full_name) }.uniq
-      @grouped_learners = @learners.group_by { |learner| learner.hubs.first.name }
+      @learners = User.joins(:hubs)
+      .where(hubs: { id: current_user.hubs.ids }, role: 'learner', deactivate: [false, nil])
+      .select('users.*, hubs.name as hub_name')
+      .order('hub_name ASC, users.full_name ASC')
+      .distinct
+
+      @grouped_learners = @learners.group_by { |learner| learner.hub_name }
 
       # Determine which learner's report to show
       if params[:learner_id].present?
@@ -83,54 +90,7 @@ class ReportsController < ApplicationController
       @hide = @report.hide
     end
 
-    @report_activities = []
-
-    if @report
-      @sprint_goal = @learner.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: @sprint)
-      return unless @sprint_goal
-
-      activities = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
-      activities += @sprint_goal.communities.pluck(:involved, :smartgoals)
-      @report_activities = @report.report_activities
-
-      activity_names = activities.map { |activity| activity[0] } # Extracts the name part of each activity
-
-      @report.report_activities.where.not(activity: activity_names).destroy_all
-
-      activities.each do |activity|
-        # Assuming activity[0] is the activity name and activity[1] is the goal
-        @report_activities.find_or_create_by(activity: activity[0]) do |report_activity|
-          report_activity.goal = activity[1]
-        end
-      end
-
-      @knowledges = @timelines.left_outer_joins(:subject, :exam_date).pluck('subjects.name', :personalized_name,
-                                                                            :progress, :difference, 'exam_dates.date')
-
-      @knowledges.each do |data|
-        name = data[1] || data[0]
-
-        # Find or initialize a ReportKnowledge record by subject_name
-        knowledge_record = @report.report_knowledges.find_or_initialize_by(subject_name: name)
-
-        # Set the personalized flag if the personalized_name is present
-        knowledge_record.personalized = !data[1].nil?
-
-        # Update or set the attributes as necessary
-        if !knowledge_record.personalized
-          knowledge_record.progress = data[2]
-          knowledge_record.difference = data[3]
-        end
-
-        # Set exam_season only if it hasn't been set before
-        if knowledge_record.exam_season.nil?
-          knowledge_record.exam_season = data[4].is_a?(Date) ? data[4].strftime("%B %Y") : data[4]
-        end
-
-        # Save each record individually to persist changes
-        knowledge_record.save
-      end
-    end
+    @report_activities = @report.report_activities
 
     # Optionally, if you want to ensure the main report is saved
     @report.save
@@ -147,33 +107,90 @@ class ReportsController < ApplicationController
   end
 
   def edit
-    if !@report.nil? && @report.user_id == current_user.id
+    @learner = @report.user
+
+    if !@report.nil? && @learner == current_user
       @hide = @report.hide
     elsif !@report.nil? && current_user.role == 'parent'
       @hide = @report.hide
     end
 
-
-
-    @timelines = @report.user.timelines.where(hidden: false)
     @sprint = @report.sprint
+    @sprint_goal = @learner.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: @sprint)
+    @sprint_goal_knowledges = @sprint_goal.knowledges.pluck(:subject_name) if @sprint_goal
 
-    @sprint_goal = @report.user.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: @sprint)
+    @timelines = @learner.timelines
+    .where(hidden: false)
+    .joins(:subject) # Ensure we join the subjects table
+    .where('subjects.name IN (:sprint_knowledges) OR timelines.personalized_name IN (:sprint_knowledges)',
+           sprint_knowledges: @sprint_goal_knowledges)
+    @sprint = @report.sprint
     @activ = []
     if @sprint_goal
       @activ = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
       @activ += @sprint_goal.communities.pluck(:involved, :smartgoals)
     end
 
-    @learner = @report.user
     @lcs = @learner.hubs.first.users.where(role: 'lc')
 
     @report_knowledges = @report.report_knowledges
 
-    if current_user.role == 'learner' && @report.user_id == current_user.id
+    if @sprint_goal
+
+      activities = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
+      activities += @sprint_goal.communities.pluck(:involved, :smartgoals)
+      @report_activities = @report.report_activities
+
+      activity_names = activities.map { |activity| activity[0] } # Extracts the name part of each activity
+
+      @report.report_activities.where.not(activity: activity_names).destroy_all
+
+      activities.each do |activity|
+        # Assuming activity[0] is the activity name and activity[1] is the goal
+        @report_activities.find_or_create_by(activity: activity[0]) do |report_activity|
+          report_activity.goal = activity[1]
+        end
+      end
+
+      @knowledges = @timelines.left_outer_joins(:subject, :exam_date)
+                    .where('subjects.name IN (:sprint_knowledges) OR personalized_name IN (:sprint_knowledges)', sprint_knowledges: @sprint_goal_knowledges)
+                    .pluck('subjects.name', :personalized_name, :progress, :difference, 'exam_dates.date')
+
+
+      @knowledges.each do |data|
+
+        name = data[1] || data[0]
+
+        unless @sprint_goal.knowledges.find_by(subject_name: name).nil?
+
+          knowledge_record = @report.report_knowledges.find_or_initialize_by(subject_name: name)
+
+          # Set the personalized flag if the personalized_name is present
+          knowledge_record.personalized = !data[1].nil?
+          # Update or set the attributes as necessary
+          if !knowledge_record.personalized
+            knowledge_record.progress = data[2]
+            knowledge_record.difference = data[3]
+          end
+
+          # Set exam_season only if it hasn't been set before
+          if knowledge_record.exam_season.nil?
+            knowledge_record.exam_season = data[4].is_a?(Date) ? data[4].strftime("%B %Y") : data[4]
+          end
+          puts knowledge_record.errors.full_messages
+
+          # Save each record individually to persist changes
+          knowledge_record.save
+          puts knowledge_record.errors.full_messages
+
+        end
+      end
+    end
+
+    if current_user.role == 'learner' && @learner == current_user
       # The learner can edit their report
       @role = 'learner'
-    elsif current_user.role == 'lc' && (current_user.hubs & @report.user.hubs).any?
+    elsif current_user.role == 'lc' && (current_user.hubs & @learner.hubs).any?
       # The LC can edit the report related to them
       @role = 'lc'
     elsif current_user.role == 'admin'
@@ -194,6 +211,7 @@ class ReportsController < ApplicationController
     end
   end
 
+
   def toggle_hide
     @report.update(hide: !@report.hide)
     redirect_to report_path(@report), notice: "Visibility toggled successfully."
@@ -207,7 +225,20 @@ class ReportsController < ApplicationController
     end
   end
 
-  def Report
+def destroy_report_knowledge
+  @report = Report.find(params[:report_id])
+
+  @report_knowledge = @report.report_knowledges.find(params[:id])
+
+  if @report_knowledge.destroy
+    redirect_to edit_report_path(@report), notice: 'Knowledge record deleted successfully.'
+  else
+    redirect_to edit_report_path(@report), alert: 'Failed to delete the knowledge record.'
+  end
+end
+
+
+  def report
     # Queries
     @report = Report.find(params[:id])
     @learner = @report.user
@@ -537,7 +568,7 @@ class ReportsController < ApplicationController
 
     justified_line
   end
-=======
+
   def update_activities
     if @report.update(report_activities_params)
       redirect_to edit_report_path(@report), notice: 'Activity was successfully updated.'
