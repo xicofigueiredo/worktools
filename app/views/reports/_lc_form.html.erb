@@ -248,7 +248,7 @@ This would also refer to participation on the Forum for the BGA online courses."
           </tr>
           <tr>
             <td>
-              <%= form.select :ini_goal_settings,
+              <%= form.select :ini_goal_setting,
                 Report.ini_goal_settings.keys.map { |level| [level == 'na' ? 'N/A' : level.titleize, level] },
                 { include_blank: "" },
                 class: "level-dropdown",

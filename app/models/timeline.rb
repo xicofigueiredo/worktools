@@ -19,6 +19,7 @@ class Timeline < ApplicationRecord
   validates :start_date, presence: true
   validates :end_date, presence: true
   validate :dates_cannot_be_holidays
+  validates :difference, numericality: { only_integer: true, allow_nil: false }
 
   def check_and_hide_if_completed
     return unless user_topics.all?(&:done)
