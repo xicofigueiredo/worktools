@@ -7,9 +7,13 @@ namespace :timeline_progress do
       Timeline.find_each do |timeline|
         # Assuming the Timeline model has a method `current_progress` that returns the latest progress
         current_progress = timeline.progress || 0 # Provide a default if no progress is set
+        current_expected = timeline.expected || 0 # Provide a default if no expected progress is set
+        current_difference = timeline.difference || 0 # Provide a default if no difference is set
 
         timeline_progress = timeline.timeline_progresses.find_or_initialize_by(week: current_week)
         timeline_progress.progress = current_progress
+        timeline_progress.expected = current_expected
+        timeline_progress.difference = current_difference
         timeline_progress.save!
 
         puts "Updated TimelineProgress for Timeline #{timeline.id} with progress #{current_progress}."
