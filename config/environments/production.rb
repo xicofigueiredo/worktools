@@ -2,18 +2,15 @@ require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
 
-  config.action_mailer.default_url_options = { host: 'bravegenerationacademy.com' }
-
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    address:              'smtp.office365.com',
+    address:              'smtp.gmail.com',
     port:                 587,
-    authentication:       'login',
-    user_name:            ENV['OUTLOOK_USERNAME'],
-    password:             ENV['OUTLOOK_PASSWORD'],
-    open_timeout:         30,
-    read_timeout:         300,
-    enable_starttls_auto: true}
+    domain:               'gmail.com',
+    user_name:            ENV['GMAIL_USERNAME'],
+    password:             ENV['GMAIL_PASSWORD'],
+    authentication:       'plain',
+    enable_starttls_auto: true  }
     config.action_mailer.default_url_options = {:host =>"http://worktools.site"}  # Settings specified here will take precedence over those in config/application.rb.
     config.action_mailer.raise_delivery_errors = true
     config.action_mailer.perform_deliveries = true
