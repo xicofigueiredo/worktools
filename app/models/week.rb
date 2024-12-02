@@ -9,8 +9,8 @@ class Week < ApplicationRecord
   has_many :timeline_progresses
 
   def week_name_abbr
-    if name =~ /\AWeek (\d+)( \/ Build Week)?\z/
-      "W#{$1}"
+    if name =~ %r{\AWeek (\d+)( / Build Week)?\z}
+      "W#{::Regexp.last_match(1)}"
     else
       "W"
     end
@@ -18,7 +18,7 @@ class Week < ApplicationRecord
 
   def calc_user_average_timeline_progress(user)
     timeline_progresses = self.timeline_progresses.joins(:timeline)
-                            .where(timelines: {user_id: user.id})
+                              .where(timelines: { user_id: user.id })
 
     if timeline_progresses.any?
       average_progress = timeline_progresses.average(:progress).to_f.round(1)
@@ -30,7 +30,7 @@ class Week < ApplicationRecord
 
   def calc_relative_average_timeline_progress(user)
     current_week_average = calc_user_average_timeline_progress(user)
-    previous_week = Week.where("start_date < ?", self.start_date).order(:start_date).last
+    previous_week = Week.where("start_date < ?", start_date).order(:start_date).last
 
     if previous_week.present?
       previous_week_average = previous_week.calc_user_average_timeline_progress(user)
@@ -39,8 +39,8 @@ class Week < ApplicationRecord
       relative_average = current_week_average
     end
 
-    if relative_average < 0
-      relative_average = 0
+    if relative_average.negative?
+      0
     else
       relative_average
     end
@@ -52,5 +52,4 @@ class Week < ApplicationRecord
     Attendance.where(user_id: user.id, attendance_date: date_range)
               .where(absence: 'Unjustified Leave').count
   end
-
 end

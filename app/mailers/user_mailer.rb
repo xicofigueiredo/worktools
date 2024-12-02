@@ -1,6 +1,5 @@
-class UserMailer < ApplicationMailer
-
-  def confirmation_instructions(record, token, opts={})
+class UserMailer < Devise::Mailer
+  def confirmation_instructions(record, token, opts = {})
     @token = token
     devise_mail(record, :confirmation_instructions, opts)
   end
@@ -11,10 +10,9 @@ class UserMailer < ApplicationMailer
   end
 
   # Send password reset instructions
-  def password_reset(user)
-    @user = user
-    @token = user.reset_password_token # Assuming you have a method to generate this
-    mail(to: @user.email, subject: 'Your Password Reset Instructions')
+  def reset_password_instructions(record, token, opts = {})
+    @token = token
+    devise_mail(record, :reset_password_instructions, opts)
   end
 
   # Send a notification to the userz
@@ -22,5 +20,14 @@ class UserMailer < ApplicationMailer
     @user = user
     @message = message
     mail(to: @user.email, subject: 'You Have a New Notification')
+  end
+
+  def welcome_parent(parent, password, lcs)
+    @parent = parent
+    @password = password
+    mail(to: @parent.email,
+         cc: lcs.map(&:email),
+         from: 'worktools@bravegenerationacademy.com',
+         subject: 'Welcome to the new BGA App!')
   end
 end

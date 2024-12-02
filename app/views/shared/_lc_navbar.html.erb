@@ -16,13 +16,28 @@
           <%# </li> %>
 
           <li class="nav-item">
-            <%= link_to "Attendance", attendance_path, class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(attendance_path)%>">
+              <%= link_to "Attendance", attendance_path, class: "nav-link" %>
+            </div>
           </li>
           <li class="nav-item">
-            <%= link_to "LC Dashboard", dashboard_lc_path, class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(dashboard_lc_path)%>">
+              <% if current_user.hubs.count > 2 %>
+                  <%= link_to "DC Dashboard", dashboard_lc_path, class: "nav-link" %>
+              <% else %>
+                <%= link_to "LC Dashboard", dashboard_lc_path, class: "nav-link" %>
+              <% end %>
+            </div>
           </li>
           <li class="nav-item">
-            <%= link_to "Exams Seasons", weekly_meetings_path, class: "nav-link" %>
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(weekly_meetings_path)%>">
+              <%= link_to "Exams Seasons", weekly_meetings_path, class: "nav-link" %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(lc_view_path)%>">
+              <%= link_to "Reports", reports_path, class: "nav-link" %>
+            </div>
           </li>
           <li class="nav-item dropdown">
             <%= link_to 'Profile', class: 'avatar', id: 'navbarDropdown', 'data-bs-toggle': 'dropdown', 'aria-haspopup': true, 'aria-expanded': false do %>
@@ -30,9 +45,18 @@
             <% end %>
           </a>
             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-              <%= link_to "Profile", profile_path, class: "dropdown-item" %>
-              <%= link_to "About", about_path, class: "dropdown-item" %>
-              <%= link_to "Log out", destroy_user_session_path, data: {turbo_method: :delete}, class: "dropdown-item" %>
+              <%= link_to profile_path, class: "dropdown-item" do %>
+                <i class="fa fa-user"></i> Profile
+              <% end %>
+              <%= link_to about_path, class: "dropdown-item" do %>
+                <i class="fa-regular fa-circle-question"></i> About
+              <% end %>
+              <%= link_to edit_user_registration_path, class: "dropdown-item" do %>
+                <i class="fa-solid fa-rotate"></i> Password
+              <% end %>
+              <%= link_to destroy_user_session_path, class: "dropdown-item", data: {turbo_method: :delete} do %>
+                <i class="fa fa-sign-out"></i> Logout
+              <% end %>
             </div>
           </li>
         <% else %>

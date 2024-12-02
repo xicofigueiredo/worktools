@@ -3,6 +3,8 @@ class Timeline < ApplicationRecord
   belongs_to :subject, optional: true
 
   after_create :create_user_topics
+  after_save :clear_monthly_goals_cache, if: :dates_changed?
+  before_save :calculate_difference, if: :progress_and_expected_progress_present?
 
   has_many :knowledges, dependent: :destroy
   before_destroy :destroy_associated_user_topics
@@ -13,35 +15,66 @@ class Timeline < ApplicationRecord
   has_many :timeline_progresses, dependent: :destroy
   has_many :weeks, through: :timeline_progresses
 
-
-
   validate :start_date_before_end_date
   validates :start_date, presence: true
   validates :end_date, presence: true
+  validate :dates_cannot_be_holidays
+  validates :difference, numericality: { only_integer: true, allow_nil: false }
 
-  def create_user_topics
-    self.subject.topics.find_each do |topic|
-      self.user.user_topics.create!(topic: topic, done: false)
-    end
+  def check_and_hide_if_completed
+    return unless user_topics.all?(&:done)
+
+    update(hidden: true)
   end
 
-  def calculate_total_time
-    self.total_time = (self.end_date - self.start_date)
+  def create_user_topics
+    subject.topics.order(:order).find_each do |topic|
+      user.user_topics.create!(topic:, done: false)
+    end
   end
 
   def start_date_before_end_date
-    if start_date && end_date && start_date > end_date
-      errors.add(:end_date, "must be after the start date")
-    end
+    return unless start_date && end_date && start_date >= end_date
+
+    errors.add(:end_date, "must be after the start date")
   end
 
   def destroy_associated_user_topics
-    user.user_topics.joins(:topic).where(topics: { subject_id: subject_id }).destroy_all
+    user.user_topics.joins(:topic).where(topics: { subject_id: }).destroy_all
   end
 
   def update_weekly_progress(week)
-    tp = timeline_progresses.find_or_initialize_by(week: week)
-    tp.progress = self.progress
+    tp = timeline_progresses.find_or_initialize_by(week:)
+    tp.progress = progress
     tp.save!
+  end
+
+  def dates_cannot_be_holidays
+    holidays = user.holidays
+    return unless holidays.include?(start_date) && holidays.include?(end_date)
+
+    errors.add(:base, "Start date and end date cannot be on a holiday")
+  end
+
+  def dates_changed?
+    saved_change_to_start_date? || saved_change_to_end_date?
+  end
+
+  def clear_monthly_goals_cache
+    Rails.cache.delete("monthly_goals_#{Date.today.beginning_of_month}")
+  end
+
+  def calculate_difference
+    if progress.present? && expected_progress.present?
+      self.difference = progress - expected_progress
+    else
+      self.difference = nil
+    end
+  end
+
+  private
+
+  def progress_and_expected_progress_present?
+    progress.present? && expected_progress.present?
   end
 end

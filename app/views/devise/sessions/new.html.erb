@@ -8,7 +8,7 @@
             <div class="mb-md-5 mt-md-4 pb-5">
 
               <h2 class="fw-bold mb-2 text-uppercase">LOGIN</h2>
-              <p class="text-black-50 mb-5">Please enter your login and password!</p>
+              <p class="text-black-50 mb-5">Please enter your credentials</p>
 
               <%= simple_form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
                 <div class="form-outline form-black mb-4">
@@ -18,20 +18,26 @@
                               input_html: { class: "form-control form-control-lg", autocomplete: "email" } %>
                 </div>
 
-                <div class="form-outline form-white mb-4">
+                <div class="form-outline form-white mb-4" data-controller="password-toggle">
                   <%= f.input :password,
                               required: false,
-                              input_html: { class: "form-control form-control-lg", autocomplete: "current-password" } %>
+                              input_html: { class: "form-control form-control-lg",
+                                            autocomplete: "current-password",
+                                            type: "password",
+                                            id: "password",
+                                            data: { password_toggle_target: "password" } } %>
+                  <span toggle="#password" class="fa fa-fw fa-eye field-icon toggle-password"
+                        data-action="click->password-toggle#toggle"
+                        data-password-toggle-target="icon"></span>
                 </div>
+                <%= f.button :submit, "Login", class: "btn btn-lg btn-outline-success px-5 rounded-pill shadow-sm" %>
 
-                <%# <p class="small mb-5 pb-lg-2"><%= link_to "Forgot password?", new_password_path(resource_name), class: "text-black-50" %>
-
-                <%= f.button :submit, "Login", class: "btn btn-outline-green btn-lg px-5 text-black-50" %>
               <% end %>
 
             </div>
+
               <p class="small mb-5 pb-lg-2"><%= link_to "Forgot password?", new_user_password_path, class: "text-black-50" %> </p>
-              <p class="mb-0">Don't have an account? <%= link_to "Sign Up", new_registration_path(resource_name), class: "btn btn-info text-black-50 fw-bold" %></p>
+              <p class="mb-0">Don't have an account? <%= link_to "Sign Up", new_registration_path(resource_name), class: "btn btn-lg btn-outline-info px-3 rounded-pill shadow-sm" %></p>
 
           </div>
         </div>
@@ -39,3 +45,4 @@
     </div>
   </div>
 </section>
+<%= render 'devise/shared/see_password' %>

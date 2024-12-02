@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
+ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -52,6 +52,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "absence"
+    t.index ["user_id", "attendance_date"], name: "index_attendances_on_user_id_and_attendance_date", unique: true
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
@@ -226,6 +227,64 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
     t.index ["kda_id"], name: "index_p2ps_on_kda_id"
   end
 
+  create_table "report_activities", force: :cascade do |t|
+    t.bigint "report_id", null: false
+    t.string "activity"
+    t.string "goal"
+    t.text "reflection"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["report_id"], name: "index_report_activities_on_report_id"
+  end
+
+  create_table "report_knowledges", force: :cascade do |t|
+    t.bigint "report_id", null: false
+    t.string "subject_name"
+    t.integer "progress"
+    t.integer "difference"
+    t.string "grade"
+    t.string "exam_season"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "personalized", default: false, null: false
+    t.index ["report_id"], name: "index_report_knowledges_on_report_id"
+  end
+
+  create_table "reports", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "sprint_id", null: false
+    t.text "general"
+    t.text "lc_comment"
+    t.text "reflection"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "sdl"
+    t.text "ini"
+    t.text "mot"
+    t.text "p2p"
+    t.text "hubp"
+    t.integer "sdl_long_term_plans"
+    t.integer "sdl_week_organization"
+    t.integer "sdl_achieve_goals"
+    t.integer "sdl_study_techniques"
+    t.integer "sdl_initiative_office_hours"
+    t.integer "ini_new_activities"
+    t.integer "ini_goal_setting"
+    t.integer "mot_integrity"
+    t.integer "mot_improvement"
+    t.integer "p2p_support_from_peers"
+    t.integer "p2p_support_to_peers"
+    t.integer "hub_cleanliness"
+    t.integer "hub_respectful_behavior"
+    t.integer "hub_welcome_others"
+    t.integer "hub_participation"
+    t.boolean "hide", default: true
+    t.date "last_update_check"
+    t.index ["sprint_id"], name: "index_reports_on_sprint_id"
+    t.index ["user_id", "sprint_id"], name: "index_reports_on_user_id_and_sprint_id", unique: true
+    t.index ["user_id"], name: "index_reports_on_user_id"
+  end
+
   create_table "sdls", force: :cascade do |t|
     t.integer "rating"
     t.text "why"
@@ -234,6 +293,14 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["kda_id"], name: "index_sdls_on_kda_id"
+  end
+
+  create_table "settings", force: :cascade do |t|
+    t.boolean "report"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "sprint_id", null: false
+    t.index ["sprint_id"], name: "index_settings_on_sprint_id"
   end
 
   create_table "skills", force: :cascade do |t|
@@ -289,6 +356,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
     t.integer "progress"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "expected", default: 0, null: false
+    t.integer "difference", default: 0, null: false
     t.index ["timeline_id"], name: "index_timeline_progresses_on_timeline_id"
     t.index ["week_id"], name: "index_timeline_progresses_on_week_id"
   end
@@ -310,6 +379,9 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
     t.datetime "mock50"
     t.datetime "mock100"
     t.string "personalized_name"
+    t.string "color", default: "#F4F4F4"
+    t.boolean "hidden", default: false
+    t.integer "difference"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
     t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
@@ -327,6 +399,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
     t.string "unit"
     t.boolean "Mock50"
     t.boolean "Mock100"
+    t.integer "order"
+    t.bigint "moodle_id"
     t.index ["subject_id"], name: "index_topics_on_subject_id"
   end
 
@@ -378,6 +452,10 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
     t.datetime "confirmed_at"
     t.datetime "confirmation_sent_at"
     t.string "unconfirmed_email"
+    t.boolean "deactivate", default: false
+    t.bigint "moodle_id"
+    t.integer "kids", default: [], array: true
+    t.boolean "changed_password", default: false
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -412,6 +490,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
     t.date "start_date"
     t.date "end_date"
     t.bigint "week_id"
+    t.index ["user_id", "week_id"], name: "index_weekly_goals_on_user_id_and_week_id", unique: true
     t.index ["user_id"], name: "index_weekly_goals_on_user_id"
     t.index ["week_id"], name: "index_weekly_goals_on_week_id"
   end
@@ -433,6 +512,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
     t.datetime "updated_at", null: false
     t.string "subject_name"
     t.string "topic_name"
+    t.string "custom_topic"
     t.index ["weekly_goal_id"], name: "index_weekly_slots_on_weekly_goal_id"
   end
 
@@ -468,7 +548,12 @@ ActiveRecord::Schema[7.0].define(version: 2024_05_18_171947) do
   add_foreign_key "mots", "kdas"
   add_foreign_key "notes", "users"
   add_foreign_key "p2ps", "kdas"
+  add_foreign_key "report_activities", "reports"
+  add_foreign_key "report_knowledges", "reports"
+  add_foreign_key "reports", "sprints"
+  add_foreign_key "reports", "users"
   add_foreign_key "sdls", "kdas"
+  add_foreign_key "settings", "sprints"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"

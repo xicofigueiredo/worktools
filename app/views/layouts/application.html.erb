@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Worktools</title>
+    <% current_user ? name = current_user.role.capitalize + "'s " : '' %>
+    <title><%= name %>Worktools</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    <link rel="apple-touch-icon" sizes="180x180" href="<%= asset_path("icons100.png") %>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<%= asset_path("icons32.png") %>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<%= asset_path("icons16.png") %>">
   </head>
 
   <body>
@@ -16,12 +21,19 @@
         <%= render "shared/lc_navbar" %>
       <% elsif current_user.role == "admin" %>
         <%= render "shared/admin_navbar" %>
+      <% elsif current_user.role == "guardian" %>
+        <%= render "shared/parent_navbar" %>
       <% else %>
         <%= render "shared/navbar" %>
       <% end %>
     <% else %>
       <%= render "shared/navbar" %>
     <% end %>
+    <div class="d-flex justify-content-center align-items-center">
+      <%# <%= notice if notice %>
+      <%= alert if alert %>
+    </div>
+
     <%= turbo_frame_tag "modal" %>
     <%= yield %>
   </body>

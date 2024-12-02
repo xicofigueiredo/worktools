@@ -36,7 +36,13 @@
       <div class="row justify-content-center">
         <div class="col-md-12">
           <div class="card shadow-sm mb-5" style="border-radius: 10px;">
-            <div class="card-body">
+            <div class="card-body position-relative">
+
+              <%= link_to weekly_goals_color_picker_path(date: @current_week.start_date), data: { turbo_frame: "modal" }, class: 'btn btn-primary position-absolute', style: 'right: 12px; top: 12px; border-radius: 10px;' do %>
+                <i class="fa-solid fa-gear"></i>
+              <% end %>
+
+
               <div class="container">
                   <div class="row">
                     <div class="col-md-6">
@@ -60,7 +66,7 @@
                         <tr class="bg-gray">
                           <th class="text-uppercase">Time</th>
                           <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                            <th class="text-uppercase" style="width: 20%"><%= day.split('_').first.capitalize %></th>
+                            <th class="text-uppercase" style="width: 12.5%"><%= day.split('_').first.capitalize %></th>
                           <% end %>
                         </tr>
                       </thead>
@@ -69,14 +75,52 @@
                           <tr>
                             <td class="align-middle"><%= time.to_s.humanize.titleize %></td>
                             <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                              <td id="<%= time.downcase %>_<%= day.downcase %>">
-                                <div class="form-group">
-                                  <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
-                                  <% if slot %>
-                                    <%= slot.subject_name %><br>
-                                    <%= slot.topic_name %>
+                              <td id="<%= time.downcase %>_<%= day.downcase %>" style="height: 1px">
+                                <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
+
+                                <% if slot && slot.subject_name.present?%>
+                                  <% subject = @subjects.find {|subject| subject.name == slot.subject_name} %>
+                                    <% if subject %>
+                                      <% timeline = @timelines.find {|timeline| timeline.subject_id == subject.id} %>
+                                    <% else %>
+                                      <% timeline = @timelines.find {|timeline| timeline.personalized_name == slot.subject_name} %>
+                                    <% end %>
+                                <% end %>
+
+                                <div class="form-group h-100 align-content-center" style="position: relative;">
+                                  <% if timeline&.color %>
+                                    <div class="background-overlay" style="background-color: <%= timeline.color %>;"></div>
                                   <% end %>
+                                  <div class="content">
+                                    <% if slot %>
+                                      <% if slot.subject_name == 'Other' %>
+                                        <%= slot.topic_name %>
+                                        <%= slot.custom_topic %>
+                                      <% elsif slot.topic_name.blank? %>
+                                        <%= slot.subject_name %><br>
+                                        <%= slot.custom_topic %>
+                                      <% else %>
+                                        <%= slot.subject_name %><br>
+                                        <%= slot.topic_name %>
+                                      <% end %>
+                                    <% end %>
+                                  </div>
                                 </div>
+                                <style>
+                                  .form-group .background-overlay {
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    right: 0;
+                                    bottom: 0;
+                                    opacity: 0.65;
+                                    z-index: 1;
+                                  }
+                                  .form-group .content {
+                                    position: relative;
+                                    z-index: 2;
+                                  }
+                                </style>
                               </td>
                             <% end %>
                           </tr>
@@ -90,7 +134,7 @@
 
             </div>
           </div>
-          <div class="text-center">
+          <div class="text-center mb-5">
             <%= link_to "Edit Weekly Goal", edit_weekly_goal_path(@weekly_goal), class: "btn btn-primary mr-2", style: 'border-radius: 10px;' %>
           </div>
         </div>

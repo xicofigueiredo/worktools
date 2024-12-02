@@ -1,0 +1,98 @@
+<div class="mb-5">
+  <div class="card mb-2 shadow-sm px-2 responsive-card" style="border-radius: 10px">
+    <div class="px-2 overflow-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Progress</th>
+              <th>+/-</th>
+              <th>Start Date</th>
+              <th>Mock 50%</th>
+              <th>Mock 100%</th>
+              <% if @has_exam_date %>
+                <th>Exam Season</th>
+              <% end %>
+              <%# <th>End Date</th> %>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @timelines.exists? %>
+
+              <% @timelines.each do |timeline| %>
+                <tr>
+                  <td style="text-align: left;"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %></td>
+                  <td>
+                    <!-- Numeric Progress Display -->
+                    <div style="font-weight: bold;">
+                        <%= timeline.progress %>%
+                    </div>
+                  </td>
+                  <td>
+                    <% unless timeline.expected_progress.nil? || timeline.progress.nil? %>
+
+                      <% if timeline.progress > timeline.expected_progress %>
+                        <div class="badge rounded-pill bg-success">
+                          +<%= timeline.progress - timeline.expected_progress %>%
+                        </div>
+                      <% elsif timeline.progress < timeline.expected_progress %>
+                        <div class="badge rounded-pill bg-danger">
+                          <%= timeline.progress - timeline.expected_progress %>%
+                        </div>
+                      <% elsif timeline.progress == timeline.expected_progress%>
+                        <div class="badge rounded-pill bg-success">0%</div>
+                      <% end %>
+
+                    <% end %>
+                  </td>
+                  <td><%= timeline.start_date.strftime("%d/%m/%Y") %></td>
+
+                  <% if timeline.mock50 != nil %>
+                    <td><%= timeline.mock50.strftime("%d/%m/%Y") %></td>
+                  <% else %>
+                    <td></td>
+                  <% end %>
+
+                  <% if timeline.mock100 != nil %>
+                    <td><%= timeline.mock100.strftime("%d/%m/%Y") %></td>
+                  <% else %>
+                    <td></td>
+                  <% end %>
+
+                  <% if @has_exam_date %>
+                    <td>
+                      <% if timeline.exam_date.present? %>
+                        <% if timeline.exam_date.date.month == 5 || timeline.exam_date.date.month == 6 %>
+                          May/Jun <%= timeline.exam_date.date.strftime("%Y") %>
+                        <% elsif timeline.exam_date.date.month == 10 || timeline.exam_date.date.month == 11 %>
+                          Oct/Nov <%= timeline.exam_date.date.strftime("%Y") %>
+                        <% else %>
+                          <%= timeline.exam_date.date.strftime("%B %Y") %>
+                        <% end %>
+                      <% else %>
+                        N/A
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+
+              <% end %>
+
+            <% else %>
+
+              <tr>
+                <td colspan="7">
+                  <div class="text-center py-5">
+                    <h2>No Timelines available...</h2>
+                    <p>Please help <%= @learner.full_name %> set up their timelines.</p>
+                  </div>
+                </td>
+              </tr>
+
+            <% end %>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>

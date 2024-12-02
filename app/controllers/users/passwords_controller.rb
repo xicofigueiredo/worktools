@@ -14,8 +14,13 @@ module Users
     #   super
     # end
 
-    # def update
-    #   super
-    # end
+    def update
+      super do |resource|
+        if resource.errors.empty?
+          # Ensure that `changed_password` is set to true after a successful password reset
+          resource.update(changed_password: true)
+        end
+      end
+    end
   end
 end

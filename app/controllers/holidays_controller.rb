@@ -1,5 +1,7 @@
 class HolidaysController < ApplicationController
-  before_action :set_holiday, only: [ :edit, :update, :destroy]
+  include GenerateTopicDeadlines
+
+  before_action :set_holiday, only: %i[edit update destroy]
 
   def new
     @holiday = current_user.holidays.new
@@ -12,7 +14,11 @@ class HolidaysController < ApplicationController
     @holiday = current_user.holidays.new(holiday_params)
 
     if @holiday.save
-      redirect_to root_path, notice: 'Holiday was successfully created.'
+      current_user.timelines.each do |timeline|
+        generate_topic_deadlines(timeline)
+        timeline.save
+      end
+      redirect_to timelines_path, notice: 'Holiday was successfully created.'
     else
       render :new, status: :unprocessable_entity
     end
@@ -20,7 +26,11 @@ class HolidaysController < ApplicationController
 
   def update
     if @holiday.update(holiday_params)
-      redirect_to root_path, notice: 'Holiday was successfully updated.'
+      current_user.timelines.each do |timeline|
+        generate_topic_deadlines(timeline)
+        timeline.save
+      end
+      redirect_to timelines_path, notice: 'Holiday was successfully updated.'
     else
       render :edit, status: :unprocessable_entity
     end
@@ -28,15 +38,20 @@ class HolidaysController < ApplicationController
 
   def destroy
     @holiday.destroy
-    redirect_to root_path, notice: 'Holiday was successfully destroyed.'
+    current_user.timelines.each do |timeline|
+      generate_topic_deadlines(timeline)
+      timeline.save
+    end
+    redirect_to timelines_path, notice: 'Holiday was successfully destroyed.'
   end
 
   private
-    def set_holiday
-      @holiday = Holiday.find(params[:id])
-    end
 
-    def holiday_params
-      params.require(:holiday).permit(:user_id, :start_date, :end_date, :name, :bga)
-    end
+  def set_holiday
+    @holiday = Holiday.find(params[:id])
+  end
+
+  def holiday_params
+    params.require(:holiday).permit(:user_id, :start_date, :end_date, :name, :bga)
+  end
 end

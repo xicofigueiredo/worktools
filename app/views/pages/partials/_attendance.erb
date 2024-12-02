@@ -1,0 +1,69 @@
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card shadow-sm mb-5" style="border-radius: 10px;">
+        <div class="pt-4">
+          <div class="container">
+            <div class="d-flex justify-content-between mb-3">
+              <div style="text-align: left;">
+                <%= @current_sprint.name %>
+              </div>
+              <div style="text-align: right;">
+                <%= Date.today.strftime("%Y") %>:
+                <% if @yearly_presence %>
+                  <%= @yearly_presence %>%
+                <% else %>
+                  0%
+                <% end %>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered text-center">
+                <thead>
+                  <% (@current_sprint.start_date..@current_sprint.end_date).each do |date| %>
+                    <% next if date.saturday? || date.sunday? %>
+                    <th><%= date.strftime("%A")[0..2]%> <br> <%= date.strftime("%d/%m") %></th>
+                  <% end %>
+                </thead>
+                <tbody>
+                  <tr>
+                    <% (@current_sprint.start_date..@current_sprint.end_date).each do |date| %>
+                      <% next if date.saturday? || date.sunday? %>
+                      <% attendance = @attendances.find { |a| a.attendance_date == date } %>
+                      <td>
+                        <% if attendance && attendance.start_time && attendance.end_time %>
+                          <div> <%= attendance.start_time.strftime("%H:%M") %></div>
+                          <div><%= attendance.end_time.strftime("%H:%M") %></div>
+                        <% elsif attendance && attendance.start_time && !attendance.end_time %>
+                          <div> <%= attendance.start_time.strftime("%H:%M") %></div>
+                          <div>-</div>
+                        <% elsif attendance && !attendance.start_time && attendance.end_time %>
+                          <div>-</div>
+                          <div><%= attendance.end_time.strftime("%H:%M") %></div>
+                        <% elsif attendance && attendance.absence == "Justified Leave" %>
+                          <span class="text-primary"><i class="fa-regular fa-circle-xmark"></i></span>
+                        <% elsif attendance && attendance.absence == "Working Away" %>
+                          <i class="fa-solid fa-house-laptop"></i>
+                        <% elsif attendance && attendance.absence == "Holiday" %>
+                          <i class="fa-solid fa-plane-departure"></i>
+                        <% elsif  attendance && attendance.absence == "Unjustified Leave" %>
+                          <span class="text-danger"><i class="fa-regular fa-circle-xmark"></i></span>
+                        <% else %>
+                          X
+                        <% end %>
+                      </td>
+                    <% end %>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-4 small mt-2 build-week justify-content-center" style="padding-top: 12px; padding-bottom: 24px;">
+          <div><span class="text-danger"><i class="fa-regular fa-circle-xmark"></i></span>  Unjustified</div>
+          <div><span class="text-primary"><i class="fa-regular fa-circle-xmark"></i></span>  Justified</div>
+          <div><i class="fa-solid fa-house-laptop"></i>  Working Away</div>
+          <div><i class="fa-solid fa-plane-departure"></i>  Holiday</div>
+        </div>
+      </div>
+    </div>
+  </div>

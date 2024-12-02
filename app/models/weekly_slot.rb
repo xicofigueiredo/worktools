@@ -7,7 +7,9 @@ class WeeklySlot < ApplicationRecord
     tuesday_day: 1,
     wednesday_day: 2,
     thursday_day: 3,
-    friday_day: 4
+    friday_day: 4,
+    saturday_day: 5,
+    sunday_day: 6
   }
 
   enum time_slot: {

@@ -4,14 +4,17 @@ export default class extends Controller {
   static targets = ["subject", "topicContainer"];
 
   connect() {
+    this.specialSubjects = JSON.parse(this.element.dataset.specialSubjects || "[]");
     this.updateTopics();
+    console.log(this.identifier);
   }
 
   updateTopics() {
     const subjectName = this.subjectTarget.value;
     const existingTopicName = this.topicContainerTarget.dataset.selectedTopic;
 
-    if (subjectName === "Other") {
+    // Check if subjectName is "Other" or part of specialSubjects
+    if (subjectName === "Other" || this.specialSubjects.includes(subjectName)) {
       this.topicContainerTarget.innerHTML = `<input type="text" name="${this.subjectTarget.name.replace(
         "subject",
         "topic"

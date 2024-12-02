@@ -1,0 +1,26 @@
+<h1>Exam Dates</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Subject</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @exam_dates.each do |exam_date| %>
+      <tr>
+        <td><%= exam_date.date %></td>
+        <td><%= exam_date.subject.name %></td> <!-- Assuming association with subject -->
+        <td>
+          <%= link_to 'Edit', edit_exam_date_path(exam_date) %>
+          <%= link_to "Delete", exam_date_path(exam_date), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= link_to 'New Exam Date', new_exam_date_path %>

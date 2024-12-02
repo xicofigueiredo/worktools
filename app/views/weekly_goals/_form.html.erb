@@ -33,9 +33,9 @@
                   <% WeeklySlot.time_slots.keys.each do |time| %>
                     <tr>
                       <td class="align-middle"><%= time.to_s.humanize.titleize %></td>
-                      <% WeeklySlot.day_of_weeks.keys.each_with_index do |day, index| %>
+                      <% WeeklySlot.day_of_weeks.keys.each do |day| %>
                         <td id="<%= time.downcase %>_<%= day.downcase %>">
-                          <div class="form-group" data-controller="selects">
+                          <div class="form-group" data-controller="selects" data-special-subjects="<%= @special_subjects.to_json %>">
                             <% selected_subject = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:subject_name) %>
                             <div>
                               <%= form.collection_select "#{day}_#{time}_subject", @combined_options, :itself, :itself,
@@ -43,10 +43,19 @@
                                   { data: { action: "change->selects#updateTopics", selects_target: "subject" }, class: "form-control mb-1" } %>
                             </div>
                             <% selected_topic = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:topic_name) %>
-                            <div data-selects-target="topicContainer" data-selected-topic="<%= selected_topic%>">
-                              <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself,
-                                  { selected: selected_topic, prompt: "" },
-                                  { class: "form-control" } %>
+                            <% custom_topic_value = @weekly_goal.new_record? ? nil : @weekly_goal.weekly_slots.find { |slot| slot.day_of_week == day && slot.time_slot == time.to_s }.try(:custom_topic) %>
+
+                            <div data-selects-target="topicContainer" data-selected-topic="<%= selected_topic %>">
+                              <% if (selected_topic.blank? && selected_subject != "Other" && !@special_subjects.include?(selected_subject)) || custom_topic_value.blank? %>
+                                <%= form.collection_select "#{day}_#{time}_topic", @topic_names, :itself, :itself,
+                                    { selected: selected_topic, prompt: "" },
+                                    { class: "form-control" } %>
+                              <% else %>
+                                <%= form.text_field "#{day}_#{time}_custom_topic",
+                                    value: custom_topic_value || selected_topic,
+                                    class: "form-control",
+                                    placeholder: "" %>
+                              <% end %>
                             </div>
                           </div>
                         </td>
@@ -56,11 +65,9 @@
                 </tbody>
               </table>
             </div>
-
-            <!-- Form Actions -->
           </div>
         </div>
-        <div class="d-flex justify-content-center  gap-2 mt-3">
+        <div class="d-flex justify-content-center gap-2 mt-3 mb-5">
           <%= link_to "Back", weekly_goals_navigator_path(@weekly_goal.week.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
           <%= form.submit 'Save Weekly Goal', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
         </div>

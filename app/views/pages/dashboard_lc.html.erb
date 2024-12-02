@@ -1,137 +1,127 @@
 <div class="container mt-3">
-  <div class="d-flex justify-content-between mb-4">
-    <h2><%=  current_user.users_hubs.first.hub.name %></h2>
-    <h2>Learner Count: <%=  current_user.users_hubs.first.hub.users.where(role: 'learner').count%></h2>
-  </div>
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">
-    <% @users.each do |user| %>
-    <% result = 0 %>
-    <% max = 0 %>
-      <div class="col d-flex mb-3 px-2">
-        <div class="card shadow-sm w-100" style="border-radius: 10px; ">
-          <%= link_to learner_profile_path(user), class: "text-decoration-none on-card-hover", style: "border-radius: 10px; height: 100%;" do %>
-            <div class="p-3">
-              <p class="text-black d-flex justify-content-center"><%= user.full_name %></p>
-              <div class="d-flex justify-content-center mb-3">
-                <div class="card p-2 d-flex flex-row gap-1" style="border-radius: 10px; width: fit-content;">
-                  <div>
-                    <div class="text-secondary">
-                      SG
-                    </div>
-                    <div class="text-center">
-                      <% if user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)).present?
-                          sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
-                            sg.knowledges.each do |knowledge|
-                            max +=1
-                              if knowledge.difficulties != '' && knowledge.plan != ''
-                                  result += 1
-                              end
-                            end
-                            sg.skills.each do |skill|
-                              max +=1
-                              if skill.extracurricular != ''
-                                if skill.difficulties != '' && skill.plan != '' && skill.smartgoals != ''
-                                    result += 1
-                                end
-                              end
-                            end
-                            sg.communities.each do |community|
-                            max +=1
-                              if community.involved != ''
-                                if community.difficulties != '' && community.plan != '' && community.smartgoals != ''
-                                    result += 1
-                                end
-                              end
-                            end
-                        end %>
-                      <% if result == max%>
-                        <i class="fa-solid fa-check text-success"></i>
-                      <% else %>
-                        <i class="fa-solid fa-x text-danger"></i>
-                      <% end %>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-secondary">
-                      WG
-                    </div>
-                    <div class="text-center">
-                      <% wg = user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))%>
-                      <% count = 0 %>
-                      <% if wg %>
-                        <% wg.weekly_slots.each do |slot|
-                            if slot.subject_name != ''
-                              count += 1
-                            end
+    <div class="d-flex justify-content-between mb-4">
+      <h2><%= @selected_hub.name %></h2>
+      <h2>Learner Count: <%=  @users.count  %></h2>
+    </div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5">
+      <% @users.each do |user| %>
+      <% result = 0 %>
+      <% max = 0 %>
+        <div class="col d-flex mb-3 px-2">
+          <div class="card shadow-sm w-100" style="border-radius: 10px; ">
+            <%= link_to learner_profile_path(user), class: "text-decoration-none on-card-hover", data: { turbo: false }, style: "border-radius: 10px; height: 100%;" do %>
+              <div class="p-3">
+                <p class="text-black d-flex justify-content-center"><%= user.full_name %></p>
+                <div class="d-flex justify-content-center mb-3">
+                  <div class="card p-2 d-flex flex-row gap-1" style="border-radius: 10px; width: fit-content;">
+                    <div>
+                      <div class="text-secondary">
+                        SG
+                      </div>
+                      <div class="text-center">
+                     <%
+                        def fields_populated?(object, fields)
+                          fields.all? { |field| object.send(field).present? }
+                        end
+
+                        sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
+
+                        all_fields_populated = false
+
+                        if sg.present?
+                          required_fields = {
+                            knowledge: [:difficulties, :plan],
+                            skill: [:extracurricular, :difficulties, :plan, :smartgoals],
+                            community: [:involved, :difficulties, :plan, :smartgoals]
+                          }
+
+                          # Ensure there's at least one of each category
+                          if sg.knowledges.any? && sg.skills.any? && sg.communities.any?
+                            knowledges_populated = sg.knowledges.all? { |knowledge| fields_populated?(knowledge, required_fields[:knowledge]) }
+                            skills_populated = sg.skills.all? { |skill| fields_populated?(skill, required_fields[:skill]) }
+                            communities_populated = sg.communities.all? { |community| fields_populated?(community, required_fields[:community]) }
+
+                            all_fields_populated = knowledges_populated && skills_populated && communities_populated
                           end
+                        end
                         %>
-                        <% if count >= 13 %>
+                        <% if all_fields_populated%>
                           <i class="fa-solid fa-check text-success"></i>
                         <% else %>
                           <i class="fa-solid fa-x text-danger"></i>
                         <% end %>
-                      <% else %>
-                        <i class="fa-solid fa-x text-danger"></i>
-                      <% end %>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div class="text-secondary">
-                      KDA
-                    </div>
-                    <div class="text-center">
-                      <% if user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)) %>
-                      <% result = 0 %>
-                        <% kda = user.kdas.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
-                            if kda.sdl.why != '' && kda.sdl.improve != ''
-                              result += 1
-                            end
-                            if kda.ini.why != '' && kda.ini.improve != ''
-                              result += 1
-                            end
-                            if kda.mot.why != '' && kda.mot.improve != ''
-                              result += 1
-                            end
-                            if kda.p2p.why != '' && kda.p2p.improve != ''
-                              result += 1
-                            end
-                            if kda.hubp.why != '' && kda.hubp.improve != ''
-                              result += 1
-                            end
+                    <div>
+                      <div class="text-secondary">
+                        WG
+                      </div>
+                      <div class="text-center">
+                        <%
+                        wg = user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
                         %>
-                        <% if result == 5%>
+
+                        <% if wg && wg.weekly_slots.any? { |slot| slot.subject_name.present? } %>
                           <i class="fa-solid fa-check text-success"></i>
                         <% else %>
                           <i class="fa-solid fa-x text-danger"></i>
                         <% end %>
-                      <% else %>
-                        <i class="fa-solid fa-x text-danger"></i>
-                      <% end %>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div class="text-secondary">
-                      UA
+                    <div>
+                      <div class="text-secondary">
+                        KDA
+                      </div>
+                      <div class="text-center">
+                        <%
+                        def fields_populated?(object, fields)
+                          fields.all? { |field| object.send(field).present? }
+                        end
+
+                        current_week = Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)
+                        kda = user.kdas.find_by(week: current_week)
+                        required_fields = [:sdl, :ini, :mot, :p2p, :hubp]
+                        populated = false
+
+                        if kda
+                          populated = required_fields.all? do |field|
+                            kda_field = kda.send(field)
+                            fields_populated?(kda_field, [:why, :improve])
+                          end
+                        end
+                        %>
+
+                        <% if populated %>
+                          <i class="fa-solid fa-check text-success"></i>
+                        <% else %>
+                          <i class="fa-solid fa-x text-danger"></i>
+                        <% end %>
+
+                      </div>
                     </div>
-                    <div class="text-center">
-                      <%= @current_sprint.count_absences(user) %>
+                    <div>
+                      <div class="text-secondary">
+                        UA
+                      </div>
+                      <div class="text-center">
+                        <%= @current_sprint.count_absences(user) %>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <% if user.timelines.present? %>
-                <% sorted_timelines = user.timelines.to_a.sort_by { |timeline| timeline.balance } %>
-                <% sorted_timelines.each do |timeline| %>
-                  <div class="d-flex justify-content-between gap-2" style="height: fit-content;">
+                <% if user.timelines.present? %>
+                  <% sorted_timelines = user.timelines.where(hidden: false).to_a.sort_by { |timeline| timeline.difference } %>
+                  <% sorted_timelines.each do |timeline| %>
+                    <div class="d-flex justify-content-between gap-2" style="height: fit-content;">
                       <p class="text-secondary mb-1"><%= timeline.subject.name != '' ? timeline.subject.name : timeline.personalized_name %>
-                      <% if !timeline.personalized_name.present? && timeline.balance != nil %>
-                        <% if timeline.balance > 0 %>
+                      <% if !timeline.personalized_name.present? && timeline.difference != nil %>
+                        <% if timeline.difference > 0 %>
                           <div style="height: 28px;">
-                            <div class="badge rounded-pill bg-success">+<%= timeline.balance %></div></p>
+                            <div class="badge rounded-pill bg-success">+<%= timeline.difference %>%</div></p>
                           </div>
-                        <% elsif timeline.balance < 0 %>
+                        <% elsif timeline.difference < 0 %>
                           <div style="height: 28px;">
-                            <div class="badge rounded-pill bg-danger"><%= timeline.balance %></div></p>
+                            <div class="badge rounded-pill bg-danger"><%= timeline.difference %>%</div></p>
                           </div>
                         <% else %>
                           <div style="height: 28px;">
@@ -143,17 +133,16 @@
                             <div class="badge rounded-pill bg-warning">N/A</div>
                           </div>
                       <% end %>
-
-                  </div>
+                    </div>
+                  <% end %>
                 <% end %>
-              <% end %>
-            </div>
-          <% end %>
+              </div>
+            <% end %>
 
+          </div>
         </div>
-      </div>
-    <% end %>
-  </div>
+      <% end %>
+    </div>
 </div>
 
 

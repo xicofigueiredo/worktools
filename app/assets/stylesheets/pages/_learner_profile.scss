@@ -1,0 +1,90 @@
+.lp-notes-category-width {
+  width: 12%;
+
+  @media (max-width: 1024px) {
+    width: 16%;
+  }
+}
+
+.lp-notes-topic-width {
+  width: 48%;
+
+  @media (max-width: 1024px) {
+    width: 36%;
+  }
+}
+
+.lp-notes-status-width {
+  width: 12%;
+
+  @media (max-width: 1024px) {
+    width: 18%;
+  }
+}
+
+/* Base Styles */
+.card {
+  border-radius: 10px;
+  margin-bottom: 5px;
+}
+
+.table {
+  width: 100%;
+}
+
+.table td {
+  text-align: center; /* Centers text horizontally */
+  vertical-align: middle; /* Centers text vertically */
+}
+
+.table th {
+  text-align: center; /* Centers text horizontally */
+  vertical-align: middle; /* Centers text vertically */
+}
+
+.build-week {
+  font-size: 14px;
+  text-align: right;
+}
+
+/* Responsive table styling */
+@media (max-width: 768px) {
+  .table-responsive {
+    overflow-x: auto; /* Enables horizontal scrolling on smaller devices */
+  }
+
+  .table th, .table td {
+    padding: 8px; /* Reduced padding */
+    font-size: 14px; /* Smaller text to fit on smaller screens */
+  }
+
+  .progress-bar {
+    height: 10px; /* Smaller progress bars */
+  }
+
+  .build-week {
+    font-size: 10px;
+    text-align: right;
+  }
+}
+
+@media (max-width: 480px) {
+  .table th, .table td {
+    padding: 8px; /* Even smaller padding */
+    font-size: 12px; /* Even smaller text */
+  }
+
+  table th {
+    white-space: nowrap;
+  }
+
+  .build-week {
+    font-size: 8px;
+    text-align: right;
+  }
+}
+
+.badge {
+  display: inline-block; /* This is good for badges */
+  width: auto; /* Auto width based on content */
+}
