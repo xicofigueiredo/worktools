@@ -11,11 +11,11 @@ class TimelinesController < ApplicationController
   def index
     @archived = current_user.timelines.exists?(hidden: true)
 
-    timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
     @has_lws = false
     @total_blocks_per_day = 0
     @total_hours_per_week = 0
     weekly_percentages = []
+    timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
 
     @average_weekly_percentage = calc_array_average(weekly_percentages).round(1)
 

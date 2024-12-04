@@ -72,7 +72,7 @@
                       </h5>
                       <div>
                         <%= link_to toggle_archive_timeline_path(timeline), data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to archive #{timeline.subject.name}?" }  do %>
-                          <i class="fa-solid fa-box-archive" title="Archive" style="font-size: 20px; color: #808080;"></i>
+                          <i class="fa-solid fa-box-archive" title="Unarchive" style="font-size: 20px; color: #808080;"></i>
                         <% end %>
                       </div>
                     </div>
