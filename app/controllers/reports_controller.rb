@@ -8,7 +8,7 @@ class ReportsController < ApplicationController
     @learners = User.joins(:hubs)
     .where(hubs: { id: current_user.hubs.ids }, role: 'learner', diactivate: [false, nil])
     .distinct
-end
+  end
 
   def index
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
@@ -131,7 +131,14 @@ end
       @activ += @sprint_goal.communities.pluck(:involved, :smartgoals)
     end
 
-    @lcs = @learner.hubs.first.users.where(role: 'lc')
+    @all = @learner.hubs.first.users.where(role: 'lc')
+    @lcs = []
+
+    @all.each do |lc|
+      if lc.hubs.count < 3
+        @lcs << lc
+      end
+    end
 
     @report_knowledges = @report.report_knowledges
 

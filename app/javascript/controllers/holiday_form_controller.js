@@ -38,7 +38,10 @@ export default class extends Controller {
     // Validation: start_date must be before end_date
     if (startDate >= endDate) {
       errorMessages.push("End date must be after the start date.");
+    } else if (endDate - startDate > 1000 * 60 * 60 * 24 * 30 * 5) {
+      errorMessages.push("Holiday period cannot be longer than 5 months.");
     }
+
 
     // Validation: holiday should not contain any existing timeline period
     this.timelines.forEach(timeline => {
