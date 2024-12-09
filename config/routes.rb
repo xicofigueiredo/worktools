@@ -75,7 +75,7 @@ Rails.application.routes.draw do
       resources :friday_slots, except: [:index]
     end
 
-    resources :exam_dates
+    resources :exam_dates, except: [:show]
 
     resources :sprint_goals do
       # member do

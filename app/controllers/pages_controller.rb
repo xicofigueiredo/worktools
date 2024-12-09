@@ -11,6 +11,9 @@ class PagesController < ApplicationController
                          update_comments_attendance]
 
   def dashboard_admin
+    @learners_without_hub = User.left_outer_joins(:users_hubs)
+    .where(role: 'learner', deactivate: [false, nil])
+    .where(users_hubs: { id: nil })
     @hubs = Hub.order(:name).includes(:users).map do |hub|
       {
         hub: hub,
@@ -78,11 +81,9 @@ class PagesController < ApplicationController
       @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
       @skills = @sprint_goals&.skills
       @communities = @sprint_goals&.communities
-      @lcs = @learner.hubs.first.users.where(role: 'lc')
       @hub_lcs = []
-
-      @lcs.each do |lc|
-        @hub_lcs << lc if lc.hubs.count < 3
+      @hub_lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+        lc.hubs.count >= 3
       end
 
       @yearly_presence = calc_yearly_presence(@learner)
@@ -142,11 +143,9 @@ class PagesController < ApplicationController
     @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
     @skills = @sprint_goals&.skills
     @communities = @sprint_goals&.communities
-    @lcs = @learner.hubs.first.users.where(role: 'lc')
     @hub_lcs = []
-
-    @lcs.each do |lc|
-      @hub_lcs << lc if lc.hubs.count < 2
+    @hub_lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+      lc.hubs.count >= 3
     end
 
     @holidays = @learner.holidays

@@ -87,7 +87,7 @@ class TimelinesController < ApplicationController
     @timeline = Timeline.new
     set_exam_dates
     @subjects = Subject.order(:category, :name).reject do |subject|
-      subject.name.blank? || subject.name.match?(/^P\d/) || subject.id == 101 || subject.id == 578
+      subject.name.blank? || subject.name.match?(/^P\d/) || subject.id == 101 || subject.id == 578 || subject.id == 105
     end
     @max_date = Date.today + 5.year
     @min_date = Date.today - 5.year

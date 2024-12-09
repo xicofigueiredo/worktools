@@ -1,11 +1,15 @@
 class ExamDatesController < ApplicationController
   def index
-    @exam_dates = ExamDate.all
+    @exam_dates = ExamDate.all.order(:date)
   end
 
   def new
     @exam_date = ExamDate.new
     @subjects = Subject.all
+    @subjects = Subject.order(:category, :name).reject do |subject|
+      subject.category == 'lws7' || subject.category == 'lws8' || subject.category == 'lws9' ||
+      subject.category == 'lang' || subject.category == 'other' || subject.category == 'up'
+    end
   end
 
   def create
@@ -19,8 +23,12 @@ class ExamDatesController < ApplicationController
   end
 
   def edit
+    @edit = true
     @exam_date = ExamDate.find(params[:id])
-    @subjects = Subject.all
+    @subjects = Subject.order(:category, :name).reject do |subject|
+      subject.category == 'lws7' || subject.category == 'lws8' || subject.category == 'lws9' ||
+      subject.category == 'lang' || subject.category == 'other' || subject.category == 'up'
+    end
   end
 
   def update
@@ -36,9 +44,15 @@ class ExamDatesController < ApplicationController
 
   def destroy
     @exam_date = ExamDate.find(params[:id])
-    @exam_date.destroy
-    redirect_to exam_dates_path
+
+    begin
+      @exam_date.destroy
+      redirect_to exam_dates_path, notice: 'Exam date was successfully deleted.'
+    rescue ActiveRecord::InvalidForeignKey
+      redirect_to exam_dates_path, alert: 'Cannot delete this exam date because it is still referenced by one or more timelines.'
+    end
   end
+
 
   private
 

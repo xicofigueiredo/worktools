@@ -3,7 +3,11 @@
     <div class="col-md-6">
       <div class="card" data-controller="holiday-form">
         <div class="card-body">
-          <h2 class="card-title text-center mb-4">New Holiday</h2>
+          <% if @edit %>
+            <h2 class="card-title text-center mb-4">Edit Holiday</h2>
+          <% else %>
+            <h2 class="card-title text-center mb-4">New Holiday</h2>
+          <% end %>
           <%= simple_form_for(@holiday) do |f| %>
             <div id="error_explanation" class="alert alert-danger" style="display: none;" data-holiday-form-target="error"></div>
             <%= f.error_notification %>

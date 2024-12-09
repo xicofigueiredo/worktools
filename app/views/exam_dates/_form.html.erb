@@ -1,0 +1,43 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <% if @edit %>
+            <h2 class="card-title text-center mb-4">Edit Exam Date</h2>
+          <% else %>
+            <h2 class="card-title text-center mb-4">New Exam Date</h2>
+          <% end %>
+
+          <%= simple_form_for(@exam_date) do |form| %>
+            <div id="error_explanation" class="alert alert-danger" style="display: none;"></div>
+            <%= form.error_notification %>
+
+            <% if @edit %>
+              <div class="form-group">
+                <%= form.label :subject_id %>
+                <%= form.collection_select :subject_id, @subjects, :id, :name, { }, { class: 'form-control', disabled: true } %>
+              </div>
+              <br>
+            <% else %>
+              <div class="form-group">
+                <%= form.label :subject_id %>
+                <%= form.collection_select :subject_id, @subjects, :id, :name, { }, { class: 'form-control' } %>
+              </div>
+            <% end %>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <%= form.label :date %>
+              <%= form.date_field :date, class: 'form-control' %>
+            </div>
+
+            <div class="d-flex justify-content-center gap-2 mt-3">
+              <%= link_to "Back", exam_dates_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+              <%= form.submit 'Create Exam Date', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

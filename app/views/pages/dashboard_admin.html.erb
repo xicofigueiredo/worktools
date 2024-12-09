@@ -1,4 +1,29 @@
 <div class="container mt-5">
+  <% @learners_without_hub.each do |user| %>
+    <div class="col-md-4 mb-4">
+      <%= link_to learner_profile_path(user), class: "text-decoration-none" do %>
+        <div class="card on-card-hover" style="border-radius: 10px;">
+          <div class="card-body">
+            <div class="d-flex flex-column align-items-center text-center">
+              <%= image_tag "profile.jpeg", class: "rounded-circle", width: "150" %>
+              <div class="mt-3">
+                <h4><%= user.full_name %></h4>
+                <p><%= user.email %></p>
+                <p>ID: <%= user.id %></p>
+                <p>
+                  <% if user.deactivate %>
+                    <i class="fa-regular fa-eye-slash text-danger"></i> Deactivated
+                  <% else %>
+                    <i class="fa-solid fa-eye text-success"></i> Active
+                  <% end %>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
   <% @hubs.each do |hub_data| %>
     <h2><%= hub_data[:hub].name.capitalize %></h2>
     <% hub_data[:learners].each_slice(3) do |users_slice| %>

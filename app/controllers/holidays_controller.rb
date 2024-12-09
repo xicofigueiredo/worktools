@@ -8,6 +8,7 @@ class HolidaysController < ApplicationController
   end
 
   def edit
+    @edit = true
   end
 
   def create

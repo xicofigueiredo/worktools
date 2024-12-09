@@ -1,0 +1,39 @@
+<div class="container mt-5">
+  <div class="d-flex justify-content-end">
+    <%= link_to "Add", new_exam_date_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
+  </div>
+  <br>
+  <table class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th>Exam Season</th>
+        <th>Subject</th>
+        <th>Category</th>
+        <th>Exam Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @exam_dates.each do |exam_date| %>
+        <tr>
+          <td><%= exam_date.date.strftime("%Y") %></td>
+          <td><%= exam_date.subject.name %></td>
+          <td><%= exam_date.subject.category_long_form %></td>
+          <td><%= exam_date.date.strftime("%d/%m/%Y") %></td>
+          <td>
+            <%= link_to 'Edit', edit_exam_date_path(exam_date), class: 'btn btn btn-primary' %>
+            <%= link_to "Delete", exam_date_path(exam_date), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn-danger", style: "color: white;" %>
+            <%# <div class="d-flex gap-2 justify-content-center">
+              <%= link_to edit_exam_date_path(exam_date) do %>
+                <%# <i class="fa-solid fa-pencil" title="Edit" style="font-size: 20px; color: gray;"></i>
+              <% end %>
+              <%# <%= link_to exam_date_path(exam_date), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } do %>
+                <%# <i class="fa-solid fa-trash" title="Delete" style="font-size: 20px; color: gray;"></i>
+              <% end %>
+            <%# </div> %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

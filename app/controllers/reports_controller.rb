@@ -60,13 +60,9 @@ class ReportsController < ApplicationController
     @report.save
     @attendance = calc_sprint_presence(@learner, @sprint)
 
-    @all = @learner.hubs.first.users.where(role: 'lc')
     @lcs = []
-
-    @all.each do |lc|
-      if lc.hubs.count < 3
-        @lcs << lc
-      end
+    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+      lc.hubs.count >= 3
     end
 
     if @sprint
@@ -131,13 +127,9 @@ class ReportsController < ApplicationController
       @activ += @sprint_goal.communities.pluck(:involved, :smartgoals)
     end
 
-    @all = @learner.hubs.first.users.where(role: 'lc')
     @lcs = []
-
-    @all.each do |lc|
-      if lc.hubs.count < 3
-        @lcs << lc
-      end
+    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+      lc.hubs.count >= 3
     end
 
     @report_knowledges = @report.report_knowledges
@@ -251,12 +243,9 @@ end
     @learner = @report.user
     @attendance = calc_sprint_presence(@learner, @report.sprint) if @report&.sprint
     @report_activities = @report.report_activities
-    @all = @learner.hubs.first.users.where(role: 'lc')
     @lcs = []
-    @all.each do |lc|
-      if lc.hubs.count < 3
-        @lcs << lc
-      end
+    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+      lc.hubs.count >= 3
     end
 
     pdf = Prawn::Document.new
