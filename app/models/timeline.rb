@@ -19,6 +19,8 @@ class Timeline < ApplicationRecord
   validates :start_date, presence: true
   validates :end_date, presence: true
   validate :dates_cannot_be_holidays
+  validate :end_date_before_expected
+
 
   def check_and_hide_if_completed
     return unless user_topics.all?(&:done)
@@ -69,6 +71,27 @@ class Timeline < ApplicationRecord
       self.difference = progress - expected_progress
     else
       self.difference = nil
+    end
+  end
+
+  def end_date_before_expected
+    return unless exam_date
+
+    # Map the expected end date based on the exam month
+    expected_end_date = case exam_date.date.month
+                        when 5, 6 # May/June exams
+                          Date.new(exam_date.date.year, 2, 28)
+                        when 10, 11 # October/November exams
+                          Date.new(exam_date.date.year, 7, 28)
+                        when 1 # January exams
+                          Date.new(exam_date.date.year - 1, 10, 28) # Previous year for October
+                        else
+                          nil
+                        end
+
+    # Validate if end_date is before or on the expected end date
+    if expected_end_date && end_date > expected_end_date
+      errors.add(:end_date, "must be on or before #{expected_end_date.strftime('%d %B %Y')} for the selected exam session.")
     end
   end
 

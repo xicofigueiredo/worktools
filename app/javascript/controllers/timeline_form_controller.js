@@ -62,7 +62,23 @@ export default class extends Controller {
   validateDates() {
     const startDate = new Date(this.startDateTarget.value);
     const endDate = new Date(this.endDateTarget.value);
+    const selectedExamId = parseInt(this.examDateTarget.value, 10);
     const errorMessages = [];
+
+    const examDate = this.allExamDates.find((exam) => exam.id === selectedExamId);
+
+    if (examDate) {
+      const month = new Date(examDate.name).getMonth() + 1; // Adjust based on your exam date format
+      const year = new Date(examDate.name).getFullYear();
+
+      const expectedEndDate = this.getExpectedEndDate(month, year);
+      if (endDate.getTime() > expectedEndDate.getTime()) {
+        errorMessages.push(
+          `For the selected exam session, the end date must be on or before ${expectedEndDate.toLocaleDateString()}.`
+        );
+      }
+    }
+
 
     if (startDate >= endDate) {
       errorMessages.push("End date must be after the start date.");
@@ -83,6 +99,19 @@ export default class extends Controller {
 
     this.showErrors(errorMessages);
     this.toggleSubmitButton(errorMessages.length === 0 && !isWithinHolidayPeriod);
+  }
+
+  getExpectedEndDate(examMonth, year) {
+    // Define expected end dates for each exam session
+    const dates = {
+      5: new Date(year, 1, 28), // May/June -> February 28
+      6: new Date(year, 1, 28), // May/June -> February 28
+      10: new Date(year, 6, 28), // October/November -> July 28
+      11: new Date(year, 6, 28), // October/November -> July 28
+      1: new Date(year, 9, 28), // January -> October 28
+    };
+
+    return dates[examMonth] || new Date(); // Default to current date if no match
   }
 
   isWithinHoliday(startDate, endDate, holidayStart, holidayEnd) {
