@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :set_time_zone, if: :user_signed_in?
+  before_action :fetch_notifications
 
   def set_time_zone
     # Time.zone = current_user.time_zone
@@ -15,5 +16,13 @@ class ApplicationController < ActionController::Base
 
   def after_sign_out_path_for(_resource_or_scope)
     new_user_session_path
+  end
+
+  def fetch_notifications
+    if user_signed_in?
+      @unread_notifications = current_user.notifications.where(read: false).order(created_at: :desc)
+    else
+      @unread_notifications = []
+    end
   end
 end

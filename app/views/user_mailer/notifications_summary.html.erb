@@ -1,0 +1,16 @@
+<h1>Action Required: Update Your Timelines</h1>
+
+<p>Dear <%= @user.full_name %>,</p>
+
+<p>The following issues have been identified with your timelines. Please address them as soon as possible to ensure you can sit for your exams:</p>
+
+<ul>
+  <% @notifications.each do |notification| %>
+    <li><%= notification.message %></li>
+  <% end %>
+</ul>
+
+<p>If you have any questions, please reach out to your Learning Coach.</p>
+
+<p>Best regards,</p>
+<p>Worktools Team</p>

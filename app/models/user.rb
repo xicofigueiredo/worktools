@@ -28,6 +28,8 @@ class User < ApplicationRecord
   has_many :notes, dependent: :destroy
   has_one :learner_flag, dependent: :destroy
   has_many :reports
+  has_many :notifications, dependent: :destroy
+
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', dc: 'Development Coach', guardian: 'Parent' }
   validate :email_domain_check, on: :create
 

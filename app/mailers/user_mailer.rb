@@ -30,4 +30,15 @@ class UserMailer < Devise::Mailer
          from: 'worktools@bravegenerationacademy.com',
          subject: 'Welcome to the new BGA App!')
   end
+
+  def notifications_summary(user, notifications, lcs_emails)
+    @user = user
+    @notifications = notifications
+
+    mail(
+      to: @user.email,
+      cc: lcs_emails,
+      subject: "Action Required: Update Your Timelines"
+    )
+  end
 end

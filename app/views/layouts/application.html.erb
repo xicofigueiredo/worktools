@@ -29,9 +29,26 @@
     <% else %>
       <%= render "shared/navbar" %>
     <% end %>
+
     <div class="d-flex justify-content-center align-items-center">
       <%# <%= notice if notice %>
       <%= alert if alert %>
+      <br>
+      <% if @unread_notifications.any? %>
+        <div class="alert alert-warning alert-dismissible fade show" style="margin-top: 10px;"role="alert">
+          <h5>You have <%= @unread_notifications.size %> unresolved notification(s):</h5>
+          <ul>
+            <% @unread_notifications.each do |notification| %>
+              <li>
+                <%= notification.message %>
+                <small class="text-muted">(<%= time_ago_in_words(notification.created_at) %> ago)</small>
+                <%= link_to "Mark as resolved", mark_as_read_notification_path(notification), method: :patch, class: "btn btn-sm btn-success" %>
+              </li>
+            <% end %>
+          </ul>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% end %>
     </div>
 
     <%= turbo_frame_tag "modal" %>

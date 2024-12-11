@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
+ActiveRecord::Schema[7.0].define(version: 2024_12_11_135242) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -215,6 +215,15 @@ ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_notes_on_user_id"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "message"
+    t.boolean "read", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
   create_table "p2ps", force: :cascade do |t|
@@ -539,6 +548,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
   add_foreign_key "monday_slots", "weekly_meetings"
   add_foreign_key "mots", "kdas"
   add_foreign_key "notes", "users"
+  add_foreign_key "notifications", "users"
   add_foreign_key "p2ps", "kdas"
   add_foreign_key "report_activities", "reports"
   add_foreign_key "report_knowledges", "reports"
