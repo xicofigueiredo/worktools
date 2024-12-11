@@ -38,7 +38,8 @@ class UserMailer < Devise::Mailer
     mail(
       to: @user.email,
       cc: lcs_emails,
-      subject: "Action Required: Update Your Timelines"
+      from: 'worktools@bravegenerationacademy.com',
+      subject: "Notification Summary: You have #{notifications.size} unread notifications"
     )
   end
 end
