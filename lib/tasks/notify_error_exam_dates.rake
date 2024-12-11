@@ -1,4 +1,4 @@
-namespace :timeline do
+namespace :timelines do
   desc "Validate timelines, notify users about issues, and send notification summaries via email"
   task notify_error_exam_dates: :environment do
     updated_count = 0
@@ -57,21 +57,6 @@ namespace :timeline do
     end
 
     puts "Step 2 Completed: #{non_compliant_notifications_count} notifications created for non-compliant timelines."
-
-    # Step 3: Send email summaries to users with notifications
-    User.includes(:notifications).where.not(notifications: { id: nil }).find_each do |user|
-      notifications = user.notifications.where(read: false)
-
-      next if notifications.empty?
-
-      # Fetch Learning Coordinators (assuming you have a way to find them)
-      lcs_emails = user.learning_coordinators.pluck(:email) # Adjust to your associations
-
-      # Send email
-      UserMailer.notifications_summary(user, notifications, lcs_emails).deliver_now
-
-      puts "Email sent to #{user.email} with notifications summary."
-    end
   end
 
   # Helper method to find non-compliant timelines
