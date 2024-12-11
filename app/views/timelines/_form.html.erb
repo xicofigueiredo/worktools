@@ -2,14 +2,16 @@
   <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-md-6">
-        <div class="card" data-controller="timeline-form">
+        <div class="card" data-controller="timeline-form" data-timeline-form-exam-dates="<%= @exam_dates.to_json %>">
           <div class="card-body">
             <% if @edit %>
               <h2 class="card-title text-center mb-4">Edit Timeline</h2>
             <% else %>
               <h2 class="card-title text-center mb-4">New Timeline</h2>
             <% end %>
+
             <%= form_with(model: @timeline) do |form| %>
+              <!-- Error Messages -->
               <div id="error_explanation" class="alert alert-danger" data-timeline-form-target="error"></div>
               <% if @timeline.errors.any? %>
                 <div id="error_explanation" class="alert alert-danger">
@@ -21,49 +23,73 @@
                   </ul>
                 </div>
               <% end %>
+
+              <!-- Subject Selection -->
               <% if @edit %>
                 <div class="form-group">
                   <%= form.label :subject_id %>
-                  <%= form.collection_select :subject_id, @subjects, :id, :name, { disabled: @subjects_with_timeline_ids }, { class: 'form-control', disabled: true } %>
+                  <%= form.collection_select :subject_id, @subjects, :id, :name,
+                        { disabled: @subjects_with_timeline_ids },
+                        { class: 'form-control', disabled: true, data: { "timeline-form-target": "subject" } } %>
                 </div>
               <% else %>
                 <div class="form-group">
                   <%= form.label :subject_id %>
-                  <%= form.collection_select :subject_id, @subjects, :id, :name, { disabled: @subjects_with_timeline_ids }, { class: 'form-control' } %>
+                  <%= form.collection_select :subject_id, @subjects, :id, :name,
+                        { disabled: @subjects_with_timeline_ids },
+                        { class: 'form-control', data: { "timeline-form-target": "subject" } } %>
                 </div>
               <% end %>
 
+              <!-- Start Date -->
               <div class="form-group">
                 <%= form.label :start_date %>
-                <%= form.date_field :start_date, class: 'form-control', min: @min_date, max: @max_date, required: true, data: { "timeline-form-target": "startDate" } %>
+                <%= form.date_field :start_date, class: 'form-control',
+                      min: @min_date, max: @max_date, required: true,
+                      data: { "timeline-form-target": "startDate" } %>
               </div>
               <br>
+
+              <!-- Exam Date -->
               <div class="form-group">
                 <%= form.label :exam_date %>
-                <%= form.collection_select :exam_date_id, @exam_dates, :last, :first, include_blank: true, class: 'form-control' %>
+                <%= form.collection_select :exam_date_id, [], :id, :name,
+                      { include_blank: true },
+                      { class: 'form-control', data: { target: "timeline-form.examDate" } } %>
               </div>
-              <br>
 
+
+
+              <!-- End Date -->
               <div class="form-group">
                 <%= form.label :end_date %>
-                <%= form.date_field :end_date, class: 'form-control', min: @min_date, max: @max_date, required: true, data: { "timeline-form-target": "endDate" } %>
+                <%= form.date_field :end_date, class: 'form-control',
+                      min: @min_date, max: @max_date, required: true,
+                      data: { "timeline-form-target": "endDate" } %>
               </div>
 
+              <!-- Submit Buttons -->
               <div class="d-flex justify-content-center gap-2 mt-3">
                 <%= link_to "Back", timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
                 <% if @edit %>
-                  <%= form.submit 'Update Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;', data: { "timeline-form-target": "submitButton" } %>
+                  <%= form.submit 'Update Timeline', class: 'btn btn-primary',
+                        style: 'border-radius: 10px;',
+                        data: { "timeline-form-target": "submitButton" } %>
                 <% else %>
-                  <%= form.submit 'Create Timeline', class: 'btn btn-primary', style: 'border-radius: 10px;', data: { "timeline-form-target": "submitButton" } %>
+                  <%= form.submit 'Create Timeline', class: 'btn btn-primary',
+                        style: 'border-radius: 10px;',
+                        data: { "timeline-form-target": "submitButton" } %>
                 <% end %>
               </div>
             <% end %>
+
             <% if !@edit %>
               <div class="text-center mb-4">
                 <br>
                 <p><a href="<%= personalized_new_timelines_path %>" class="text-decoration-underline"> Do you want to create a personalized timeline?</a></p>
               </div>
             <% end %>
+
             <%= turbo_frame_tag "holidays" do %>
               <%= render "holidays" %>
             <% end %>
