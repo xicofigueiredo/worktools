@@ -51,12 +51,29 @@
               <br>
 
               <!-- Exam Date -->
-              <div class="form-group">
-                <%= form.label :exam_date %>
-                <%= form.collection_select :exam_date_id, [], :id, :name,
-                      { include_blank: true },
-                      { class: 'form-control', data: { target: "timeline-form.examDate" } } %>
-              </div>
+              <% if @edit %>
+                <div class="form-group">
+                  <%= form.label :exam_date, "Exam Date" %>
+                  <%= form.collection_select :exam_date_id, @exam_dates_edit, :id, lambda { |exam_date|
+                        if exam_date.date.month == 5 || exam_date.date.month == 6
+                          "May/June #{exam_date.date.year}"
+                        elsif exam_date.date.month == 10 || exam_date.date.month == 11
+                          "Oct/Nov #{exam_date.date.year}"
+                        else
+                          exam_date.date.strftime("%B %Y")
+                        end
+                      },
+                      { include_blank: true, selected: @selected_exam_date_id },
+                      { class: 'form-control' } %>
+                </div>
+              <% else %>
+                <div class="form-group">
+                  <%= form.label :exam_date %>
+                  <%= form.collection_select :exam_date_id, [], :id, :name,
+                        { include_blank: true },
+                        { class: 'form-control', data: { target: "timeline-form.examDate" } } %>
+                </div>
+              <% end %>
 
 
 

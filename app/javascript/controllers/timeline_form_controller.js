@@ -52,6 +52,9 @@ export default class extends Controller {
       const option = document.createElement("option");
       option.value = examDate.id;
       option.textContent = examDate.name; // Adjust if your JSON has a different field for name
+      if (parseInt(this.examDateTarget.dataset.selectedId) === examDate.id) {
+        option.selected = true; // Pre-select if it matches the timeline's exam_date_id
+      }
       this.examDateTarget.appendChild(option);
     });
   }
