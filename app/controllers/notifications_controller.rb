@@ -4,8 +4,12 @@ class NotificationsController < ApplicationController
   end
 
   def mark_as_read
-    notification = current_user.notifications.find(params[:id])
-    notification.update(read: true)
-    redirect_to notifications_path, notice: "Notification marked as read."
+    notification = Notification.find(params[:id])
+    if notification.update(read: true)
+      flash[:success] = "Notification marked as resolved."
+    else
+      flash[:error] = "Unable to mark notification as resolved."
+    end
+    redirect_back fallback_location: profile_path
   end
 end

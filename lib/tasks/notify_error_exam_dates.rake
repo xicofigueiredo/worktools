@@ -26,14 +26,14 @@ namespace :timelines do
           timeline.update(exam_date_id: corrected_exam_date.id)
           updated_count += 1
           puts "Updated timeline #{timeline.id} - #{timeline.subject.name} to exam_date ID #{corrected_exam_date.id}."
-        else
-          # Notify the user about the mismatch if no corrected exam_date exists
-          Notification.find_or_create_by!(
-            user: timeline.user,
-            message: "Your timeline '#{timeline.subject.name}' has an exam date that doesn’t exist. Please update your timeline as soon as possible to ensure you're able to sit for the exams. Failure to update will result in being unable to take the exams."
-          )
-          notified_count += 1
-          puts "Notified user #{timeline.user.full_name} about timeline #{timeline.id}."
+        # else
+        #   # Notify the user about the mismatch if no corrected exam_date exists
+        #   Notification.find_or_create_by!(
+        #     user: timeline.user,
+        #     message: "Your timeline '#{timeline.subject.name}' has an exam date that doesn’t exist. Please update your timeline as soon as possible to ensure you're able to sit for the exams. Failure to update will result in being unable to take the exams."
+        #   )
+        #   notified_count += 1
+        #   puts "Notified user #{timeline.user.full_name} about timeline #{timeline.id}."
         end
       end
     end
@@ -41,22 +41,22 @@ namespace :timelines do
     puts "Step 1 Completed: #{updated_count} timelines were updated."
     puts "#{notified_count} users were notified about mismatched exam dates with no corrections available."
 
-    # Step 2: Notify users about non-compliant timelines
-    non_compliant_notifications_count = 0
+  #   # Step 2: Notify users about non-compliant timelines
+  #   non_compliant_notifications_count = 0
 
-    User.where(role: 'learner').find_each do |user|
-      non_compliant_timelines = non_compliant_timelines(user)
+  #   User.where(role: 'learner').find_each do |user|
+  #     non_compliant_timelines = non_compliant_timelines(user)
 
-      non_compliant_timelines.each do |timeline|
-        Notification.find_or_create_by!(
-          user: user,
-          message: "Your timeline '#{timeline.subject.name}' has an invalid end date. Please update it to avoid issues with your exam schedule."
-        )
-        non_compliant_notifications_count += 1
-      end
-    end
+  #     non_compliant_timelines.each do |timeline|
+  #       Notification.find_or_create_by!(
+  #         user: user,
+  #         message: "Your timeline '#{timeline.subject.name}' has an invalid end date. Please update it to avoid issues with your exam schedule."
+  #       )
+  #       non_compliant_notifications_count += 1
+  #     end
+  #   end
 
-    puts "Step 2 Completed: #{non_compliant_notifications_count} notifications created for non-compliant timelines."
+  #   puts "Step 2 Completed: #{non_compliant_notifications_count} notifications created for non-compliant timelines."
   end
 
   # Helper method to find non-compliant timelines

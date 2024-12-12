@@ -42,7 +42,7 @@
               <li>
                 <%= notification.message %>
                 <small class="text-muted">(<%= time_ago_in_words(notification.created_at) %> ago)</small>
-                <%= link_to "Mark as resolved", mark_as_read_notification_path(notification), method: :patch, class: "btn btn-sm btn-success" %>
+                <%= button_to "Mark as resolved", mark_as_read_notification_path(notification), method: :patch, class: "btn btn-sm btn-success" %>
               </li>
             <% end %>
           </ul>
