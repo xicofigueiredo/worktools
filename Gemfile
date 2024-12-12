@@ -56,6 +56,7 @@ gem "sassc-rails"
 gem "ar_lazy_preload"
 gem "prawn"
 gem 'prawn-table'
+gem 'rest-client'
 
 group :development, :test do
   gem "dotenv-rails"
