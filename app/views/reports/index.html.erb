@@ -284,7 +284,7 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
               <div class="section-title">Learning Coach Comment</div>
               <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
                 <p style="text-align: justify;">
-                  <%= @report.lc_comment %>
+                  <%= simple_format(@report.lc_comment, {}, sanitize: true) %>
                 </p>
               </div>
             </div>
@@ -292,7 +292,7 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
               <div class="section-title">Learner's Reflection</div>
               <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
                 <p style="text-align: justify;">
-                  <%= @report.reflection %>
+                  <%= simple_format(@report.reflection, {}, sanitize: true) %>
                 </p>
               </div>
             </div>
@@ -302,7 +302,7 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
           <div class="section-title">Learner's Reflection</div>
           <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
             <p style="text-align: justify;">
-              <%= @report.reflection %>
+              <%= simple_format(@report.reflection, {}, sanitize: true) %>
             </p>
           </div>
         </div>
@@ -358,23 +358,23 @@ These KDAs represent critical growth areas unique to each learner, helping them 
             <tbody>
                 <tr>
                     <td>Self-Directed Learning <i class="fa-solid fa-circle-info" title="Are you able to learn independently? This KDA refers to your ability to set your learning goals, assign deadlines, and complete them, whether the goals are academic in nature or not. From an academic perspective this relates to the BGA Moodle platform and its subjects; are you keeping up with your deadlines and setting effective goals each week and adhering to them."></i></td>
-                    <td style="text-align: justify;"><%= @report.sdl %></td>
+                    <td style="text-align: justify;"><%= simple_format(@report.sdl, {}, sanitize: true) %></td>
                 </tr>
                 <tr>
                     <td>Initiative <i class="fa-solid fa-circle-info" title="Are you trying any new things? Or taking on any new challenges. This area is related to trying to get out of your comfort zone and try new activities/courses to see if these are things you might be interested in! This KDA is key to Learners discovering their passions, and how to pursue them."></i></td>
-                    <td style="text-align: justify;"><%= @report.ini %> </td>
+                    <td style="text-align: justify;"><%= simple_format(@report.ini, {}, sanitize: true) %> </td>
                 </tr>
                 <tr>
                     <td>Motivation <i class="fa-solid fa-circle-info" title="Are you approaching your learning with motivation, and trying to complete your goals to the best of your ability? Are your pushing yourself and trying your best in the challenges that you encounter? Are you persevering, and not dropping new courses or activities too soon?" ></i></td>
-                    <td style="text-align: justify;"><%= @report.mot %> </td>
+                    <td style="text-align: justify;"><%= simple_format(@report.mot, {}, sanitize: true) %></td>
                 </tr>
                 <tr>
                     <td>P2P <i class="fa-solid fa-circle-info" title="This section refers to learning: are you helping others with their courses and learning? Are you asking for help from other learners as opposed to the Learning Coach? This would also refer to participation on the Forum for the BGA online courses."></i> </td>
-                    <td style="text-align: justify;"><%= @report.p2p %> </td>
+                    <td style="text-align: justify;"><%= simple_format(@report.p2p, {}, sanitize: true) %> </td>
                 </tr>
                 <tr>
                     <td title="Are you participating in the Hub activities? Are you contributing to any projects or events that are being run in their Hub? And are you helping to contribute to the Hub being a safe and clean environment for other learners? This KDA relates to respect of fellow peers and of the educational space." >Hub Participation <i class="fa-solid fa-circle-info"></i></td>
-                    <td style="text-align: justify;"><%= @report.hubp %> </td>
+                    <td style="text-align: justify;"><%= simple_format(@report.hubp, {}, sanitize: true) %></td>
                 </tr>
             </tbody>
         </table>
