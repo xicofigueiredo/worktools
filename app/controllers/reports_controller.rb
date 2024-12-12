@@ -21,6 +21,26 @@ class ReportsController < ApplicationController
 
     if current_user.role == 'learner'
       @learner = current_user
+    # elsif current_user.role == 'guardian'
+    #   @grouped_learners = current_user.kids
+
+    #   # Determine which learner's report to show
+    #   if params[:learner_id].present?
+    #     @learner = User.find_by(id: params[:learner_id])
+
+    #     if @learner.nil?
+    #       redirect_to reports_path, alert: "No valid learner found."
+    #       return
+    #     end
+
+    #     # Ensure the current user has permission to view this learner's report
+    #     unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
+    #       redirect_to reports_path, alert: "You do not have permission to access this report."
+    #       return
+    #     end
+    #   else
+    #     @learner = current_user.kids.first
+    #   end
     else
       @learners = User.joins(:hubs)
       .where(hubs: { id: current_user.hubs.ids }, role: 'learner', deactivate: [false, nil])
