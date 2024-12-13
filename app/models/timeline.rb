@@ -46,8 +46,9 @@ class Timeline < ApplicationRecord
 
   def update_weekly_progress(week)
     tp = timeline_progresses.find_or_initialize_by(week:)
-    # add difference and expected_progress to the timeline_progress
     tp.progress = progress
+    tp.expected_progress = expected_progress
+    tp.difference = difference
     tp.save!
   end
 

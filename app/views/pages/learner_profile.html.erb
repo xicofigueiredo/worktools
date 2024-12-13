@@ -50,11 +50,15 @@
               <p>LC: <%= lc.full_name %> <br> <i class="fa-regular fa-envelope"></i> <a href="mailto:<%= lc.email %>"><%= lc.email %></a></p>
             <% end %>
           <% end %>
-<%#
-          <div class="d-flex gap-3 mt-3">
-            <div class="d-flex gap-3">
-              <%# <a href="<%= reports_path %>" class="btn btn-primary">Report</a>
-            <%# </div> %>
+
+        <div class="d-flex gap-3 mt-3">
+          <div class="d-flex gap-3">
+            <% if @report %>
+              <%= link_to report_report_url(@report.id), class: 'btn btn-primary', style: 'border-radius: 10px;', target: '_blank' do %>
+                <%= @last_report_sprint %> Report
+              <% end %>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>

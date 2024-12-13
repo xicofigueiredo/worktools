@@ -21,26 +21,26 @@ class ReportsController < ApplicationController
 
     if current_user.role == 'learner'
       @learner = current_user
-    # elsif current_user.role == 'guardian'
-    #   @grouped_learners = current_user.kids
+    elsif current_user.role == 'guardian'
+      @grouped_learners = current_user.kids
 
-    #   # Determine which learner's report to show
-    #   if params[:learner_id].present?
-    #     @learner = User.find_by(id: params[:learner_id])
+      # Determine which learner's report to show
+      if params[:learner_id].present?
+        @learner = User.find_by(id: params[:learner_id])
 
-    #     if @learner.nil?
-    #       redirect_to reports_path, alert: "No valid learner found."
-    #       return
-    #     end
+        if @learner.nil?
+          redirect_to reports_path, alert: "No valid learner found."
+          return
+        end
 
-    #     # Ensure the current user has permission to view this learner's report
-    #     unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
-    #       redirect_to reports_path, alert: "You do not have permission to access this report."
-    #       return
-    #     end
-    #   else
-    #     @learner = current_user.kids.first
-    #   end
+        # Ensure the current user has permission to view this learner's report
+        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
+          redirect_to reports_path, alert: "You do not have permission to access this report."
+          return
+        end
+      else
+        @learner = User.find_by(id: current_user.kids.first)
+      end
     else
       @learners = User.joins(:hubs)
       .where(hubs: { id: current_user.hubs.ids }, role: 'learner', deactivate: [false, nil])
@@ -261,6 +261,19 @@ end
     # Queries
     @report = Report.find(params[:id])
     @learner = @report.user
+
+    if current_user.role == 'guardian' && current_user.kids.exclude?(@learner.id)
+      redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
+        return
+      elsif current_user.role == 'learner' && current_user != @learner
+        redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
+        return
+      elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.hubs.first)
+        redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
+        return
+      elsif current_user.role == 'admin'
+
+    end
     @attendance = calc_sprint_presence(@learner, @report.sprint) if @report&.sprint
     @report_activities = @report.report_activities
     @lcs = []

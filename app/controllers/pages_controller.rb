@@ -128,6 +128,11 @@ class PagesController < ApplicationController
   def learner_profile
     @learner = User.find_by(id: params[:id])
 
+    if current_user.role == 'guardian'
+      @report = @learner.reports.order(updated_at: :asc).where(parent: true).last
+      @last_report_sprint = @report&.sprint&.name || "" # Safe navigation to handle nil
+    end
+
     redirect_to root_path and return if @learner.nil?
 
     unless current_user.kids.include?(@learner.id) || current_user.role == "admin" || current_user.role == "lc"
