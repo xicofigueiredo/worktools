@@ -311,7 +311,7 @@ end
     pdf.move_down 10
 
     # General Comments Section
-    print_section(pdf, @report.general, "1. General Comment", 16)
+    print_section(pdf, sanitize_text_for_prawn(@report.general), "1. General Comment", 16)
     pdf.move_down 15
 
     # Knowledge Section (Table)
@@ -340,10 +340,10 @@ end
 
     pdf.move_down 20
 
-    print_section(pdf, @report.lc_comment, "2.1. Learning Coach Comment", 14)
+    print_section(pdf, sanitize_text_for_prawn(@report.lc_comment), "2.1. Learning Coach Comment", 14)
     pdf.move_down 15
 
-    print_section(pdf, @report.reflection, "2.2. Learner's Reflection", 14)
+    print_section(pdf, sanitize_text_for_prawn(@report.reflection), "2.2. Learner's Reflection", 14)
     pdf.move_down 15
 
     # Skills & Community Section
@@ -357,8 +357,8 @@ end
     pdf.text "3. Skills & Community", size: 16, style: :bold
     table_data = [["Goal", "Learner's Reflection"]] + @report_activities.map do |activity|
       [
-        "#{activity.activity.capitalize} - #{activity.goal}",
-        activity.reflection
+        sanitize_text_for_prawn("#{activity.activity.capitalize} - #{activity.goal}"),
+        sanitize_text_for_prawn(activity.reflection)
       ]
     end
     # Define the table and add a background color to the header row
@@ -384,11 +384,11 @@ end
     pdf.text "4.1. Learner's Reflection", size: 14, style: :bold
     table_data = [
       ["KDA", "Learner's Reflection"],
-      ["Self-Directed Learning", @report.sdl],
-      ["Initiative", @report.ini],
-      ["Motivation", @report.mot],
-      ["Peer-to-Peer Learning", @report.p2p],
-      ["Hub Participation", @report.hubp]
+      ["Self-Directed Learning", sanitize_text_for_prawn(@report.sdl)],
+      ["Initiative", sanitize_text_for_prawn(@report.ini)],
+      ["Motivation", sanitize_text_for_prawn(@report.mot)],
+      ["Peer-to-Peer Learning", sanitize_text_for_prawn(@report.p2p)],
+      ["Hub Participation", sanitize_text_for_prawn(@report.hubp)]
     ]
     pdf.table(table_data, header: true, width: 540, column_widths: { 0 => 130, 1 => 410 }) do
       # Set background color and text style for the header row
@@ -497,6 +497,15 @@ end
 
       # Split remaining text into lines that fit within the available width
       text_lines = break_text_into_lines(pdf, remaining_text, font_size, available_width - (2 * box_padding))
+
+      # If there is no space for even one line, start a new page
+      if max_lines <= 0
+        pdf.start_new_page
+        pdf.text "#{section_title} (Continuation)", size: title_size, style: :bold
+        pdf.move_down 10
+        next
+      end
+
 
       # If the text doesn't fit, print as much as possible
       lines_to_print = if text_lines.length <= max_lines
@@ -608,6 +617,10 @@ end
 
 
   private
+
+  def sanitize_text_for_prawn(text)
+    text.to_s.encode("Windows-1252", invalid: :replace, undef: :replace, replace: " ")
+  end
 
   def report_knowledge_params
     params.require(:report).permit(report_knowledges_attributes: [:id, :subject_name, :progress, :difference, :grade, :exam_season])
