@@ -80,10 +80,12 @@ class ReportsController < ApplicationController
     @report.save
     @attendance = calc_sprint_presence(@learner, @sprint)
 
-    @lcs = []
-    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3
-    end
+    @lcs = @learner.hubs.flat_map do |hub|
+      hub.users.where(role: 'lc').reject do |lc|
+        lc.hubs.count >= 3
+      end
+    end.uniq
+
 
     if @sprint
       @report = @learner.reports.find_by(sprint: @sprint)
@@ -147,10 +149,11 @@ class ReportsController < ApplicationController
       @activ += @sprint_goal.communities.pluck(:involved, :smartgoals)
     end
 
-    @lcs = []
-    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3
-    end
+    @lcs = @learner.hubs.flat_map do |hub|
+      hub.users.where(role: 'lc').reject do |lc|
+        lc.hubs.count >= 3
+      end
+    end.uniq
 
     @report_knowledges = @report.report_knowledges
 
@@ -244,17 +247,17 @@ class ReportsController < ApplicationController
     end
   end
 
-def destroy_report_knowledge
-  @report = Report.find(params[:report_id])
+  def destroy_report_knowledge
+    @report = Report.find(params[:report_id])
 
-  @report_knowledge = @report.report_knowledges.find(params[:id])
+    @report_knowledge = @report.report_knowledges.find(params[:id])
 
-  if @report_knowledge.destroy
-    redirect_to edit_report_path(@report), notice: 'Knowledge record deleted successfully.'
-  else
-    redirect_to edit_report_path(@report), alert: 'Failed to delete the knowledge record.'
+    if @report_knowledge.destroy
+      redirect_to edit_report_path(@report), notice: 'Knowledge record deleted successfully.'
+    else
+      redirect_to edit_report_path(@report), alert: 'Failed to delete the knowledge record.'
+    end
   end
-end
 
 
   def report
@@ -276,10 +279,12 @@ end
     end
     @attendance = calc_sprint_presence(@learner, @report.sprint) if @report&.sprint
     @report_activities = @report.report_activities
-    @lcs = []
-    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3
-    end
+    @lcs = @learner.hubs.flat_map do |hub|
+      hub.users.where(role: 'lc').reject do |lc|
+        lc.hubs.count >= 3
+      end
+    end.uniq
+
 
     pdf = Prawn::Document.new
 
