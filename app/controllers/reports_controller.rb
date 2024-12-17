@@ -80,11 +80,10 @@ class ReportsController < ApplicationController
     @report.save
     @attendance = calc_sprint_presence(@learner, @sprint)
 
-    @lcs = @learner.hubs.flat_map do |hub|
-      hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3
-      end
-    end.uniq
+    @lcs = []
+    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+      lc.hubs.count >= 3
+    end
 
 
     if @sprint
@@ -142,18 +141,11 @@ class ReportsController < ApplicationController
     .joins(:subject) # Ensure we join the subjects table
     .where('subjects.name IN (:sprint_knowledges) OR timelines.personalized_name IN (:sprint_knowledges)',
            sprint_knowledges: @sprint_goal_knowledges)
-    @sprint = @report.sprint
-    @activ = []
-    if @sprint_goal
-      @activ = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
-      @activ += @sprint_goal.communities.pluck(:involved, :smartgoals)
-    end
 
-    @lcs = @learner.hubs.flat_map do |hub|
-      hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3
-      end
-    end.uniq
+    @lcs = []
+    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+      lc.hubs.count >= 3
+    end
 
     @report_knowledges = @report.report_knowledges
 
@@ -279,11 +271,10 @@ class ReportsController < ApplicationController
     end
     @attendance = calc_sprint_presence(@learner, @report.sprint) if @report&.sprint
     @report_activities = @report.report_activities
-    @lcs = @learner.hubs.flat_map do |hub|
-      hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3
-      end
-    end.uniq
+    @lcs = []
+    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+      lc.hubs.count >= 3
+    end
 
 
     pdf = Prawn::Document.new
