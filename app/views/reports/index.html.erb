@@ -194,7 +194,7 @@
       <div class="header">
           <div>
               <div><%= @learner.full_name %></div>
-              <div><%= @learner.hubs.first.name %> Hub</div>
+              <div><%= @learner.users_hubs.first.hub.name %> Hub</div>
               <div> Attendance: <%= @attendance %>% <i class="fa-solid fa-circle-info" title="Presences:
 Present - <%=@p%>
 Working away - <%=@wa%>

@@ -118,6 +118,7 @@ class TimelinesController < ApplicationController
   end
 
   def update
+
     ## i want to add a method that if i add a topic on dbeaver, it will automatically add the user_topic to all the users after update timeline
     if @timeline.update(timeline_params)
 
@@ -128,6 +129,13 @@ class TimelinesController < ApplicationController
       redirect_to timelines_path, notice: 'Timeline was successfully updated.'
 
     else
+      @edit = true
+      @subjects = Subject.order(:category, :name)
+      @max_date = Date.today + 5.year
+      @min_date = Date.today - 5.year
+      @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
+      @selected_exam_date_id = @timeline.exam_date_id
+      @exam_dates_edit = ExamDate.where(subject_id: @timeline.subject_id).order(:date)
       flash.now[:alert] = @timeline.errors.full_messages.to_sentence
       render :edit
     end
