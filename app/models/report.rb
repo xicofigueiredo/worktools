@@ -27,34 +27,4 @@ class Report < ApplicationRecord
   accepts_nested_attributes_for :report_knowledges, allow_destroy: true
   accepts_nested_attributes_for :report_activities, allow_destroy: true
 
-  def self.update_daily_knowledge
-    active_reports = Report.joins(:sprint).where("sprints.start_date <= ? AND sprints.end_date > ?", Date.today,
-                                                 Date.today)
-
-    active_reports.each do |report|
-      timelines = report.user.timelines.left_outer_joins(:subject, :exam_date)
-
-      timelines.pluck('subjects.name', :personalized_name, :progress, :difference, 'exam_dates.date').each do |data|
-        name = data[1] || data[0]
-
-        # Find or initialize ReportKnowledge record by subject_name
-        knowledge_record = report.report_knowledges.find_or_initialize_by(subject_name: name)
-
-        # Update progress and difference as necessary
-        knowledge_record.progress = data[2]
-        knowledge_record.difference = data[3]
-
-        # Set exam_season only if it hasn’t been set before
-        if knowledge_record.exam_season.nil?
-          knowledge_record.exam_season = data[4].is_a?(Date) ? data[4].strftime("%B %Y") : data[4]
-        end
-
-        # Save each record
-        knowledge_record.save
-      end
-
-      # Update the last check date
-      report.update(last_update_check: Date.today)
-    end
-  end
 end

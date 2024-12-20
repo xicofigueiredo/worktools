@@ -103,7 +103,7 @@ class ReportsController < ApplicationController
 
     if !@report.nil? && @report.user_id == current_user.id
       @hide = @report.hide
-    elsif current_user.role == 'parent'
+    elsif current_user.role == 'guardian'
       @hide = @report.hide
     end
 
@@ -128,7 +128,7 @@ class ReportsController < ApplicationController
 
     if !@report.nil? && @learner == current_user
       @hide = @report.hide
-    elsif !@report.nil? && current_user.role == 'parent'
+    elsif !@report.nil? && current_user.role == 'guardian'
       @hide = @report.hide
     end
 
@@ -149,7 +149,7 @@ class ReportsController < ApplicationController
 
     @report_knowledges = @report.report_knowledges
 
-    if @sprint_goal
+    if @sprint_goal && @sprint_goal.sprint.end_date >= Date.today
 
       activities = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
       activities += @sprint_goal.communities.pluck(:involved, :smartgoals)

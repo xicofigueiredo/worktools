@@ -42,7 +42,6 @@ class PagesController < ApplicationController
   def dashboard_lc
     redirect_to dashboard_dc_path if current_user.hubs.count > 1 && params[:hub_id].nil?
 
-    update_daily_knowledge_if_needed
 
     if params[:hub_id].nil?
       @selected_hub = current_user.hubs.first
@@ -131,6 +130,8 @@ class PagesController < ApplicationController
     if current_user.role == 'guardian'
       @report = @learner.reports.order(updated_at: :asc).where(parent: true).last
       @last_report_sprint = @report&.sprint&.name || "" # Safe navigation to handle nil
+      # @report = @learner.reports.find_by(sprint: 12).parent
+
     end
 
     redirect_to root_path and return if @learner.nil?
@@ -190,60 +191,7 @@ class PagesController < ApplicationController
 
     redirect_to some_fallback_path, alert: "Learner not found."
 
-    # ##render json
-    # respond_to do |format|
-    #   format.html
-    #   format.json { render learner: @learner,
-    #   weekly_goal: @weekly_goal,
-    #   current_week: @current_week,
-    #   current_date: @current_weekly_goal_date,
-    #   weekly_goals_percentage: @weekly_goals_percentage,
-    #   kdas_percentage: @kdas_percentage,
-    #   average_items: @average_items,
-    #   has_exam_date: @has_exam_date,
-    #   has_mock50: @has_mock50,
-    #   has_mock100: @has_mock100,
-    #   yearly_presence: @yearly_presence,
-    #   notes: @notes,
-    #   timelines: @timelines,
-    #   current_sprint: @current_sprint,
-    #   current_sprint_weeks: @current_sprint_weeks,
-    #   sprint_goals: @sprint_goals,
-    #   skills: @skills,
-    #   communities: @communities,
-    #   lcs: @lcs,
-    #   hub_lcs: @hub_lcs,
-    #   holidays: @holidays
-    #   }
-    # end
   end
-
-  # ##render json
-  # respond_to do |format|
-  #   format.html
-  #   format.json { render learner: @learner,
-  #   weekly_goal: @weekly_goal,
-  #   current_week: @current_week,
-  #   current_date: @current_weekly_goal_date,
-  #   weekly_goals_percentage: @weekly_goals_percentage,
-  #   kdas_percentage: @kdas_percentage,
-  #   average_items: @average_items,
-  #   has_exam_date: @has_exam_date,
-  #   has_mock50: @has_mock50,
-  #   has_mock100: @has_mock100,
-  #   yearly_presence: @yearly_presence,
-  #   notes: @notes,
-  #   timelines: @timelines,
-  #   current_sprint: @current_sprint,
-  #   current_sprint_weeks: @current_sprint_weeks,
-  #   sprint_goals: @sprint_goals,
-  #   skills: @skills,
-  #   communities: @communities,
-  #   lcs: @lcs,
-  #   hub_lcs: @hub_lcs,
-  #   holidays: @holidays
-  #   }
-  # end
 
   # app/controllers/pages_controller.rb
   def change_weekly_attendance
@@ -386,19 +334,5 @@ class PagesController < ApplicationController
     presence
   end
 
-  def update_daily_knowledge_if_needed
-    # Check if any active reports haven't been updated today
 
-    reports = Report.joins(:sprint)
-                    .where("sprints.start_date <= ? AND sprints.end_date >= ?", Date.today, Date.today)
-
-    count_with_last_update_today = reports.where(last_update_check: Date.today).count
-    count_with_last_update_not_nil = reports.where.not(last_update_check: nil).count
-
-    # If condition comparing counts
-    return if count_with_last_update_today >= count_with_last_update_not_nil
-
-    # Call the method to update knowledge records
-    Report.update_daily_knowledge
-  end
 end
