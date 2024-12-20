@@ -175,9 +175,9 @@ class ReportsController < ApplicationController
 
         name = data[1] || data[0]
 
-        unless @sprint_goal.knowledges.find_by(subject_name: name).nil?
+        if @sprint_goal.knowledges.find_by(subject_name: name).present?
 
-          knowledge_record = @report.report_knowledges.find_or_initialize_by(subject_name: name)
+          knowledge_record = @report.report_knowledges.find_by(subject_name: name)
 
           # Set the personalized flag if the personalized_name is present
           knowledge_record.personalized = !data[1].nil?
@@ -187,10 +187,6 @@ class ReportsController < ApplicationController
             knowledge_record.difference = data[3]
           end
 
-          # Set exam_season only if it hasn't been set before
-          if knowledge_record.exam_season.nil?
-            knowledge_record.exam_season = data[4].is_a?(Date) ? data[4].strftime("%B %Y") : data[4]
-          end
           puts knowledge_record.errors.full_messages
 
           # Save each record individually to persist changes
