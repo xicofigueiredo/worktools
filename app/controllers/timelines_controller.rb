@@ -87,7 +87,7 @@ class TimelinesController < ApplicationController
     @timeline = Timeline.new
     set_exam_dates(filter_future: true) # Only include future dates for new
     @subjects = Subject.order(:category, :name).reject do |subject|
-      subject.name.blank? || subject.name.match?(/^P\d/) || subject.id == 101 || subject.id == 578 || subject.id == 105
+      subject.name.blank? || subject.name.match?(/^P\d/) || subject.id == 101 || subject.id == 578 || subject.id == 105 || subject.id == 575
     end
     @max_date = Date.today + 5.years
     @min_date = Date.today - 5.years
@@ -109,7 +109,9 @@ class TimelinesController < ApplicationController
 
   def edit
     @edit = true
-    @subjects = Subject.order(:category, :name)
+    @subjects = Subject.order(:category, :name).reject do |subject|
+      subject.name.blank? || subject.name.match?(/^P\d/) || subject.id == 101 || subject.id == 578 || subject.id == 105 || subject.id == 575
+    end
     @max_date = Date.today + 5.year
     @min_date = Date.today - 5.year
     @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
