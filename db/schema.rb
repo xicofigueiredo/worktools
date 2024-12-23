@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
+ActiveRecord::Schema[7.0].define(version: 2024_12_17_103651) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -217,6 +217,15 @@ ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
     t.index ["user_id"], name: "index_notes_on_user_id"
   end
 
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "message"
+    t.boolean "read", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
+
   create_table "p2ps", force: :cascade do |t|
     t.integer "rating"
     t.text "why"
@@ -247,6 +256,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "personalized", default: false, null: false
+    t.bigint "knowledge_id"
+    t.index ["knowledge_id"], name: "index_report_knowledges_on_knowledge_id"
     t.index ["report_id"], name: "index_report_knowledges_on_report_id"
   end
 
@@ -280,6 +291,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
     t.integer "hub_participation"
     t.boolean "hide", default: true
     t.date "last_update_check"
+    t.boolean "parent"
     t.index ["sprint_id"], name: "index_reports_on_sprint_id"
     t.index ["user_id", "sprint_id"], name: "index_reports_on_user_id_and_sprint_id", unique: true
     t.index ["user_id"], name: "index_reports_on_user_id"
@@ -293,14 +305,6 @@ ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["kda_id"], name: "index_sdls_on_kda_id"
-  end
-
-  create_table "settings", force: :cascade do |t|
-    t.boolean "report"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "sprint_id", null: false
-    t.index ["sprint_id"], name: "index_settings_on_sprint_id"
   end
 
   create_table "skills", force: :cascade do |t|
@@ -547,13 +551,14 @@ ActiveRecord::Schema[7.0].define(version: 2024_11_28_130410) do
   add_foreign_key "monday_slots", "weekly_meetings"
   add_foreign_key "mots", "kdas"
   add_foreign_key "notes", "users"
+  add_foreign_key "notifications", "users"
   add_foreign_key "p2ps", "kdas"
   add_foreign_key "report_activities", "reports"
+  add_foreign_key "report_knowledges", "knowledges"
   add_foreign_key "report_knowledges", "reports"
   add_foreign_key "reports", "sprints"
   add_foreign_key "reports", "users"
   add_foreign_key "sdls", "kdas"
-  add_foreign_key "settings", "sprints"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"

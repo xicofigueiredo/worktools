@@ -12,7 +12,7 @@
       <div class="header">
           <div>
               <div><%= @learner.full_name %></div>
-              <div><%= @learner.hubs.first.name %> Hub</div>
+              <div><%= @learner.users_hubs.first.hub.name %> Hub</div>
           </div>
           <div class="report-period">
               <%= @report.sprint.name %> / <%= Date.today.year %>
@@ -53,30 +53,36 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
                   </tr>
               </thead>
               <tbody>
-                <% @timelines.each do |timeline|  %>
+                <% @report.report_knowledges.each do |knowledge| %>
                   <tr>
-                      <td><%= timeline.subject.name %> <%= timeline.personalized_name %></td>
-                      <% if !timeline.progress? %>
+                    <td><%= knowledge.subject_name %></td>
+                    <% if knowledge.progress.nil? || (knowledge.progress == 0 && knowledge.difference == 0)%>
+                      <td>N/A</td>
+                      <td>N/A</td>
+                      <td><%= knowledge.grade.presence || 'N/A' %> </td>
+                    <% else %>
+                      <td><%= knowledge.progress %>%</td>
+                      <% if knowledge.difference.nil? %>
                         <td>N/A</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
-                      <% elsif timeline.difference.positive?%>
-                        <td><%= timeline.progress %></td>
-                        <td>+<%= timeline.difference %>%</td>
-                        <td></td>
-                      <% else  %>
-                        <td><%= timeline.progress %></td>
-                        <td><%= timeline.difference %>%</td>
-                        <td></td>
-                      <% end %>
-                      <% if timeline.exam_date && (timeline.exam_date.date.year < Date.today.year ||
-                            (timeline.exam_date.date.year == Date.today.year &&
-                            timeline.exam_date.date.month <= Date.today.month)) %>
-                        <%# <td><%= form.text_area :grade, class: "form-control"%>
-                        <td></td>
+                      <% elsif knowledge.difference > 0 %>
+                        <td>+<%= knowledge.difference %>%</td>
                       <% else %>
-                        <td><%= timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A' %></td>
+                        <td><%= knowledge.difference %>%</td>
                       <% end %>
+                      <td><%= knowledge.grade.presence || 'N/A' %></td>
+                    <% end %>
+
+                    <% if knowledge.exam_season.present? && (knowledge.exam_season.include?("June") || knowledge.exam_season.include?("May")) %>
+                      <% year = knowledge.exam_season.split.last %>
+                      <td>May/June <%= year %></td>
+                    <% elsif knowledge.exam_season.present? && (knowledge.exam_season.include?("October") || knowledge.exam_season.include?("November"))%>
+                      <% year = knowledge.exam_season.split.last %>
+                      <td>Oct/Nov <%= year %></td>
+                    <% elsif knowledge.exam_season.present? %>
+                      <td><%= knowledge.exam_season.presence %></td>
+                    <% else %>
+                      <td>N/A</td>
+                    <% end %>
                   </tr>
                 <% end %>
               </tbody>

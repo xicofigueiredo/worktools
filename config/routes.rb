@@ -109,4 +109,12 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :notifications, only: [:index] do
+      member do
+        patch :mark_as_read
+        delete :destroy
+      end
+    end
+
+
 end

@@ -85,18 +85,17 @@ class TimelinesController < ApplicationController
 
   def new
     @timeline = Timeline.new
-    set_exam_dates
+    set_exam_dates(filter_future: true) # Only include future dates for new
     @subjects = Subject.order(:category, :name).reject do |subject|
       subject.name.blank? || subject.name.match?(/^P\d/) || subject.id == 101 || subject.id == 578 || subject.id == 105
     end
-    @max_date = Date.today + 5.year
-    @min_date = Date.today - 5.year
+    @max_date = Date.today + 5.years
+    @min_date = Date.today - 5.years
     @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
   end
 
   def create
     @timeline = current_user.timelines.new(timeline_params)
-    set_exam_dates
 
     if @timeline.save
       generate_topic_deadlines(@timeline)
@@ -110,17 +109,18 @@ class TimelinesController < ApplicationController
 
   def edit
     @edit = true
-    set_exam_dates
     @subjects = Subject.order(:category, :name)
     @max_date = Date.today + 5.year
     @min_date = Date.today - 5.year
     @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
+    @selected_exam_date_id = @timeline.exam_date_id
+    @exam_dates_edit = ExamDate.where(subject_id: @timeline.subject_id).order(:date)
   end
 
   def update
+
     ## i want to add a method that if i add a topic on dbeaver, it will automatically add the user_topic to all the users after update timeline
     if @timeline.update(timeline_params)
-      set_exam_dates
 
       @timeline.save
       generate_topic_deadlines(@timeline)
@@ -129,6 +129,13 @@ class TimelinesController < ApplicationController
       redirect_to timelines_path, notice: 'Timeline was successfully updated.'
 
     else
+      @edit = true
+      @subjects = Subject.order(:category, :name)
+      @max_date = Date.today + 5.year
+      @min_date = Date.today - 5.year
+      @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
+      @selected_exam_date_id = @timeline.exam_date_id
+      @exam_dates_edit = ExamDate.where(subject_id: @timeline.subject_id).order(:date)
       flash.now[:alert] = @timeline.errors.full_messages.to_sentence
       render :edit
     end
@@ -207,19 +214,6 @@ class TimelinesController < ApplicationController
 
   private
 
-  def set_exam_dates
-    @exam_dates = ExamDate.where('date >= ?', Date.today).order(:date).map do |exam_date|
-      result = if exam_date.date.month == 5 || exam_date.date.month == 6
-                 exam_date.date.strftime("May/June %Y")
-               elsif exam_date.date.month == 10 || exam_date.date.month == 11
-                 exam_date.date.strftime("Oct/Nov %Y")
-               else
-                 exam_date.date.strftime("%B %Y")
-               end
-      [result, exam_date.id]
-    end
-  end
-
   def set_timeline
     @timeline = Timeline.find(params[:id])
   end
@@ -251,6 +245,16 @@ class TimelinesController < ApplicationController
       end.compact
     end
   end
+
+
+  def set_exam_dates(filter_future: false)
+    scope = filter_future ? ExamDate.where("date >= ?", Date.today) : ExamDate.all
+    @exam_dates = scope.includes(:subject).map do |exam_date|
+      { id: exam_date.id, name: exam_date.formatted_date, subject_id: exam_date.subject_id }
+    end
+  end
+
+
 
   # FIXME: remove if everything is alright after merge
   # def calculate_holidays_array

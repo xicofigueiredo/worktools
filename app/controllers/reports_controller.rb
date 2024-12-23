@@ -21,6 +21,26 @@ class ReportsController < ApplicationController
 
     if current_user.role == 'learner'
       @learner = current_user
+    elsif current_user.role == 'guardian'
+      @grouped_learners = current_user.kids
+
+      # Determine which learner's report to show
+      if params[:learner_id].present?
+        @learner = User.find_by(id: params[:learner_id])
+
+        if @learner.nil?
+          redirect_to reports_path, alert: "No valid learner found."
+          return
+        end
+
+        # Ensure the current user has permission to view this learner's report
+        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
+          redirect_to reports_path, alert: "You do not have permission to access this report."
+          return
+        end
+      else
+        @learner = User.find_by(id: current_user.kids.first)
+      end
     else
       @learners = User.joins(:hubs)
       .where(hubs: { id: current_user.hubs.ids }, role: 'learner', deactivate: [false, nil])
@@ -61,9 +81,10 @@ class ReportsController < ApplicationController
     @attendance = calc_sprint_presence(@learner, @sprint)
 
     @lcs = []
-    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+    @lcs = @learner.users_hubs.first.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
+
 
     if @sprint
       @report = @learner.reports.find_by(sprint: @sprint)
@@ -82,7 +103,7 @@ class ReportsController < ApplicationController
 
     if !@report.nil? && @report.user_id == current_user.id
       @hide = @report.hide
-    elsif current_user.role == 'parent'
+    elsif current_user.role == 'guardian'
       @hide = @report.hide
     end
 
@@ -107,7 +128,7 @@ class ReportsController < ApplicationController
 
     if !@report.nil? && @learner == current_user
       @hide = @report.hide
-    elsif !@report.nil? && current_user.role == 'parent'
+    elsif !@report.nil? && current_user.role == 'guardian'
       @hide = @report.hide
     end
 
@@ -120,21 +141,15 @@ class ReportsController < ApplicationController
     .joins(:subject) # Ensure we join the subjects table
     .where('subjects.name IN (:sprint_knowledges) OR timelines.personalized_name IN (:sprint_knowledges)',
            sprint_knowledges: @sprint_goal_knowledges)
-    @sprint = @report.sprint
-    @activ = []
-    if @sprint_goal
-      @activ = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
-      @activ += @sprint_goal.communities.pluck(:involved, :smartgoals)
-    end
 
     @lcs = []
-    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+    @lcs = @learner.users_hubs.first.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
 
     @report_knowledges = @report.report_knowledges
 
-    if @sprint_goal
+    if @sprint_goal && @sprint_goal.sprint.end_date >= Date.today
 
       activities = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
       activities += @sprint_goal.communities.pluck(:involved, :smartgoals)
@@ -160,9 +175,9 @@ class ReportsController < ApplicationController
 
         name = data[1] || data[0]
 
-        unless @sprint_goal.knowledges.find_by(subject_name: name).nil?
+        if @sprint_goal.knowledges.find_by(subject_name: name).present?
 
-          knowledge_record = @report.report_knowledges.find_or_initialize_by(subject_name: name)
+          knowledge_record = @report.report_knowledges.find_by(subject_name: name)
 
           # Set the personalized flag if the personalized_name is present
           knowledge_record.personalized = !data[1].nil?
@@ -172,10 +187,6 @@ class ReportsController < ApplicationController
             knowledge_record.difference = data[3]
           end
 
-          # Set exam_season only if it hasn't been set before
-          if knowledge_record.exam_season.nil?
-            knowledge_record.exam_season = data[4].is_a?(Date) ? data[4].strftime("%B %Y") : data[4]
-          end
           puts knowledge_record.errors.full_messages
 
           # Save each record individually to persist changes
@@ -224,29 +235,43 @@ class ReportsController < ApplicationController
     end
   end
 
-def destroy_report_knowledge
-  @report = Report.find(params[:report_id])
+  def destroy_report_knowledge
+    @report = Report.find(params[:report_id])
 
-  @report_knowledge = @report.report_knowledges.find(params[:id])
+    @report_knowledge = @report.report_knowledges.find(params[:knowledge_id])
 
-  if @report_knowledge.destroy
-    redirect_to edit_report_path(@report), notice: 'Knowledge record deleted successfully.'
-  else
-    redirect_to edit_report_path(@report), alert: 'Failed to delete the knowledge record.'
+    if @report_knowledge.destroy
+      redirect_to edit_report_path(@report), notice: 'Knowledge record deleted successfully.'
+    else
+      redirect_to edit_report_path(@report), alert: 'Failed to delete the knowledge record.'
+    end
   end
-end
 
 
   def report
     # Queries
     @report = Report.find(params[:id])
     @learner = @report.user
+
+    if current_user.role == 'guardian' && current_user.kids.exclude?(@learner.id)
+      redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
+        return
+      elsif current_user.role == 'learner' && current_user != @learner
+        redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
+        return
+      elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.first.hub)
+        redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
+        return
+      elsif current_user.role == 'admin'
+
+    end
     @attendance = calc_sprint_presence(@learner, @report.sprint) if @report&.sprint
     @report_activities = @report.report_activities
     @lcs = []
-    @lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+    @lcs = @learner.users_hubs.first.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
+
 
     pdf = Prawn::Document.new
 
@@ -256,7 +281,7 @@ end
     # Left Section (Learner and Hub Info)
     pdf.bounding_box([0, cursor], width: pdf.bounds.width / 3) do
       pdf.text "#{@learner.full_name}", size: 18, style: :bold
-      pdf.text "#{@learner.hubs.first.name} Hub", size: 15
+      pdf.text "#{@learner.users_hubs.first.hub.name} Hub", size: 15
       pdf.text "Attendance: #{@attendance}%", size: 12
     end
 
@@ -278,7 +303,7 @@ end
     pdf.move_down 10
 
     # General Comments Section
-    print_section(pdf, @report.general, "1. General Comment", 16)
+    print_section(pdf, sanitize_text_for_prawn(@report.general), "1. General Comment", 16)
     pdf.move_down 15
 
     # Knowledge Section (Table)
@@ -307,10 +332,10 @@ end
 
     pdf.move_down 20
 
-    print_section(pdf, @report.lc_comment, "2.1. Learning Coach Comment", 14)
+    print_section(pdf, sanitize_text_for_prawn(@report.lc_comment), "2.1. Learning Coach Comment", 14)
     pdf.move_down 15
 
-    print_section(pdf, @report.reflection, "2.2. Learner's Reflection", 14)
+    print_section(pdf, sanitize_text_for_prawn(@report.reflection), "2.2. Learner's Reflection", 14)
     pdf.move_down 15
 
     # Skills & Community Section
@@ -324,8 +349,8 @@ end
     pdf.text "3. Skills & Community", size: 16, style: :bold
     table_data = [["Goal", "Learner's Reflection"]] + @report_activities.map do |activity|
       [
-        "#{activity.activity.capitalize} - #{activity.goal}",
-        activity.reflection
+        sanitize_text_for_prawn("#{activity.activity.capitalize} - #{activity.goal}"),
+        sanitize_text_for_prawn(activity.reflection)
       ]
     end
     # Define the table and add a background color to the header row
@@ -351,11 +376,11 @@ end
     pdf.text "4.1. Learner's Reflection", size: 14, style: :bold
     table_data = [
       ["KDA", "Learner's Reflection"],
-      ["Self-Directed Learning", @report.sdl],
-      ["Initiative", @report.ini],
-      ["Motivation", @report.mot],
-      ["Peer-to-Peer Learning", @report.p2p],
-      ["Hub Participation", @report.hubp]
+      ["Self-Directed Learning", sanitize_text_for_prawn(@report.sdl)],
+      ["Initiative", sanitize_text_for_prawn(@report.ini)],
+      ["Motivation", sanitize_text_for_prawn(@report.mot)],
+      ["Peer-to-Peer Learning", sanitize_text_for_prawn(@report.p2p)],
+      ["Hub Participation", sanitize_text_for_prawn(@report.hubp)]
     ]
     pdf.table(table_data, header: true, width: 540, column_widths: { 0 => 130, 1 => 410 }) do
       # Set background color and text style for the header row
@@ -464,6 +489,15 @@ end
 
       # Split remaining text into lines that fit within the available width
       text_lines = break_text_into_lines(pdf, remaining_text, font_size, available_width - (2 * box_padding))
+
+      # If there is no space for even one line, start a new page
+      if max_lines <= 0
+        pdf.start_new_page
+        pdf.text "#{section_title} (Continuation)", size: title_size, style: :bold
+        pdf.move_down 10
+        next
+      end
+
 
       # If the text doesn't fit, print as much as possible
       lines_to_print = if text_lines.length <= max_lines
@@ -575,6 +609,10 @@ end
 
 
   private
+
+  def sanitize_text_for_prawn(text)
+    text.to_s.encode("Windows-1252", invalid: :replace, undef: :replace, replace: " ")
+  end
 
   def report_knowledge_params
     params.require(:report).permit(report_knowledges_attributes: [:id, :subject_name, :progress, :difference, :grade, :exam_season])

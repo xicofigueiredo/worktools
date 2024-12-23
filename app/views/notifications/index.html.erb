@@ -1,0 +1,15 @@
+<% if @notifications.any? %>
+  <div class="alert alert-warning">
+    <h4>You have the following notifications:</h4>
+    <ul>
+      <% @notifications.each do |notification| %>
+        <li>
+          <%= notification.message %>
+          <%= link_to "Mark as resolved", mark_as_read_notification_path(notification), method: :patch, class: "btn btn-sm btn-success" %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+<% else %>
+  <p>No notifications at this time.</p>
+<% end %>

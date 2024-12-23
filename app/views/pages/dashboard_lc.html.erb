@@ -136,6 +136,8 @@
                     </div>
                   <% end %>
                 <% end %>
+                <p class="text-secondary mb-1">Notifications Unread: <%= user.notifications.where(read: false).count %>
+
               </div>
             <% end %>
 

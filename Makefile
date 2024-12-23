@@ -54,3 +54,15 @@ flags:
 
 attendance:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake attendances:delete_attendances"
+
+personalized:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake reports:correct_personalized"
+
+exam_dates:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake exam_dates:create_igcse_dates"
+
+notify_error_exam_dates:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake timelines:notify_error_exam_dates"
+
+send_unread_notifications:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake notifications:send_unread_notifications"
