@@ -4,11 +4,6 @@ class WeeklyGoalsController < ApplicationController
   before_action :set_subject_names, only: %i[new edit]
   before_action :set_topic_names, only: %i[new edit]
 
-  def index
-    @weekly_goals = current_user.weekly_goals.order(created_at: :desc)
-    @last_completed_weekly_goal = @weekly_goals.first
-  end
-
   def navigator
     @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
 

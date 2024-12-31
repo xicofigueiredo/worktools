@@ -176,7 +176,7 @@ class PagesController < ApplicationController
     end
 
     @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @current_weekly_goal_date,
-                                 @current_weekly_goal_date)
+                                 @current_weekly_goal_date) || Week.find_by("start_date <= ? AND end_date >= ?", @current_weekly_goal_date + 14.days, @current_weekly_goal_date + 14.days)
 
     @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?",
                                                               @current_weekly_goal_date, @current_weekly_goal_date)
