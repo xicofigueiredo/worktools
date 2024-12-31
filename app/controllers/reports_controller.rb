@@ -92,7 +92,7 @@ class ReportsController < ApplicationController
       @report = nil
     end
 
-    if @sprint.id <= 12 ## Sprint 12 was the current sprint when the report feature was added
+    if @sprint.id <= 12 ## Sprint 12 was the current sprint when reports feature was added
       @has_prev_sprint = false
     else
       @has_prev_sprint = Sprint.exists?(['end_date < ?', @sprint.start_date])
