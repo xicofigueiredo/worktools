@@ -287,7 +287,7 @@ class ReportsController < ApplicationController
 
     # Center Section (Sprint Info)
     pdf.bounding_box([pdf.bounds.width / 3, cursor], width: pdf.bounds.width / 3) do
-      pdf.text "#{@report.sprint.name} / #{Date.today.year}", size: 12, style: :bold, align: :center
+      pdf.text "#{@report.sprint.name} / #{@report.sprint.start_date.year}", size: 12, style: :bold, align: :center
       pdf.text "#{@report.sprint.start_date.strftime("%d %b")} - #{@report.sprint.end_date.strftime("%d %b")}", size: 12, align: :center
     end
 
@@ -450,7 +450,7 @@ class ReportsController < ApplicationController
       end
     end
 
-    filename = "#{@learner.full_name}_#{@report.sprint.name}/#{Date.today.year}.pdf"
+    filename = "#{@learner.full_name}_#{@report.sprint.name}/#{@report.sprint.start_date.year}.pdf"
     send_data pdf.render,
           type: 'application/pdf',
           disposition: 'inline',

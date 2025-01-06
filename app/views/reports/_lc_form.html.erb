@@ -16,7 +16,7 @@
             <div><%= @learner.users_hubs.first.hub.name %> Hub</div>
         </div>
         <div class="report-period">
-            <%= @report.sprint.name %> / <%= Date.today.year %>
+            <%= @report.sprint.name %> / <%= @report.sprint.start_date.year %>
             <br>
             <%= @report.sprint.start_date.strftime("%d %b") %> - <%= @report.sprint.end_date.strftime("%d %b") %>
         </div>
