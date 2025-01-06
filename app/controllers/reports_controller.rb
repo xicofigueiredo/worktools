@@ -34,7 +34,7 @@ class ReportsController < ApplicationController
         end
 
         # Ensure the current user has permission to view this learner's report
-        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
+        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin' || current_user.kids.include?(@learner.id)
           redirect_to reports_path, alert: "You do not have permission to access this report."
           return
         end
