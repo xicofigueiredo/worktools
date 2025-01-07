@@ -16,7 +16,7 @@ namespace :db do
       if parent.new_record? && kid.present?
         parent.assign_attributes(
           full_name: name,
-          password:,
+          password: password,
           password_confirmation: password,
           confirmed_at: Time.now,
           role: 'Parent',
