@@ -179,19 +179,21 @@ class ReportsController < ApplicationController
 
           knowledge_record = @report.report_knowledges.find_by(subject_name: name)
 
-          # Set the personalized flag if the personalized_name is present
-          knowledge_record.personalized = !data[1].nil?
-          # Update or set the attributes as necessary
-          if !knowledge_record.personalized
-            knowledge_record.progress = data[2]
-            knowledge_record.difference = data[3]
+          if knowledge_record
+            # Set the personalized flag if the personalized_name is present
+            knowledge_record.personalized = !data[1].nil?
+            # Update or set the attributes as necessary
+            if !knowledge_record.personalized
+              knowledge_record.progress = data[2]
+              knowledge_record.difference = data[3]
+            end
+
+            puts knowledge_record.errors.full_messages
+
+            # Save each record individually to persist changes
+            knowledge_record.save
+            puts knowledge_record.errors.full_messages
           end
-
-          puts knowledge_record.errors.full_messages
-
-          # Save each record individually to persist changes
-          knowledge_record.save
-          puts knowledge_record.errors.full_messages
 
         end
       end
@@ -256,13 +258,13 @@ class ReportsController < ApplicationController
     if current_user.role == 'guardian' && current_user.kids.exclude?(@learner.id)
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
         return
-      elsif current_user.role == 'learner' && current_user != @learner
-        redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
-        return
-      elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.first.hub)
-        redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
-        return
-      elsif current_user.role == 'admin'
+    elsif current_user.role == 'learner' && current_user != @learner
+      redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
+      return
+    elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.first.hub)
+      redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
+      return
+    elsif current_user.role == 'admin'
 
     end
     @attendance = calc_sprint_presence(@learner, @report.sprint) if @report&.sprint
