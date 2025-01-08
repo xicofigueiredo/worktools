@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2024_12_11_135242) do
+ActiveRecord::Schema[7.0].define(version: 2024_12_17_103651) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -256,6 +256,8 @@ ActiveRecord::Schema[7.0].define(version: 2024_12_11_135242) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "personalized", default: false, null: false
+    t.bigint "knowledge_id"
+    t.index ["knowledge_id"], name: "index_report_knowledges_on_knowledge_id"
     t.index ["report_id"], name: "index_report_knowledges_on_report_id"
   end
 
@@ -289,6 +291,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_12_11_135242) do
     t.integer "hub_participation"
     t.boolean "hide", default: true
     t.date "last_update_check"
+    t.boolean "parent"
     t.index ["sprint_id"], name: "index_reports_on_sprint_id"
     t.index ["user_id", "sprint_id"], name: "index_reports_on_user_id_and_sprint_id", unique: true
     t.index ["user_id"], name: "index_reports_on_user_id"
@@ -551,6 +554,7 @@ ActiveRecord::Schema[7.0].define(version: 2024_12_11_135242) do
   add_foreign_key "notifications", "users"
   add_foreign_key "p2ps", "kdas"
   add_foreign_key "report_activities", "reports"
+  add_foreign_key "report_knowledges", "knowledges"
   add_foreign_key "report_knowledges", "reports"
   add_foreign_key "reports", "sprints"
   add_foreign_key "reports", "users"

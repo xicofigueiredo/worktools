@@ -1,7 +1,25 @@
 <% if !@current_week %>
-  <div class="container mt-5">
-    <h1>Sorry, its seems like this week has not been created in our system yet...</h1>
+<div class="d-flex flex-column align-items-center justify-content-start vh-100">
+  <!-- Navigation Buttons -->
+  <div class="d-flex gap-2 mb-4">
+    <%= link_to weekly_goals_navigator_path(date: @current_date - 7), class: "btn btn-outline-secondary rounded d-flex align-items-center" do %>
+      <i class="fa-solid fa-chevron-left"></i>
+    <% end %>
+    <%= link_to weekly_goals_navigator_path(Date.today), class: "btn btn-outline-secondary rounded d-flex align-items-center" do %>
+      This Week
+    <% end %>
+    <%= link_to weekly_goals_navigator_path(date: @current_date + 7), class: "btn btn-outline-secondary rounded d-flex align-items-center" do %>
+      <i class="fa-solid fa-chevron-right"></i>
+    <% end %>
   </div>
+  
+  <!-- Message Section -->
+  <div class="text-center">
+    <h1>There are no Weekly Goal's this week</h1>
+    <p>Navigate to another week.</p>
+  </div>
+</div>
+
 <% else %>
   <div class="container mt-3">
     <div class="d-flex justify-content-between mb-3 align-items-center position-relative">

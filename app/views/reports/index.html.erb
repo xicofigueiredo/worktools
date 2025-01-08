@@ -1,16 +1,17 @@
+
 <% if current_user.role == 'lc' || current_user.role == "admin" %>
   <div style="padding-top: 20px; padding-bottom: 20px;">
-    <%= form_with url: reports_path, method: :get, local: true, class: "d-flex align-items-center justify-content-center gap-2", data: { controller: "auto-submit" } do %>
+    <%= form_with url: reports_path, method: :get, local: true, class: "d-flex align-items-center justify-content-center gap-2 ", data: { controller: "auto-submit" } do %>
       <%= select_tag :learner_id,
             grouped_options_for_select(@grouped_learners.transform_values { |learners| learners.map { |learner| [learner.full_name, learner.id] } }, params[:learner_id]),
-            class: "form-select form-select-lg", style: "width: 25%;", prompt: "Select a learner" %>
+            class: "form-select form-select-lg w-25", prompt: "Select a learner" %>
     <% end %>
   </div>
 <% end %>
 
 
 
-<div class="container mt-3">
+<div class="report-container mt-3">
   <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
     <div>
       <% if @report && current_user.role != 'lc' && current_user.role != 'admin'%>
@@ -45,7 +46,9 @@
     </div>
 
     <div>
-      <%= link_to 'Edit Report', edit_report_path(@report), class: "btn btn-primary", style: 'border-radius: 10px; margin-left: 5px;' %>
+      <% if current_user.role != 'guardian' %>
+        <%= link_to 'Edit Report', edit_report_path(@report), class: "btn btn-primary", style: 'border-radius: 10px; margin-left: 5px;' %>
+      <% end %>
       <%= link_to report_report_url(@report.id), class: 'btn btn-secondary', style: 'border-radius: 10px;', target: '_blank' do %>
         <i class="fa-solid fa-file-pdf"></i>
       <% end %>
@@ -66,133 +69,10 @@
       </div>
     </div>
   <% else %>
-    <!DOCTYPE html>
-  <html lang="en">
-    <head>
-        <style>
-            body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        .container {
-            width: 80%;
-            margin: auto;
-            background-color: white;
-            padding-left: 56px;
-            padding-right: 56px;
-            margin-top: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .header div {
-            font-size: 18px;
-        }
-        .header .report-period {
-            font-weight: bold;
-        }
-        .section {
-            margin-bottom: 20px;
-        }
-        .section-title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .comment-box {
-            width: 100%;
-            height: 150px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            font-size: 14px;
-            resize: none;
-        }
-        .knowledge-table tr:nth-child(even) td {
-          background-color: #f9f9f9; /* Alternate row color */
-        }
-        .knowledge-table, .kda-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        .knowledge-table th, .knowledge-table td, .kda-table th, .kda-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .knowledge-table th, .kda-table th {
-            background-color: #f2f2f2;
-        }
-        .skill-table, .kda-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        .skill-table th, .skill-table td, .kda-table th, .kda-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .skill-table th, .kda-table th {
-            background-color: #f2f2f2;
-        }
-        .flex-container {
-            display: flex;
-            justify-content: space-between;
-        }
-        .flex-item {
-            width: 48%;
-        }
-        .skill-table th:first-child {
-          width: 30%; /* Adjust proportion as needed */
-        }
-
-        .skill-table th:last-child {
-          width: 70%;
-        }
-
-        /* CSS for the rubric table */
-        .rubric-section {
-          margin: 20px 0;
-        }
-
-        .rubric-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 15px;
-        }
-
-        .rubric-table th,
-        .rubric-table td {
-          border: 1px solid #ccc;
-          padding: 10px;
-          text-align: left;
-        }
-
-        .rubric-table th {
-          background-color: #f4f4f4;
-          font-weight: bold;
-        }
-
-        .rubric-table tr:nth-child(even) td {
-          background-color: #f9f9f9; /* Alternate row color */
-        }
-        </style>
-    </head>
-    <body>
       <div class="header">
           <div>
               <div><%= @learner.full_name %></div>
-              <div><%= @learner.hubs.first.name %> Hub</div>
+              <div><%= @learner.users_hubs.first.hub.name %> Hub</div>
               <div> Attendance: <%= @attendance %>% <i class="fa-solid fa-circle-info" title="Presences:
 Present - <%=@p%>
 Working away - <%=@wa%>
@@ -204,7 +84,7 @@ Justified absences - <%=@jl%>
 Holidays - <%=@h%>"></i></div>
           </div>
           <div class="report-period">
-              <%= @report.sprint.name %> / <%= Date.today.year %>
+              <%= @report.sprint.name %> / <%= @report.sprint.start_date.year %>
               <br>
               <%= @report.sprint.start_date.strftime("%d %b") %> - <%= @report.sprint.end_date.strftime("%d %b") %>
           </div>
@@ -230,53 +110,55 @@ Holidays - <%=@h%>"></i></div>
 
 If your child is pursuing the UP curriculum or the American curriculum, they will receive an additional separate academic report detailing their achievements and progress."></i>
         </div>
-        <table class="knowledge-table">
-            <thead>
-                <tr>
-                    <th>Subject</th>
-                    <th>Progress</th>
-                    <th>+/-</th>
-                    <th>Grade</th>
-                    <th>Exam</th>
-                </tr>
-            </thead>
-            <tbody>
-              <% @report.report_knowledges.each do |knowledge| %>
-                <tr>
-                  <td><%= knowledge.subject_name %></td>
+        <div style="overflow-x: auto;">
+          <table class="knowledge-table">
+              <thead>
+                  <tr>
+                      <th>Subject</th>
+                      <th>Progress</th>
+                      <th>+/-</th>
+                      <th>Grade</th>
+                      <th>Exam</th>
+                  </tr>
+              </thead>
+              <tbody>
+                <% @report.report_knowledges.each do |knowledge| %>
+                  <tr>
+                    <td><%= knowledge.subject_name %></td>
 
-                  <% if knowledge.progress.nil? || (knowledge.progress == 0 && knowledge.difference == 0)%>
-                    <td>N/A</td>
-                    <td>N/A</td>
-                    <td><%= knowledge.grade.presence || 'N/A' %> </td>
-                  <% else %>
-                    <td><%= knowledge.progress %>%</td>
-                    <% if knowledge.difference.nil? %>
+                    <% if knowledge.progress.nil? || (knowledge.progress == 0 && knowledge.difference == 0)%>
                       <td>N/A</td>
-                    <% elsif knowledge.difference > 0 %>
-                      <td>+<%= knowledge.difference %>%</td>
+                      <td>N/A</td>
+                      <td><%= knowledge.grade.presence || 'N/A' %> </td>
                     <% else %>
-                      <td><%= knowledge.difference %>%</td>
+                      <td><%= knowledge.progress %>%</td>
+                      <% if knowledge.difference.nil? %>
+                        <td>N/A</td>
+                      <% elsif knowledge.difference > 0 %>
+                        <td>+<%= knowledge.difference %>%</td>
+                      <% else %>
+                        <td><%= knowledge.difference %>%</td>
+                      <% end %>
+                      <td><%= knowledge.grade.presence || 'N/A' %></td>
                     <% end %>
-                    <td><%= knowledge.grade.presence || 'N/A' %></td>
-                  <% end %>
 
-                  <% if knowledge.exam_season.present? && (knowledge.exam_season.include?("June") || knowledge.exam_season.include?("May")) %>
-                    <% year = knowledge.exam_season.split.last %>
-                    <td>May/June <%= year %></td>
-                  <% elsif knowledge.exam_season.present? && (knowledge.exam_season.include?("October") || knowledge.exam_season.include?("November"))%>
-                    <% year = knowledge.exam_season.split.last %>
-                    <td>Oct/Nov <%= year %></td>
-                  <% elsif knowledge.exam_season.present? %>
-                    <td><%= knowledge.exam_season.presence %></td>
-                  <% else %>
-                    <td>N/A</td>
-                  <% end %>
+                    <% if knowledge.exam_season.present? && (knowledge.exam_season.include?("June") || knowledge.exam_season.include?("May")) %>
+                      <% year = knowledge.exam_season.split.last %>
+                      <td>May/June <%= year %></td>
+                    <% elsif knowledge.exam_season.present? && (knowledge.exam_season.include?("October") || knowledge.exam_season.include?("November"))%>
+                      <% year = knowledge.exam_season.split.last %>
+                      <td>Oct/Nov <%= year %></td>
+                    <% elsif knowledge.exam_season.present? %>
+                      <td><%= knowledge.exam_season.presence %></td>
+                    <% else %>
+                      <td>N/A</td>
+                    <% end %>
 
-                </tr>
-              <% end %>
+                  </tr>
+                <% end %>
               </tbody>
           </table>
+        </div>
       </div>
       <% if @hide != true || current_user.role == 'lc' %>
         <div class="flex-container">
@@ -284,7 +166,7 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
               <div class="section-title">Learning Coach Comment</div>
               <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
                 <p style="text-align: justify;">
-                  <%= @report.lc_comment %>
+                  <%= simple_format(@report.lc_comment, {}, sanitize: true) %>
                 </p>
               </div>
             </div>
@@ -292,7 +174,7 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
               <div class="section-title">Learner's Reflection</div>
               <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
                 <p style="text-align: justify;">
-                  <%= @report.reflection %>
+                  <%= simple_format(@report.reflection, {}, sanitize: true) %>
                 </p>
               </div>
             </div>
@@ -302,7 +184,7 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
           <div class="section-title">Learner's Reflection</div>
           <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
             <p style="text-align: justify;">
-              <%= @report.reflection %>
+              <%= simple_format(@report.reflection, {}, sanitize: true) %>
             </p>
           </div>
         </div>
@@ -316,28 +198,29 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
 
 Below is the information on the goals that they have been working on for the last Sprint, and what some of the outcomes have been!"></i>
       </div>
-      <table class="skill-table">
-        <thead>
-          <tr>
-            <th>Goal</th>
-            <th>Learner's Reflection</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @report_activities.each do |activity| %>
+      <div style="overflow-x: auto;">
+        <table class="skill-table">
+          <thead>
             <tr>
-              <td><b><%= activity.activity.capitalize %></b> - <%= activity.goal %></td>
-              <td><%= activity.reflection %></td>
+              <th>Goal</th>
+              <th>Learner's Reflection</th>
             </tr>
-          <% end %>
-          <% if @report_activities.empty? %>
-            <tr>
-              <td colspan="2">No goals set for this sprint</td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-
+          </thead>
+          <tbody>
+            <% @report_activities.each do |activity| %>
+              <tr>
+                <td><b><%= activity.activity.capitalize %></b> - <%= activity.goal %></td>
+                <td><%= activity.reflection %></td>
+              </tr>
+            <% end %>
+            <% if @report_activities.empty? %>
+              <tr>
+                <td colspan="2">No goals set for this sprint</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     </div>
     <br>
 
@@ -358,23 +241,23 @@ These KDAs represent critical growth areas unique to each learner, helping them 
             <tbody>
                 <tr>
                     <td>Self-Directed Learning <i class="fa-solid fa-circle-info" title="Are you able to learn independently? This KDA refers to your ability to set your learning goals, assign deadlines, and complete them, whether the goals are academic in nature or not. From an academic perspective this relates to the BGA Moodle platform and its subjects; are you keeping up with your deadlines and setting effective goals each week and adhering to them."></i></td>
-                    <td style="text-align: justify;"><%= @report.sdl %></td>
+                    <td style="text-align: justify;"><%= simple_format(@report.sdl, {}, sanitize: true) %></td>
                 </tr>
                 <tr>
                     <td>Initiative <i class="fa-solid fa-circle-info" title="Are you trying any new things? Or taking on any new challenges. This area is related to trying to get out of your comfort zone and try new activities/courses to see if these are things you might be interested in! This KDA is key to Learners discovering their passions, and how to pursue them."></i></td>
-                    <td style="text-align: justify;"><%= @report.ini %> </td>
+                    <td style="text-align: justify;"><%= simple_format(@report.ini, {}, sanitize: true) %> </td>
                 </tr>
                 <tr>
                     <td>Motivation <i class="fa-solid fa-circle-info" title="Are you approaching your learning with motivation, and trying to complete your goals to the best of your ability? Are your pushing yourself and trying your best in the challenges that you encounter? Are you persevering, and not dropping new courses or activities too soon?" ></i></td>
-                    <td style="text-align: justify;"><%= @report.mot %> </td>
+                    <td style="text-align: justify;"><%= simple_format(@report.mot, {}, sanitize: true) %></td>
                 </tr>
                 <tr>
                     <td>P2P <i class="fa-solid fa-circle-info" title="This section refers to learning: are you helping others with their courses and learning? Are you asking for help from other learners as opposed to the Learning Coach? This would also refer to participation on the Forum for the BGA online courses."></i> </td>
-                    <td style="text-align: justify;"><%= @report.p2p %> </td>
+                    <td style="text-align: justify;"><%= simple_format(@report.p2p, {}, sanitize: true) %> </td>
                 </tr>
                 <tr>
                     <td title="Are you participating in the Hub activities? Are you contributing to any projects or events that are being run in their Hub? And are you helping to contribute to the Hub being a safe and clean environment for other learners? This KDA relates to respect of fellow peers and of the educational space." >Hub Participation <i class="fa-solid fa-circle-info"></i></td>
-                    <td style="text-align: justify;"><%= @report.hubp %> </td>
+                    <td style="text-align: justify;"><%= simple_format(@report.hubp, {}, sanitize: true) %></td>
                 </tr>
             </tbody>
         </table>
@@ -534,23 +417,20 @@ These KDAs represent critical growth areas unique to each learner, helping them 
       </body>
     <% end %>
     <br>
-      <footer style="border-top: 1px solid #ccc; padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <!-- Left-aligned website link -->
-          <div style="text-align: left;">
-            <a href="http://www.bravegenerationacademy.com" target="_blank" style="text-decoration: none; color: #333;">
-              www.bravegenerationacademy.com
-            </a>
-          </div>
-
-          <!-- Right-aligned LCs' information -->
-          <div style="text-align: right;">
-            <% @lcs.each do |lc| %>
-              <div><%= lc.full_name %>: <%= lc.email %></div>
-            <% end %>
-          </div>
-        </div>
-      </footer>
+<footer style="border-top: 1px solid #ccc; padding: 20px;">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+    <div class="text-center text-md-start mb-3 mb-md-0">
+      <a href="http://www.bravegenerationacademy.com" target="_blank" style="text-decoration: none; color: #333;">
+        www.bravegenerationacademy.com
+      </a>
+    </div>
+    <div class="text-center text-md-end">
+      <% @lcs.each do |lc| %>
+        <div><%= lc.full_name %>: <%= lc.email %></div>
+      <% end %>
+    </div>
+  </div>
+</footer>
 
   </html>
 </div>
