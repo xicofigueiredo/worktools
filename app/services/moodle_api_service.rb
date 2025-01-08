@@ -28,4 +28,3 @@ class MoodleApiService
     call('core_enrol_get_enrolled_users', { courseid: course_id })
   end
 end
-
