@@ -11,6 +11,19 @@ class MoodleApiService
       moodlewsrestformat: 'json'
     }.merge(params)
 
+    # Flatten criteria if present
+    if params[:criteria].is_a?(Array)
+      params[:criteria].each_with_index do |criterion, idx|
+        base_params["criteria[#{idx}][key]"]   = criterion[:key]
+        base_params["criteria[#{idx}][value]"] = criterion[:value]
+      end
+      # Remove the original :criteria key so it doesn't get sent twice
+      params.delete(:criteria)
+    end
+
+    # Merge any remaining top-level params (if you need other fields)
+    base_params.merge!(params)
+
     # Use POST for complex or any multi-dimensional data
     response = RestClient.post(@base_url, base_params)
     JSON.parse(response.body)
@@ -27,4 +40,21 @@ class MoodleApiService
   def get_enrolled_users(course_id)
     call('core_enrol_get_enrolled_users', { courseid: course_id })
   end
+
+  def get_all_courses
+    a = []
+    courses = call('core_course_get_courses', {})
+    puts "Found #{courses.size} courses."
+    courses.each do |course|
+      a << "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
+      # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
+    end
+    puts a
+
+    # search Subjects with that name and populate subject.moodle_id with course['id']
+
+  end
+  # service = MoodleApiService.new
+  # courses = service.get_all_courses
+
 end

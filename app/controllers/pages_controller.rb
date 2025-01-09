@@ -11,6 +11,7 @@ class PagesController < ApplicationController
                          update_comments_attendance]
 
   def dashboard_admin
+    @deactivated = User.where(deactivate: true, role: 'learner')
     @learners_without_hub = User.left_outer_joins(:users_hubs)
     .where(role: 'learner', deactivate: [false, nil])
     .where(users_hubs: { id: nil })
