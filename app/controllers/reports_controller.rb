@@ -151,21 +151,6 @@ class ReportsController < ApplicationController
 
     if @sprint_goal && @sprint_goal.sprint.end_date >= Date.today
 
-      activities = @sprint_goal.skills.pluck(:extracurricular, :smartgoals)
-      activities += @sprint_goal.communities.pluck(:involved, :smartgoals)
-      @report_activities = @report.report_activities
-
-      activity_names = activities.map { |activity| activity[0] } # Extracts the name part of each activity
-
-      @report.report_activities.where.not(activity: activity_names).destroy_all
-
-      activities.each do |activity|
-        # Assuming activity[0] is the activity name and activity[1] is the goal
-        @report_activities.find_or_create_by(activity: activity[0]) do |report_activity|
-          report_activity.goal = activity[1]
-        end
-      end
-
       @knowledges = @timelines.left_outer_joins(:subject, :exam_date)
                     .where('subjects.name IN (:sprint_knowledges) OR personalized_name IN (:sprint_knowledges)', sprint_knowledges: @sprint_goal_knowledges)
                     .pluck('subjects.name', :personalized_name, :progress, :difference, 'exam_dates.date')
