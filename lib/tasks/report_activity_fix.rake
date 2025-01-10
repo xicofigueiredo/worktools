@@ -26,7 +26,7 @@ namespace :db do
           report_activity.update!(community_id: community.id)
           puts "Updated report_activity ID: #{report_activity.id} with community ID: #{community.id}, sg_id: #{sprint_goal.id}"
         else
-          count += 1
+          unmatched_count += 1
           puts "No matching skill/community found for report_activity ID: #{report_activity.id}, #{unmatched_count}"
         end
       end
