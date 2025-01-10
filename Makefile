@@ -66,3 +66,6 @@ notify_error_exam_dates:
 
 send_unread_notifications:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake notifications:send_unread_notifications"
+
+report_activity:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rails db:report_activity_fix"

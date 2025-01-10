@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_01_08_180905) do
+ActiveRecord::Schema[7.0].define(version: 2025_01_10_121021) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -243,7 +243,11 @@ ActiveRecord::Schema[7.0].define(version: 2025_01_08_180905) do
     t.text "reflection"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "skill_id"
+    t.bigint "community_id"
+    t.index ["community_id"], name: "index_report_activities_on_community_id"
     t.index ["report_id"], name: "index_report_activities_on_report_id"
+    t.index ["skill_id"], name: "index_report_activities_on_skill_id"
   end
 
   create_table "report_knowledges", force: :cascade do |t|
@@ -554,7 +558,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_01_08_180905) do
   add_foreign_key "notes", "users"
   add_foreign_key "notifications", "users"
   add_foreign_key "p2ps", "kdas"
+  add_foreign_key "report_activities", "communities"
   add_foreign_key "report_activities", "reports"
+  add_foreign_key "report_activities", "skills"
   add_foreign_key "report_knowledges", "knowledges"
   add_foreign_key "report_knowledges", "reports"
   add_foreign_key "reports", "sprints"
