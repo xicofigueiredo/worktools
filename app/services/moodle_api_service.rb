@@ -46,7 +46,7 @@ class MoodleApiService
     courses = call('core_course_get_courses', {})
     puts "Found #{courses.size} courses."
     courses.each do |course|
-      a << "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
+      a << " #{course['shortname']} #{course['id']}"
       # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
     end
     puts a
