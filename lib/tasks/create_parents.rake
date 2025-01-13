@@ -53,21 +53,21 @@ namespace :db do
 
     # Process each row in the CSV
     CSV.foreach(file_path, headers: true) do |row|
-      unless row['Email'].nil? || row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil?
-        parent_name = row['Parent 1'].strip.capitalize
-        parent1_email = row['Email 1'].strip.downcase
+      unless row['Institutional Email'].nil? || row['Guardian 1'].nil? || row['Email 1'].nil? || row['Password'].nil?
+        parent_name = row['Guardian 1'].strip.capitalize
+        parent1_email = row['Guardian 1 email'].strip.downcase
         parent1_password = row['Password'].strip
-        kid_email = row['Email'].strip.downcase
+        kid_email = row['Institutional Email'].strip.downcase
 
         # Create or update the first parent
         create_parent_method.call(parent_name, parent1_email, parent1_password, kid_email)
       end
 
       # Create or update the second parent if present
-      unless row['Email'].nil? || row['Parent 2'].nil? || row['Email 2'].nil? || row['Password 2'].nil?
-        parent2_name = row['Parent 2'].strip.capitalize
-        parent2_email = row['Email 2'].strip.downcase
-        parent2_password = row['Password 2'].strip
+      unless row['Email'].nil? || row['Guardian 3'].nil? || row['Email 3'].nil? || row['Password'].nil?
+        parent2_name = row['Guardian 3'].strip.capitalize
+        parent2_email = row['Guardian 3 email'].strip.downcase
+        parent2_password = row['Password'].strip
         create_parent_method.call(parent2_name, parent2_email, parent2_password, kid_email)
       end
     end
