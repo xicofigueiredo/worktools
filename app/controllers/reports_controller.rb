@@ -293,15 +293,10 @@ class ReportsController < ApplicationController
     print_section(pdf, sanitize_text_for_prawn(@report.general), "1. General Comment", 16)
     pdf.move_down 15
 
-    # Knowledge Section (Table)
-    title_height = pdf.height_of("Knowledge", size: 16, style: :bold)
-
-    # Check if there's only room for the title, but not the table
-    if pdf.cursor < (title_height + 60)
-      pdf.start_new_page
-    end
-
-    pdf.text "2. Knowledge", size: 16, style: :bold
+        # Knowledge Section (Table)
+    title_height = pdf.height_of("2. Knowledge", size: 16, style: :bold)
+    header_data = [["Subject", "Progress", "+/-", "Grade", "Exam"]]
+    header_height = calculate_row_height(pdf, header_data, { 0 => 108, 1 => 108, 2 => 108, 3 => 108, 4 => 108 }, font_size: 12)
     table_data = [["Subject", "Progress", "+/-", "Grade", "Exam"]] + @report.report_knowledges.map do |knowledge|
       [
         knowledge.subject_name,
@@ -311,6 +306,15 @@ class ReportsController < ApplicationController
         knowledge.exam_season.presence || 'N/A'
       ]
     end
+    sample_row = table_data[1]
+    row_height = sample_row ? calculate_row_height(pdf, sample_row, { 0 => 108, 1 => 108, 2 => 108, 3 => 108, 4 => 108 }, font_size: 12) : 0
+
+    # Check if there's only room for the title, but not the table
+    if pdf.cursor < (title_height + header_height + row_height + 40)
+      pdf.start_new_page
+    end
+
+    pdf.text "2. Knowledge", size: 16, style: :bold
     pdf.table(table_data, header: true, width: 540) do
       # Set background color and text style for the header row
       row(0).background_color = 'D5F000'
@@ -327,21 +331,25 @@ class ReportsController < ApplicationController
 
     # Skills & Community Section
     title_height = pdf.height_of("Skills & Community", size: 16, style: :bold)
-
-    # Check if there's only room for the title, but not the table
-    if pdf.cursor < (title_height + 60)
-      pdf.start_new_page
-    end
-
-    pdf.text "3. Skills & Community", size: 16, style: :bold
+    header_data = [["Goal", "Learner's Reflection"]]
+    header_height = calculate_row_height(pdf, header_data, { 0 => 135, 1 => 405 }, font_size: 12)
     table_data = [["Goal", "Learner's Reflection"]] + @report_activities.map do |activity|
       [
         sanitize_text_for_prawn("#{activity.activity.capitalize} - #{activity.goal}"),
         sanitize_text_for_prawn(activity.reflection)
       ]
     end
+    sample_row = table_data[1]
+    row_height = sample_row ? calculate_row_height(pdf, sample_row, { 0 => 135, 1 => 405 }, font_size: 12) : 0
+
+    # Check if there's only room for the title, but not the table
+    if pdf.cursor < (title_height + header_height + row_height + 40)
+      pdf.start_new_page
+    end
+
+    pdf.text "3. Skills & Community", size: 16, style: :bold
     # Define the table and add a background color to the header row
-    pdf.table(table_data, header: true, width: 540) do
+    pdf.table(table_data, header: true, width: 540, column_widths: { 0 => 135, 1 => 405 }, cell_style: { overflow: :shrink_to_fit }) do
       # Set background color and text style for the header row
       row(0).background_color = 'D5F000'
       row(0).font_style = :bold # Make the header text bold
@@ -350,10 +358,15 @@ class ReportsController < ApplicationController
     pdf.move_down 20
 
     # Key Development Areas (KDA) Section
-    title_height = pdf.height_of("Key Development Areas", size: 16, style: :bold)
+    title_height = pdf.height_of("4. Key Development Areas", size: 16, style: :bold)
+    secound_title_height = pdf.height_of("4.1. Learner's Reflection", size: 14, style: :bold) + 10
+    header_data = ["KDA", "Learner's Reflection"]
+    header_height = calculate_row_height(pdf, header_data, { 0 => 80, 1 => 460 }, font_size: 12)
+    sample_row = ["Self-Directed Learning", sanitize_text_for_prawn(@report.sdl)]
+    row_height = calculate_row_height(pdf, sample_row, { 0 => 80, 1 => 460 }, font_size: 12)
 
     # Check if there's only room for the title, but not the table
-    if pdf.cursor < (title_height + 60)
+    if pdf.cursor < (title_height + secound_title_height + header_height + row_height + 40)
       pdf.start_new_page
     end
 
@@ -369,19 +382,28 @@ class ReportsController < ApplicationController
       ["Peer-to-Peer Learning", sanitize_text_for_prawn(@report.p2p)],
       ["Hub Participation", sanitize_text_for_prawn(@report.hubp)]
     ]
-    pdf.table(table_data, header: true, width: 540, column_widths: { 0 => 130, 1 => 410 }) do
+
+    pdf.table(table_data, header: true, width: 540, column_widths: { 0 => 80, 1 => 460 }, cell_style: { overflow: :shrink_to_fit }) do |table|
       # Set background color and text style for the header row
-      row(0).background_color = 'D5F000'
-      row(0).font_style = :bold # Make the header text bold
+      table.row(0).background_color = 'D5F000'
+      table.row(0).font_style = :bold
     end
 
     pdf.move_down 20
 
     # Rubric Table
-    title_height = pdf.height_of("Learning Coach's Rubric", size: 16, style: :bold)
+    title_height = pdf.height_of("Learning Coach's Rubric", size: 14, style: :bold)
+    header_data = ["KDA", "Level", "Area of Impact"]
+    header_height = calculate_row_height(pdf, header_data, { 0 => 80, 1 => 80, 2 => 380 }, font_size: 12)
+    sample_row = [
+      { content: "Self-Directed Learning", rowspan: 5 },
+      @report.sdl_long_term_plans.present? ? @report.sdl_long_term_plans.capitalize : "",
+      "The learner sets effective long-term plans."
+    ]
+    row_height = calculate_row_height(pdf, sample_row, { 0 => 80, 1 => 80, 2 => 380 }, font_size: 12)
 
     # Check if there's only room for the title, but not the table
-    if pdf.cursor < (title_height + 60)
+    if pdf.cursor < (title_height + header_height + row_height + 40)
       pdf.start_new_page
     end
     pdf.text "4.2 Learning Coach's Rubric", size: 14, style: :bold
@@ -430,7 +452,7 @@ class ReportsController < ApplicationController
       pdf.text "www.bravegenerationacademy.com", size: 10, align: :left, inline_format: true
 
       # Right side (LC emails)
-      pdf.bounding_box([pdf.bounds.width - 200, pdf.cursor + 10], width: 200) do
+      pdf.bounding_box([pdf.bounds.width - 300, pdf.cursor + 10], width: 300) do
         @lcs.each do |lc|
           pdf.text "#{lc.full_name}: #{lc.email}", align: :right, size: 10
         end
@@ -444,12 +466,23 @@ class ReportsController < ApplicationController
           filename: filename
   end
 
+  def calculate_row_height(pdf, row_data, column_widths, font_size: 12)
+    row_data.each_with_index.map do |cell, col_index|
+      # Measure cell content, handling hashes for rowspan/cell formatting
+      cell_content = cell.is_a?(Hash) ? cell[:content].to_s : cell.to_s
+      pdf.height_of(cell_content, width: column_widths[col_index], size: font_size)
+    end.max # Take the tallest cell in the row
+  end
+
   def print_section(pdf, comment_text, section_title, title_size)
     # Ensure there is content to print
     comment_text = comment_text.presence || "[Empty]"
     pdf.font("Helvetica")
 
     # Print the title (header)
+    if pdf.cursor < 60
+      pdf.start_new_page
+    end
     pdf.text section_title, size: title_size, style: :bold
     pdf.move_down 10
 
@@ -475,7 +508,7 @@ class ReportsController < ApplicationController
       max_lines = (available_height / line_height).to_i
 
       # Split remaining text into lines that fit within the available width
-      text_lines = break_text_into_lines(pdf, remaining_text, font_size, available_width - (2 * box_padding))
+      text_lines = break_text_into_lines(pdf, remaining_text, font_size, available_width - (2 * box_padding) - 2)
 
       # If there is no space for even one line, start a new page
       if max_lines <= 0
@@ -484,7 +517,6 @@ class ReportsController < ApplicationController
         pdf.move_down 10
         next
       end
-
 
       # If the text doesn't fit, print as much as possible
       lines_to_print = if text_lines.length <= max_lines
@@ -526,33 +558,43 @@ class ReportsController < ApplicationController
 
   def break_text_into_lines(pdf, text, size, width)
     lines = []
-    current_line = ""
-    words = text.split(" ")
 
-    words.each do |word|
-      test_line = current_line.empty? ? word : "#{current_line} #{word}"
+    # Split text into paragraphs (by newlines) while keeping the \n intact
+    paragraphs = text.split("\n").map(&:strip)
 
-      # Check if the current line fits the width
-      if pdf.width_of(test_line, size: size) > width
-        # Justify the line if it's not the last one
-        if current_line.strip.split.size > 1
-          lines << justify_line(current_line.strip, pdf, size, width)
+    paragraphs.each do |paragraph|
+      current_line = ""
+      words = paragraph.split(" ")
+
+      words.each do |word|
+        test_line = current_line.empty? ? word : "#{current_line} #{word}"
+
+        # Check if the current line fits the width
+        if pdf.width_of(test_line, size: size) > width
+          # Justify the line if it's not the last one
+          if current_line.strip.split.size > 1
+            lines << justify_line(current_line.strip, pdf, size, width)
+          else
+            lines << current_line.strip
+          end
+          current_line = word
         else
-          lines << current_line.strip
+          # Otherwise, add the word to the current line
+          current_line = test_line
         end
-        current_line = word
-      else
-        # Otherwise, add the word to the current line
-        current_line = test_line
       end
+
+      # Add the last line of the paragraph without justification
+      lines << current_line.strip unless current_line.empty?
+
+      # Add a blank line to maintain paragraph separation (if not the last paragraph)
+      lines << "" unless paragraph == paragraphs.last
     end
 
-    # Add the last line without justification
-    lines << current_line.strip unless current_line.empty?
     lines
   end
 
-  # Helper function to justify a line
+  # Updated `justify_line` function remains unchanged
   def justify_line(line, pdf, size, width)
     words = line.split(" ")
     return line if words.size <= 1 # Single-word lines can't be justified
