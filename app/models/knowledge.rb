@@ -12,6 +12,10 @@ class Knowledge < ApplicationRecord
     if self.subject_name == "Travel & Tourism IGCSE (M50% not done)" || self.subject_name == "Travel & Tourism IGCSE (M50% done)"
       ReportKnowledge.create(report: report, subject_name: "Travel & Tourism IGCSE" , exam_season: self.exam_season, knowledge_id: self.id)
     end
-    ReportKnowledge.create(report: report, subject_name: self.subject_name, exam_season: self.exam_season, knowledge_id: self.id)
+    if Subject.pluck(:name).include?(self.subject_name)
+      ReportKnowledge.create(report: report, subject_name: self.subject_name, exam_season: self.exam_season, knowledge_id: self.id)
+    else
+      ReportKnowledge.create(report: report, subject_name: self.subject_name, exam_season: self.exam_season, knowledge_id: self.id, personalized: true)
+    end
   end
 end
