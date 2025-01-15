@@ -9,6 +9,9 @@ class Knowledge < ApplicationRecord
 
   def create_report_knowledge
     report = Report.find_by(user: self.sprint_goal.user, sprint: self.sprint_goal.sprint)
+    if self.subject_name == "Travel & Tourism IGCSE (M50% not done)" || self.subject_name == "Travel & Tourism IGCSE (M50% done)"
+      ReportKnowledge.create(report: report, subject_name: "Travel & Tourism IGCSE" , exam_season: self.exam_season, knowledge_id: self.id)
+    end
     ReportKnowledge.create(report: report, subject_name: self.subject_name, exam_season: self.exam_season, knowledge_id: self.id)
   end
 end
