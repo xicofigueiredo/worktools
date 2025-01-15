@@ -10,6 +10,7 @@
               <th>Start Date</th>
               <th>Mock 50%</th>
               <th>Mock 100%</th>
+              <th>End Date</th>
               <% if @has_exam_date %>
                 <th>Exam Season</th>
               <% end %>
@@ -58,6 +59,8 @@
                   <% else %>
                     <td></td>
                   <% end %>
+
+                  <td><%= timeline.end_date.strftime("%d/%m/%Y") %></td>
 
                   <% if @has_exam_date %>
                     <td>
