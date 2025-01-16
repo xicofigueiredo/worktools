@@ -229,7 +229,25 @@ class PagesController < ApplicationController
     render 'not_found', status: :not_found
   end
 
+  def update_learner_name
+    @learner = User.find_by(id: params[:id])
+
+    unless current_user.role == 'admin' || current_user.role == 'lc'
+      redirect_to root_path, alert: "You don't have permission to edit this learner's name." and return
+    end
+
+    if @learner.update(learner_params)
+      redirect_to learner_profile_path(@learner), notice: "Learner name updated successfully."
+    else
+      redirect_to learner_profile_path(@learner), alert: "Failed to update learner name: #{@learner.errors.full_messages.join(', ')}"
+    end
+  end
+
   private
+
+  def learner_params
+    params.require(:user).permit(:full_name)
+  end
 
   def update_weekly_goal(weekly_goal, week, learner, date)
     render turbo_stream:

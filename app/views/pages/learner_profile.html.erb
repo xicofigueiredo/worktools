@@ -2,10 +2,15 @@
 <div class="container">
   <% if current_user.role != 'guardian' %>
 
-    <div class="d-flex gap-3 align-items-center mb-3 mt-3">
-      <%# <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
-      <h2><%= @learner.full_name %></h2>
-    </div>
+    <%# <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
+    <%= form_with url: update_learner_name_path(@learner), class: "d-flex align-items-center justify-content-center gap-2 ", method: :patch, local: true do |f| %>
+      <%= f.label :full_name, "Edit Learner Name:", class: "d-flex align-items-center justify-content-center" %> <hr>
+      <%= f.text_field :full_name, class: "form-control form-control-lg mr-2 w-25", name: "user[full_name]", value: @learner.full_name, placeholder: "Enter learner name" %>
+      <hr><%= f.submit "Save", class: "btn btn-primary" %>
+    <% end %>
+
+    <br>
+
     <div>
       <%= render 'pages/partials/cards' %>
     </div>
