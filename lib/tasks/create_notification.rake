@@ -6,13 +6,13 @@ namespace :notifications do
       if user.role == 'learner'
         Notification.find_or_create_by!(
           user: user,
-          message: "If your report includes subjects that shouldn't appear, please let your Learning Coach know"
+          message: "If your name is not entirely correct, please ask your LC to update it manually so that it appears correctly in the sprint report."
         )
         notifications_count += 1
       elsif user.role == 'lc'
         Notification.find_or_create_by!(
           user: user,
-          message: "If a learner's report includes subjects that shouldn't appear, please message Luís Brito e Faro with the learner's email address and the subjects to be removed."
+          message: "If a learner’s name is incorrect, please update it via the LC Dashboard. Otherwise, it will appear incorrectly in the report shared with parents."
         )
         notifications_count += 1
       end
