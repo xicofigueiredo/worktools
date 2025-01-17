@@ -45,7 +45,7 @@ class PagesController < ApplicationController
 
 
     if params[:hub_id].nil?
-      @selected_hub = current_user.users_hubs.find_by(main: true)&.hub_id
+      @selected_hub = current_user.users_hubs.find_by(main: true)&.hub
     else
       @selected_hub = Hub.find_by(id: params[:hub_id])
     end
