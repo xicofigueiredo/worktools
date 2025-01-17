@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_01_10_121021) do
+ActiveRecord::Schema[7.0].define(version: 2025_01_17_102710) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -311,6 +311,14 @@ ActiveRecord::Schema[7.0].define(version: 2025_01_10_121021) do
     t.index ["kda_id"], name: "index_sdls_on_kda_id"
   end
 
+  create_table "settings", force: :cascade do |t|
+    t.boolean "report"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "sprint_id", null: false
+    t.index ["sprint_id"], name: "index_settings_on_sprint_id"
+  end
+
   create_table "skills", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
     t.string "extracurricular"
@@ -475,6 +483,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_01_10_121021) do
     t.bigint "hub_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "main", default: true, null: false
     t.index ["hub_id"], name: "index_users_hubs_on_hub_id"
     t.index ["user_id"], name: "index_users_hubs_on_user_id"
   end
@@ -566,6 +575,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_01_10_121021) do
   add_foreign_key "reports", "sprints"
   add_foreign_key "reports", "users"
   add_foreign_key "sdls", "kdas"
+  add_foreign_key "settings", "sprints"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"
