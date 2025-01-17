@@ -8,7 +8,7 @@ class AttendancesController < ApplicationController
     @prev_date = calculate_prev_date(@current_date, 'daily')
     @next_date = calculate_next_date(@current_date, 'daily')
     @attendances = fetch_daily_attendances(@current_date).sort_by { |attendance| attendance.user.full_name.downcase }
-    @has_learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.first.hub.id }, role: 'learner').exists?
+    @has_learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.find_by(main: true)&.hub_id }, role: 'learner').exists?
     return unless @has_learners == true
 
     @is_today = @attendances ? @attendances&.first&.attendance_date == Date.today : false
@@ -20,7 +20,7 @@ class AttendancesController < ApplicationController
     @next_date = calculate_next_date(current_date, 'weekly')
     @time_frame = 'Weekly'
     @daily_grouped_attendances = fetch_weekly_attendances(current_date)
-    @has_learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.first.hubs.id }, role: 'learner').exists?
+    @has_learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.find_by(main: true)&.hub_id }, role: 'learner').exists?
   end
 
   def update_attendance
@@ -107,7 +107,7 @@ class AttendancesController < ApplicationController
   end
 
   def ensure_weekly_attendance_records(start_date, end_date)
-    learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.first.hub.id }, role: 'learner', deactivate: false)
+    learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.find_by(main: true)&.hub_id }, role: 'learner', deactivate: false)
     (start_date..end_date).each do |date|
       # Checking for saturday and sunday
       next if date.wday == 6 || date.wday.zero?
@@ -121,7 +121,7 @@ class AttendancesController < ApplicationController
   def ensure_daily_attendance_records(date)
     return if date.saturday? || date.sunday?
 
-    learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.first.hub.id }, role: 'learner', deactivate: false)
+    learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.find_by(main: true)&.hub_id }, role: 'learner', deactivate: false)
     learners.each do |learner|
       learner.attendances.create(attendance_date: date) unless learner.attendances.exists?(attendance_date: date)
     end
@@ -131,7 +131,7 @@ class AttendancesController < ApplicationController
     ensure_daily_attendance_records(date)
 
     Attendance.joins(user: :hubs)
-              .where(users: { hubs: { id: current_user.users_hubs.first.hub.id }, role: 'learner',
+              .where(users: { hubs: { id: current_user.users_hubs.find_by(main: true)&.hub_id }, role: 'learner',
                               deactivate: false },
                      attendance_date: date)
               .order(:created_at)
@@ -143,7 +143,7 @@ class AttendancesController < ApplicationController
     ensure_weekly_attendance_records(start_of_week, end_of_week)
 
     weekly_attendances = Attendance.joins(user: :hubs)
-                                   .where(users: { hubs: { id: current_user.users_hubs.first.hub.id }, role: 'learner',
+                                   .where(users: { hubs: { id: current_user.users_hubs.find_by(main: true)&.hub_id }, role: 'learner',
                                                    deactivate: false },
                                           attendance_date: start_of_week..end_of_week)
                                    .order('attendance_date, users.full_name ASC')

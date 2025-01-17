@@ -28,7 +28,7 @@ class WeeklyMeetingsController < ApplicationController
   end
 
   def create
-    @hub = current_user.hubs.first
+    @hub = current_user.users_hubs.find_by(main: true)&.hub
     @weekly_meeting = @hub.weekly_meetings.new(weekly_meeting_params)
     set_available_weeks(@weekly_meeting.week_id)
 

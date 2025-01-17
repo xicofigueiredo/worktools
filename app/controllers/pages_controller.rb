@@ -45,7 +45,7 @@ class PagesController < ApplicationController
 
 
     if params[:hub_id].nil?
-      @selected_hub = current_user.hubs.first
+      @selected_hub = current_user.users_hubs.find_by(main: true)&.hub_id
     else
       @selected_hub = Hub.find_by(id: params[:hub_id])
     end
@@ -82,7 +82,7 @@ class PagesController < ApplicationController
       @skills = @sprint_goals&.skills
       @communities = @sprint_goals&.communities
       @hub_lcs = []
-      @hub_lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+      @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub_id.users.where(role: 'lc').reject do |lc|
         lc.hubs.count >= 3
       end
 
@@ -151,7 +151,7 @@ class PagesController < ApplicationController
     @skills = @sprint_goals&.skills
     @communities = @sprint_goals&.communities
     @hub_lcs = []
-    @hub_lcs = @learner.hubs.first.users.where(role: 'lc').reject do |lc|
+    @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub_id.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
 

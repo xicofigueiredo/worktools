@@ -23,7 +23,7 @@
                           <div id="full-name" class="editable-field">
                             <%= form_for current_user, url: update_profile_path, method: :post do |form| %>
                               <div class="form-group">
-                                <%= form.select :hub, current_user.hubs.first.present? ? [current_user.hubs.first.name] : [], {}, { class: 'form-control' } %>
+                                <%= form.select :hub, current_user.users_hubs.find_by(main: true)&.hub.present? ? [current_user.users_hubs.find_by(main: true)&.hub.name] : [], {}, { class: 'form-control' } %>
                               </div>
                           </div>
                         </div>

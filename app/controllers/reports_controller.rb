@@ -81,7 +81,7 @@ class ReportsController < ApplicationController
     @attendance = calc_sprint_presence(@learner, @sprint)
 
     @lcs = []
-    @lcs = @learner.users_hubs.first.hub.users.where(role: 'lc').reject do |lc|
+    @lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
 
@@ -143,7 +143,7 @@ class ReportsController < ApplicationController
            sprint_knowledges: @sprint_goal_knowledges)
 
     @lcs = []
-    @lcs = @learner.users_hubs.first.hub.users.where(role: 'lc').reject do |lc|
+    @lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
 
@@ -246,7 +246,7 @@ class ReportsController < ApplicationController
     elsif current_user.role == 'learner' && current_user != @learner
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
-    elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.first.hub)
+    elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.find_by(main: true)&.hub)
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
     elsif current_user.role == 'admin'
@@ -255,7 +255,7 @@ class ReportsController < ApplicationController
     @attendance = calc_sprint_presence(@learner, @report.sprint) if @report&.sprint
     @report_activities = @report.report_activities
     @lcs = []
-    @lcs = @learner.users_hubs.first.hub.users.where(role: 'lc').reject do |lc|
+    @lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
 
@@ -268,7 +268,7 @@ class ReportsController < ApplicationController
     # Left Section (Learner and Hub Info)
     pdf.bounding_box([0, cursor], width: pdf.bounds.width / 3) do
       pdf.text "#{@learner.full_name}", size: 18, style: :bold
-      pdf.text "#{@learner.users_hubs.first.hub.name} Hub", size: 15
+      pdf.text "#{@learner.users_hubs.find_by(main: true)&.hub.name} Hub", size: 15
       pdf.text "Attendance: #{@attendance}%", size: 12
     end
 

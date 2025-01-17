@@ -30,7 +30,7 @@ namespace :db do
           )
 
           # Find LC with less than 3 hubs linked to the kid's hub
-          lcs = kid.hubs.first.users.where(role: 'lc').select { |lc| lc.hubs.count < 3 }
+          lcs = kid.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').select { |lc| lc.hubs.count < 3 }
 
           if parent.save
             puts "Parent account for #{email} created successfully."
