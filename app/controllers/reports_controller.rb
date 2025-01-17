@@ -573,10 +573,16 @@ class ReportsController < ApplicationController
   def break_text_into_lines(pdf, text, size, width)
     lines = []
 
-    # Split the text into segments using \n to preserve explicit newlines
-    paragraphs = text.split("\n")
+    # Split the text into segments using \n and preserve empty lines
+    paragraphs = text.split("\n", -1) # Preserve empty lines from explicit newlines
 
     paragraphs.each do |paragraph|
+      if paragraph.empty?
+        # Add an empty line to represent the newline
+        lines << ""
+        next
+      end
+
       current_line = ""
       words = paragraph.split(" ")
 
@@ -595,8 +601,10 @@ class ReportsController < ApplicationController
       end
 
       # Add the last line of the paragraph (not justified)
-      lines << current_line.strip unless current_line.empty?
+      lines << current_line.strip
     end
+
+    puts "Text lines from break_text_into_lines: #{lines.inspect}"
 
     lines
   end
