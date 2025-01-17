@@ -293,7 +293,7 @@ class ReportsController < ApplicationController
     print_section(pdf, sanitize_text_for_prawn(@report.general), "1. General Comment", 16)
     pdf.move_down 15
 
-        # Knowledge Section (Table)
+    # Knowledge Section (Table)
     title_height = pdf.height_of("2. Knowledge", size: 16, style: :bold)
     header_data = [["Subject", "Progress", "+/-", "Grade", "Exam"]]
     header_height = calculate_row_height(pdf, header_data, { 0 => 108, 1 => 108, 2 => 108, 3 => 108, 4 => 108 }, font_size: 12)
@@ -542,8 +542,7 @@ class ReportsController < ApplicationController
                      width: available_width - (2 * box_padding), size: font_size
       end
 
-      # Update remaining text
-      remaining_text = text_lines[max_lines..].to_a.join(" ")
+      remaining_text = text_lines[max_lines..].to_a.join("\n")
 
       # If there is more text to print, start a new page
       if remaining_text.length > 0
@@ -559,8 +558,8 @@ class ReportsController < ApplicationController
   def break_text_into_lines(pdf, text, size, width)
     lines = []
 
-    # Split text into paragraphs (by newlines) while keeping the \n intact
-    paragraphs = text.split("\n").map(&:strip)
+    # Split the text into segments using \n to preserve explicit newlines
+    paragraphs = text.split("\n")
 
     paragraphs.each do |paragraph|
       current_line = ""
@@ -569,26 +568,19 @@ class ReportsController < ApplicationController
       words.each do |word|
         test_line = current_line.empty? ? word : "#{current_line} #{word}"
 
-        # Check if the current line fits the width
+        # Check if the current line fits within the width
         if pdf.width_of(test_line, size: size) > width
-          # Justify the line if it's not the last one
-          if current_line.strip.split.size > 1
-            lines << justify_line(current_line.strip, pdf, size, width)
-          else
-            lines << current_line.strip
-          end
+          # Justify the current line before adding it to the list
+          lines << justify_line(current_line.strip, pdf, size, width)
           current_line = word
         else
-          # Otherwise, add the word to the current line
+          # Otherwise, continue building the current line
           current_line = test_line
         end
       end
 
-      # Add the last line of the paragraph without justification
+      # Add the last line of the paragraph (not justified)
       lines << current_line.strip unless current_line.empty?
-
-      # Add a blank line to maintain paragraph separation (if not the last paragraph)
-      lines << "" unless paragraph == paragraphs.last
     end
 
     lines
