@@ -69,3 +69,6 @@ send_unread_notifications:
 
 report_activity:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rails db:create_missing_report_activities"
+
+send_notification:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake notifications:send_notifications"

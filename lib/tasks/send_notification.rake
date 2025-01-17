@@ -1,6 +1,6 @@
 namespace :notifications do
   desc "Send notifications"
-  task create_notifications: :environment do
+  task send_notifications: :environment do
     notifications_count = 0
     User.find_each do |user|
       if user.role == 'learner'
