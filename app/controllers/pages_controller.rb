@@ -82,7 +82,7 @@ class PagesController < ApplicationController
       @skills = @sprint_goals&.skills
       @communities = @sprint_goals&.communities
       @hub_lcs = []
-      @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub_id.users.where(role: 'lc').reject do |lc|
+      @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
         lc.hubs.count >= 3
       end
 
@@ -151,7 +151,7 @@ class PagesController < ApplicationController
     @skills = @sprint_goals&.skills
     @communities = @sprint_goals&.communities
     @hub_lcs = []
-    @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub_id.users.where(role: 'lc').reject do |lc|
+    @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
 
