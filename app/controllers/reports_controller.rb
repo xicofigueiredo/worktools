@@ -604,8 +604,6 @@ class ReportsController < ApplicationController
       lines << current_line.strip
     end
 
-    puts "Text lines from break_text_into_lines: #{lines.inspect}"
-
     lines
   end
 
