@@ -12,7 +12,7 @@ namespace :report_activity do
     updated_count = 0
 
     # Fetch all sprint goals for Sprint 12
-    sprint.sprint_goals.where(user_id: 337).each do |sprint_goal|
+    sprint.sprint_goals.each do |sprint_goal|
       user = sprint_goal.user # Associated user
 
       # Fetch the user's report for Sprint 12
