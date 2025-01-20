@@ -9,15 +9,16 @@ namespace :db do
     create_parent_method = lambda do |name, email, password, kid_email|
       return if email.blank? || password.blank? || kid_email.blank?
 
-      if kid && kid.deactivate?
-        puts "Kid with email #{kid_email} is deactivated, skipping parent creation for #{email}."
-        return
-      end
 
       # Find or create the parent
       parent = User.find_or_initialize_by(email: email.strip.downcase)
       kid = User.find_by(email: kid_email.strip.downcase)
 
+      if kid && kid.deactivate?
+        puts "Kid with email #{kid_email} is deactivated, skipping parent creation for #{email}."
+        return
+      end
+      
       if parent.new_record?
         if kid.present?
           parent.assign_attributes(
