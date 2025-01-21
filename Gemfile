@@ -83,3 +83,5 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+
+gem "browser", "~> 5.3"
