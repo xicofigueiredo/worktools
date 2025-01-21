@@ -75,3 +75,6 @@ send_notification:
 
 check_parent_kids:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake db:check_parent_kids"
+
+ensure_report_knowledges:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake db:ensure_report_knowledges"
