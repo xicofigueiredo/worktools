@@ -364,7 +364,7 @@ class ReportsController < ApplicationController
 
     pdf.text "3. Skills & Community", size: 16, style: :bold
     # Define the table and add a background color to the header row
-    pdf.table(table_data, header: true, width: 540, column_widths: { 0 => 135, 1 => 405 }, cell_style: { overflow: :shrink_to_fit }) do
+    pdf.table(table_data, header: true, width: 540, column_widths: { 0 => 160, 1 => 380 }, cell_style: { overflow: :shrink_to_fit }) do
       # Set background color and text style for the header row
       row(0).background_color = 'D5F000'
       row(0).font_style = :bold # Make the header text bold
