@@ -30,6 +30,7 @@ class ApplicationController < ActionController::Base
   def check_browser
     return unless user_signed_in? # Ensure the user is logged in
     return if browser.device.mobile?
+    return unless current_user.role.in?(%w[lc learner]) # Only for learners or LCs
     return if request.path == unsupported_browser_path # Skip the unsupported browser page
     browser = Browser.new(request.user_agent)
 
