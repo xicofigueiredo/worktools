@@ -132,35 +132,33 @@ class ReportsController < ApplicationController
       @hide = @report.hide
     end
 
-    @sprint = @report.sprint
-    @sprint_goal = @learner.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: @sprint)
-    @sprint_goal_knowledges = @sprint_goal.knowledges.pluck(:subject_name) if @sprint_goal
+    sprint = @report.sprint
+    sprint_goal = @learner.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: sprint)
+    sprint_goal_knowledges = sprint_goal.knowledges.pluck(:subject_name) if sprint_goal
 
-    @timelines = @learner.timelines
+    timelines = @learner.timelines
     .where(hidden: false)
     .joins(:subject) # Ensure we join the subjects table
     .where('subjects.name IN (:sprint_knowledges) OR timelines.personalized_name IN (:sprint_knowledges)',
-           sprint_knowledges: @sprint_goal_knowledges)
+           sprint_knowledges: sprint_goal_knowledges)
 
     @lcs = []
     @lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
 
-    @report_knowledges = @report.report_knowledges
+    if sprint_goal && sprint_goal.sprint.end_date >= Date.today
 
-    if @sprint_goal && @sprint_goal.sprint.end_date >= Date.today
-
-      @knowledges = @timelines.left_outer_joins(:subject, :exam_date)
-                    .where('subjects.name IN (:sprint_knowledges) OR personalized_name IN (:sprint_knowledges)', sprint_knowledges: @sprint_goal_knowledges)
+      knowledges = timelines.left_outer_joins(:subject, :exam_date)
+                    .where('subjects.name IN (:sprint_knowledges) OR personalized_name IN (:sprint_knowledges)', sprint_knowledges: sprint_goal_knowledges)
                     .pluck('subjects.name', :personalized_name, :progress, :difference, 'exam_dates.date')
 
 
-      @knowledges.each do |data|
+      knowledges.each do |data|
 
         name = data[1] || data[0]
 
-        if @sprint_goal.knowledges.find_by(subject_name: name).present?
+        if sprint_goal.knowledges.find_by(subject_name: name).present?
 
           knowledge_record = @report.report_knowledges.find_by(subject_name: name)
 
