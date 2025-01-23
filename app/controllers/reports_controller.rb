@@ -85,7 +85,6 @@ class ReportsController < ApplicationController
       lc.hubs.count >= 3
     end
 
-
     if @sprint
       @report = @learner.reports.find_by(sprint: @sprint)
     else
@@ -98,6 +97,22 @@ class ReportsController < ApplicationController
       @has_prev_sprint = Sprint.exists?(['end_date < ?', @sprint.start_date])
     end
     @has_next_sprint = Sprint.exists?(['start_date > ?', @sprint.end_date])
+
+    # Fetch reports where parent: true for the learner
+    @reports_parents = @learner.reports.where(parent: true)
+
+    # Check if the next report belongs to @reports_parents for guardians
+    if current_user.role == 'guardian'
+      next_sprint = Sprint.where('start_date > ?', @sprint.end_date).first
+      if next_sprint
+        next_report = @learner.reports.find_by(sprint: next_sprint)
+        @disable_next = next_report.nil? || !@reports_parents.include?(next_report)
+      else
+        @disable_next = true # No next sprint exists
+      end
+    else
+      @disable_next = false
+    end
 
     @edit = false
 
