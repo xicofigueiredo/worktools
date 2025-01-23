@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :set_time_zone, if: :user_signed_in?
   before_action :fetch_notifications
+  before_action :check_browser
 
   def set_time_zone
     # Time.zone = current_user.time_zone
@@ -25,4 +26,19 @@ class ApplicationController < ActionController::Base
       @unread_notifications = []
     end
   end
+
+  def check_browser
+    return unless user_signed_in? # Ensure the user is logged in
+    return if browser.device.mobile?
+    return unless current_user.role.in?(%w[lc learner]) # Only for learners or LCs
+    return if request.path == unsupported_browser_path # Skip the unsupported browser page
+    browser = Browser.new(request.user_agent)
+
+    if !browser.chrome?
+      render "static/unsupported_browser", layout: "application"
+    end
+  end
+
+
+
 end

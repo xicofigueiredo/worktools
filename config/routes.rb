@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get '/unsupported_browser', to: 'static#unsupported_browser', as: :unsupported_browser
   devise_for :users, controllers: {
     registrations: 'users/registrations',
     confirmations: 'users/confirmations',

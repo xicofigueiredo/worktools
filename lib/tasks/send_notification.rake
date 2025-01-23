@@ -4,15 +4,23 @@ namespace :notifications do
     notifications_count = 0
     User.find_each do |user|
       if user.role == 'learner'
+        subjects = user.timelines.pluck(:subject_id)
+        if subjects.include?(454) || subjects.include?(455) || subjects.include?(575)
+          Notification.find_or_create_by!(
+            user: user,
+            message: "Some changes were made to AS Biology and Portuguese Second Language timelines. Please update those."
+          )
+          notifications_count += 1
+        end
         Notification.find_or_create_by!(
           user: user,
-          message: "If your name is not entirely correct, please ask your LC to update it manually so that it appears correctly in the sprint report."
+          message: "Please make sure that you are using the Google Chrome browser. Any other browser will most likely cause you problems, such as losing data."
         )
         notifications_count += 1
       elsif user.role == 'lc'
         Notification.find_or_create_by!(
           user: user,
-          message: "If a learner’s name is incorrect, please update it via the LC Dashboard. Otherwise, it will appear incorrectly in the report shared with parents."
+          message: "Please make sure that you and your learners are using the Google Chrome browser. Any other browser will most likely cause you problems, such as losing data."
         )
         notifications_count += 1
       end

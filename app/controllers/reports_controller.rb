@@ -85,7 +85,6 @@ class ReportsController < ApplicationController
       lc.hubs.count >= 3
     end
 
-
     if @sprint
       @report = @learner.reports.find_by(sprint: @sprint)
     else
@@ -98,6 +97,22 @@ class ReportsController < ApplicationController
       @has_prev_sprint = Sprint.exists?(['end_date < ?', @sprint.start_date])
     end
     @has_next_sprint = Sprint.exists?(['start_date > ?', @sprint.end_date])
+
+    # Fetch reports where parent: true for the learner
+    @reports_parents = @learner.reports.where(parent: true)
+
+    # Check if the next report belongs to @reports_parents for guardians
+    if current_user.role == 'guardian'
+      next_sprint = Sprint.where('start_date > ?', @sprint.end_date).first
+      if next_sprint
+        next_report = @learner.reports.find_by(sprint: next_sprint)
+        @disable_next = next_report.nil? || !@reports_parents.include?(next_report)
+      else
+        @disable_next = true # No next sprint exists
+      end
+    else
+      @disable_next = false
+    end
 
     @edit = false
 
@@ -132,35 +147,33 @@ class ReportsController < ApplicationController
       @hide = @report.hide
     end
 
-    @sprint = @report.sprint
-    @sprint_goal = @learner.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: @sprint)
-    @sprint_goal_knowledges = @sprint_goal.knowledges.pluck(:subject_name) if @sprint_goal
+    sprint = @report.sprint
+    sprint_goal = @learner.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: sprint)
+    sprint_goal_knowledges = sprint_goal.knowledges.pluck(:subject_name) if sprint_goal
 
-    @timelines = @learner.timelines
+    timelines = @learner.timelines
     .where(hidden: false)
     .joins(:subject) # Ensure we join the subjects table
     .where('subjects.name IN (:sprint_knowledges) OR timelines.personalized_name IN (:sprint_knowledges)',
-           sprint_knowledges: @sprint_goal_knowledges)
+           sprint_knowledges: sprint_goal_knowledges)
 
     @lcs = []
     @lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
 
-    @report_knowledges = @report.report_knowledges
+    if sprint_goal && sprint_goal.sprint.end_date >= Date.today
 
-    if @sprint_goal && @sprint_goal.sprint.end_date >= Date.today
-
-      @knowledges = @timelines.left_outer_joins(:subject, :exam_date)
-                    .where('subjects.name IN (:sprint_knowledges) OR personalized_name IN (:sprint_knowledges)', sprint_knowledges: @sprint_goal_knowledges)
+      knowledges = timelines.left_outer_joins(:subject, :exam_date)
+                    .where('subjects.name IN (:sprint_knowledges) OR personalized_name IN (:sprint_knowledges)', sprint_knowledges: sprint_goal_knowledges)
                     .pluck('subjects.name', :personalized_name, :progress, :difference, 'exam_dates.date')
 
 
-      @knowledges.each do |data|
+      knowledges.each do |data|
 
         name = data[1] || data[0]
 
-        if @sprint_goal.knowledges.find_by(subject_name: name).present?
+        if sprint_goal.knowledges.find_by(subject_name: name).present?
 
           knowledge_record = @report.report_knowledges.find_by(subject_name: name)
 
@@ -293,7 +306,7 @@ class ReportsController < ApplicationController
     print_section(pdf, sanitize_text_for_prawn(@report.general), "1. General Comment", 16)
     pdf.move_down 15
 
-        # Knowledge Section (Table)
+    # Knowledge Section (Table)
     title_height = pdf.height_of("2. Knowledge", size: 16, style: :bold)
     header_data = [["Subject", "Progress", "+/-", "Grade", "Exam"]]
     header_height = calculate_row_height(pdf, header_data, { 0 => 108, 1 => 108, 2 => 108, 3 => 108, 4 => 108 }, font_size: 12)
@@ -542,8 +555,7 @@ class ReportsController < ApplicationController
                      width: available_width - (2 * box_padding), size: font_size
       end
 
-      # Update remaining text
-      remaining_text = text_lines[max_lines..].to_a.join(" ")
+      remaining_text = text_lines[max_lines..].to_a.join("\n")
 
       # If there is more text to print, start a new page
       if remaining_text.length > 0
@@ -559,36 +571,36 @@ class ReportsController < ApplicationController
   def break_text_into_lines(pdf, text, size, width)
     lines = []
 
-    # Split text into paragraphs (by newlines) while keeping the \n intact
-    paragraphs = text.split("\n").map(&:strip)
+    # Split the text into segments using \n to preserve explicit newlines
+    paragraphs = text.split("\n", -1) # Preserve empty lines from explicit newlines
 
     paragraphs.each do |paragraph|
+
+      if paragraph.empty?
+        # Add an empty line to represent the newline
+        lines << ""
+        next
+      end
+
       current_line = ""
       words = paragraph.split(" ")
 
       words.each do |word|
         test_line = current_line.empty? ? word : "#{current_line} #{word}"
 
-        # Check if the current line fits the width
+        # Check if the current line fits within the width
         if pdf.width_of(test_line, size: size) > width
-          # Justify the line if it's not the last one
-          if current_line.strip.split.size > 1
-            lines << justify_line(current_line.strip, pdf, size, width)
-          else
-            lines << current_line.strip
-          end
+          # Justify the current line before adding it to the list
+          lines << justify_line(current_line.strip, pdf, size, width)
           current_line = word
         else
-          # Otherwise, add the word to the current line
+          # Otherwise, continue building the current line
           current_line = test_line
         end
       end
 
-      # Add the last line of the paragraph without justification
-      lines << current_line.strip unless current_line.empty?
-
-      # Add a blank line to maintain paragraph separation (if not the last paragraph)
-      lines << "" unless paragraph == paragraphs.last
+      # Add the last line of the paragraph (not justified)
+      lines << current_line.strip
     end
 
     lines
