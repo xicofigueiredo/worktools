@@ -57,7 +57,7 @@ class MoodleApiService
   # service = MoodleApiService.new
   # courses = service.get_all_courses
   #
-  #i need to create user topics
+  #I need to create user topics
 
 
 end
