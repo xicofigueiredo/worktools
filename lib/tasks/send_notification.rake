@@ -6,8 +6,9 @@ namespace :notifications do
       if user.role == 'learner' || user.role == 'lc'
         Notification.find_or_create_by!(
           user: user,
-          message: 'Last week issues on sprint goals and attendance were fixed. sorry for the inconvenience that could generated.  Thank you!'
+          message: "Good news! The issues affecting last week’s sprint goals have hopefully been resolved. We apologize for any inconvenience this may have caused. Thank you for your patience!"
         )
+        notifications_count +=1
       end
     end
 
