@@ -7,8 +7,8 @@ services:
     command: "postgres -c 'max_connections=500'"
     env_file:
       - .env.production
-    # ports:
-    #   - "5432:5432"
+    ports:
+      - "5432:5432"
   server:
       build: .
       command: "./bin/rails server"
