@@ -135,8 +135,33 @@ class MoodleApiService
     user_id = get_user_id(email)
     return puts "User not found!" if user_id.nil?
 
-    # Fetch course contents (including sections and activities)
+    # Fetch course contents (topics & activities)
     course_contents = call('core_course_get_contents', { courseid: course_id })
+
+    # Fetch completion status for activities
+    completion_status = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user_id })
+
+    # Fetch grades for activities in the course
+    grades_response = call('core_grades_get_gradeitems', { courseid: course_id })
+
+    # Convert completion status into a hash for quick lookup
+    completion_lookup = {}
+    if completion_status["statuses"]
+      completion_status["statuses"].each do |status|
+        completion_lookup[status["cmid"]] = status["state"] == 1 ? "✅ Done" : "❌ Not Done"
+      end
+    end
+
+    # Convert grades into a hash using cmid
+    grades_lookup = {}
+    if grades_response["gradeitems"]
+      grades_response["gradeitems"].each do |grade|
+        grades_lookup[grade["cmid"]] = {
+          grade: grade["graderaw"] || "No Grade",
+          max_grade: grade["grademax"] || "N/A"
+        }
+      end
+    end
 
     if course_contents.is_a?(Array) && course_contents.any?
       course_topics = []
@@ -145,17 +170,26 @@ class MoodleApiService
         next if section['name'].nil? || section['modules'].nil? # Skip empty sections
 
         section_title = section['name']
-        section_visibility = section['visible'] == 1 ? "✅ Visible" : "❌ Hidden"
+        section_visibility = section['visible'] == 1 ? " Visible" : "❌ Hidden"
         section_availability = section['availabilityinfo'] || "No restrictions"
 
         activities = section['modules'].map do |mod|
-          activity_visibility = mod['visible'] == 1 ? "✅ Visible" : "❌ Hidden"
+          activity_id = mod["id"]  # Capture the activity ID
+          activity_visibility = mod['visible'] == 1 ? " Visible" : "❌ Hidden"
           activity_availability = mod['availabilityinfo'] || "No restrictions"
+          completion_state = completion_lookup[activity_id] || "❓ Unknown"
+
+          # Check if the activity is completed and has a grade
+          grade_info = grades_lookup[activity_id]
+          grade_display = grade_info ? "#{grade_info[:grade]} / #{grade_info[:max_grade]}" : "No Grade"
 
           {
+            id: activity_id,  # Added activity ID here
             name: mod['name'],
             visible: activity_visibility,
-            availabilityinfo: activity_availability
+            availabilityinfo: activity_availability,
+            completed: completion_state,
+            grade: completion_state == "✅ Done" ? grade_display : "N/A"
           }
         end
 
@@ -167,16 +201,6 @@ class MoodleApiService
         }
       end
 
-      puts "📚 Topics and Activities in Course ID #{course_id}:"
-      course_topics.each do |topic|
-        puts "🔹 #{topic[:section]} (#{topic[:visible]})"
-        puts "   ⏳ #{topic[:availabilityinfo]}"
-        topic[:activities].each do |activity|
-          puts "  - #{activity[:name]} (#{activity[:visible]})"
-          puts "    ℹ️ #{activity[:availabilityinfo]}"
-        end
-      end
-
       return course_topics
     else
       puts "No topics or activities found for Course ID #{course_id}"
@@ -184,106 +208,123 @@ class MoodleApiService
     end
   end
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   # get the activities completion status of a course and a learner
-  def get_completion_status_for_learner(email, course_id)
-    user_id = get_user_id(email)
-    return puts "User not found!" if user_id.nil?
+  # def get_completion_status_for_learner(email, course_id)
+  #   user_id = get_user_id(email)
+  #   return puts "User not found!" if user_id.nil?
 
-    completion_data = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user_id })
+  #   completion_data = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user_id })
 
-    # Ensure we have a valid response
-    return puts "No completion data found!" if completion_data.nil? || completion_data["statuses"].nil?
+  #   # Ensure we have a valid response
+  #   return puts "No completion data found!" if completion_data.nil? || completion_data["statuses"].nil?
 
-    # Map Moodle completion states
-    status_map = {
-      0 => "❌ Not Completed",
-      1 => "✅ Completed",
-      2 => "🎉 Completed (Passed)",
-      3 => "⚠️ Completed (Failed)"
-    }
+  #   # Map Moodle completion states
+  #   status_map = {
+  #     0 => "❌ Not Completed",
+  #     1 => "Completed",
+  #     2 => "🎉 Completed (Passed)",
+  #     3 => "⚠️ Completed (Failed)"
+  #   }
 
-    completion_results = {}
+  #   completion_results = {}
 
-    completion_data["statuses"].each do |status|
-      activity_id = status["cmid"]
-      completion_results[activity_id] = status_map[status["state"]] || "❓ Unknown Status"
-    end
+  #   completion_data["statuses"].each do |status|
+  #     activity_id = status["cmid"]
+  #     completion_results[activity_id] = status_map[status["state"]] || "❓ Unknown Status"
+  #   end
 
-    return completion_results
-  end
+  #   return completion_results
+  # end
 
-  def get_grades_for_learner(email, course_id)
-    user_id = get_user_id(email)
-    return puts "User not found!" if user_id.nil?
+  # def get_grades_for_learner(email, course_id)
+  #   user_id = get_user_id(email)
+  #   return puts "User not found!" if user_id.nil?
 
-    # Fetch grade items for the course
-    grades_data = call('core_grades_get_gradeitems', { courseid: course_id })
+  #   # Fetch grade items for the course
+  #   grades_data = call('core_grades_get_gradeitems', { courseid: course_id })
 
-    return puts "No grades found!" if grades_data.nil? || grades_data["gradeitems"].nil?
+  #   return puts "No grades found!" if grades_data.nil? || grades_data["gradeitems"].nil?
 
-    grades = {}
+  #   grades = {}
 
-    grades_data["gradeitems"].each do |item|
-      # Handle cases where Moodle rejects 'itemname'
-      clean_name = item["itemname"] rescue "Unnamed Item"
+  #   grades_data["gradeitems"].each do |item|
+  #     # Handle cases where Moodle rejects 'itemname'
+  #     clean_name = item["itemname"] rescue "Unnamed Item"
 
-      grades[item["id"]] = {
-        name: clean_name,
-        max_grade: item["grademax"],
-        min_grade: item["grademin"],
-        grade_pass: item["gradepass"],
-        aggregationcoef: item["aggregationcoef"], # Grade weight in final score
-      }
-    end
+  #     grades[item["id"]] = {
+  #       name: clean_name,
+  #       max_grade: item["grademax"],
+  #       min_grade: item["grademin"],
+  #       grade_pass: item["gradepass"],
+  #       aggregationcoef: item["aggregationcoef"], # Grade weight in final score
+  #     }
+  #   end
 
-    return grades
-  end
-
-
+  #   return grades
+  # end
 
 
 
-  def get_course_details_for_learner(email, course_id)
-    topics = get_course_topics_for_learner(email, course_id)
-    completion_status = get_completion_status_for_learner(email, course_id)
-    grades = get_grades_for_learner(email, course_id)
 
-    puts "📌 Course Overview for #{email} (Course ID: #{course_id}):"
-    topics.each do |topic|
-      puts "🔹 #{topic[:section]} (#{topic[:visible]})"
-      topic[:activities].each do |activity|
-        activity_status = completion_status[activity[:id]] || "❓ Unknown Status"
-        activity_grade = grades[activity[:id]] || "No grade"
-        puts "  - #{activity[:name]} (#{activity[:visible]})"
-        puts "    ✔️ Status: #{activity_status}"
-        puts "    📊 Grade: #{activity_grade}"
-      end
-    end
-  end
+
+  # def get_course_details_for_learner(email, course_id)
+  #   topics = get_course_topics_for_learner(email, course_id)
+  #   completion_status = get_completion_status_for_learner(email, course_id)
+  #   grades = get_grades_for_learner(email, course_id)
+
+  #   puts "📌 Course Overview for #{email} (Course ID: #{course_id}):"
+  #   topics.each do |topic|
+  #     puts "🔹 #{topic[:section]} (#{topic[:visible]})"
+  #     topic[:activities].each do |activity|
+  #       activity_status = completion_status[activity[:id]] || "❓ Unknown Status"
+  #       activity_grade = grades[activity[:id]] || "No grade"
+  #       puts "  - #{activity[:name]} (#{activity[:visible]})"
+  #       puts "    ✔️ Status: #{activity_status}"
+  #       puts "    📊 Grade: #{activity_grade}"
+  #     end
+  #   end
+  # end
 
 
 
   # 6) Create user topics based on enrolled courses
-  def create_user_topics(email)
-    user_id = get_user_id(email)
-    return puts "User not found!" unless user_id
+  # def create_user_topics(email)
+  #   user_id = get_user_id(email)
+  #   return puts "User not found!" unless user_id
 
-    courses = get_user_courses(email)
-    return puts "No courses found!" if courses.empty?
+  #   courses = get_user_courses(email)
+  #   return puts "No courses found!" if courses.empty?
 
-    courses.each do |course|
-      subject = Subject.find_or_create_by(moodle_id: course['shortname'])
-      subject.update(moodle_id: course['id'])
+  #   courses.each do |course|
+  #     subject = Subject.find_or_create_by(moodle_id: course['shortname'])
+  #     subject.update(moodle_id: course['id'])
 
-      UserTopic.create!(
-        user_id: user_id,
-        subject_id: subject.id,
-        moodle_course_id: course['id'],
-        status: 'active'
-      )
-      puts "Created topic for #{course['shortname']} (#{course['id']})"
-    end
-  end
+  #     UserTopic.create!(
+  #       user_id: user_id,
+  #       subject_id: subject.id,
+  #       moodle_course_id: course['id'],
+  #       status: 'active'
+  #     )
+  #     puts "Created topic for #{course['shortname']} (#{course['id']})"
+  #   end
+  # end
 
   # service = MoodleApiService.new
   # courses = service.get_all_courses
