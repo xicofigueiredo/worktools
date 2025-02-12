@@ -34,7 +34,7 @@ class ApplicationController < ActionController::Base
     return if request.path == unsupported_browser_path # Skip the unsupported browser page
     browser = Browser.new(request.user_agent)
 
-    if !browser.chrome?
+    if !browser.chrome? && !browser.edge?
       render "static/unsupported_browser", layout: "application"
     end
   end
