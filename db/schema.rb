@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_01_17_102710) do
+ActiveRecord::Schema[7.0].define(version: 2025_02_13_172629) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -195,6 +195,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_01_17_102710) do
     t.index ["weekly_meeting_id"], name: "index_monday_slots_on_weekly_meeting_id"
   end
 
+  create_table "moodle_topics", force: :cascade do |t|
+    t.bigint "timeline_id", null: false
+    t.float "time", null: false
+    t.string "name", null: false
+    t.string "unit", null: false
+    t.integer "order"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.float "grade"
+    t.boolean "done", default: false, null: false
+    t.datetime "completion_date"
+    t.index ["timeline_id"], name: "index_moodle_topics_on_timeline_id"
+  end
+
   create_table "mots", force: :cascade do |t|
     t.integer "rating"
     t.text "why"
@@ -309,14 +323,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_01_17_102710) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["kda_id"], name: "index_sdls_on_kda_id"
-  end
-
-  create_table "settings", force: :cascade do |t|
-    t.boolean "report"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "sprint_id", null: false
-    t.index ["sprint_id"], name: "index_settings_on_sprint_id"
   end
 
   create_table "skills", force: :cascade do |t|
@@ -563,6 +569,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_01_17_102710) do
   add_foreign_key "monday_slots", "users", column: "lc_id"
   add_foreign_key "monday_slots", "users", column: "learner_id"
   add_foreign_key "monday_slots", "weekly_meetings"
+  add_foreign_key "moodle_topics", "timelines"
   add_foreign_key "mots", "kdas"
   add_foreign_key "notes", "users"
   add_foreign_key "notifications", "users"
@@ -575,7 +582,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_01_17_102710) do
   add_foreign_key "reports", "sprints"
   add_foreign_key "reports", "users"
   add_foreign_key "sdls", "kdas"
-  add_foreign_key "settings", "sprints"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"

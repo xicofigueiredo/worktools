@@ -119,6 +119,24 @@ class MoodleApiService
         )
         created_timelines << timeline
         puts "Created #{timeline.subject.name} Timeline for #{course.split(':').last.strip}"
+
+        # 🔹 Fetch and Create MoodleTopics for the Timeline 🔹
+        course_topics = get_course_topics_for_learner(email, course.split(":").first.to_i)
+
+        course_topics.each do |section|
+          section[:activities].each_with_index do |activity, index|
+            MoodleTopic.create!(
+              timeline: timeline,
+              time: 1,
+              name: activity[:name],
+              unit: section[:section],  # Store section name as unit
+              order: index + 1,  # Use index to maintain order
+              grade: activity[:grade] == "No Grade" ? nil : activity[:grade].to_f,  # Convert grade if available
+              done: activity[:completed] == "✅ Done",  # Mark as done if completed
+              completion_date: activity[:completion_date] == "N/A" ? nil : DateTime.parse(activity[:completion_date])
+            )
+          end
+        end
       end
     end
 
@@ -129,6 +147,7 @@ class MoodleApiService
 
     puts "✅ Created #{created_timelines.size} timelines for #{email}"
   end
+
 
   # get all the topics for a specific course and learner
   def get_course_topics_for_learner(email, course_id)
@@ -148,7 +167,10 @@ class MoodleApiService
     completion_lookup = {}
     if completion_status["statuses"]
       completion_status["statuses"].each do |status|
-        completion_lookup[status["cmid"]] = status["state"] == 1 ? "✅ Done" : "❌ Not Done"
+        completion_lookup[status["cmid"]] = {
+          completed: status["state"] == 1 ? "✅ Done" : "❌ Not Done",
+          completion_date: status["timecompleted"] ? Time.at(status["timecompleted"]).strftime("%d %B %Y, %H:%M") : "N/A"
+        }
       end
     end
 
@@ -177,7 +199,9 @@ class MoodleApiService
           activity_id = mod["id"]  # Capture the activity ID
           activity_visibility = mod['visible'] == 1 ? " Visible" : "❌ Hidden"
           activity_availability = mod['availabilityinfo'] || "No restrictions"
-          completion_state = completion_lookup[activity_id] || "❓ Unknown"
+
+          # Get completion state and completion date
+          completion_info = completion_lookup[activity_id] || { completed: "❓ Unknown", completion_date: "N/A" }
 
           # Check if the activity is completed and has a grade
           grade_info = grades_lookup[activity_id]
@@ -188,8 +212,9 @@ class MoodleApiService
             name: mod['name'],
             visible: activity_visibility,
             availabilityinfo: activity_availability,
-            completed: completion_state,
-            grade: completion_state == "✅ Done" ? grade_display : "N/A"
+            completed: completion_info[:completed],
+            completion_date: completion_info[:completion_date],  # Added completion date
+            grade: completion_info[:completed] == "✅ Done" ? grade_display : "N/A"
           }
         end
 
@@ -207,6 +232,7 @@ class MoodleApiService
       return []
     end
   end
+
 
 
 

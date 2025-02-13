@@ -56,6 +56,7 @@
       <div class="accordion" id="parentAccordion">
         <% @timelines.each do |timeline| %>
           <%= render partial: 'timelines/timeline', locals: { timeline: timeline } %>
+          <%# <%= render partial: 'timelines/moodle_timeline', locals: { timeline: timeline } %>
         <% end %>
       </div>
     </div>
