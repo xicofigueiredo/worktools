@@ -25,7 +25,31 @@ class TimelinesController < ApplicationController
 
     @holidays = current_user.holidays.where("end_date >= ?", 4.months.ago)
 
-    @timelines = current_user.timelines
+    @timelines = timelines.map do |timeline|
+      {
+        "id" => timeline.id,
+        "subject_id" => timeline.subject_id,
+        "subject_name" => timeline.subject.name,
+        "personalized_name" => timeline.personalized_name,
+        "category" => timeline.subject.category,
+        "start_date" => timeline.start_date,
+        "end_date" => timeline.end_date,
+        "progress" => timeline.progress,
+        "balance" => timeline.balance,
+        "topics" => timeline.subject.topics.order(:order, id: :asc).map do |topic|
+          user_topic = current_user.user_topics.find_or_initialize_by(topic:)
+          {
+            "id" => topic.id,
+            "name" => topic.name,
+            "unit" => topic.unit,
+            "time" => topic.time,
+            "deadline" => user_topic.deadline,
+            "done" => user_topic.done,
+            "user_topic_id" => user_topic.id
+          }
+        end
+      }
+    end
     #     timelines.each do |timeline|
     #       unless timeline.personalized_name
     #         if timeline.subject.category.include?("lws")

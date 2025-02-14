@@ -125,16 +125,18 @@ class MoodleApiService
 
         course_topics.each do |section|
           section[:activities].each_with_index do |activity, index|
-            MoodleTopic.create!(
-              timeline: timeline,
-              time: 1,
-              name: activity[:name],
-              unit: section[:section],  # Store section name as unit
-              order: index + 1,  # Use index to maintain order
-              grade: activity[:grade] == "No Grade" ? nil : activity[:grade].to_f,  # Convert grade if available
-              done: activity[:completed] == "✅ Done",  # Mark as done if completed
-              completion_date: activity[:completion_date] == "N/A" ? nil : DateTime.parse(activity[:completion_date])
-            )
+              next if activity[:completion_date] == "N/A" || activity[:completion_date]== "N/A" || activity[:visible] == "Hidden" || activity[:completed] == "❓ Unknown"
+              MoodleTopic.create!(
+                timeline: timeline,
+                time: 1,
+                name: activity[:name],
+                unit: section[:section],  # Store section name as unit
+                order: index + 1,  # Use index to maintain order
+                grade: activity[:grade] == "No Grade" ? nil : activity[:grade].to_f,  # Convert grade if available
+                done: activity[:completed] == "✅ Done",  # Mark as done if completed
+                completion_date: activity[:completion_date] == "N/A" ? nil : DateTime.parse(activity[:completion_date]),
+                moodle_id: activity[:id]
+              )
           end
         end
       end
@@ -214,7 +216,7 @@ class MoodleApiService
             availabilityinfo: activity_availability,
             completed: completion_info[:completed],
             completion_date: completion_info[:completion_date],  # Added completion date
-            grade: completion_info[:completed] == "✅ Done" ? grade_display : "N/A"
+            grade: completion_info[:completed] == "✅ Done" ? grade_display : "N/A",
           }
         end
 
@@ -232,6 +234,66 @@ class MoodleApiService
       return []
     end
   end
+
+
+  def update_course_topics_for_learner(user, timeline)
+    count = 0
+    course_id = timeline.subject.moodle_id
+    return puts "No Moodle ID for subject!" if course_id.nil?
+
+    # Fetch completion status for activities in the course
+    completion_response = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user.moodle_id })
+    completion_lookup = {}
+    if completion_response["statuses"]
+      completion_response["statuses"].each do |status|
+        completion_lookup[status["cmid"]] = {
+          completed: status["state"] == 1,  # Moodle's state 1 means completed
+          completion_date: status["timecompleted"] ? Time.at(status["timecompleted"]) : nil
+        }
+      end
+    end
+
+    # Fetch grades for activities in the course
+    grades_response = call('core_grades_get_gradeitems', { courseid: course_id })
+    grades_lookup = {}
+    if grades_response["gradeitems"]
+      grades_response["gradeitems"].each do |grade|
+        grades_lookup[grade["cmid"]] = {
+          grade: grade["graderaw"],
+          max_grade: grade["grademax"]
+        }
+      end
+    end
+
+    # Update MoodleTopics in the given timeline
+    timeline.moodle_topics.each do |topic|
+      moodle_activity_id = topic.moodle_id  # Ensure this is the correct field
+
+      if completion_lookup.key?(moodle_activity_id)
+        completion_data = completion_lookup[moodle_activity_id]
+        grade_data = grades_lookup[moodle_activity_id]
+
+        updated_attributes = {}
+        updated_attributes[:done] = completion_data[:completed] if topic.done != completion_data[:completed]
+        updated_attributes[:completion_date] = completion_data[:completion_date] if topic.completion_date != completion_data[:completion_date]
+        updated_attributes[:grade] = grade_data[:grade] if grade_data && topic.grade != grade_data[:grade]
+
+        topic.update!(updated_attributes) unless updated_attributes.empty?
+        count += 1
+        puts "Checking completion for Moodle Topic ID #{topic.id}:"
+        puts " - Existing Done: #{topic.done}, New Done: #{completion_data[:completed]}"
+        puts " - Existing Date: #{topic.completion_date}, New Date: #{completion_data[:completion_date]}"
+        puts " - Existing Grade: #{topic.grade}, New Grade: #{grade_data[:grade]}" if grade_data
+      end
+
+
+    end
+
+    puts "✅ Updated #{count} Moodle topics for timeline ID #{timeline.id} (Course ID: #{course_id})"
+  end
+
+
+
 
 
 

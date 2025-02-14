@@ -66,19 +66,18 @@
             <tr>
               <th>Unit</th>
               <th>Topic</th>
-                <th>Hours</th>
-                <th width="120px">Date</th>
-              <th>Done</th>
+              <th>Hours</th>
+              <th width="120px">Date</th>
             </tr>
           </thead>
           <tbody>
             <% previous_unit = nil %>
-            <% timeline.moodle_topics.each do |topic| %>
-              <% background_color = if !topic["done"] && topic["deadline"] && topic["deadline"] < Date.today && !['lws7', 'lws8', 'lws9'].include?(topic["subject_category"])
+            <% timeline.moodle_topics.order(id: :asc).each do |topic| %>
+              <% background_color = if !topic.done && topic["deadline"] && topic["deadline"] < Date.today && !['lws7', 'lws8', 'lws9'].include?(topic["subject_category"])
                                       '#ff193499'
-                                    elsif !topic["done"] && topic["deadline"] && Date.today.monday? && topic["deadline"] < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(topic["subject_category"])
+                                    elsif !topic.done && topic["deadline"] && Date.today.monday? && topic["deadline"] < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(topic["subject_category"])
                                       'lightgrey'
-                                    elsif topic["done"]
+                                    elsif topic.done
                                       '#00ce00a6'
                                     else
                                       'transparent'
@@ -93,8 +92,7 @@
                 </td>
                 <td style="background-color: <%= background_color %>;"><%= topic["name"] %></td>
                 <td style="background-color: <%= background_color %>;"><%= topic.time %></td>
-                <td style="background-color: <%= background_color %>;"></td>
-                <td style="background-color: <%= background_color %>;"> <%= topic.done %></td>
+                <td style="background-color: <%= background_color %>;"><%= topic.completion_date.strftime('%d-%m-%Y') if "01-01-1970" != topic.completion_date.strftime('%d-%m-%Y') %></td>
               </tr>
             <% end %>
           </tbody>
