@@ -65,7 +65,7 @@ class KdasController < ApplicationController
   # DELETE /kdas/1
   def destroy
     @kda.destroy
-    redirect_to kdas_url, notice: 'Kda was successfully destroyed.'
+    redirect_to kdas_url, notice: 'Kda was destroyed.'
   end
 
   private
