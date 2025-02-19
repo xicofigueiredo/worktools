@@ -78,13 +78,14 @@
                           fields.all? { |field| object.send(field).present? }
                         end
 
-                        current_week = Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today)
-                        kda = user.kdas.find_by(week: current_week)
-                        required_fields = [:sdl, :ini, :mot, :p2p, :hubp]
-                        populated = false
+                        # Get the last 4 weeks including the current week
+                        last_4_weeks = Week.where('start_date <= ?', Date.today).order(start_date: :desc).limit(4)
 
-                        if kda
-                          populated = required_fields.all? do |field|
+                        # Find if any KDA from the last 4 weeks is fully populated
+                        required_fields = [:sdl, :ini, :mot, :p2p, :hubp]
+                        populated = last_4_weeks.any? do |week|
+                          kda = user.kdas.find_by(week: week)
+                          kda && required_fields.all? do |field|
                             kda_field = kda.send(field)
                             fields_populated?(kda_field, [:why, :improve])
                           end
