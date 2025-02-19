@@ -83,7 +83,7 @@ class PagesController < ApplicationController
       @communities = @sprint_goals&.communities
       @hub_lcs = []
       @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3
+        lc.hubs.count >= 3 || lc.deactivate == true
       end
 
       @yearly_presence = calc_yearly_presence(@learner)
