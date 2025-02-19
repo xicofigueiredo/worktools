@@ -83,7 +83,7 @@ class PagesController < ApplicationController
       @communities = @sprint_goals&.communities
       @hub_lcs = []
       @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3 || lc.deactivate == true
+        lc.hubs.count >= 3 || lc.deactivate
       end
 
       @yearly_presence = calc_yearly_presence(@learner)
@@ -153,7 +153,7 @@ class PagesController < ApplicationController
     @communities = @sprint_goals&.communities
     @hub_lcs = []
     @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3 || lc.deactivate == true
+      lc.hubs.count >= 3 || lc.deactivate
     end
 
     @holidays = @learner.holidays
