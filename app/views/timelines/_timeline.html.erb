@@ -7,7 +7,7 @@
           <div class="d-flex justify-content-between">
             <h5>
               <%= timeline["subject_name"].present? ? timeline["subject_name"] : timeline["personalized_name"] %>
-              <% unless timeline["category"]&.include?("lws") || timeline["personalized_name"].present? %>
+              <% unless timeline["personalized_name"].present? %>
                 <% if timeline["balance"] > 0 %>
                   <span class="badge rounded-pill bg-success">+<%= timeline["balance"] %></span>
                 <% elsif timeline["balance"] < 0 %>
