@@ -21,7 +21,7 @@ class PagesController < ApplicationController
         learners: hub.users.where(role: 'learner', deactivate: [false, nil]).order(:full_name)
       }
     end
-    # Transform data into a format suitable for the view
+
     # @hubs = hubs_with_users.map do |hub|
     #   {
     #     "name" => hub.name,
