@@ -37,27 +37,36 @@
             <% end %>
             <%# <td><%= @weekly_goals_percentage %>
           </tr>
-          <tr>
-<tr>
-  <td style="text-align: left;">KDA's</td>
-  <% @current_sprint_weeks.each_slice(4) do |week_group| %>
-    <% past_or_current = week_group.any? { |week| week.start_date <= Date.today } %>
+            <tr>
+              <td style="text-align: left;">KDA's</td>
+              <% @current_sprint_weeks.each_slice(4) do |week_group| %>
+                <% past_or_current = week_group.any? { |week| week.start_date <= Date.today } %>
 
-    <% if past_or_current %>
-      <% completed = week_group.any? { |week| week.kdas.where(user: @learner).exists? } %>
+                <% if past_or_current %>
+                  <% completed = week_group.any? { |week| week.kdas.where(user: @learner).exists? } %>
 
-      <td colspan="4" style="text-align: center; border: 2px solid <%= completed ? 'lightgreen' : 'red' %>;">
-        <% if completed %>
-          <i class="fa-regular fa-circle-check text-success"></i>
-        <% else %>
-          <i class="fa-regular fa-circle-xmark text-danger"></i>
-        <% end %>
-      </td>
-    <% else %>
-      <td colspan="4"></td>
-    <% end %>
-  <% end %>
-</tr>
+                  <td colspan="4" style="text-align: center; padding: 5px; position: relative;">
+                    <div style="
+                      display: inline-block;
+                      width: 100%;
+                      height: 100%;
+                      padding: 8px;
+                      border: 2px solid <%= completed ? 'lightgreen' : 'red' %>;
+                      box-sizing: border-box;
+                      border-radius: 5px;
+                    ">
+                      <% if completed %>
+                        <i class="fa-regular fa-circle-check text-success"></i>
+                      <% else %>
+                        <i class="fa-regular fa-circle-xmark text-danger"></i>
+                      <% end %>
+                    </div>
+                  </td>
+                <% else %>
+                  <td colspan="4"></td>
+                <% end %>
+              <% end %>
+            </tr>
 
 
 

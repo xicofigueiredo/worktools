@@ -52,20 +52,16 @@
             <tr>
               <th></th>
               <% @current_sprint_weeks.each do |week| %>
-                <th style="vertical-align: middle;">
-                  <div class="d-flex">
-                    <% if week.name.include?("Build") %>
-                      <%= week.week_name_abbr %>
-                      <p style="font-size: 10px; margin-bottom: -1;">BW</p>
-                    <% else %>
-                      <div style="margin-bottom: 3px"><%= week.week_name_abbr %></div>
-                    <% end %>
+                <th class="week-header" >
+                  <div class="week-name-container">
+                    <div class="week-name"><%= week.week_name_abbr %></div>
                   </div>
                 </th>
               <% end %>
-              <th>
-                Overall
-              </th>
+              <%# <th>Overall</th> %>
+                <th>
+                  Overall
+                </th>
             </tr>
           </thead>
           <tbody>
@@ -89,23 +85,34 @@
               <td><%= @weekly_goals_percentage %>%</td>
             </tr>
             <tr>
-              <td>KDAs</td>
-              <% @current_sprint_weeks.each do |week| %>
-                <% if week.kdas.where(user: @learner).exists? %>
-                  <% if week.start_date <= Date.today %>
-                    <td class="text-success"><i class="fa-regular fa-circle-check"></i></td>
-                  <% else %>
-                    <td></td>
-                  <% end %>
+              <td>KDA's</td>
+              <% @current_sprint_weeks.each_slice(4) do |week_group| %>
+                <% past_or_current = week_group.any? { |week| week.start_date <= Date.today } %>
+
+                <% if past_or_current %>
+                  <% completed = week_group.any? { |week| week.kdas.where(user: @learner).exists? } %>
+
+                  <td colspan="4" style="text-align: center; padding: 5px; position: relative;">
+                    <div style="
+                      display: inline-block;
+                      width: 100%;
+                      height: 100%;
+                      padding: 8px;
+                      border: 2px solid <%= completed ? 'lightgreen' : 'red' %>;
+                      box-sizing: border-box;
+                      border-radius: 5px;
+                    ">
+                      <% if completed %>
+                        <i class="fa-regular fa-circle-check text-success"></i>
+                      <% else %>
+                        <i class="fa-regular fa-circle-xmark text-danger"></i>
+                      <% end %>
+                    </div>
+                  </td>
                 <% else %>
-                  <% if week.start_date <= Date.today %>
-                    <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
-                  <% else %>
-                    <td></td>
-                  <% end %>
+                  <td colspan="4"></td>
                 <% end %>
               <% end %>
-              <td><%= @kdas_percentage %>%</td>
             </tr>
             <tr>
               <td>Unjustified Absences</td>
