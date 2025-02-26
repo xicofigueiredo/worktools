@@ -6,9 +6,10 @@ class PagesController < ApplicationController
   skip_before_action :authenticate_user!
   before_action :check_admin_role, only: [:dashboard_admin]
   before_action :check_lc_role,
-                only: %i[dashboard_lc learner_profile attendance attendances learner_attendances update_attendance
+                only: %i[dashboard_lc attendance attendances learner_attendances update_attendance
                          update_absence_attendance update_start_time_attendance update_end_time_attendance
                          update_comments_attendance]
+  before_action :check_cm_role, only: %i[dashboard_cm cm_learners]
 
   def dashboard_admin
     @deactivated = User.where(deactivate: true, role: 'learner')
@@ -66,6 +67,44 @@ class PagesController < ApplicationController
     @users = @users.order(topics_balance: :asc)
   end
 
+  def dashboard_cm
+    redirect_to cm_learners_path if current_user.subjects.count <= 1 && params[:subject_id].nil?
+    @subjects = current_user.subject_records
+
+    # Count users per subject
+    @subject_user_counts = User.joins(:timelines)
+                               .group("timelines.subject_id")
+                               .count
+  end
+
+
+  def cm_learners
+
+    @selected_subject = params[:subject_id].present? ? Subject.find_by(id: params[:subject_id]) : Subject.first
+
+    @users = User.joins(:timelines).where(timelines: { subject_id: @selected_subject.id })
+    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+
+    # dropdown por nome
+    # ordenar por topicos apenas pela disciplina do cm
+    # apagar icones de sg wg etc... e por attendance
+
+    @total_balance = {}
+
+    @users.each do |user|
+      total_balance_for_user = 0
+      user.timelines.each do |timeline|
+        total_balance_for_user += timeline.difference unless timeline.difference.nil?
+      end
+      user.topics_balance = total_balance_for_user
+      user.save
+    end
+
+    @users = @users.order(topics_balance: :asc)
+
+  end
+
+
   def dashboard_dc
     @hubs = current_user.hubs
   end
@@ -105,6 +144,8 @@ class PagesController < ApplicationController
       redirect_to dashboard_lc_path
     elsif current_user.role == "guardian" && kids.count.positive?
       redirect_to learner_profile_path(kids.first)
+    elsif current_user.role == "cm"
+      redirect_to dashboard_cm_path
     else
       redirect_to about_path
     end
@@ -137,7 +178,7 @@ class PagesController < ApplicationController
 
     redirect_to root_path and return if @learner.nil?
 
-    unless current_user.kids.include?(@learner.id) || current_user.role == "admin" || current_user.role == "lc"
+    unless current_user.kids.include?(@learner.id) || current_user.role == "admin" || current_user.role == "lc" || current_user.role == "cm"
       redirect_to root_path and return
     end
 
@@ -308,7 +349,13 @@ class PagesController < ApplicationController
   end
 
   def check_lc_role
-    return if current_user.role != "learner"
+    return if current_user.role == "lc" || current_user.role == "admin"
+
+    redirect_to root_path, alert: "You are not authorized to access this page."
+  end
+
+  def check_cm_role
+    return if current_user.role == "cm"|| current_user.role == "admin"
 
     redirect_to root_path, alert: "You are not authorized to access this page."
   end

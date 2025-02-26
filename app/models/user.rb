@@ -30,7 +30,7 @@ class User < ApplicationRecord
   has_many :reports
   has_many :notifications, dependent: :destroy
 
-  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', dc: 'Development Coach', guardian: 'Parent' }
+  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', dc: 'Development Coach', guardian: 'Parent', cm: 'Course Manager' }
   validate :email_domain_check, on: :create
 
   after_create :associate_with_hubs, :create_learner_flag
@@ -46,6 +46,10 @@ class User < ApplicationRecord
 
   def timelines_sorted_by_balance
     timelines.order(balance: :asc, start_date: :asc)
+  end
+
+  def subject_records
+    Subject.where(id: subjects)
   end
 
   private
