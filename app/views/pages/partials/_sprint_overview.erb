@@ -73,29 +73,6 @@
               <%#<td><%= @weekly_goals_percentage %>
             </td>
           </tr>
-          <% if current_user.kids.count < 1 %>
-            <tr>
-              <td style="text-align: left;">KDAs</td>
-              <% @current_sprint_weeks.each do |week| %>
-                <% if week.kdas.where(user: @learner).exists? %>
-                  <% if week.start_date <= Date.today %>
-                    <td class="text-success"><i class="fa-regular fa-circle-check"></i></td>
-                  <% else %>
-                    <td></td>
-                  <% end %>
-                <% elsif week.name.include?("Build") %>
-                  <td><i class="fa-solid fa-hammer"></i></td>
-                <% else %>
-                  <% if week.start_date <= Date.today %>
-                    <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
-                  <% else %>
-                    <td></td>
-                  <% end %>
-                <% end %>
-              <% end %>
-              <%# <td><%= @kdas_percentage %>
-            </tr>
-          <% end %>
           <tr>
             <td style="text-align: left;">Unjustified Absences</td>
             <% @current_sprint_weeks.each do |week| %>
