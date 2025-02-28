@@ -86,7 +86,7 @@
           current_user: current_user %>
     </div>
 
-    <h2>Knowledge</h2>
+    <h2>Timelines</h2>
     <p>Check your learner's academic performance.</p>
     <div>
       <%= render 'pages/partials/timelines_display' %>
@@ -95,22 +95,18 @@
   <% end %>
 
   <h2>Holidays</h2>
-  <p>Check your learner's holidays below.</p>
   <div>
     <%= render 'pages/partials/holidays',
         holidays: @holidays %>
   </div>
 
-  <%#<h2>Knowledges Goals</h2>
-  <p>Check your learner's goals for this sprint.</p>
+  <h2>Sprint Goals</h2>
+  <p>Check your learner's goals below.</p>
   <div>
-    <%= render 'pages/partials/sg_knowledges' %>
-  <%# </div> %>
-
-  <h2>Skills & Community</h2>
-  <p>Check your learner's goals for this sprint.</p>
-  <div>
-    <%= render 'pages/partials/skills_and_communities' %>
+    <%= render 'pages/partials/skills_and_communities',
+        sprint_goal: @sprint_goal,
+        current_sprint: @current_sprint,
+        learner: @learner %>
   </div>
 
 </div>

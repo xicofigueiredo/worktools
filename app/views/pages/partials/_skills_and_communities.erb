@@ -1,40 +1,96 @@
-<div class="mb-5">
-  <div class="card mb-2 shadow-sm px-2 responsive-card" style="border-radius: 10px">
-    <div class="px-2 overflow-auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th style="text-align: left;">Activity</th>
-            <th>Your Goals for this Activity</th>
-            <th>The challenges you might encounter.</th>
-            <th>The plan to overcome the challenges</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @skills&.each do |skill| %>
-            <tr>
-              <td style="text-align: left;"><%= skill.extracurricular %></td>
-              <td><%= skill.smartgoals %></td>
-              <td><%= skill.difficulties %></td>
-              <td><%= skill.plan %></td>
-            </tr>
+<%= turbo_frame_tag "lp_sprint_goal" do %>
+  <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+
+
+  <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
+    <%= button_to change_sprint_goal_path(current_sprint_id: current_sprint.id - 1, learner_id: learner.id, ), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center h-100", data: { turbo_frame: 'lp_sprint_goal' } do %>
+      <i class="fa-solid fa-chevron-left"></i>
+    <% end %>
+
+    <div class= "btn btn-outline-secondary rounded d-flex align-items-center h-100">
+      <div><%= current_sprint.name %> <br><%= current_sprint.start_date.strftime("%Y") %></div>
+    </div>
+
+    <%= button_to change_sprint_goal_path(current_sprint_id: current_sprint.id + 1, learner_id: learner.id, ), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center h-100", data: { turbo_frame: 'lp_sprint_goal' } do %>
+      <i class="fa-solid fa-chevron-right"></i>
+    <% end %>
+  </div>
+  <br>
+  <br>
+
+  </div>
+
+    <div class="mb-5">
+      <div class="card mb-2 shadow-sm px-2 responsive-card" style="border-radius: 10px">
+        <div class="px-2 overflow-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="text-align: left;">Subject</th>
+                <th>The challenges you might encounter.</th>
+                <th>The plan to overcome the challenges</th>
+                <th>Exam Season</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% sprint_goal.knowledges&.each do |k| %>
+                <tr>
+                  <td style="text-align: left;"><%= k.subject_name %></td>
+                  <td><%= k.difficulties %></td>
+                  <td><%= k.plan %></td>
+                  <td><%= k.exam_season %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+          <% if (sprint_goal.knowledges.nil? || sprint_goal.knowledges&.empty?) %>
+            <div class="text-center py-5">
+              <h2>No Knowledges Goals yet...</h2>
+              <p>Please help <%= learner.full_name %> fill out their Sprint goals</p>
+            </div>
           <% end %>
-          <% @communities&.each do |community| %>
-            <tr>
-              <td style="text-align: left;"><%= community.involved %></td>
-              <td><%= community.smartgoals %></td>
-              <td><%= community.difficulties %></td>
-              <td><%= community.plan %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-      <% if (@skills.nil? || @skills&.empty?) && (@communities.nil? || @communities&.empty?) %>
-        <div class="text-center py-5">
-          <h2>No Skills or Community Goals yet...</h2>
-          <p>Please help <%= @learner.full_name %> fill out their Skills and Community goals</p>
         </div>
-      <% end %>
+      </div>
+    </div>
+    <div class="mb-5">
+      <div class="card mb-2 shadow-sm px-2 responsive-card" style="border-radius: 10px">
+        <div class="px-2 overflow-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="text-align: left;">Activity</th>
+                <th>Your Goals for this Activity</th>
+                <th>The challenges you might encounter.</th>
+                <th>The plan to overcome the challenges</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% sprint_goal.skills&.each do |skill| %>
+                <tr>
+                  <td style="text-align: left;"><%= skill.extracurricular %></td>
+                  <td><%= skill.smartgoals %></td>
+                  <td><%= skill.difficulties %></td>
+                  <td><%= skill.plan %></td>
+                </tr>
+              <% end %>
+              <% sprint_goal.communities&.each do |community| %>
+                <tr>
+                  <td style="text-align: left;"><%= community.involved %></td>
+                  <td><%= community.smartgoals %></td>
+                  <td><%= community.difficulties %></td>
+                  <td><%= community.plan %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+          <% if (sprint_goal.skills.nil? || sprint_goal.skills&.empty?) && (sprint_goal.communities.nil? || sprint_goal.skillscommunities&.empty?) %>
+            <div class="text-center py-5">
+              <h2>No Skills or Community Goals yet...</h2>
+              <p>Please help <%= learner.full_name %> fill out their Skills and Community goals</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+<% end %>

@@ -188,10 +188,10 @@ class PagesController < ApplicationController
     @timelines = @learner.timelines.where(hidden: false)
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
     @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
-    @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
-    @sg_knowledges = @sprint_goals&.knowledges
-    @skills = @sprint_goals&.skills
-    @communities = @sprint_goals&.communities
+    @sprint_goal = @learner.sprint_goals.find_by(sprint: @current_sprint)
+    @sg_knowledges = @sprint_goal&.knowledges
+    @skills = @sprint_goal&.skills
+    @communities = @sprint_goal&.communities
     @hub_lcs = []
     @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3 || lc.deactivate
@@ -211,6 +211,7 @@ class PagesController < ApplicationController
     @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
     @current_weekly_goal_date = today
+    @current_sprint_goal_date = Date.today
 
     if today.saturday?
       @current_weekly_goal_date = today - 1.day
@@ -223,8 +224,7 @@ class PagesController < ApplicationController
 
     @weekly_goal = @learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?",
                                                               @current_weekly_goal_date, @current_weekly_goal_date)
-
-    @attendances = @learner.attendances.where(attendance_date: @current_sprint.start_date..@current_sprint.end_date)
+    @sprint_goal = @learner.sprint_goals.joins(:sprint).find_by("sprints.start_Date <= ? AND sprints.end_date >= ?", @current_sprint_goal_date, @current_sprint_goal_date)
 
     @attendances = @learner.attendances.where(attendance_date: @current_sprint.start_date..@current_sprint.end_date)
 
@@ -267,6 +267,32 @@ class PagesController < ApplicationController
     update_weekly_goal(weekly_goal, week, learner, date)
   end
 
+  def change_sprint_goal
+    sprint = Sprint.find_by(id: params[:current_sprint_id])
+    learner = User.find_by(id: params[:learner_id])
+
+    if sprint.nil?
+      Rails.logger.error "❌ No Sprint found for ID: #{params[:current_sprint_id]}"
+      flash[:alert] = "Sprint not found!"
+      redirect_to root_path and return
+    end
+
+    if learner.nil?
+      Rails.logger.error "❌ Learner not found for ID: #{params[:learner_id]}"
+      flash[:alert] = "Learner not found!"
+      redirect_to root_path and return
+    end
+
+    sprint_goal = learner.sprint_goals.find_by(sprint_id: sprint.id)
+
+    if sprint_goal.nil?
+      Rails.logger.info "ℹ️ No sprint goal found for learner ID: #{learner.id} on sprint ID: #{sprint.id}"
+    end
+
+    update_sprint_goal(sprint_goal, sprint, learner)
+  end
+
+
   def not_found
     render 'not_found', status: :not_found
   end
@@ -299,6 +325,15 @@ class PagesController < ApplicationController
                                      current_week: week,
                                      learner:,
                                      current_date: date })
+  end
+
+  def update_sprint_goal(sprint_goal, sprint, learner)
+    render turbo_stream:
+      turbo_stream.replace("lp_sprint_goal",
+                           partial: "pages/partials/skills_and_communities",
+                           locals: { sprint_goal: sprint_goal,
+                                     current_sprint: sprint,
+                                     learner: learner })
   end
 
   def user_params
