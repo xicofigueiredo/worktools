@@ -16,95 +16,7 @@
                   <div class="card p-2 d-flex flex-row gap-1" style="border-radius: 10px; width: fit-content;">
                     <div>
                       <div class="text-secondary">
-                        SG
-                      </div>
-                      <div class="text-center">
-                     <%
-                        def fields_populated?(object, fields)
-                          fields.all? { |field| object.send(field).present? }
-                        end
-
-                        sg = user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
-
-                        all_fields_populated = false
-
-                        if sg.present?
-                          required_fields = {
-                            knowledge: [:difficulties, :plan],
-                            skill: [:extracurricular, :difficulties, :plan, :smartgoals],
-                            community: [:involved, :difficulties, :plan, :smartgoals]
-                          }
-
-                          # Ensure there's at least one of each category
-                          if sg.knowledges.any? && sg.skills.any? && sg.communities.any?
-                            knowledges_populated = sg.knowledges.all? { |knowledge| fields_populated?(knowledge, required_fields[:knowledge]) }
-                            skills_populated = sg.skills.all? { |skill| fields_populated?(skill, required_fields[:skill]) }
-                            communities_populated = sg.communities.all? { |community| fields_populated?(community, required_fields[:community]) }
-
-                            all_fields_populated = knowledges_populated && skills_populated && communities_populated
-                          end
-                        end
-                        %>
-                        <% if all_fields_populated%>
-                          <i class="fa-solid fa-check text-success"></i>
-                        <% else %>
-                          <i class="fa-solid fa-x text-danger"></i>
-                        <% end %>
-                      </div>
-                    </div>
-                    <div>
-                      <div class="text-secondary">
-                        WG
-                      </div>
-                      <div class="text-center">
-                        <%
-                        wg = user.weekly_goals.find_by(week: Week.find_by('start_date <= ? AND end_date >= ?', Date.today, Date.today))
-                        %>
-
-                        <% if wg && wg.weekly_slots.any? { |slot| slot.subject_name.present? } %>
-                          <i class="fa-solid fa-check text-success"></i>
-                        <% else %>
-                          <i class="fa-solid fa-x text-danger"></i>
-                        <% end %>
-                      </div>
-                    </div>
-                    <div>
-                      <div class="text-secondary">
-                        KDA
-                      </div>
-                      <div class="text-center">
-                        <%
-                        def fields_populated?(object, fields)
-                          fields.all? { |field| object.send(field).present? }
-                        end
-
-                        # Get the last 4 weeks including the current week
-                        last_4_weeks = Week.where('start_date <= ?', Date.today).order(start_date: :desc).limit(4)
-
-                        # Find if any KDA from the last 4 weeks is fully populated
-                        required_fields = [:sdl, :ini, :mot, :p2p, :hubp]
-                        populated = last_4_weeks.any? do |week|
-                          kda = user.kdas.find_by(week: week)
-                          kda && required_fields.all? do |field|
-                            kda_field = kda.send(field)
-                            fields_populated?(kda_field, [:why, :improve])
-                          end
-                        end
-                        %>
-
-                        <% if populated %>
-                          <i class="fa-solid fa-check text-success"></i>
-                        <% else %>
-                          <i class="fa-solid fa-x text-danger"></i>
-                        <% end %>
-
-                      </div>
-                    </div>
-                    <div>
-                      <div class="text-secondary">
-                        UA
-                      </div>
-                      <div class="text-center">
+                        Unjustified Absences:
                         <%= @current_sprint.count_absences(user) %>
                       </div>
                     </div>
@@ -137,8 +49,6 @@
                     </div>
                   <% end %>
                 <% end %>
-                <p class="text-secondary mb-1">Notifications Unread: <%= user.notifications.where(read: false).count %>
-
               </div>
             <% end %>
 
