@@ -17,8 +17,10 @@
 
   <body>
      <% if current_user.present? %>
-      <% if current_user.role == "lc" || current_user.role == "cm" %>
+      <% if current_user.role == "lc"%>
         <%= render "shared/lc_navbar" %>
+      <% elsif current_user.role == "cm"  %>
+        <%= render "shared/cm_navbar" %>
       <% elsif current_user.role == "admin" %>
         <%= render "shared/admin_navbar" %>
       <% elsif current_user.role == "guardian" %>
