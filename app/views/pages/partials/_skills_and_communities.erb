@@ -33,6 +33,7 @@
               </tr>
             </thead>
             <tbody>
+            <% if sprint_goal %>
               <% sprint_goal.knowledges&.each do |k| %>
                 <tr>
                   <td style="text-align: left;"><%= k.subject_name %></td>
@@ -41,9 +42,10 @@
                   <td><%= k.exam_season %></td>
                 </tr>
               <% end %>
+            <% end %>
             </tbody>
           </table>
-          <% if (sprint_goal.knowledges.nil? || sprint_goal.knowledges&.empty?) %>
+          <% if (sprint_goal.nil? || sprint_goal.knowledges.nil? || sprint_goal.knowledges&.empty?) %>
             <div class="text-center py-5">
               <h2>No Knowledges Goals yet...</h2>
               <p>Please help <%= learner.full_name %> fill out their Sprint goals</p>
@@ -65,25 +67,27 @@
               </tr>
             </thead>
             <tbody>
-              <% sprint_goal.skills&.each do |skill| %>
-                <tr>
-                  <td style="text-align: left;"><%= skill.extracurricular %></td>
-                  <td><%= skill.smartgoals %></td>
-                  <td><%= skill.difficulties %></td>
-                  <td><%= skill.plan %></td>
-                </tr>
-              <% end %>
-              <% sprint_goal.communities&.each do |community| %>
-                <tr>
-                  <td style="text-align: left;"><%= community.involved %></td>
-                  <td><%= community.smartgoals %></td>
-                  <td><%= community.difficulties %></td>
-                  <td><%= community.plan %></td>
-                </tr>
+              <% if sprint_goal %>
+                <% sprint_goal.skills&.each do |skill| %>
+                  <tr>
+                    <td style="text-align: left;"><%= skill.extracurricular %></td>
+                    <td><%= skill.smartgoals %></td>
+                    <td><%= skill.difficulties %></td>
+                    <td><%= skill.plan %></td>
+                  </tr>
+                <% end %>
+                <% sprint_goal.communities&.each do |community| %>
+                  <tr>
+                    <td style="text-align: left;"><%= community.involved %></td>
+                    <td><%= community.smartgoals %></td>
+                    <td><%= community.difficulties %></td>
+                    <td><%= community.plan %></td>
+                  </tr>
+                <% end %>
               <% end %>
             </tbody>
           </table>
-          <% if (sprint_goal.skills.nil? || sprint_goal.skills&.empty?) && (sprint_goal.communities.nil? || sprint_goal.skillscommunities&.empty?) %>
+          <% if (sprint_goal.nil? || sprint_goal.skills.nil? || sprint_goal.skills&.empty?) && (sprint_goal.nil? || sprint_goal.communities.nil? || sprint_goal.skillscommunities&.empty?) %>
             <div class="text-center py-5">
               <h2>No Skills or Community Goals yet...</h2>
               <p>Please help <%= learner.full_name %> fill out their Skills and Community goals</p>
