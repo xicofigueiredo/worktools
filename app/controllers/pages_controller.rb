@@ -69,7 +69,7 @@ class PagesController < ApplicationController
 
   def dashboard_cm
     redirect_to cm_learners_path if current_user.subjects.count <= 1 && params[:subject_id].nil?
-    @subjects = current_user.subject_records
+    @subjects = current_user.subject_records.order(name: :asc)
 
     # Count users per subject
     @subject_user_counts = User.joins(:timelines)
