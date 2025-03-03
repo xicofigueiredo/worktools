@@ -29,6 +29,13 @@
               <% end %>
             </div>
           </li>
+          <% if current_user.subjects.count >= 1 %>
+            <li class="nav-item">
+              <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(dashboard_lc_path)%>">
+                <%= link_to "CM Dashboard", dashboard_cm_path, class: "nav-link" %>
+              </div>
+            </li>
+          <% end %>
           <li class="nav-item">
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(weekly_meetings_path)%>">
               <%= link_to "Exams Seasons", weekly_meetings_path, class: "nav-link" %>

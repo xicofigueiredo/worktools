@@ -394,7 +394,7 @@ class PagesController < ApplicationController
   end
 
   def check_cm_role
-    return if current_user.role == "cm"|| current_user.role == "admin"
+    return if current_user.role == "cm" || current_user.role == "admin" || current_user.subjects.count >= 1
 
     redirect_to root_path, alert: "You are not authorized to access this page."
   end
