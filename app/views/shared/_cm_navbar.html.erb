@@ -25,11 +25,6 @@
               <%= link_to "Exams Seasons", weekly_meetings_path, class: "nav-link" %>
             </div>
           </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(lc_view_path)%>">
-              <%= link_to "Reports", reports_path, class: "nav-link" %>
-            </div>
-          </li>
           <li class="nav-item dropdown">
             <%= link_to 'Profile', class: 'avatar', id: 'navbarDropdown', 'data-bs-toggle': 'dropdown', 'aria-haspopup': true, 'aria-expanded': false do %>
               <%= image_tag "profile.jpeg", class: "avatar", alt: "dropdown menu" %>

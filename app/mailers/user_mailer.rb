@@ -31,6 +31,14 @@ class UserMailer < Devise::Mailer
          subject: 'Welcome to the new BGA App!')
   end
 
+  def welcome_cm(cm, password)
+    @cm = cm
+    @password = password
+    mail(to: @cm.email,
+         from: 'worktools@bravegenerationacademy.com',
+         subject: 'Welcome to the new BGA App!')
+  end
+
   def notifications_summary(user, notifications, lcs_emails)
     @user = user
     @notifications = notifications
