@@ -16,7 +16,7 @@
             <% @notes.each do |note| %>
             <tr style="display: table; width: 100%; table-layout: fixed;">
               <td class="lp-notes-category-width">
-                <p class="mb-2"><%= note.category %></p>
+                <p class="mb-2"><%= note.category.capitalize %></p>
                 <p><%= note.date.strftime("%d/%m/%Y") %></p>
               </td>
               <td class="lp-notes-topic-width"><%= note.topic %></td>

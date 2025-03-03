@@ -1,5 +1,7 @@
 class NotesController < ApplicationController
   before_action :set_learner, only: %i[new create edit update destroy]
+  before_action :enforce_category_for_cm, only: [:create, :update]
+
 
   def index
     @notes = Note.all
@@ -70,5 +72,11 @@ class NotesController < ApplicationController
 
   def note_params
     params.require(:note).permit(:category, :topic, :follow_up_action, :status)
+  end
+
+  def enforce_category_for_cm
+    if current_user.role == "cm"
+      params[:note][:category] = "knowledge"
+    end
   end
 end

@@ -184,7 +184,11 @@ class PagesController < ApplicationController
 
     today = Date.today
     @learner_flag = @learner.learner_flag
-    @notes = @learner.notes.order(created_at: :desc)
+    if current_user.role != "cm"
+      @notes = @learner.notes.order(created_at: :desc)
+    else
+      @notes = @learner.notes.where(category: "knowledge").order(created_at: :desc)
+    end
     @timelines = @learner.timelines.where(hidden: false)
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
     @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
