@@ -87,7 +87,7 @@
               <% end %>
             </tbody>
           </table>
-          <% if (sprint_goal.nil? || sprint_goal.skills.nil? || sprint_goal.skills&.empty?) && (sprint_goal.nil? || sprint_goal.communities.nil? || sprint_goal.skillscommunities&.empty?) %>
+          <% if (sprint_goal.nil? || sprint_goal.skills.nil? || sprint_goal.skills&.empty?) && (sprint_goal.nil? || sprint_goal.communities.nil? || sprint_goal.communities&.empty?) %>
             <div class="text-center py-5">
               <h2>No Skills or Community Goals yet...</h2>
               <p>Please help <%= learner.full_name %> fill out their Skills and Community goals</p>
