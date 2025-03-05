@@ -2,7 +2,7 @@ namespace :notifications do
   desc "Send notifications"
   task send_notifications: :environment do
     notifications_count = 0
-    subject_ids = [590]
+    subject_ids = [569]
 
     Timeline.where(subject_id: subject_ids, hidden: [false, nil]).find_each do |timeline|
       user = timeline.user
