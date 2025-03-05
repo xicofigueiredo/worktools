@@ -9,9 +9,9 @@
       </div>
       <% if current_user.role == "cm" %>
         <%= f.hidden_field :category, value: "Knowledge" %>
-        <p class="form-control-static">Knowledge</p>
+        <%= f.select :category, ['Knowledge'], {}, { class: 'form-control' } %>
       <% else %>
-        <%= f.select :category, ['Behaviour', 'Knowledge', 'Skills & Community', 'Parents'], {}, { class: 'form-control' } %>
+        <%= f.select :category, ['Behaviour', 'Knowledge', 'Skills & Community', 'Parents', 'General Update'], {}, { class: 'form-control' } %>
       <% end %>
     </div>
 
