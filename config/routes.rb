@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  get 'responses/create'
+  get 'forms/index'
+  get 'forms/show'
   get '/unsupported_browser', to: 'static#unsupported_browser', as: :unsupported_browser
   devise_for :users, controllers: {
     registrations: 'users/registrations',
@@ -122,5 +125,8 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :forms, only: [:index, :show] do
+      resources :responses, only: [:create]
+    end
 
 end

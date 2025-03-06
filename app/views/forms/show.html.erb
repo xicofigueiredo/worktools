@@ -1,0 +1,18 @@
+<h1><%= @form.title %></h1>
+
+<%= form_with url: form_responses_path(@form), method: :post do |f| %>
+  <% @form_interrogations.each do |join| %>
+    <div class="question-card">
+      <h3><%= join.interrogation.content %></h3>
+
+      <% existing_response = @existing_responses[join.id] %>
+
+      <%= text_area_tag "responses[#{join.id}]",
+                       existing_response&.content,
+                       class: "form-control",
+                       rows: 4 %>
+    </div>
+  <% end %>
+
+  <%= f.submit "Submit Responses", class: "btn btn-primary" %>
+<% end %>

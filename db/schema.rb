@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_02_26_023542) do
+ActiveRecord::Schema[7.0].define(version: 2025_03_06_181238) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -80,6 +80,23 @@ ActiveRecord::Schema[7.0].define(version: 2025_02_26_023542) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "form_interrogation_joins", force: :cascade do |t|
+    t.bigint "form_id", null: false
+    t.bigint "interrogation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["form_id", "interrogation_id"], name: "index_form_interrogation_unique", unique: true
+    t.index ["form_id"], name: "index_form_interrogation_joins_on_form_id"
+    t.index ["interrogation_id"], name: "index_form_interrogation_joins_on_interrogation_id"
+  end
+
+  create_table "forms", force: :cascade do |t|
+    t.string "title"
+    t.datetime "scheduled_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "friday_slots", force: :cascade do |t|
     t.bigint "weekly_meeting_id", null: false
     t.string "time_slot"
@@ -129,6 +146,13 @@ ActiveRecord::Schema[7.0].define(version: 2025_02_26_023542) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["kda_id"], name: "index_inis_on_kda_id"
+  end
+
+  create_table "interrogations", force: :cascade do |t|
+    t.string "content"
+    t.boolean "active", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "kdas", force: :cascade do |t|
@@ -314,6 +338,17 @@ ActiveRecord::Schema[7.0].define(version: 2025_02_26_023542) do
     t.index ["sprint_id"], name: "index_reports_on_sprint_id"
     t.index ["user_id", "sprint_id"], name: "index_reports_on_user_id_and_sprint_id", unique: true
     t.index ["user_id"], name: "index_reports_on_user_id"
+  end
+
+  create_table "responses", force: :cascade do |t|
+    t.bigint "form_interrogation_join_id", null: false
+    t.bigint "user_id", null: false
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["form_interrogation_join_id"], name: "index_responses_on_form_interrogation_join_id"
+    t.index ["user_id", "form_interrogation_join_id"], name: "index_user_interrogation_unique", unique: true
+    t.index ["user_id"], name: "index_responses_on_user_id"
   end
 
   create_table "sdls", force: :cascade do |t|
@@ -557,6 +592,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_02_26_023542) do
   add_foreign_key "attendances", "users"
   add_foreign_key "communities", "sprint_goals"
   add_foreign_key "exam_dates", "subjects"
+  add_foreign_key "form_interrogation_joins", "forms"
+  add_foreign_key "form_interrogation_joins", "interrogations"
   add_foreign_key "friday_slots", "users", column: "lc_id"
   add_foreign_key "friday_slots", "users", column: "learner_id"
   add_foreign_key "friday_slots", "weekly_meetings"
@@ -583,6 +620,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_02_26_023542) do
   add_foreign_key "report_knowledges", "reports"
   add_foreign_key "reports", "sprints"
   add_foreign_key "reports", "users"
+  add_foreign_key "responses", "form_interrogation_joins"
+  add_foreign_key "responses", "users"
   add_foreign_key "sdls", "kdas"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
