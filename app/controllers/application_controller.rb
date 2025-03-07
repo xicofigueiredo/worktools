@@ -38,7 +38,4 @@ class ApplicationController < ActionController::Base
       render "static/unsupported_browser", layout: "application"
     end
   end
-
-
-
 end
