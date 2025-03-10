@@ -14,7 +14,7 @@ namespace :notifications do
     # Fetch all learning coaches who have learners with the timeline
     User.joins(users_hubs: :hub)
         .where(users_hubs: { main: true })
-        .where(role: 'learning_coach')
+        .where(role: 'lc')
         .find_each do |coach|
 
       learners = User.joins(users_hubs: :hub)
