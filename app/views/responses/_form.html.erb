@@ -1,0 +1,73 @@
+<!-- app/views/responses/_form.html.erb -->
+<%= form_with url: form_responses_path(@form), method: :post do |f| %>
+  <% @form_interrogations.each do |join| %>
+    <div class="question-card">
+      <h3><%= join.interrogation.content %></h3>
+
+      <% existing_response = @existing_responses[join.id] %>
+
+      <%= text_area_tag "responses[#{join.id}]", existing_response&.content, class: "form-control", rows: 4 %>
+    </div>
+  <% end %>
+
+  <div class="actions">
+    <%= f.submit @existing_responses.any? ? "Update Responses" : "Submit Responses", class: "btn btn-primary" %>
+  </div>
+<% end %>
+
+<style>
+  /* app/assets/stylesheets/application.css */
+  .form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+  }
+
+  .form-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 1000px; /* Increased from 600px to 800px */
+  }
+
+  .question-card {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover {
+    background-color: #5a6268;
+  }
+</style>

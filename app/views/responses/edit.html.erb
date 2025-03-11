@@ -1,0 +1,9 @@
+<!-- app/views/responses/edit.html.erb -->
+<div class="form-container">
+  <div class="form-card">
+    <h1><%= @form.title %></h1>
+    <p>Scheduled: <%= @form.scheduled_date.strftime("%B %d, %Y") %></p>
+
+    <%= render 'form' %>
+  </div>
+</div>

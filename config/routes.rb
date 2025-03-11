@@ -126,7 +126,7 @@ Rails.application.routes.draw do
     end
 
     resources :forms, only: [:index, :show] do
-      resources :responses, only: [:create]
+      resources :responses, only: [:new, :create, :edit, :update]
     end
 
 end
