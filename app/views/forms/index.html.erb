@@ -1,97 +1,32 @@
 <!-- app/views/forms/index.html.erb -->
-<div class="container">
-  <% @forms.each do |form| %>
-    <div class="card">
-      <h2><%= form.title %></h2>
-      <p>Scheduled: <%= form.scheduled_date.strftime("%B %d, %Y") %></p>
-
-      <% if form.completed_by?(current_user) %>
-        <!-- Add Edit Responses Button -->
-        <% response = form.responses.find_by(user_id: current_user.id) %>
-        <%= link_to "Edit Responses", edit_form_response_path(form, response), class: "btn btn-warning" %>
-      <% else %>
-        <%= link_to "Complete Form", new_form_response_path(form), class: "btn btn-primary" %>
-      <% end %>
-    </div>
-  <% end %>
+<div class="container mt-5">
+  <div class="row">
+    <% @forms.each do |form| %>
+      <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h2 class="card-title h5"><%= form.title %></h2>
+            <p class="card-text text-muted">
+              <strong>Scheduled:</strong> <%= form.scheduled_date.strftime("%B %d, %Y") %>
+            </p>
+          </div>
+          <div class="card-footer bg-transparent border-top-0">
+            <% if @user_responses.key?(form.id) %>
+              <!-- Edit Responses Button -->
+              <%= link_to "Edit Responses", edit_form_response_path(form, @user_responses[form.id]), class: "btn btn-success btn-sm w-100" %>
+            <% else %>
+              <%= link_to "Complete Form", new_form_response_path(form), class: "btn btn-primary btn-sm w-100" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
 </div>
 
+
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f5f5f5;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-
-  .container {
-    flex: 1; /* Ensures the content takes up available space */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 0; /* Add some margin between cards */
-  }
-
-  .card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    padding: 40px; /* Increased padding for a larger card */
-    max-width: 600px; /* Slightly wider */
-    width: 90%;
-    text-align: center;
-  }
-
-  .card h2 {
-    color: #333;
-    margin-bottom: 20px;
-    font-size: 2rem; /* Larger font for the title */
-  }
-
-  .card p {
-    color: #555;
-    line-height: 1.6;
-    margin-bottom: 30px;
-    font-size: 1.1rem; /* Slightly larger text */
-  }
-
-  .card a {
-    display: inline-block;
-    padding: 15px 25px; /* Larger button */
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 1rem;
-    margin: 5px; /* Add margin between buttons */
-  }
-
-  .btn-primary {
-    background-color: #007bff;
-  }
-
-  .btn-primary:hover {
-    background-color: #0056b3;
-  }
-
-  .btn-secondary {
-    background-color: #6c757d;
-  }
-
-  .btn-secondary:hover {
-    background-color: #5a6268;
-  }
-
-  .badge.completed {
-    display: inline-block;
-    padding: 10px 15px;
-    background-color: #28a745;
-    color: white;
-    border-radius: 5px;
-    font-weight: bold;
-    margin-bottom: 10px; /* Add margin below the badge */
-  }
+  .btn-success, .btn-primary {
+  color: white !important;
+}
 </style>

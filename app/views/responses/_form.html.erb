@@ -12,6 +12,7 @@
 
   <div class="actions">
     <%= f.submit @existing_responses.any? ? "Update Responses" : "Submit Responses", class: "btn btn-primary" %>
+    <%= link_to "Back", forms_path, class: "btn btn-secondary" %>
   </div>
 <% end %>
 

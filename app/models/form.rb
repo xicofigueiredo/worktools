@@ -5,6 +5,9 @@ class Form < ApplicationRecord
 
   # Find forms that are due to be shown
   scope :current, -> { where('scheduled_date <= ?', Date.today) }
+  scope :by_subject_name, ->(subject_names) {
+    where(subject_names.map { |name| "title ILIKE ?" }.join(' OR '), *subject_names.map { |name| "%#{name}%" })
+  }
 
   def responses_for_user(user)
     Response.joins(:form_interrogation_join)

@@ -64,15 +64,25 @@
               <%= link_to "Reports", reports_path(date: Date.today), class: "nav-link" %>
             </div>
           </li>
+          <li class="nav-item">
+            <div class="p-1 position-relative" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(reports_path) %>">
+              <%= link_to notifications_path, class: "nav-link position-relative" do %>
+                <i class="fa-solid fa-bell"></i>
+                <% if @notification_count.to_i.positive? %>
+                  <span class="position-absolute top-10 start-80 translate-middle badge rounded-pill bg-danger" style="transform: translate(-50%, -50%); font-size: 0.6em;">
+                    <%= @notification_count %>
+                    <span class="visually-hidden">unread notifications</span>
+                  </span>
+                <% end %>
+              <% end %>
+            </div>
+          </li>
           <li class="nav-item dropdown">
             <%= link_to 'Profile', class: 'avatar', id: 'navbarDropdown', 'data-bs-toggle': 'dropdown', 'aria-haspopup': true, 'aria-expanded': false do %>
               <%= image_tag "profile.jpeg", class: "avatar", alt: "dropdown menu" %>
             <% end %>
             </a>
             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-              <%# <%= link_to notifications_path, class: "dropdown-item" do %>
-                <%# <i class="fa-solid fa-bell"></i></i> Notifications
-              <% end %>
               <%= link_to profile_path, class: "dropdown-item" do %>
                 <i class="fa fa-user"></i> Profile
               <% end %>

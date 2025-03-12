@@ -2,8 +2,8 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :set_time_zone, if: :user_signed_in?
-  before_action :fetch_notifications
   before_action :check_browser
+  before_action :set_notification_count
 
   def set_time_zone
     # Time.zone = current_user.time_zone
@@ -19,14 +19,6 @@ class ApplicationController < ActionController::Base
     new_user_session_path
   end
 
-  def fetch_notifications
-    if user_signed_in?
-      @unread_notifications = current_user.notifications.where(read: false).order(created_at: :desc)
-    else
-      @unread_notifications = []
-    end
-  end
-
   def check_browser
     return unless user_signed_in? # Ensure the user is logged in
     return if browser.device.mobile?
@@ -36,6 +28,15 @@ class ApplicationController < ActionController::Base
 
     if !browser.chrome? && !browser.edge?
       render "static/unsupported_browser", layout: "application"
+    end
+  end
+
+  def set_notification_count
+    @notification_count = current_user.notifications.unread.count if user_signed_in?
+    if user_signed_in?
+      @unread_notifications = current_user.notifications.where(read: false).order(created_at: :desc)
+    else
+      @unread_notifications = []
     end
   end
 end

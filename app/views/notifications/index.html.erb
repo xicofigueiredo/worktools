@@ -1,11 +1,6 @@
 <!-- Notifications Container -->
 <div class="notifications-container">
   <% if @notifications.any? %>
-    <div class="notifications-header">
-      <span>You have the following notifications:</span>
-      <span class="notification-count"><%= @notifications_unread.count || 0 %></span>
-    </div>
-
     <div class="notification-list">
       <% @notifications.each do |notification| %>
         <%
@@ -25,29 +20,33 @@
           </div>
           <div class="notification-actions">
             <% unless notification.read? %>
-              <%= link_to "Mark as resolved",
+              <%= button_to "Mark as resolved",
                           mark_as_read_notification_path(notification),
                           method: :patch,
                           class: "btn btn-primary" %>
             <% end %>
 
-            <% if notification_type == "error" && notification.message.include?("timeline") %>
+
+            <% if notification_type == "error" && notification.message.include?("has an exam date associated with a different subject") %>
               <% timeline_name = notification.message.match(/Your timeline '(.*?)'/)[1] rescue nil %>
               <% timeline = timeline_name ? current_user.timelines.joins(:subject).find_by(subjects: { name: timeline_name }) : nil %>
 
               <% if timeline %>
                 <%= link_to "Update Timeline", edit_timeline_path(timeline.id), class: "btn btn-outline" %>
               <% else %>
-                <p>Timeline not found. Please check your timelines.</p>
+                <div class= "btn btn-outline">Timeline not found.</div>
               <% end %>
 
-            <% elsif notification_type == "warning" && notification.message.include?("Learning Coach") %>
+            <% elsif notification_type == "warning" && notification.message.include?("please let your Learning Coach know") %>
               <% if @lcs_emails.present? %>
                 <%= link_to "Message LC on Teams", "msteams:/l/chat/0/0?users=#{@lcs_emails.join(',')}", class: "btn btn-outline" %>
               <% end %>
 
-            <% elsif notification.message.include?("Brito") %>
+            <% elsif notification.message.include?("please message Luís Brito e Faro") %>
               <%= link_to "Message Luis", "msteams:/l/chat/0/0?users=luis@bravegenerationacademy.com", class: "btn btn-outline" %>
+
+            <% elsif notification.message.include?("Form") %>
+              <%= link_to "Check Forms", forms_path, class: "btn btn-outline" %>
             <% end %>
 
 
