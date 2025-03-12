@@ -12,8 +12,13 @@
           </div>
           <div class="card-footer bg-transparent border-top-0">
             <% if @user_responses.key?(form.id) %>
-              <!-- Edit Responses Button -->
-              <%= link_to "Edit Responses", edit_form_response_path(form, @user_responses[form.id]), class: "btn btn-success btn-sm w-100" %>
+              <% response = @user_responses[form.id] %>
+              <% if response.editable? %>
+                <!-- Edit Responses Button -->
+                <%= link_to "Edit Responses", edit_form_response_path(form, response), class: "btn btn-warning btn-sm w-100" %>
+              <% else %>
+                <div class="btn btn-success btn-sm w-100">Done</div>
+              <% end %>
             <% else %>
               <%= link_to "Complete Form", new_form_response_path(form), class: "btn btn-primary btn-sm w-100" %>
             <% end %>
@@ -26,7 +31,7 @@
 
 
 <style>
-  .btn-success, .btn-primary {
+  .btn-success, .btn-warning {
   color: white !important;
 }
 </style>
