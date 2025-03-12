@@ -48,4 +48,3 @@ namespace :notifications do
   end
 end
 
-# Let me know if anything needs adjusting or optimizing! 🚀
