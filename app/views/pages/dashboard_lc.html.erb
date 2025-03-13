@@ -138,7 +138,7 @@
                   <% end %>
                 <% end %>
                 <p class="text-secondary mb-1">Notifications Unread: <%= user.notifications.where(read: false).count %>
-
+                <p class="text-secondary mb-1">Forms Completed: <%= @forms_completed[user.id] %>
               </div>
             <% end %>
 

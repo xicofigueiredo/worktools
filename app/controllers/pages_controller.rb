@@ -44,7 +44,6 @@ class PagesController < ApplicationController
   def dashboard_lc
     redirect_to dashboard_dc_path if current_user.hubs.count > 1 && params[:hub_id].nil?
 
-
     if params[:hub_id].nil?
       @selected_hub = current_user.users_hubs.find_by(main: true)&.hub
     else
@@ -54,6 +53,7 @@ class PagesController < ApplicationController
     @users = @selected_hub.users.where(role: 'learner', deactivate: [false, nil])
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     @total_balance = {}
+    @forms_completed = {} # Hash to store the number of forms completed by each learner
 
     @users.each do |user|
       total_balance_for_user = 0
@@ -62,6 +62,12 @@ class PagesController < ApplicationController
       end
       user.topics_balance = total_balance_for_user
       user.save
+
+      # Count the number of forms completed by the learner
+      @forms_completed[user.id] = Response.joins(form_interrogation_join: :form)
+                                          .where(user_id: user.id)
+                                          .count
+      @forms_completed[user.id] = @forms_completed[user.id] / 4
     end
 
     @users = @users.order(topics_balance: :asc)
@@ -85,7 +91,7 @@ class PagesController < ApplicationController
     @users = User.joins(:timelines)
     .where(timelines: { subject_id: @selected_subject.id })
     .where(deactivated: false)
-    
+
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
 
     # dropdown por nome
