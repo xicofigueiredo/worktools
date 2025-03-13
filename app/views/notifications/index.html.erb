@@ -45,7 +45,7 @@
             <% elsif notification.message.include?("please message Luís Brito e Faro") %>
               <%= link_to "Message Luis", "msteams:/l/chat/0/0?users=luis@bravegenerationacademy.com", class: "btn btn-outline" %>
 
-            <% elsif notification.message.include?("Form") %>
+            <% elsif notification.message.include?("You have new forms to fill") %>
               <%= link_to "Check Forms", forms_path, class: "btn btn-outline" %>
             <% end %>
 

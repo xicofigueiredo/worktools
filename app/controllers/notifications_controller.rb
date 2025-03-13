@@ -1,6 +1,6 @@
 class NotificationsController < ApplicationController
   def index
-    @notifications = current_user.notifications
+    @notifications = current_user.notifications.order(created_at: :desc)
     @notifications_unread = @notifications.where(read: false)
     hub_lcs = []
     hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
