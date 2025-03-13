@@ -16,7 +16,10 @@
 
         <div class="notification-item <%= notification_type %> <%= notification.read? ? 'resolved' : '' %>">
           <div class="notification-content">
-            <%= notification.message %>
+            <%= notification.message %> 
+          </div>
+          <div class="notification-content">
+            (<%= time_ago_in_words(notification.created_at) %> ago)
           </div>
           <div class="notification-actions">
             <% unless notification.read? %>
@@ -27,14 +30,12 @@
             <% end %>
 
 
-            <% if notification_type == "error" && notification.message.include?("has an exam date associated with a different subject") %>
+            <% if notification_type == "error" && notification.message.include?("timeline") %>
               <% timeline_name = notification.message.match(/Your timeline '(.*?)'/)[1] rescue nil %>
               <% timeline = timeline_name ? current_user.timelines.joins(:subject).find_by(subjects: { name: timeline_name }) : nil %>
 
               <% if timeline %>
                 <%= link_to "Update Timeline", edit_timeline_path(timeline.id), class: "btn btn-outline" %>
-              <% else %>
-                <div class= "btn btn-outline">Timeline not found.</div>
               <% end %>
 
             <% elsif notification_type == "warning" && notification.message.include?("please let your Learning Coach know") %>
