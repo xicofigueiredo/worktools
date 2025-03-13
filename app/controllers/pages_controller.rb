@@ -86,11 +86,11 @@ class PagesController < ApplicationController
 
   def cm_learners
 
-    @selected_subject = params[:subject_id].present? ? Subject.find_by(id: params[:subject_id]) :  Subject.find_by(id: current_user.subjects.first.id)
+    @selected_subject = params[:subject_id].present? ? Subject.find_by(id: params[:subject_id]) :  Subject.find_by(id: current_user.subjects.first)
 
     @users = User.joins(:timelines)
     .where(timelines: { subject_id: @selected_subject.id })
-    .where(deactivated: false)
+    .where(deactivate: false)
 
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
 

@@ -3,10 +3,12 @@ class NotificationsController < ApplicationController
     @notifications = current_user.notifications.order(created_at: :desc)
     @notifications_unread = @notifications.where(read: false)
     hub_lcs = []
-    hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3 || lc.deactivate
+    if current_user.role == 'admin' || current_user.role == 'lc' || current_user.role == 'learner'
+      hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+        lc.hubs.count >= 3 || lc.deactivate
+        @lcs_emails = hub_lcs.map(&:email)
+      end
     end
-    @lcs_emails = hub_lcs.map(&:email)
   end
 
   def mark_as_read
