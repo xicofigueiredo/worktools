@@ -6,7 +6,7 @@
 
       <% existing_response = @existing_responses[join.id] %>
 
-      <%= text_area_tag "responses[#{join.id}]", existing_response&.content, class: "form-control", rows: 4 %>
+      <%= text_area_tag "responses[#{join.id}]", existing_response&.content, class: "form-control", rows: 4, required: true %>
     </div>
   <% end %>
 
