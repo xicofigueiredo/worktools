@@ -71,8 +71,14 @@
                         <% end %>
                       </h5>
                       <div>
-                        <%= link_to toggle_archive_timeline_path(timeline), data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to archive #{timeline.subject.name}?" }  do %>
-                          <i class="fa-solid fa-box-archive" title="Unarchive" style="font-size: 20px; color: #808080;"></i>
+                        <% if timeline.hidden %>
+                          <%= link_to toggle_archive_timeline_path(timeline), data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to reactivate #{timeline.subject.name}?" }  do %>
+                            <i class="fa-solid fa-trash-can-arrow-up" title="Unarchive" style="font-size: 20px; color: #808080;"></i>
+                          <% end %>
+                        <% else %>
+                          <%= link_to toggle_archive_timeline_path(timeline), data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to archive #{timeline.subject.name}?" }  do %>
+                            <i class="fa-solid fa-box-archive" title="archive" style="font-size: 20px; color: #808080;"></i>
+                          <% end %>
                         <% end %>
                       </div>
                     </div>
