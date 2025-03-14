@@ -16,7 +16,7 @@
 
         <div class="notification-item <%= notification_type %> <%= notification.read? ? 'resolved' : '' %>">
           <div class="notification-content">
-            <%= notification.message %> 
+            <%= simple_format(notification.message) %>
           </div>
           <div class="notification-content">
             (<%= time_ago_in_words(notification.created_at) %> ago)
