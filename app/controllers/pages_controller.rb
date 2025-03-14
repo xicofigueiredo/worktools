@@ -423,9 +423,8 @@ class PagesController < ApplicationController
 
   def calc_yearly_presence(user)
     current_year = Date.today.year
-    # start_of_year = Date.new(current_year, 1, 1)
-    # FIXME temporary logic for 2024 to only count starting sprint 2, remove for 2025
-    start_of_year = Date.new(2024, 6, 1)
+
+    start_of_year = Date.new(current_year, 1, 1)
     end_of_year = Date.new(current_year, 12, 31)
 
     yearly_sprints = Sprint.where(start_date: start_of_year..end_of_year)
