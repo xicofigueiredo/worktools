@@ -27,8 +27,7 @@ Details:
 Location: CCB Hub
 Date: Thursday, March 20th
 Time: 17h - 19h30
-The fee for this fun is 5€, please register and pay through this link:
-https://forms.gle/m4LjY7LpJdPF4of36
+The fee for this fun is 5€, please register and pay in the link bellow.
 
 Funds raised will be donated to support Brave Future; contribute to start this Spring by supporting our community 💙
 We hope to see you there!🌹"

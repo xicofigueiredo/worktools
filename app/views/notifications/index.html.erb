@@ -48,6 +48,9 @@
 
             <% elsif notification.message.include?("You have new forms to fill") %>
               <%= link_to "Check Forms", forms_path, class: "btn btn-outline" %>
+
+            <% elsif notification.message.include?("register and pay through this link") %>
+              <%= link_to "Register and pay here!", "https://forms.gle/m4LjY7LpJdPF4of36", class: "btn btn-outline", target: "_blank"  %>
             <% end %>
 
 
