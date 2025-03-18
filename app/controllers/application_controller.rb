@@ -33,10 +33,9 @@ class ApplicationController < ActionController::Base
 
   def set_notification_count
     @notification_count = current_user.notifications.unread.count if user_signed_in?
+    @unread_notifications = []
     if user_signed_in?
       @unread_notifications = current_user.notifications.where(read: false).order(created_at: :desc)
-    else
-      @unread_notifications = []
     end
   end
 end
