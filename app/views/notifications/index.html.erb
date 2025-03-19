@@ -30,11 +30,11 @@
             <% end %>
 
 
-            <% if notification_type == "error" && notification.message.include?("timeline") %>
-              <% timeline_name = notification.message.match(/Your timeline '(.*?)'/)[1] rescue nil %>
+            <% if notification_type == "error" && (notification.message.include?("timeline") || notification.message.include?("update your")) %>
+              <% timeline_name = notification.message.match(/timeline '(.*?)'|your (.*?) timeline/)[1] || notification.message.match(/your (.*?) timeline/)[1] rescue nil %>
               <% timeline = timeline_name ? current_user.timelines.joins(:subject).find_by(subjects: { name: timeline_name }) : nil %>
 
-              <% if timeline %>
+              <% if timeline && !timeline.hidden %>
                 <%= link_to "Update Timeline", edit_timeline_path(timeline.id), class: "btn btn-outline" %>
               <% end %>
 
