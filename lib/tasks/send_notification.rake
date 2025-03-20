@@ -2,18 +2,33 @@ namespace :notifications do
   desc "Send notifications to Level 4 Business users, Learning Coaches, and about the Spring Equinox Party"
   task send_notifications: :environment do
     notifications_count = 0
-    subject_ids = [587, 559]
+    # subject_ids = [587, 559]
 
-    Timeline.where(subject_id: subject_ids, hidden: [false, nil]).find_each do |timeline|
-      user = timeline.user
-      Notification.find_or_create_by!(
-        user: user,
-        message: "Please update your #{timeline.subject.name} timeline."
-        )
-        notifications_count += 1
+    # Timeline.where(subject_id: subject_ids, hidden: [false, nil]).find_each do |timeline|
+    #   user = timeline.user
+    #   Notification.find_or_create_by!(
+    #     user: user,
+    #     message: "Please update your #{timeline.subject.name} timeline."
+    #     )
+    #     notifications_count += 1
+    # end
+    User.where(role: "learner").or(User.where(role: "lc")).or(User.where(role: "admin")).find_each do |user|
+
+    Notification.find_or_create_by!(
+      user: user,
+      message: "POSTPONED: Spring Equinox Party 🌸
+
+        We’re so sorry to share that due to the unexpected weather and resulting transport issues, we’ll be postponing the BGA for Change Spring Equinox Party. Your safety is our top priority, and we’ll be announcing a new date soon.
+
+        If you’re unable to join on the new date, your ticket can either remain as a donation to Brave Future or you can request a refund by contacting kendall@bravegenerationacademy.com.
+
+        Thank you so much for your understanding, and we’re sorry for any inconvenience. We can’t wait to celebrate with you soon! 🌷"
+            )
+    notifications_count += 1
     end
 
-    puts "Completed: #{notifications_count} notifications."
+  puts "Completed: #{notifications_count} notifications sent."
+
 
       # Notify Learning Coaches with the list of learners
       #  learners_by_coach.each do |coach, learner_names|
