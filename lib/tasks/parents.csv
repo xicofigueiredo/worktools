@@ -1,40 +1,67 @@
-Status,Hub,Learners Full Names,Start Date,Age,Birthdate,Gender,Institutional Email,Guardian 1,Guardian 1 email,Guardian 2,Guardian 2 email,Guardian 3,Guardian 3 email,Flag,Password
-Active,Caldas da Rainha,Valerie Dreher,9/1/2021,17,7/12/2007,F,Valerie.Dreher@edubga.com,Randal Addison,rdreher01@yahoo.com,Monika Dreher,,dreher.monika82@yahoo.com,,,0BlwaL
-Active,Sommerschield,Kwame Magane,2/5/2025,16,6/6/2008,M,kwame.magane@edubga.com,Armenio Magane,armeniomagane@gmail.com,Carmen Magane,,carmenbilale@gmail.com,,,Tu3ZR1
-Active,Porto Foco,Beatriz Costa Magalhaes,2/1/2022,17,6/10/2007,F,Beatriz.magalhaes@edubga.com,Joao Pedro Magalhaes,j.p.magalhaes@bham.ac.uk,Maria Sameiro ,,msameirol@sapo.pt,,,w8Kpt5
-Active,Aveiro,Wayan Sasha Taksu Brahmanda Harris,8/26/2024,16,3/24/2008,M,wayan.ha@edubga.com,Carlos Andre Oliviera,profootballacademyportugal@gmail.com,Catia Ferreira,,catiaferreirapfacademy@gmail.com,,,9CuQ0M
-Active,Sommerschield,Alexa Vieira Fernandes,1/20/2025,14,3/9/2010,F,alexa.fernandes@edubga.com,Tania Vieira,tania.correia.vieira@gmail.com,Dinis Franco Pereira Fernandes,,dennys@globalsecuritymaputo.com,,,X1h42Y
-Active,Sommerschield,Elspeth Blithe Little,1/27/2025,17,9/14/2007,F,elspeth.little@edubga.com,Jake Little,jake.little@controlrisks.com,Avril Little,,avriljolliffe@yahoo.co.uk,,,m6r2u9
-Active,Cascais 1,Maxima Alana Pichler,1/29/2025,17,12/19/2007,F,maxima.pichler@edubga.com,Nikolaus Sebastian Alexander Pichler,nikolaus.pichler@outlook.com,Tanja Pichler,,tan.pichler@gmail.com,,,UlL201
-Active,Huguenot,Cyler Macseen Abrahams,1/15/2025,13,8/25/2011,F,cyler.abrahams@edubga.com,"Amy du toit- Abrahams
- ",cylera25@gmail.com,clinton Abrahams,,cylerabrahams25@gmail.com,,,Ai1JG1
-Active,DHS,Leruo Oamogetswe Goitseone Pooe,1/15/2025,17,11/28/2007,M,leruo.pooe@edubga.com,Mmatjiata Thalita Pooe,thalitapooe@yahoo.com,Molefi James Baleni,,mjbaleni@yahoo.com,,,R0CCJu
-Active,Huguenot,Ayabukwa Thupha,1/15/2025,15,6/19/2009,M,ayabukwa.thupha@edubga.com,Thami Ntlathi,aya.thupa@icloud.com,Akhona Thupha,,"aya.thupa@icloud.com
- ",,,P407f3
-Active,Setubal,Nolan Denilson Barros Rocha,1/16/2025,17,5/25/2007,M,nolan.rocha@edubga.com,Denilson Euclides Augusto Basto Pinto Rocha,denilsonrocha@msn.com,Solita De Lurdes Costa De Barros,,solita.barros@gmail.com,,,oOLV6R
-Active,Huguenot,Sophia Carstens,1/27/2025,12,12/7/2012,F,sophia.carstens@edubga.com,Martha Sophia Carstens,coveredinlove2007@gmail.com,Andries Cornelius Carstens,,jonty@humkoop.co.za,,,R1pg8x
-Active,Paarl,Adriaan Le Roux,2/6/2025,14,3/22/2010,M,adriaan.roux@edubga.com,Etienne Le Roux,etienne@marefa.co.za,Elana Le Roux,,elanaleroux3@gmail.com,,,I5L6MG
-Active,Braga,Zahra Ghazouani,2/7/2025,14,4/5/2010,F,,Ramzi ghazouani,jomaa36@yahoo.fr,Najah ghazouani,,fatimaa.36@yahoo.com,,,HWKO6M
-Active,Leiria,Harrison Suarez Barda,1/20/2025,20,11/19/2004,M,harrison.barda@edubga.com,"Anthony Barda
-",tonybarda813@gmail.com,Melissa Barda,,Barda1924@gmail.com,,,33QxxP
-Active,Cascais 1,Joshua Daniel dos Santos,2/4/2025,16,4/25/2008,M,joshua.santos@edubga.com,"Martin dos Santos
- ",mdos007@gmail.com,Christi dos Santos,,christidossantos@gmail.com,,,XY6hwj
-Active,Sommerschield,Devi Eluah Rassul Wood,2/4/2025,16,6/18/2008,F,,Elisangela Vanessa Costa Rassul,elirassul@gmail.com,Deon Brendan Wood,,,,,9UMBFP
-Active,Marbella,Oscar Joseph O Meara,1/20/2025,14,12/16/2010,M,oscar.meara@edubga.com,Samantha Andre,samanthalou1984@gmail.com,Stephen O Meara,,"Saospurs1983@icloud.com
-  ",,,V6056L
-Active,Marbella,Sonny Charles O Meara,1/20/2025,12,4/5/2012,M,sonny.meara@edubga.com,Samantha Andre,samanthalou1984@gmail.com,Stephen O Meara,,"Saospurs1983@icloud.com
-  ",,,4SL4g9
-Active,Windhoek,Cashton Cloete,1/20/2025,16,2/11/2008,M,cashton.cloete@edubga.com,"Chasanareen Cloete
+Institutional Email,Parent 1,Email 1,Parent 2,Email 2
+kwame.magane@edubga.com,Armenio Magane,armeniomagane@gmail.com,Carmen Magane,carmenbilale@gmail.com
+lya.costa@edubga.com,Ana Moreira,criolabela6@hotmail.com,LUIS COSTA,
+alexa.fernandes@edubga.com,Tania Vieira,tania.correia.vieira@gmail.com,Dinis Franco Pereira Fernandes,dennys@globalsecuritymaputo.com
+arthur.goetheer@edubga.com,Pepijn Kops,pepijnkops@hotmail.com,Willemijn Goetheer,wgoetheer@hotmail.com
+amber.andrew@edubga.com,Marius Andrew,andrewma@bankwindhoek.com.na,Rayshell Liezel Andrew,LAndrew@mtc.com.na
+maxima.pichler@edubga.com,Nikolaus Sebastian Alexander Pichler,nikolaus.pichler@outlook.com,Tanja Pichler,tan.pichler@gmail.com
+mariana.resende@edubga.com,Luis Miguel Machado Resende,lmmresende@hotmail.com,Graciela Patricia Andrade Camcho,gracielacamacho80@gmail.com
+cyler.abrahams@edubga.com,"Amy du toit- Abrahams
+ ",cylera25@gmail.com,clinton Abrahams,cylerabrahams25@gmail.com
+ayabukwa.thupha@edubga.com,Thami Ntlathi,aya.thupa@icloud.com,Akhona Thupha,"aya.thupa@icloud.com
+ "
+alaynna.malde@edubga.com,Malin Hedlund Laubsch,malin27@gmail.com,Alan Joachim Laubsch,alaubsch@gmail.com
+sophia.carstens@edubga.com,Martha Sophia Carstens,coveredinlove2007@gmail.com,Andries Cornelius Carstens,jonty@humkoop.co.za
+nicolie.rosa@edubga.com,Cleverson Luis da Rosa,cleverson.rosa@hotmail.com,Gracy Kelly Eggres Rodrigues da Rosa,gracyrosa@hotmail.com
+adriaan.roux@edubga.com,Etienne Le Roux,etienne@marefa.co.za,Elana Le Roux,elanaleroux3@gmail.com
+zahra.ghazouani@edubga.com,Ramzi ghazouani,jomaa36@yahoo.fr,Najah ghazouani,fatimaa.36@yahoo.com
+veronica.armando@edubga.com,Barbara Perino,barbaraperino@thl.pt,,
+harrison.barda@edubga.com,"Anthony Barda
+",tonybarda813@gmail.com,Melissa Barda,Barda1924@gmail.com
+devi.wood@edubga.com,Elisangela Vanessa Costa Rassul,elirassul@gmail.com,Deon Brendan Wood,
+oscar.meara@edubga.com,Samantha Andre,samanthalou1984@gmail.com,Stephen O'Meara,"Saospurs1983@icloud.com
+  "
+sonny.meara@edubga.com,Samantha Andre,samanthalou1984@gmail.com,Stephen O'Meara,"Saospurs1983@icloud.com
+  "
+cashton.cloete@edubga.com,"Chasanareen Cloete
 ",CCloete@oldmutual.com,"
-Jeremy Patrick Cloete",,cloetejp@iway.na,,,LxgOjQ
-Active,CCB,Maria Leonor Ribeiro de Carvalho Cavalleri,1/27/2025,18,9/12/2006,F,maria.cavalleri@edubga.com,Ines David Miranda Ribeiro de Carvalho,ines.carvalho@jeronimo-martins.com,Alexandre Lopes celestino Soares Cavalleri,,ac@cavalleri.pt,,,JvtlSr
-Active,Walvis Bay,Beatha Namvula Nasimanekwe Shimooshili,2/3/2025,17,4/27/2007,F,beatha.shimooshili@edubga.com,Hilaria Shimooshili,hshimooshili1975@gmail.com,Robert Shimooshili,,shimooshilirobert68@gmail.com,,,NImaKq
-Active,Remote Europe,Lucia Santosha Thaler,,14,8/30/2010,F,lucia.thaler@edubga.com,"Sarah Thaler
- ",sarahthaler@gmx.ch,Zafer Eroglu,,sarahthaler@gmx.ch,,,00hh7y
-Active,Huguenot,Jasmin Grobbelaar,2/4/2025,13,3/23/2011,F,jasmin.grobbelaar@edubga.com,Charne Kelly Grobbelaar,charne.g@harcourts.co.za,Pieter schalk Grobbelaar,,coalitiontradingza@gmail.com,,,2gIE4t
-Active,Tofo,Francisco Correia de Sales Parente,2/6/2025,17,10/5/2007,M,francisco.parente@edubga.com,Nuno Parreira de Sales Parente,parentenuno@hotmail.com,Carla dos Santos Correia de Sales Parente,,arpa0983@gmail.com,,,kQl5QY
-Active,Huguenot,Daniel Loots,1/31/2025,14,9/14/2010,M,daniel.loots@edubga.com,Gert Johannes Loots,gertloots.newborn@gmail.com,Linda Loots,,linda.valentine.loots@gmail.com,,,1l3ng0
-Active,,Test,,,,,,,,,,,,,B8Z40s
-Active,Porto Foco,Yara Raphael Pinto Sa,2/7/2025,13,9/9/2011,F,yara.pinto@edubga.com,Fernando Silva e Sa,Fernando.sa.welove@gmail.com,Grace Kelly Pinto Camejo Sa,,gracekpinto@gmail.com,,,336xs7
-Active,Cascais Baia 2,Olivia Bund,2/3/2025,16,1/20/2009,F,olivia.bund@edubga.com,Leo Bund,leodanielbund@gmail.com,Viktoriya Orlova Bund,,viktoriyabund@gmail.com,,,XbR54i
-Active,Sommerschield,William Winchell SEDA,,15,3/15/2009,M,,Dina Winchell,dinawinchell@yahoo.com,,,,,,6dqj91
+Jeremy Patrick Cloete",cloetejp@iway.na
+maria.cavalleri@edubga.com,Ines David Miranda Ribeiro de Carvalho,ines.carvalho@jeronimo-martins.com,Alexandre Lopes celestino Soares Cavalleri,ac@cavalleri.pt
+ella.lerea@edubga.com,ester yeshayahu,ettiyes@gmail.com,izhak lerea,izhak.larya@gmail.com
+maya.yeshayahu@edubga.com,ester yeshayahu,ettiyes@gmail.com,"Amnon cohen
+ ",amnon566@gmail.com
+narek.hovhannisyan@edubga.com,Lusine Harutyunyan,lusnarek@gmail.com,"Artashes Hovhannisyan
+ ",hovart1973@gmail.com
+beatha.shimooshili@edubga.com,Hilaria Shimooshili,hshimooshili1975@gmail.com,Robert Shimooshili,shimooshilirobert68@gmail.com
+rodrigo.paiva@edubga.com,Tiago Bruno Martins Paiva,tbmpaiva@gmail.com,Mariana Arga e Lima,marianaargalima@gmail.com
+jasmin.grobbelaar@edubga.com,Charne Kelly Grobbelaar,charnekd11@gmail.com,Pieter schalk Grobbelaar,coalitiontradingza@gmail.com
+francisco.parente@edubga.com,Nuno Parreira de Sales Parente,parentenuno@hotmail.com,Carla dos Santos Correia de Sales Parente,arpa0983@gmail.com
+daniel.loots@edubga.com,Gert Johannes Loots,gertloots.newborn@gmail.com,Linda Loots,linda.valentine.loots@gmail.com
+katherine.barnett@edubga.com,Margo Ann Barnett,margobarnett74@gmail.com,Tana Marie Barnett,tanabarnettpt@gmail.com
+victor.anjo@edubga.com,Danielle Vieira de Queiroz,dani.vieiraq1@gmail.com  ,,
+yara.raphael@edubga.com,Fernando Silva e Sa,Fernando.sa.welove@gmail.com,Grace Kelly Pinto Camejo Sa,gracekpinto@gmail.com
+olivia.bund@edubga.com,Leo Bund,leodanielbund@gmail.com,Viktoriya Orlova Bund,viktoriyabund@gmail.com
+william.seda@edubga.com,Dina Winchell,dinawinchell@yahoo.com,,
+tyler.quinn@edubga.com,Elaine Quinn,Elainequinnx@gmail.com,Alan Lefenfeld,alefenfeld86@gmail.com
+tyra.lipchick@edubga.com,Tamsynn Lipchick,tamsynn@modderfonteinacademy.com,Gary Lipchick,glipchick@gmail.com
+nil.popatlal@edubga.com,Darmesh Vrajlal Popatlal,darpopatlal@gmail.com,Sulange Hitie,sulangepopatlal@gmail.com
+tukki.nhambiu@edubga.com,Jorge Olivio Penicela Nhambiu,"
+nhambiu@uem.mz",Ligia Clara Mabunda,lcmabunda32@gmail.com
+lucas.ford@edubga.com,Brad Ford,bcford@gmail.com,mihwa lee,mihwalee@gmail.com
+karl.thurau@edubga.com,Claudia Bahr,claudia.bahr@ymail.com,Sven Walter Paul Thurau,sven@tbxx.de
+persia.king@edubga.com,Aurora Hilario Gouveia Brandon-King,auroragouveia50@gmail.com,,
+fridolin.erhardt@edubga.com,"
+
+Frank Erhardt",fr@nkerhardt.de,Anja Erhardt,anja.erhardt@anjaerhardt.de
+allan.antonio@edubga.com,Breznivio Benarez Antonio,brez.antonio@gmail.com,Dulca Maria Sambo,sambomariadulce@gmail.com
+auryn.eaton@edubga.com,"Jacqueline Eaton
+",Jackie.eaton@yahoo.co.uk,Christopher Eaton,Hawkit@mac.com
+alexis.lewis@edubga.com,Dominique Lewis,lewis3288@gmail.com,Ricardo de Araujo,
+amelie.whicker@edubga.com,Ruth Justin Warren,"
+Cotswool@aol.com",David Edward Whicker,Cotswool@aol.com
+konstantin.zhukov@edubga.com,Olga Zhukova,7644873@gmail.com,"Aleksei Zhukov
+ ",alexei.zhukov@bluewin.ch
+paolo.teixeira@edubga.com,Paulo Teixeira,pnateixeira@gmail.com,Claudia Teixeira,pnateixeira@gmail.com
+zayaan.mahomed@edubga.com,Nazeera Mahomed,nazeeram@telkomsa.net,Naeem Mahomed,naeemm@telkomsa.net
+lola.silbery@edubga.com,Danielle Mccarthy,daniellemccarthy1989@hotmail.co.uk,Luke Silbery,lukesilbery@hotmail.com
+,,,,

@@ -18,7 +18,7 @@ namespace :db do
         puts "Kid with email #{kid_email} is deactivated, skipping parent creation for #{email}."
         return
       end
-      
+
       if parent.new_record?
         if kid.present?
           parent.assign_attributes(
@@ -56,21 +56,21 @@ namespace :db do
 
     # Process each row in the CSV
     CSV.foreach(file_path, headers: true) do |row|
-      next if row['Institutional Email'].blank? || row['Guardian 1'].blank? || row['Guardian 1 email'].blank? || row['Password'].blank?
+      next if row['Institutional Email'].blank? || row['Parent 1'].blank? || row['Email 1'].blank?
 
       kid_email = row['Institutional Email'].strip.downcase
 
       # Create or update the first parent
-      parent1_name = row['Guardian 1'].strip
-      parent1_email = row['Guardian 1 email'].strip.downcase
-      parent1_password = row['Password'].strip
+      parent1_name = row['Parent 1'].strip
+      parent1_email = row['Email 1'].strip.downcase
+      parent1_password = SecureRandom.hex(8)
       create_parent_method.call(parent1_name, parent1_email, parent1_password, kid_email)
 
       # Create or update the second parent if present
-      if row['Guardian 3'].present? && row['Guardian 3 email'].present?
-        parent2_name = row['Guardian 3'].strip
-        parent2_email = row['Guardian 3 email'].strip.downcase
-        parent2_password = row['Password'].strip
+      if row['Parent 2'].present? && row['Email 2'].present?
+        parent2_name = row['Parent 2'].strip
+        parent2_email = row['Email 2'].strip.downcase
+        parent2_password = SecureRandom.hex(8)
         create_parent_method.call(parent2_name, parent2_email, parent2_password, kid_email)
       end
     end
