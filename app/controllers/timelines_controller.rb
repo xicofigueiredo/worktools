@@ -201,7 +201,7 @@ class TimelinesController < ApplicationController
     @timeline = Timeline.find(params[:id])
     new_state = !@timeline.hidden
 
-    if @timeline.update(hidden: new_state)
+    if @timeline.update_column(:hidden, new_state)
       message = new_state ? "Timeline successfully archived." : "Timeline successfully reactivated."
       redirect_to timelines_path, notice: message
     else

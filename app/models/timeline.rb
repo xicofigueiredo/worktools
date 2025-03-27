@@ -22,13 +22,6 @@ class Timeline < ApplicationRecord
   validate :dates_cannot_be_holidays
   validate :end_date_before_expected
 
-
-  def check_and_hide_if_completed
-    return unless user_topics.all?(&:done)
-
-    update(hidden: true)
-  end
-
   def create_user_topics
     subject.topics.order(:order).find_each do |topic|
       user.user_topics.create!(topic:, done: false)
