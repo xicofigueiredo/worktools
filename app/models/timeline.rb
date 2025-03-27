@@ -72,6 +72,10 @@ class Timeline < ApplicationRecord
   def end_date_before_expected
     return unless exam_date
 
+    # Skip this validation if only toggling the hidden state
+    return if changed_attributes.keys == ['hidden']
+
+
     # Map the expected end date based on the exam month
     expected_end_date = case exam_date.date.month
                         when 5, 6 # May/June exams
