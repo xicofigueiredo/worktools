@@ -222,7 +222,7 @@ class TimelinesController < ApplicationController
 
   def timeline_params
     params.require(:timeline).permit(:user_id, :subject_id, :start_date, :end_date, :total_time, :exam_date_id,
-                                     :mock100, :mock50, :personalized_name)
+                                     :mock100, :mock50, :personalized_name, :hidden)
   end
 
   def calculate_monthly_goals(timelines)
