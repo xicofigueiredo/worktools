@@ -6,6 +6,7 @@ class WeeklyGoalsController < ApplicationController
 
   def navigator
     @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @current_date += 2.day if @current_date.saturday? || @current_date.sunday?
 
     @user_goals = current_user.weekly_goals
     @weekly_goal = current_user.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?",

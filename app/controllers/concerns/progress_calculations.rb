@@ -1,71 +1,89 @@
 module ProgressCalculations
   extend ActiveSupport::Concern
 
+  # Preload user_topics for all topics across timelines once and then compute progress.
   def calculate_progress_and_balance(timelines)
+    # Collect all topic IDs from all timelines’ subjects (using in-memory associations if already loaded)
+    all_topic_ids = timelines.flat_map { |timeline| timeline.subject.topics.map(&:id) }.uniq
+
+    # Preload user_topics for current_user for these topics in one query, index by topic_id
+    user_topics_by_topic = current_user.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
+
     timelines.each do |timeline|
-      balance = 0
-      completed_topics_count = 0
-      progress = 0
-      expected_progress = 0
-
       topics = timeline.subject.topics
-      total_topics = topics.count
+      total_topics = topics.size
 
-      topics.each do |topic|
-        user_topic = current_user.user_topics.find_by(topic_id: topic.id)
-        next unless user_topic
+      if timeline.lws_timeline.nil?
+        # For non-LWS timelines, accumulate values in one pass
+        result = topics.each_with_object({ balance: 0, progress: 0.0, expected: 0.0 }) do |topic, h|
+          ut = user_topics_by_topic[topic.id]
+          next unless ut
 
-        if timeline.lws_timeline.nil?
-          if user_topic.done && user_topic.deadline && user_topic.deadline >= Date.today
-            balance += 1
-          elsif !user_topic.done && user_topic.deadline && user_topic.deadline < Date.today
-            balance -= 1
+          # Update balance based on deadline and done state
+          if ut.done && ut.deadline && ut.deadline >= Date.today
+            h[:balance] += 1
+          elsif !ut.done && ut.deadline && ut.deadline < Date.today
+            h[:balance] -= 1
           end
 
-          completed_topics_count += 1 if user_topic.done
-          progress += user_topic.percentage if user_topic.done
-          expected_progress += user_topic.percentage if user_topic.deadline < Date.today
-        else
-          expected = (timeline.lws_timeline.blocks_per_day * (Date.today - timeline.start_date).to_f).to_i
-          actual = current_user.user_topics.where(topic_id: topic.id, done: true).count
-          balance = actual - expected
-
-          completed_topics_count += 1 if user_topic.done
-          progress += user_topic.percentage if user_topic.done
-          expected_progress = (expected / total_topics)
+          # Sum progress if topic is done
+          h[:progress] += ut.percentage if ut.done
+          # Sum expected progress if deadline has passed
+          h[:expected] += ut.percentage if ut.deadline && ut.deadline < Date.today
         end
+
+        balance = result[:balance]
+        progress = result[:progress]
+        expected_progress = result[:expected]
+      else
+        # For LWS timelines, calculate expected completions based on days passed
+        days_passed = (Date.today - timeline.start_date).to_i
+        expected = (timeline.lws_timeline.blocks_per_day * days_passed).to_i
+
+        # Count how many topics are done
+        actual = topics.count { |topic| user_topics_by_topic[topic.id]&.done }
+        balance = actual - expected
+
+        # Sum percentages for done topics in one pass
+        progress = topics.sum { |topic| user_topics_by_topic[topic.id]&.done ? user_topics_by_topic[topic.id].percentage : 0.0 }
+        expected_progress = total_topics.positive? ? (expected.to_f / total_topics) : 0.0
       end
 
-      progress = (progress.to_f * 100).round
-      expected_progress_percentage = (expected_progress.to_f * 100).round
+      # Convert progress values into whole percentages
+      progress_percentage = (progress * 100).round
+      expected_progress_percentage = (expected_progress * 100).round
 
-      timeline.update(balance:, progress:, expected_progress: expected_progress_percentage)
+      # Update the timeline record (this is a DB update per timeline)
+      timeline.update(
+        balance: balance,
+        progress: progress_percentage,
+        expected_progress: expected_progress_percentage
+      )
     end
   end
 
+  # Refactored to preload user_topics for the given timeline to avoid N+1 queries
   def calc_remaining_blocks(timeline)
     topics = timeline.subject.topics
-    remaining_topics_count = 0
-
-    topics.each do |topic|
-      user_topic = current_user.user_topics.find_by(topic_id: topic.id)
-      remaining_topics_count += 1 if user_topic && !user_topic.done
-    end
-
-    remaining_topics_count
+    topic_ids = topics.map(&:id)
+    user_topics = current_user.user_topics.where(topic_id: topic_ids).index_by(&:topic_id)
+    topics.count { |topic| user_topics[topic.id] && !user_topics[topic.id].done }
   end
 
   def calc_remaining_timeline_hours_and_percentage(timeline)
     topics = timeline.subject.topics
+    topic_ids = topics.map(&:id)
+    user_topics = current_user.user_topics.where(topic_id: topic_ids).index_by(&:topic_id)
+
     remaining_hours_count = 0
-    remaining_percentage = 0
+    remaining_percentage = 0.0
 
     topics.each do |topic|
-      user_topic = current_user.user_topics.find_by(topic_id: topic.id)
-      if user_topic && !user_topic.done
-        remaining_hours_count += topic.time
-        remaining_percentage += user_topic.percentage
-      end
+      ut = user_topics[topic.id]
+      next unless ut && !ut.done
+
+      remaining_hours_count += topic.time
+      remaining_percentage += ut.percentage
     end
 
     [remaining_hours_count, remaining_percentage]

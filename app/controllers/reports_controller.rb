@@ -36,54 +36,50 @@ class ReportsController < ApplicationController
         # Ensure the current user has permission to view this learner's report
         unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin' || current_user.kids.include?(@learner.id)
           redirect_to reports_path, alert: "You do not have permission to access this report."
-          return
+            return
+          end
+        else
+          @learner = User.find_by(id: current_user.kids.first)
         end
       else
-        @learner = User.find_by(id: current_user.kids.first)
-      end
-    else
-      @learners = User.joins(:hubs)
-      .where(hubs: { id: current_user.hubs.ids }, role: 'learner', deactivate: [false, nil])
-      .select('users.*, hubs.name as hub_name')
-      .order('hub_name ASC, users.full_name ASC')
-      .distinct
+        @learners = User.joins(:hubs)
+        .where(hubs: { id: current_user.hubs.ids }, role: 'learner', deactivate: [false, nil])
+        .select('users.*, hubs.name as hub_name')
+        .order('hub_name ASC, users.full_name ASC')
+        .distinct
 
-      @grouped_learners = @learners.group_by { |learner| learner.hub_name }
+        @grouped_learners = @learners.group_by { |learner| learner.hub_name }
 
-      # Determine which learner's report to show
-      if params[:learner_id].present?
-        @learner = User.find_by(id: params[:learner_id])
+        # Determine which learner's report to show
+        if params[:learner_id].present?
+          @learner = User.find_by(id: params[:learner_id])
 
-        if @learner.nil?
-          redirect_to reports_path, alert: "No valid learner found."
-          return
+          if @learner.nil?
+            redirect_to reports_path, alert: "No valid learner found."
+            return
+          end
+
+          # Ensure the current user has permission to view this learner's report
+          unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
+            redirect_to reports_path, alert: "You do not have permission to access this report."
+              return
+            end
+          else
+            @learner = @learners.first
+          end
         end
 
-        # Ensure the current user has permission to view this learner's report
-        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
-          redirect_to reports_path, alert: "You do not have permission to access this report."
-          return
+        @timelines = @learner.timelines.where(hidden: false).order(difference: :asc)
+        calc_nav_dates(@sprint)
+        @report = @learner.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
+
+        if @report.new_record?
+          @report.last_update_check = Date.today
         end
-      else
-        @learner = @learners.first
-      end
-    end
 
-    @timelines = @learner.timelines.where(hidden: false).order(difference: :asc)
-    calc_nav_dates(@sprint)
-    @report = @learner.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
 
-    if @report.new_record?
-      @report.last_update_check = Date.today
-    end
-
-    @report.save
-    @attendance = calc_sprint_presence(@learner, @sprint)
-
-    @lcs = []
-    @lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3
-    end
+        @report.save
+        @attendance = calc_sprint_presence(@learner, @sprint)
 
     if @sprint
       @report = @learner.reports.find_by(sprint: @sprint)
@@ -158,8 +154,9 @@ class ReportsController < ApplicationController
            sprint_knowledges: sprint_goal_knowledges)
 
     @lcs = []
-    @lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3
+    @report.lc_ids.each do |lc_id|
+      lc = User.find_by(id: lc_id)
+      @lcs << lc if lc
     end
 
     if sprint_goal && sprint_goal.sprint.end_date >= Date.today
@@ -223,7 +220,13 @@ class ReportsController < ApplicationController
 
 
   def toggle_hide
-    @report.update(hide: !@report.hide)
+    lcs = @report.user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+      lc.hubs.count >= 3
+    end
+
+    lc_ids = lcs.present? ? lcs.map(&:id) : []
+
+    @report.update(hide: !@report.hide, lc_ids: lc_ids)
     redirect_to report_path(@report), notice: "Visibility toggled successfully."
   end
 
@@ -268,8 +271,9 @@ class ReportsController < ApplicationController
     @attendance = calc_sprint_presence(@learner, @report.sprint) if @report&.sprint
     @report_activities = @report.report_activities
     @lcs = []
-    @lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3
+    @report.lc_ids.each do |lc_id|
+      lc = User.find_by(id: lc_id)
+      @lcs << lc if lc
     end
 
 

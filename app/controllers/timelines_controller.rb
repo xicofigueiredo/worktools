@@ -15,73 +15,19 @@ class TimelinesController < ApplicationController
     @total_blocks_per_day = 0
     @total_hours_per_week = 0
     weekly_percentages = []
-    timelines = current_user.timelines_sorted_by_balance.where(hidden: false)
+
+    # Eager load the subject and its topics (avoid unnecessary eager loading)
+    @timelines = current_user.timelines_sorted_by_balance
+                             .where(hidden: false)
+                             .includes(subject: :topics)
 
     @average_weekly_percentage = calc_array_average(weekly_percentages).round(1)
-
-    calculate_progress_and_balance(timelines)
-
-    # @monthly_goals = calculate_monthly_goals(timelines)
+    calculate_progress_and_balance(@timelines)
+    # @monthly_goals = calculate_monthly_goals(@timelines)
 
     @holidays = current_user.holidays.where("end_date >= ?", 4.months.ago)
-
-    @timelines = timelines.map do |timeline|
-      {
-        "id" => timeline.id,
-        "subject_id" => timeline.subject_id,
-        "subject_name" => timeline.subject.name,
-        "personalized_name" => timeline.personalized_name,
-        "category" => timeline.subject.category,
-        "start_date" => timeline.start_date,
-        "end_date" => timeline.end_date,
-        "progress" => timeline.progress,
-        "balance" => timeline.balance,
-        "topics" => timeline.subject.topics.order(:order, id: :asc).map do |topic|
-          user_topic = current_user.user_topics.find_or_initialize_by(topic:)
-          {
-            "id" => topic.id,
-            "name" => topic.name,
-            "unit" => topic.unit,
-            "time" => topic.time,
-            "deadline" => user_topic.deadline,
-            "done" => user_topic.done,
-            "user_topic_id" => user_topic.id
-          }
-        end
-      }
-    end
-    #     timelines.each do |timeline|
-    #       unless timeline.personalized_name
-    #         if timeline.subject.category.include?("lws")
-    #           timeframe = Timeframe.new(Date.today, timeline.end_date)
-    #           remaining_days = calculate_working_days(timeframe)
-    #           remaining_topics = calc_remaining_blocks(timeline)
-    #           blocks_per_day = remaining_topics.to_f / remaining_days.count
-    #           @total_blocks_per_day += blocks_per_day
-    #           @has_lws = true
-    #         else
-    #           remaining_hours_count, remaining_percentage = calc_remaining_timeline_hours_and_percentage(timeline)
-    #           remaining_weeks_count = Week.where("start_date >= ? AND end_date <= ?", Date.today, timeline.end_date)
-    #           .where.not("name LIKE ?", "%Build Week%").count
-    #
-    #           @total_hours_per_week += remaining_weeks_count.zero? ? 0 : remaining_hours_count / remaining_weeks_count
-    #
-    #           weekly_percentage = remaining_weeks_count.zero? ? remaining_percentage * 100 : remaining_percentage / remaining_weeks_count * 100
-    #
-    #           weekly_percentages.push((weekly_percentage).round(2))
-    #
-    #
-    #         end
-    #         timeline.save
-    #       end
-    #
-    #     end
-    #     if timelines.count.positive?
-    #       @total_progress = (timelines.sum(&:progress).to_f / timelines.count) / 100
-    #     else
-    #       @total_progress = 0
-    #     end
   end
+
 
   def new
     @timeline = Timeline.new
@@ -211,8 +157,14 @@ class TimelinesController < ApplicationController
 
   def archived
     @archived_timelines = Timeline.where(user: current_user, hidden: true)
+                                  .includes(subject: :topics)
     @past_holidays = current_user.holidays.where("end_date <= ?", Date.today)
+
+    # Preload all topic IDs from the archived timelines' subjects
+    all_topic_ids = @archived_timelines.flat_map { |t| t.subject.topics.pluck(:id) }.uniq
+    @user_topics_by_topic = current_user.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
   end
+
 
   private
 

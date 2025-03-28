@@ -1,4 +1,3 @@
-
 <% if current_user.role == 'lc' || current_user.role == "admin" %>
   <div style="padding-top: 20px; padding-bottom: 20px;">
     <%= form_with url: reports_path, method: :get, local: true, class: "d-flex align-items-center justify-content-center gap-2 ", data: { controller: "auto-submit" } do %>
@@ -13,29 +12,6 @@
   Please rotate your device to landscape mode for the best viewing experience.
 </div>
 
-<style>
-  .rotate-message {
-  display: none; /* Hide by default */
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.9);
-  color: white;
-  font-size: 1.5em;
-  text-align: center;
-  padding-top: 20%;
-  z-index: 1000;
-}
-
-/* Show only on mobile devices in portrait mode */
-@media screen and (max-width: 767px) and (orientation: portrait) {
-  .rotate-message {
-    display: block;
-  }
-}
-</style>
 
 
 <div class="report-container mt-3">
@@ -449,10 +425,6 @@ These KDAs represent critical growth areas unique to each learner, helping them 
             </tr>
           </tbody>
         </table>
-      <% end %>
-      </body>
-    <% end %>
-    <br>
 <footer style="border-top: 1px solid #ccc; padding: 20px;">
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
     <div class="text-center text-md-start mb-3 mb-md-0">
@@ -461,12 +433,44 @@ These KDAs represent critical growth areas unique to each learner, helping them 
       </a>
     </div>
     <div class="text-center text-md-end">
-      <% @lcs.each do |lc| %>
+      <% @report.lc_ids.each do |lc| %>
+        <% lc = User.find_by(id: lc) %>
         <div><%= lc.full_name %>: <%= lc.email %></div>
       <% end %>
     </div>
   </div>
 </footer>
+      <% end %>
+      </body>
+    <% end %>
+    <br>
 
   </html>
 </div>
+
+
+
+
+<style>
+  .rotate-message {
+  display: none; /* Hide by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  font-size: 1.5em;
+  text-align: center;
+  padding-top: 20%;
+  z-index: 1000;
+}
+
+/* Show only on mobile devices in portrait mode */
+@media screen and (max-width: 767px) and (orientation: portrait) {
+  .rotate-message {
+    display: block;
+  }
+}
+</style>

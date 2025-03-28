@@ -1,5 +1,6 @@
 <div class="container mt-3">
   <div class="container">
+    <!-- Holidays Section -->
     <div id="holidays-section" class="mb-5">
       <div class="d-flex justify-content-between">
         <div>
@@ -13,7 +14,7 @@
       </div>
       <div id="holidays-content" class="row row-cols-4">
         <% @holidays.each do |holiday| %>
-        <div class="col mb-3">
+          <div class="col mb-3">
             <div class="card shadow-sm" style="border-radius: 10px;">
               <div class="p-3">
                 <%= render partial: 'holiday', locals: { holiday: holiday } %>
@@ -24,6 +25,7 @@
       </div>
     </div>
 
+    <!-- Timelines Section -->
     <div id="timelines-section" class="mb-5">
       <div class="d-flex justify-content-between">
         <div>
@@ -33,13 +35,16 @@
         <div>
           <% if @has_lws %>
             <div style="margin-right: 130px;">
-              <h5 class="mb-0" style="margin-top: 12px">Blocks per day: <%= (@total_blocks_per_day * 1.2).round(1)  %></h5>
+              <h5 class="mb-0" style="margin-top: 12px">
+                Blocks per day: <%= (@total_blocks_per_day * 1.2).round(1) %>
+              </h5>
             </div>
           <% end %>
-
           <% unless @average_weekly_percentage.nan? %>
-            <div >
-              <h5 class="mb-0" style="margin-top: 12px">Expected weekly progress: <%= @average_weekly_percentage %>% / <%= (@total_hours_per_week).round() %>h</h5>
+            <div>
+              <h5 class="mb-0" style="margin-top: 12px">
+                Expected weekly progress: <%= @average_weekly_percentage %>% / <%= @total_hours_per_week.round %>h
+              </h5>
             </div>
           <% end %>
         </div>
@@ -52,11 +57,12 @@
       </div>
     </div>
 
+    <!-- Timelines Content -->
     <div id="timelines-content">
       <div class="accordion" id="parentAccordion">
         <% @timelines.each do |timeline| %>
           <%# <%= render partial: 'timelines/moodle_timeline', locals: { timeline: timeline } %>
-           <%= render partial: 'timelines/timeline', locals: { timeline: timeline } %>
+          <%= render partial: 'timelines/timeline', locals: { timeline: timeline } %>
         <% end %>
       </div>
     </div>

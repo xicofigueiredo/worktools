@@ -1,5 +1,5 @@
 class Topic < ApplicationRecord
-  belongs_to :subject
+  belongs_to :subject, counter_cache: true
   has_many :user_topics
   has_many :users, through: :user_topics
 
