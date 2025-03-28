@@ -1,7 +1,5 @@
 class Week < ApplicationRecord
-  validates :start_date, presence: true
-  validates :end_date, presence: true
-  validates :name, presence: true
+  validates :start_date, :end_date, :name, presence: true
 
   has_many :weekly_goals
   has_many :kdas
@@ -9,47 +7,34 @@ class Week < ApplicationRecord
   has_many :timeline_progresses
 
   def week_name_abbr
-    if name =~ %r{\AWeek (\d+)( / Build Week)?\z}
-      "W#{::Regexp.last_match(1)}"
+    if (match = name.match(/\AWeek (\d+)(?: \/ Build Week)?\z/))
+      "W#{match[1]}"
     else
       "W"
     end
   end
 
   def calc_user_average_timeline_progress(user)
-    timeline_progresses = self.timeline_progresses.joins(:timeline)
-                              .where(timelines: { user_id: user.id })
-
-    if timeline_progresses.any?
-      average_progress = timeline_progresses.average(:progress).to_f.round(1)
-    else
-      average_progress = 0
-    end
-    average_progress
+    avg = timeline_progresses
+            .joins(:timeline)
+            .where(timelines: { user_id: user.id })
+            .average(:progress)
+    (avg || 0).to_f.round(1)
   end
 
   def calc_relative_average_timeline_progress(user)
-    current_week_average = calc_user_average_timeline_progress(user)
+    current_avg = calc_user_average_timeline_progress(user)
     previous_week = Week.where("start_date < ?", start_date).order(:start_date).last
-
-    if previous_week.present?
-      previous_week_average = previous_week.calc_user_average_timeline_progress(user)
-      relative_average = (current_week_average - previous_week_average).round(1)
-    else
-      relative_average = current_week_average
-    end
-
-    if relative_average.negative?
-      0
-    else
-      relative_average
-    end
+    previous_avg = previous_week ? previous_week.calc_user_average_timeline_progress(user) : current_avg
+    relative = (current_avg - previous_avg).round(1)
+    relative.negative? ? 0 : relative
   end
 
   def count_absences(user)
-    date_range = start_date..end_date
-
-    Attendance.where(user_id: user.id, attendance_date: date_range)
-              .where(absence: 'Unjustified Leave').count
+    Attendance.where(
+      user_id: user.id,
+      attendance_date: start_date..end_date,
+      absence: 'Unjustified Leave'
+    ).count
   end
 end

@@ -1,31 +1,34 @@
 <%= turbo_frame_tag "lp_weekly_goal" do %>
+  <% previous_date = current_date - 7 %>
+  <% next_date = current_date + 7 %>
+  <% this_week_date = (Date.today.saturday? || Date.today.sunday?) ? Date.today - 2 : Date.today %>
+
   <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
     <div>
       <h3><%= current_week.name %></h3>
     </div>
 
     <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
-      <%= button_to change_weekly_goal_path(date: current_date - 7, current_week_id: current_week.id, learner_id: learner.id, current_date: current_date), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center h-100", data: { turbo_frame: 'lp_weekly_goal' } do %>
+      <%= button_to change_weekly_goal_path(date: previous_date, current_week_id: current_week.id, learner_id: learner.id, current_date: current_date), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center h-100", data: { turbo_frame: 'lp_weekly_goal' } do %>
         <i class="fa-solid fa-chevron-left"></i>
       <% end %>
-      <% date_today = (Date.today.saturday? || Date.today.sunday?) ? Date.today - 2 : Date.today %>
-      <%= button_to change_weekly_goal_path(date: date_today, current_week_id: current_week.id, learner_id: learner.id, current_date: current_date), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center", data: { turbo_frame: 'lp_weekly_goal' } do %>
+      <%= button_to change_weekly_goal_path(date: this_week_date, current_week_id: current_week.id, learner_id: learner.id, current_date: current_date), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center", data: { turbo_frame: 'lp_weekly_goal' } do %>
         This Week
       <% end %>
-      <%= button_to change_weekly_goal_path(date: current_date + 7, current_week_id: current_week.id, learner_id: learner.id, current_date: current_date), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center h-100", data: { turbo_frame: 'lp_weekly_goal' } do %>
+      <%= button_to change_weekly_goal_path(date: next_date, current_week_id: current_week.id, learner_id: learner.id, current_date: current_date), method: :get, class: "btn btn-outline-secondary rounded d-flex align-items-center h-100", data: { turbo_frame: 'lp_weekly_goal' } do %>
         <i class="fa-solid fa-chevron-right"></i>
       <% end %>
     </div>
 
     <div>
-      <h3><%= current_week.sprint.name %></h3>
+      <h3><%= @current_week_sprint_name %></h3>
     </div>
   </div>
 
-  <% if !weekly_goal %>
+  <% if weekly_goal.nil? %>
     <div class="d-flex flex-column gap-3 mt-5">
       <div class="text-center mb-5">
-        <h2> <%= learner.full_name %> has no Weekly Goal for <%= current_week.name %> - <%= current_week.sprint.name %></h2>
+        <h2><%= learner.full_name %> has no Weekly Goal for <%= current_week.name %> - <%= @current_week_sprint_name %></h2>
       </div>
     </div>
   <% else %>
@@ -65,9 +68,9 @@
                         <tr>
                           <td class="align-middle"><%= time.to_s.humanize.titleize %></td>
                           <% WeeklySlot.day_of_weeks.keys.each do |day| %>
-                            <td id="<%= time.downcase %>_<%= day.downcase %>">
+                            <td id="<%= "#{time.downcase}_#{day.downcase}" %>">
                               <div class="form-group">
-                                <% slot = weekly_goal.weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
+                                <% slot = weekly_goal.weekly_slots.find { |s| s.time_slot == time && s.day_of_week == day } %>
                                 <% if slot %>
                                   <%= slot.subject_name %><br>
                                   <%= slot.topic_name %>
@@ -82,8 +85,8 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </div> <!-- end card-body -->
+        </div> <!-- end card -->
       </div>
     </div>
   <% end %>
