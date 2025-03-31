@@ -1,85 +1,69 @@
-<div class="row justify-content-center">
-  <div class="col-md-12">
-    <div class="card shadow-sm mb-5" style="border-radius: 10px;">
-      <div class="pt-4">
-        <div class="container">
-          <div class="d-flex justify-content-between mb-3">
-            <div style="text-align: left;">
-              <%= @current_sprint.name %>
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card shadow-sm mb-5" style="border-radius: 10px;">
+        <div class="pt-4">
+          <div class="container">
+            <div class="d-flex justify-content-between mb-3">
+              <div style="text-align: left;">
+                <%= @current_sprint.name %>
+              </div>
+              <div style="text-align: right;">
+                <%= Date.today.strftime("%Y") %>:
+                <% if @yearly_presence %>
+                  <%= @yearly_presence %>%
+                <% else %>
+                  0%
+                <% end %>
+              </div>
             </div>
-            <div style="text-align: right;">
-              <%= Date.today.strftime("%Y") %>:
-              <%= @yearly_presence.present? ? @yearly_presence : 0 %>%
-            </div>
-          </div>
-          <% dates = (@current_sprint.start_date..@current_sprint.end_date).to_a.reject { |date| date.saturday? || date.sunday? } %>
-          <div class="table-responsive">
-            <table class="table table-bordered text-center">
-              <thead>
-                <tr>
-                  <% dates.each do |date| %>
-                    <th>
-                      <%= date.strftime("%A")[0..2] %><br>
-                      <%= date.strftime("%d/%m") %>
-                    </th>
+            <div class="table-responsive">
+              <table class="table table-bordered text-center">
+                <thead>
+                  <% (@current_sprint.start_date..@current_sprint.end_date).each do |date| %>
+                    <% next if date.saturday? || date.sunday? %>
+                    <th><%= date.strftime("%A")[0..2]%> <br> <%= date.strftime("%d/%m") %></th>
                   <% end %>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <% dates.each do |date| %>
-                    <% attendance = @attendances.find { |a| a.attendance_date == date } %>
-                    <td>
-                      <% if attendance.present? %>
-                        <% if attendance.start_time.present? && attendance.end_time.present? %>
-                          <div><%= attendance.start_time.strftime("%H:%M") %></div>
+                </thead>
+                <tbody>
+                  <tr>
+                    <% (@current_sprint.start_date..@current_sprint.end_date).each do |date| %>
+                      <% next if date.saturday? || date.sunday? %>
+                      <% attendance = @attendances.find { |a| a.attendance_date == date } %>
+                      <td>
+                        <% if attendance && attendance.start_time && attendance.end_time %>
+                          <div> <%= attendance.start_time.strftime("%H:%M") %></div>
                           <div><%= attendance.end_time.strftime("%H:%M") %></div>
-                        <% elsif attendance.start_time.present? && attendance.end_time.blank? %>
-                          <div><%= attendance.start_time.strftime("%H:%M") %></div>
+                        <% elsif attendance && attendance.start_time && !attendance.end_time %>
+                          <div> <%= attendance.start_time.strftime("%H:%M") %></div>
                           <div>-</div>
-                        <% elsif attendance.start_time.blank? && attendance.end_time.present? %>
+                        <% elsif attendance && !attendance.start_time && attendance.end_time %>
                           <div>-</div>
                           <div><%= attendance.end_time.strftime("%H:%M") %></div>
-                        <% elsif attendance.absence == "Justified Leave" %>
+                        <% elsif attendance && attendance.absence == "Justified Leave" %>
                           <span class="text-primary"><i class="fa-regular fa-circle-xmark"></i></span>
-                        <% elsif attendance.absence == "Working Away" %>
+                        <% elsif attendance && attendance.absence == "Working Away" %>
                           <i class="fa-solid fa-house-laptop"></i>
-                        <% elsif attendance.absence == "Holiday" %>
+                        <% elsif attendance && attendance.absence == "Holiday" %>
                           <i class="fa-solid fa-plane-departure"></i>
-                        <% elsif attendance.absence == "Unjustified Leave" %>
+                        <% elsif  attendance && attendance.absence == "Unjustified Leave" %>
                           <span class="text-danger"><i class="fa-regular fa-circle-xmark"></i></span>
                         <% else %>
                           X
                         <% end %>
-                      <% else %>
-                        X
-                      <% end %>
-                    </td>
-                  <% end %>
-                </tr>
-              </tbody>
-            </table>
+                      </td>
+                    <% end %>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="d-flex align-items-center gap-4 small mt-2 build-week justify-content-center" style="padding-top: 12px; padding-bottom: 24px;">
-        <div>
-          <span class="text-danger"><i class="fa-regular fa-circle-xmark"></i></span>
-          Unjustified
-        </div>
-        <div>
-          <span class="text-primary"><i class="fa-regular fa-circle-xmark"></i></span>
-          Justified
-        </div>
-        <div>
-          <i class="fa-solid fa-house-laptop"></i>
-          Working Away
-        </div>
-        <div>
-          <i class="fa-solid fa-plane-departure"></i>
-          Holiday
+        <div class="d-flex align-items-center gap-4 small mt-2 build-week justify-content-center" style="padding-top: 12px; padding-bottom: 24px;">
+          <div><span class="text-danger"><i class="fa-regular fa-circle-xmark"></i></span>  Unjustified</div>
+          <div><span class="text-primary"><i class="fa-regular fa-circle-xmark"></i></span>  Justified</div>
+          <div><i class="fa-solid fa-house-laptop"></i>  Working Away</div>
+          <div><i class="fa-solid fa-plane-departure"></i>  Holiday</div>
         </div>
       </div>
     </div>
   </div>
-</div>
