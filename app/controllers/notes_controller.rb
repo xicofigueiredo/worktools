@@ -1,10 +1,11 @@
 class NotesController < ApplicationController
-  before_action :set_learner, only: %i[new create edit update destroy]
+  before_action :set_learner, only: %i[index new create edit update destroy]
   before_action :enforce_category_for_cm, only: [:create, :update]
 
 
   def index
-    @notes = Note.all
+    @notes = @learner.notes.order(date: :desc)
+    @notes_by_month = @notes.group_by { |note| note.date.beginning_of_month }
   end
 
   def show

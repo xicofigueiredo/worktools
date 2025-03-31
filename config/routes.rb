@@ -43,7 +43,7 @@ Rails.application.routes.draw do
     post 'sprint_goals/bulk_destroy', to: 'sprint_goals#bulk_destroy'
 
     resources :users do
-      resources :notes, except: [:show, :index]
+      resources :notes, except: [:show]
     end
     resources :learner_flags, only: [:edit, :update]
 
