@@ -4,6 +4,7 @@ services:
     container_name: worktools
     volumes:
       - ./data:/var/lib/postgresql/data
+      # - ./databackup/data:/var/lib/postgresql/data
     command: "postgres -c 'max_connections=500'"
     env_file:
       - .env.production
