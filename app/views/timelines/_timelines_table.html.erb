@@ -6,8 +6,7 @@
           <tr>
             <th>Subject</th>
             <th>Progress</th>
-            <th>%(+/-)</th>
-            <th>Topics(+/-)</th>
+            <th>Topics</th>
             <th>Start Date</th>
             <th>Mock 50%</th>
             <th>Mock 100%</th>
@@ -42,21 +41,6 @@
                   <div style="font-weight: bold;">
                     <%= timeline.progress %>%
                   </div>
-                </td>
-                <td>
-                  <% if timeline.expected_progress.present? && timeline.progress.present? %>
-                    <% if timeline.progress > timeline.expected_progress %>
-                      <div class="badge rounded-pill bg-success">
-                        +<%= timeline.progress - timeline.expected_progress %>%
-                      </div>
-                    <% elsif timeline.progress < timeline.expected_progress %>
-                      <div class="badge rounded-pill bg-danger">
-                        <%= timeline.progress - timeline.expected_progress %>%
-                      </div>
-                    <% else %>
-                      <div class="badge rounded-pill bg-success">0%</div>
-                    <% end %>
-                  <% end %>
                 </td>
                 <td>
                   <% if timeline.balance %>
@@ -172,7 +156,7 @@
 
 <style>
 tr {
-  font-size: 18px;
+  font-size: 15px;
 }
 tr.clickable:hover td {
   background-color: lightgray !important;
