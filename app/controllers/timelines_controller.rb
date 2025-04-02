@@ -11,7 +11,6 @@ class TimelinesController < ApplicationController
   def index
     @archived = current_user.timelines.exists?(hidden: true)
 
-    @has_lws = false
     @total_blocks_per_day = 0
     @total_hours_per_week = 0
     weekly_percentages = []
@@ -26,6 +25,13 @@ class TimelinesController < ApplicationController
     # @monthly_goals = calculate_monthly_goals(@timelines)
 
     @holidays = current_user.holidays.where("end_date >= ?", 4.months.ago)
+
+    @has_exam_date  = @timelines.any? { |timeline| timeline.exam_date_id.present? }
+  end
+
+  def show
+    @timeline = Timeline.find(params[:id])
+    render partial: "timeline_detail", locals: { timeline: @timeline }, layout: false
   end
 
 

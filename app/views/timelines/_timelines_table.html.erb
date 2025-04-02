@@ -1,0 +1,184 @@
+<div class="mb-5">
+  <div class="card mb-2 shadow-sm px-2 responsive-card" style="border-radius: 10px;">
+    <div class="px-2 overflow-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Progress</th>
+            <th>%(+/-)</th>
+            <th>Topics(+/-)</th>
+            <th>Start Date</th>
+            <th>Mock 50%</th>
+            <th>Mock 100%</th>
+            <th>End Date</th>
+            <% if @has_exam_date %>
+              <th>Exam Season</th>
+            <% end %>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @timelines.any? %>
+            <% @timelines.each do |timeline| %>
+              <%# Compute exam season display if needed %>
+              <% exam_season = if timeline.exam_date.present?
+                                   case timeline.exam_date.date.month
+                                   when 5, 6
+                                     "May/Jun #{timeline.exam_date.date.strftime('%Y')}"
+                                   when 10, 11
+                                     "Oct/Nov #{timeline.exam_date.date.strftime('%Y')}"
+                                   else
+                                     timeline.exam_date.date.strftime("%B %Y")
+                                   end
+                                 else
+                                   "N/A"
+                                 end %>
+              <tr class="clickable" data-href="<%= timeline_path(timeline) %>" style="cursor: pointer;">
+                <td style="text-align: left;">
+                  <%= timeline.subject.name.present? ? timeline.subject.name : timeline.personalized_name %>
+                </td>
+                <td>
+                  <div style="font-weight: bold;">
+                    <%= timeline.progress %>%
+                  </div>
+                </td>
+                <td>
+                  <% if timeline.expected_progress.present? && timeline.progress.present? %>
+                    <% if timeline.progress > timeline.expected_progress %>
+                      <div class="badge rounded-pill bg-success">
+                        +<%= timeline.progress - timeline.expected_progress %>%
+                      </div>
+                    <% elsif timeline.progress < timeline.expected_progress %>
+                      <div class="badge rounded-pill bg-danger">
+                        <%= timeline.progress - timeline.expected_progress %>%
+                      </div>
+                    <% else %>
+                      <div class="badge rounded-pill bg-success">0%</div>
+                    <% end %>
+                  <% end %>
+                </td>
+                <td>
+                  <% if timeline.balance %>
+                    <% if timeline.balance.positive? %>
+                      <div class="badge rounded-pill bg-success">
+                        +<%= timeline.balance %>
+                      </div>
+                    <% elsif timeline.balance.negative? %>
+                      <div class="badge rounded-pill bg-danger">
+                        <%= timeline.balance %>
+                      </div>
+                    <% else %>
+                      <div class="badge rounded-pill bg-warning">On time</div>
+                    <% end %>
+                  <% end %>
+                </td>
+                <td><%= timeline.start_date.strftime("%d/%m/%Y") %></td>
+                <% if timeline.mock50.present? %>
+                  <td><%= timeline.mock50.strftime("%d/%m/%Y") %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+                <% if timeline.mock100.present? %>
+                  <td><%= timeline.mock100.strftime("%d/%m/%Y") %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+                <td><%= timeline.end_date.strftime("%d/%m/%Y") %></td>
+                <% if @has_exam_date %>
+                  <td><%= exam_season %></td>
+                <% end %>
+                <td>
+                  <%= link_to edit_timeline_path(timeline.id) do %>
+                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 17px; color: gray;"></i>
+                  <% end %>
+                  <%= link_to toggle_archive_timeline_path(timeline.id),
+                              data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to archive this timeline?" } do %>
+                    <i class="fa-solid fa-box-archive" title="Archive" style="font-size: 17px; color: #808080;"></i>
+                  <% end %>
+                  <% if current_user.role == "admin" %>
+                    <%= link_to timeline_path(timeline.id),
+                                data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this timeline?" } do %>
+                      <i class="fa-solid fa-trash" title="Delete" style="font-size: 17px; color: gray;"></i>
+                    <% end %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <% colspan_val = @has_exam_date ? 8 : 7 %>
+            <tr>
+              <td colspan="<%= colspan_val %>">
+                <div class="text-center py-5">
+                  <h2>No Timelines available...</h2>
+                  <p>Please help <%= @learner.full_name %> set up their timelines.</p>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Placeholder for timeline details -->
+<div id="timeline-details" class="mt-4"></div>
+
+<!-- JavaScript to load timeline details on row click -->
+<script>
+  // Clear dynamic content before Turbo caches the page.
+  document.addEventListener("turbo:before-cache", function() {
+    var timelineDetails = document.getElementById("timeline-details");
+    if (timelineDetails) {
+      timelineDetails.innerHTML = "";
+    }
+  });
+
+  document.addEventListener("turbo:load", function() {
+    document.querySelectorAll("tr.clickable").forEach(function(row) {
+      row.addEventListener("click", function() {
+        // Remove 'selected' class from all clickable rows
+        document.querySelectorAll("tr.clickable").forEach(function(r) {
+          r.classList.remove("selected");
+        });
+        // Add 'selected' class to the clicked row
+        this.classList.add("selected");
+
+        // Insert loading animation into timeline details
+        document.getElementById("timeline-details").innerHTML =
+          '<div class="text-center my-3"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i> Loading...</div>';
+
+        // Fetch the timeline details from the URL in data-href
+        fetch(this.dataset.href, {
+          headers: { "Accept": "text/html" }
+        })
+          .then(response => response.text())
+          .then(html => {
+            document.getElementById("timeline-details").innerHTML = html;
+            document.getElementById("timeline-details").scrollIntoView({ behavior: "smooth" });
+          })
+          .catch(error => {
+            console.error("Error loading timeline details:", error);
+            document.getElementById("timeline-details").innerHTML =
+              '<div class="text-center text-danger">Error loading timeline details.</div>';
+          });
+      });
+    });
+  });
+</script>
+
+
+
+<style>
+tr {
+  font-size: 18px;
+}
+tr.clickable:hover td {
+  background-color: lightgray !important;
+}
+tr.selected td {
+  background-color: #d5f000 !important;
+}
+
+</style>

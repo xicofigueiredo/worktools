@@ -126,7 +126,7 @@ class PagesController < ApplicationController
     if current_user.role == "learner" || current_user.role == "admin"
       @learner = current_user
       @learner_flag = @learner.learner_flag
-      @timelines = @learner.timelines
+      @timelines = @learner.timelines.where(hidden: false)
       @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
       @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
       @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)

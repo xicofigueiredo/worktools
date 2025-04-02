@@ -1,0 +1,70 @@
+<!-- Accordion content OPEN by default -->
+<div id="collapse<%= @timeline.id %>" class="accordion-collapse collapse show"
+     aria-labelledby="heading<%= @timeline.id %>" data-bs-parent="#parentAccordion">
+  <div class="accordion-body p-2">
+    <div class="card shadow-sm px-2" style="border-radius: 10px;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th><%= @timeline.subject.category.include?("lws") ? 'Project' : 'Unit' %></th>
+            <th>Topic</th>
+            <% unless @timeline.subject.category.include?("lws") %>
+              <th>Hours</th>
+              <th width="120px">Date</th>
+            <% end %>
+            <th>Done</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% previous_unit = nil %>
+          <% @timeline.subject.topics.order(:order, :id).each do |topic| %>
+            <% user_topic = topic.user_topics.find_by(user: current_user) %>
+            <% background_color = if user_topic && !user_topic.done && user_topic.deadline && user_topic.deadline < Date.today && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)
+                                    '#ff193499'
+                                  elsif user_topic && !user_topic.done && user_topic.deadline && Date.today.monday? && user_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)
+                                    'lightgrey'
+                                  elsif user_topic && user_topic.done
+                                    '#00ce00a6'
+                                  else
+                                    'transparent'
+                                  end %>
+            <tr>
+              <td style="background-color: <%= background_color %>;">
+                <% if topic.unit != previous_unit %>
+                  <%= topic.unit %>
+                  <% previous_unit = topic.unit %>
+                <% end %>
+              </td>
+              <td style="background-color: <%= background_color %>;"><%= topic.name %></td>
+              <% if user_topic && user_topic.deadline.present? %>
+                <% unless @timeline.subject.category.include?("lws") %>
+                  <td style="background-color: <%= background_color %>;"><%= topic.time %></td>
+                  <td style="background-color: <%= background_color %>;"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
+                <% end %>
+              <% else %>
+                <td style="background-color: <%= background_color %>;">Update Dates</td>
+              <% end %>
+              <td style="background-color: <%= background_color %>;">
+                <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
+                  <% if user_topic.present? %>
+                    <%= form_with model: user_topic, url: timeline_path(@timeline.id), method: :patch, local: true do |form| %>
+                      <div class="form-check">
+                        <%= form.check_box :done, class: "form-check-input",
+                            data: {
+                              action: "change->toggle-done#toggle",
+                              toggle_done_target: "checkbox",
+                              user_topic_id: user_topic.id,
+                              timeline_id: @timeline.id
+                            } %>
+                      </div>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

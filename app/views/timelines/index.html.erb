@@ -1,70 +1,71 @@
 <div class="container mt-3">
-  <div class="container">
-    <!-- Holidays Section -->
-    <div id="holidays-section" class="mb-5">
-      <div class="d-flex justify-content-between">
-        <div>
-          <h2>Holidays</h2>
-          <p>Create new Holidays here:</p>
-        </div>
-        <div>
-          <%= link_to "New Holiday", new_holiday_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
-          <%= link_to "Archive", archived_timelines_path, class: "btn btn-secondary ms-2", style: 'border-radius: 10px;' %>
+  <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="timelines-tab" data-bs-toggle="tab" data-bs-target="#timelines" type="button" role="tab" aria-controls="timelines" aria-selected="true">
+        <h2>Timelines</h2>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="holidays-tab" data-bs-toggle="tab" data-bs-target="#holidays" type="button" role="tab" aria-controls="holidays" aria-selected="false">
+        <h2>Holidays</h2>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content mt-3" id="dashboardTabsContent">
+    <!-- Timelines Tab -->
+    <div class="tab-pane fade show active" id="timelines" role="tabpanel" aria-labelledby="timelines-tab">
+      <div id="timelines-section" class="mb-5">
+        <div class="d-flex justify-content-between">
+          <div>
+            <p>Create and manage your timelines here:</p>
+          </div>
+          <div>
+            <%= link_to "New Timeline", new_timeline_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
+            <% if @archived %>
+              <%= link_to "Archive", archived_timelines_path, class: "btn btn-secondary ms-2", style: 'border-radius: 10px;' %>
+            <% end %>
+          </div>
         </div>
       </div>
-      <div id="holidays-content" class="row row-cols-4">
-        <% @holidays.each do |holiday| %>
-          <div class="col mb-3">
-            <div class="card shadow-sm" style="border-radius: 10px;">
-              <div class="p-3">
-                <%= render partial: 'holiday', locals: { holiday: holiday } %>
+      <div class="mb-5">
+        <%= render partial: 'timelines/timelines_table' %>
+      </div>
+    </div>
+
+    <!-- Holidays Tab -->
+    <div class="tab-pane fade" id="holidays" role="tabpanel" aria-labelledby="holidays-tab">
+      <div id="holidays-section" class="mb-5">
+        <div class="d-flex justify-content-between mb-5">
+          <div>
+            <p>Create and manage your holidays here:</p>
+          </div>
+          <div>
+            <%= link_to "New Holiday", new_holiday_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
+            <%= link_to "Archive", archived_timelines_path, class: "btn btn-secondary ms-2", style: 'border-radius: 10px;' %>
+          </div>
+        </div>
+        <div id="holidays-content" class="row row-cols-4">
+          <% @holidays.each do |holiday| %>
+            <div class="col mb-3">
+              <div class="card shadow-sm" style="border-radius: 10px;">
+                <div class="p-3">
+                  <%= render partial: 'holiday', locals: { holiday: holiday } %>
+                </div>
               </div>
             </div>
-          </div>
-        <% end %>
-      </div>
-    </div>
-
-    <!-- Timelines Section -->
-    <div id="timelines-section" class="mb-5">
-      <div class="d-flex justify-content-between">
-        <div>
-          <h2>Timelines</h2>
-          <p>Create your Timelines here</p>
-        </div>
-        <div>
-          <% if @has_lws %>
-            <div style="margin-right: 130px;">
-              <h5 class="mb-0" style="margin-top: 12px">
-                Blocks per day: <%= (@total_blocks_per_day * 1.2).round(1) %>
-              </h5>
-            </div>
-          <% end %>
-          <% unless @average_weekly_percentage.nan? %>
-            <div>
-              <h5 class="mb-0" style="margin-top: 12px">
-                Expected weekly progress: <%= @average_weekly_percentage %>% / <%= @total_hours_per_week.round %>h
-              </h5>
-            </div>
           <% end %>
         </div>
-      </div>
-      <div>
-        <%= link_to "New Timeline", new_timeline_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
-        <% if @archived %>
-          <%= link_to "Archive", archived_timelines_path, class: "btn btn-secondary ms-2", style: 'border-radius: 10px;' %>
-        <% end %>
-      </div>
-    </div>
-
-    <!-- Timelines Content -->
-    <div id="timelines-content">
-      <div class="accordion" id="parentAccordion">
-        <% @timelines.each do |timeline| %>
-          <%# <%= render partial: 'timelines/moodle_timeline', locals: { timeline: timeline } %>
-          <%= render partial: 'timelines/timeline', locals: { timeline: timeline } %>
-        <% end %>
       </div>
     </div>
   </div>
 </div>
+<style>
+  .nav-tabs .nav-link.active {
+  color: #000 !important;
+}
+
+.nav-tabs .nav-link {
+  color: lightgrey !important;
+}
+</style>

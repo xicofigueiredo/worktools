@@ -15,7 +15,7 @@ class HolidaysController < ApplicationController
     @holiday = current_user.holidays.new(holiday_params)
 
     if @holiday.save
-      current_user.timelines.each do |timeline|
+      current_user.timelines.where(hidden: false).each do |timeline|
         generate_topic_deadlines(timeline)
         timeline.save
       end
@@ -27,7 +27,7 @@ class HolidaysController < ApplicationController
 
   def update
     if @holiday.update(holiday_params)
-      current_user.timelines.each do |timeline|
+      current_user.timelines.where(hidden: false).each do |timeline|
         generate_topic_deadlines(timeline)
         timeline.save
       end
@@ -39,7 +39,7 @@ class HolidaysController < ApplicationController
 
   def destroy
     @holiday.destroy
-    current_user.timelines.each do |timeline|
+    current_user.timelines.where(hidden: false).each do |timeline|
       generate_topic_deadlines(timeline)
       timeline.save
     end
