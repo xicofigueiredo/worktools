@@ -214,8 +214,20 @@ class PagesController < ApplicationController
     learner = User.find_by(id: params[:learner_id])
     params[:current_date] ? Date.parse(params[:current_date]) : Date.today
     weekly_goal = learner.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", date, date)
+    @current_week_sprint_name = Sprint.where(id: week.sprint_id).pluck(:name).first if week
 
     update_weekly_goal(weekly_goal, week, learner, date)
+  end
+
+  def change_kda
+    date = params[:date] ? Date.parse(params[:date]) : Date.today
+    week = Week.find_by("start_date <= ? AND end_date >= ?", date, date)
+    learner = User.find_by(id: params[:learner_id])
+    params[:current_date] ? Date.parse(params[:current_date]) : Date.today
+    kda = learner.kdas.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?", date, date)
+    @current_week_sprint_name = Sprint.where(id: week.sprint_id).pluck(:name).first if week
+
+    update_kda(kda, week, learner, date)
   end
 
   def change_sprint_goal
@@ -242,7 +254,6 @@ class PagesController < ApplicationController
 
     update_sprint_goal(sprint_goal, sprint, learner)
   end
-
 
   def not_found
     render 'not_found', status: :not_found
@@ -275,7 +286,21 @@ class PagesController < ApplicationController
                            locals: { weekly_goal:,
                                      current_week: week,
                                      learner:,
-                                     current_date: date })
+                                     current_date: date,
+                                     current_week_sprint_name: @current_week_sprint_name
+                                    })
+  end
+
+  def update_kda(kda, week, learner, date)
+    render turbo_stream:
+      turbo_stream.replace("lp_kda",
+                           partial: "pages/partials/kdas",
+                           locals: { kda:,
+                                     current_week: week,
+                                     learner:,
+                                     current_date: date,
+                                     current_week_sprint_name: @current_week_sprint_name
+                                    })
   end
 
   def update_sprint_goal(sprint_goal, sprint, learner)
@@ -443,6 +468,9 @@ class PagesController < ApplicationController
     @weekly_goal = @learner.weekly_goals.joins(:week)
                           .find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
     @attendances = @learner.attendances.where(attendance_date: @current_sprint.start_date..@current_sprint.end_date)
+
+    @kda = @learner.kdas.joins(:week)
+                          .find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
 
     get_kda_averages(@learner.kdas, @current_sprint)
   end

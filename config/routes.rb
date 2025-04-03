@@ -28,6 +28,8 @@ Rails.application.routes.draw do
     get 'learner_profile/:id', to: 'pages#learner_profile', as: 'learner_profile'
     get 'change_weekly_goal/:date/:current_week_id/:learner_id/:current_date', to: 'pages#change_weekly_goal', as: 'change_weekly_goal'
     get 'change_sprint_goal/:current_sprint_id/:learner_id/', to: 'pages#change_sprint_goal', as: 'change_sprint_goal'
+    get 'change_kda/:date/:current_week_id/:learner_id/:current_date', to: 'pages#change_kda', as: 'change_kda'
+
 
     # Attendances Routes
     get '/attendance', to: 'attendances#attendance'

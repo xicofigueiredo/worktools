@@ -34,6 +34,12 @@
         <h2>Sprint Goals</h2>
       </button>
     </li>
+    <!-- Weekly goals Tab -->
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="kda-tab" data-bs-toggle="tab" data-bs-target="#kda" type="button" role="tab" aria-controls="kda" aria-selected="false">
+        <h2>KDA's</h2>
+      </button>
+    </li>
   </ul>
 
   <div class="tab-content mt-3" id="dashboardTabsContent">
@@ -95,7 +101,19 @@
             learner: @learner %>
       </div>
     </div>
-  </div>
+
+    <!-- KDA's tab -->
+    <div class="tab-pane fade" id="kda" role="tabpanel" aria-labelledby="kda-tab">
+      <br>
+      <div class="mb-3">
+        <%= render 'pages/partials/kdas',
+            kda: @kda,
+            current_week: @current_week,
+            learner: @learner,
+            current_date: @current_weekly_goal_date,
+            current_week_sprint_name: @current_week_sprint_name %>
+      </div>
+    </div>
 </div>
 
 <style>
