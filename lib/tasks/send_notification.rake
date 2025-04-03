@@ -16,10 +16,8 @@ namespace :notifications do
 
      Notification.find_or_create_by!(
        user: user,
-       message: "Scheduled Maintenance Notice
-Please note that Moodle will be unavailable on April 14th due to scheduled maintenance. We’re working to improve your experience and appreciate your patience during this time.
-
-Thank you for your understanding!")
+       message: "Good morning! 🌻
+Reminder of the workshop happening today at 12h (PT Time): Howest University Belgium: Creative tech and AI Workshop for Learners and LCs.")
     notifications_count += 1
     end
 

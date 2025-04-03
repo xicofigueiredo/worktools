@@ -18,7 +18,7 @@
         <tbody>
           <% previous_unit = nil %>
           <% @timeline.subject.topics.order(:order, :id).each do |topic| %>
-            <% user_topic = topic.user_topics.find_by(user: current_user) %>
+            <% user_topic = topic.user_topics.find_by(user: @learner) %>
             <% background_color = if user_topic && !user_topic.done && user_topic.deadline && user_topic.deadline < Date.today && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)
                                     '#ff193499'
                                   elsif user_topic && !user_topic.done && user_topic.deadline && Date.today.monday? && user_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)

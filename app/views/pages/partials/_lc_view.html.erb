@@ -1,0 +1,108 @@
+<div class="text-center mb-3">
+  <%# <%= image_tag "profile.jpeg", class: "rounded-circle", alt: "Admin", width: "80" %>
+  <%= form_with url: update_learner_name_path(@learner), class: "d-flex align-items-center justify-content-center gap-2", method: :patch, local: true do |f| %>
+    <%= f.label :full_name, "Edit Learner Name:", class: "d-flex align-items-center justify-content-center" %>
+    <hr>
+    <%= f.text_field :full_name, class: "form-control form-control-lg mr-2 w-25", name: "user[full_name]", value: @learner.full_name, placeholder: "Enter learner name" %>
+    <hr>
+    <%= f.submit "Save", class: "btn btn-primary" %>
+  <% end %>
+</div>
+<div class="container mt-3">
+  <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+    <!-- Dashboard Tab -->
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">
+        <h2>General Information</h2>
+      </button>
+    </li>
+    <!-- Timelines Tab -->
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="timelines-tab" data-bs-toggle="tab" data-bs-target="#timelines" type="button" role="tab" aria-controls="timelines" aria-selected="false">
+        <h2>Timelines</h2>
+      </button>
+    </li>
+    <!-- Weekly goals Tab -->
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="weekly-tab" data-bs-toggle="tab" data-bs-target="#weekly" type="button" role="tab" aria-controls="weekly" aria-selected="false">
+        <h2>Weekly Goals</h2>
+      </button>
+    </li>
+    <!-- Sprint goals Tab -->
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="sprint-tab" data-bs-toggle="tab" data-bs-target="#sprint" type="button" role="tab" aria-controls="sprint" aria-selected="false">
+        <h2>Sprint Goals</h2>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content mt-3" id="dashboardTabsContent">
+    <!-- Dashboard Content -->
+    <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+      <div class="mb-3">
+        <%= render 'pages/partials/cards' %>
+      </div>
+
+      <!-- Sprint Overview -->
+      <h2>Sprint Overview</h2>
+      <p>Keep track of your learner below.</p>
+      <div class="mb-3">
+        <%= render 'pages/partials/sprint_overview' %>
+      </div>
+
+      <!-- Notes -->
+      <h2>Notes</h2>
+      <p>Create and save your notes below.</p>
+      <div class="mb-3">
+        <%= render 'pages/partials/notes' %>
+      </div>
+
+      <h2>Holidays</h2>
+      <div class="mb-3">
+        <%= render 'pages/partials/holidays', holidays: @holidays %>
+      </div>
+    </div>
+
+    <!-- Timelines Content -->
+    <div class="tab-pane fade" id="timelines" role="tabpanel" aria-labelledby="timelines-tab">
+      <br>
+      <p>Check your learner's academic goals below.</p>
+      <div class="mb-3">
+        <%= render partial: 'timelines/timelines_table', learner: @learner %>
+      </div>
+      <br>
+    </div>
+
+    <!-- Weekly Goals tab -->
+    <div class="tab-pane fade" id="weekly" role="tabpanel" aria-labelledby="weekly-tab">
+      <br>
+      <div class="mb-3">
+        <%= render 'pages/partials/weekly_goals',
+            weekly_goal: @weekly_goal,
+            current_week: @current_week,
+            learner: @learner,
+            current_date: @current_weekly_goal_date %>
+      </div>
+    </div>
+
+    <!-- Sprint Goals tab -->
+    <div class="tab-pane fade" id="sprint" role="tabpanel" aria-labelledby="sprint-tab">
+      <br>
+      <div class="mb-3">
+        <%= render 'pages/partials/skills_and_communities',
+            sprint_goal: @sprint_goal,
+            current_sprint: @current_sprint,
+            learner: @learner %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .nav-tabs .nav-link.active {
+    color: #000 !important;
+  }
+  .nav-tabs .nav-link {
+    color: lightgrey !important;
+  }
+</style>

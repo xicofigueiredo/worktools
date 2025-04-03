@@ -33,7 +33,7 @@
                                  else
                                    "N/A"
                                  end %>
-              <tr class="clickable" data-href="<%= timeline_path(timeline) %>" style="cursor: pointer;">
+              <tr class="clickable" data-href="<%= timeline_path(timeline, learner_id: @learner.id) %>" style="cursor: pointer;">
                 <td style="text-align: left;">
                   <%= timeline.subject.name.present? ? timeline.subject.name : timeline.personalized_name %>
                 </td>
@@ -140,7 +140,7 @@
           .then(response => response.text())
           .then(html => {
             document.getElementById("timeline-details").innerHTML = html;
-            document.getElementById("timeline-details").scrollIntoView({ behavior: "smooth" });
+            // document.getElementById("timeline-details").scrollIntoView({ behavior: "smooth" });
           })
           .catch(error => {
             console.error("Error loading timeline details:", error);

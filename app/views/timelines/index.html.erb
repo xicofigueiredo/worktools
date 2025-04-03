@@ -29,7 +29,9 @@
         </div>
       </div>
       <div class="mb-5">
-        <%= render partial: 'timelines/timelines_table' %>
+        <% if @has_timeline %>
+          <%= render partial: 'timelines/timelines_table' %>
+        <% end %>
       </div>
     </div>
 

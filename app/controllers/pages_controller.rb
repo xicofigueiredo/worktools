@@ -421,9 +421,6 @@ class PagesController < ApplicationController
     # Use a single query for sprint goal based on today's date
     @sprint_goal = @learner.sprint_goals.joins(:sprint)
                            .find_by("sprints.start_date <= ? AND sprints.end_date >= ?", today, today)
-    @sg_knowledges = @sprint_goal&.knowledges
-    @skills = @sprint_goal&.skills
-    @communities = @sprint_goal&.communities
 
     main_hub_id = UsersHub.where(user_id: @learner.id, main: true).pluck(:hub_id).first
     @main_hub = Hub.find_by(id: main_hub_id)
@@ -449,7 +446,6 @@ class PagesController < ApplicationController
 
     get_kda_averages(@learner.kdas, @current_sprint)
   end
-
 
 
   def fetch_hub_lcs(main_hub)

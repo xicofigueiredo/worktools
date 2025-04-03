@@ -27,10 +27,13 @@ class TimelinesController < ApplicationController
     @holidays = current_user.holidays.where("end_date >= ?", 4.months.ago)
 
     @has_exam_date  = @timelines.any? { |timeline| timeline.exam_date_id.present? }
+    @has_timeline = current_user.timelines.where(hidden: false).any?
+    @learner = current_user
   end
 
   def show
     @timeline = Timeline.find(params[:id])
+    @learner = User.find(params[:learner_id]) if params[:learner_id].present?
     render partial: "timeline_detail", locals: { timeline: @timeline }, layout: false
   end
 
@@ -80,7 +83,12 @@ class TimelinesController < ApplicationController
       generate_topic_deadlines(@timeline)
 
       @timeline.save
-      redirect_to timelines_path, notice: 'Timeline was successfully updated.'
+
+      if current_user.role == "lc" || current_user.role == "cm"
+        redirect_to learner_profile_path(@timeline.user_id)
+      else
+        redirect_to timelines_path, notice: 'Timeline was successfully updated.'
+      end
 
     else
       @edit = true
