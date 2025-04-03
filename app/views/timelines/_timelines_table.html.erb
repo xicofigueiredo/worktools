@@ -110,6 +110,7 @@
 <div id="timeline-details" class="mt-4"></div>
 
 <!-- JavaScript to load timeline details on row click -->
+<!-- JavaScript to load timeline details on row click and toggle selection -->
 <script>
   // Clear dynamic content before Turbo caches the page.
   document.addEventListener("turbo:before-cache", function() {
@@ -122,7 +123,14 @@
   document.addEventListener("turbo:load", function() {
     document.querySelectorAll("tr.clickable").forEach(function(row) {
       row.addEventListener("click", function() {
-        // Remove 'selected' class from all clickable rows
+        // If the clicked row is already selected, deselect it and clear timeline details.
+        if (this.classList.contains("selected")) {
+          this.classList.remove("selected");
+          document.getElementById("timeline-details").innerHTML = "";
+          return;
+        }
+
+        // Otherwise, remove 'selected' class from all clickable rows
         document.querySelectorAll("tr.clickable").forEach(function(r) {
           r.classList.remove("selected");
         });
@@ -140,6 +148,7 @@
           .then(response => response.text())
           .then(html => {
             document.getElementById("timeline-details").innerHTML = html;
+            // Optionally, if you want to scroll, uncomment below:
             // document.getElementById("timeline-details").scrollIntoView({ behavior: "smooth" });
           })
           .catch(error => {
@@ -151,6 +160,7 @@
     });
   });
 </script>
+
 
 
 

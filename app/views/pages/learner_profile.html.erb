@@ -1,7 +1,7 @@
 <%= turbo_page_requires_reload %>
 <div class="container">
   <% if current_user.role != 'guardian' %>
-      <%= render 'pages/partials/lc_view', learner: @learner %>,
+      <%= render 'pages/partials/lc_view', learner: @learner %>
   <% else %>
       <%= render 'pages/partials/parent_view' %>,
   <% end %>
