@@ -19,6 +19,7 @@
         </thead>
         <tbody>
           <% if @timelines.any? %>
+            <% total_columns = @has_exam_date ? 9 : 8 %>
             <% @timelines.each do |timeline| %>
               <%# Compute exam season display if needed %>
               <% exam_season = if timeline.exam_date.present?
@@ -33,6 +34,7 @@
                                  else
                                    "N/A"
                                  end %>
+              <!-- Main timeline row -->
               <tr class="clickable" data-href="<%= timeline_path(timeline, learner_id: @learner.id) %>" style="cursor: pointer;">
                 <td style="text-align: left;">
                   <%= timeline.subject.name.present? ? timeline.subject.name : timeline.personalized_name %>
@@ -88,6 +90,36 @@
                   <% end %>
                 </td>
               </tr>
+              <!-- Progress bar row underneath the main row -->
+              <tr class="progress-row">
+                <td colspan="<%= total_columns %>" style="padding: 0; border: none;">
+                  <div class="progress" style="height: 15px; margin: 0;">
+                    <% if timeline.progress >= timeline.expected_progress %>
+                      <!-- Blue segment for expected progress -->
+                      <div class="progress-bar bg-primary d-flex align-items-center justify-content-center" role="progressbar" style="width: <%= timeline.expected_progress %>%;opacity: 0.8;"
+                           aria-valuenow="<%= timeline.expected_progress %>" aria-valuemin="0" aria-valuemax="100">
+                        <%= timeline.expected_progress %>%
+                      </div>
+                      <!-- Green segment for extra progress -->
+                      <div class="progress-bar bg-success d-flex align-items-center justify-content-center" role="progressbar" style="width: <%= timeline.progress - timeline.expected_progress %>%;opacity: 0.8;"
+                           aria-valuenow="<%= timeline.progress - timeline.expected_progress %>" aria-valuemin="0" aria-valuemax="100">
+                        <%= timeline.progress - timeline.expected_progress %>%
+                      </div>
+                    <% else %>
+                      <!-- Blue segment for achieved progress -->
+                      <div class="progress-bar bg-primary d-flex align-items-center justify-content-center" role="progressbar" style="width: <%= timeline.progress %>%;opacity: 0.8;"
+                           aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
+                        <%= timeline.progress %>%
+                      </div>
+                      <!-- Red segment for shortfall -->
+                      <div class="progress-bar bg-danger d-flex align-items-center justify-content-center" role="progressbar" style="width: <%= timeline.expected_progress - timeline.progress %>%;opacity: 0.8;"
+                           aria-valuenow="<%= timeline.expected_progress - timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
+                        <%= timeline.expected_progress - timeline.progress %>%
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
             <% end %>
           <% else %>
             <% colspan_val = @has_exam_date ? 8 : 7 %>
@@ -110,7 +142,6 @@
 <div id="timeline-details" class="mt-4"></div>
 
 <!-- JavaScript to load timeline details on row click -->
-<!-- JavaScript to load timeline details on row click and toggle selection -->
 <script>
   // Clear dynamic content before Turbo caches the page.
   document.addEventListener("turbo:before-cache", function() {
@@ -161,9 +192,6 @@
   });
 </script>
 
-
-
-
 <style>
 tr {
   font-size: 17px;
@@ -174,5 +202,4 @@ tr.clickable:hover td {
 table.table tbody tr.selected td {
   background-color: #d5f000 !important;
 }
-
 </style>
