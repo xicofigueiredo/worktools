@@ -15,6 +15,11 @@
         %>
 
         <div class="notification-item <%= notification_type %> <%= notification.read? ? 'resolved' : '' %>">
+            <% if notification.read? %>
+              <div class="d-flex justify-content-end"><i class="fa-regular fa-envelope-open"></i></div>
+            <% else %>
+              <div class="d-flex justify-content-end"><i class="fa-regular fa-envelope"></i></i></div>
+            <% end %>
           <div class="notification-content">
             <%= simple_format(notification.message) %>
           </div>
