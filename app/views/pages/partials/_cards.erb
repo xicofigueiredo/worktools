@@ -1,7 +1,7 @@
 <div class="d-flex row gap-3 mb-5">
   <div class="col-md-4">
     <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
-      <p><%= Date.today.strftime("%Y") %> Attendance: <%= @yearly_presence %>%</p>
+      <p><%= Date.today.strftime("%Y") %> Attendance: <%= @sprint_presence %>%</p>
       <p>Hub: <%= @main_hub.try(:name) || "N/A" %></p>
       <p>Email: <%= @learner.email %></p>
       <% @hub_lcs.each do |lc| %>
