@@ -137,7 +137,7 @@ class PagesController < ApplicationController
         lc.hubs.count >= 3 || lc.deactivate
       end
 
-      @yearly_presence = calc_sprint_presence(@learner)
+      @sprint_presence = calc_sprint_presence(@learner, @current_sprint)
 
       @weekly_goals_percentage = @current_sprint.count_weekly_goals_total(@learner)
       @kdas_percentage = @current_sprint.count_kdas_total(@learner)
@@ -405,9 +405,8 @@ class PagesController < ApplicationController
     total > 0 ? ((present_count.to_f / total) * 100).round : 0
   end
 
-  def calc_sprint_presence(user)
+  def calc_sprint_presence(user, sprint)
     current_date = Date.today
-    sprint = Sprint.where("start_date <= ? AND end_date >= ?", current_date, current_date).first
 
     attendance_counts = Attendance.where(user_id: user.id, attendance_date: sprint.start_date..sprint.end_date)
                                   .group(:absence).count
@@ -470,7 +469,7 @@ class PagesController < ApplicationController
 
 
     @holidays = @learner.holidays
-    @sprint_presence = calc_sprint_presence(@learner)
+    @sprint_presence = calc_sprint_presence(@learner, @current_sprint)
     @weekly_goals_percentage = @current_sprint.count_weekly_goals_total(@learner)
     @kdas_percentage = @current_sprint.count_kdas_total(@learner)
     @has_exam_date = @timelines.any? { |timeline| timeline.exam_date.present? }
