@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_03_27_233112) do
+ActiveRecord::Schema[7.0].define(version: 2025_04_08_162409) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -491,6 +491,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_03_27_233112) do
     t.bigint "timeline_id"
     t.index ["timeline_id"], name: "index_user_topics_on_timeline_id"
     t.index ["topic_id"], name: "index_user_topics_on_topic_id"
+    t.index ["user_id", "topic_id"], name: "index_user_topics_on_user_id_and_topic_id", unique: true
     t.index ["user_id"], name: "index_user_topics_on_user_id"
   end
 

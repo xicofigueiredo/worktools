@@ -6,7 +6,10 @@ class UserTopic < ApplicationRecord
   after_save :clear_monthly_goals_cache, if: :deadline_changed_for_current_user?
 
   validates :user, :topic, presence: true
-  # validates :deadline, presence: true
+
+  validates :topic, uniqueness: { scope: :user_id, message: "already exists for this user" }
+
+  #validates :deadline, presence: true
 
   before_save :update_percentage
 

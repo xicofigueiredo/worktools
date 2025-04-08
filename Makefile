@@ -81,3 +81,6 @@ ensure_report_knowledges:
 
 create_cm:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake db:create_cms"
+
+delete_usertopics:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake user_topics:dedupe"
