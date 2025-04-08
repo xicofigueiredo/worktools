@@ -9,14 +9,15 @@ class TimelinesController < ApplicationController
   before_action :set_timeline, only: %i[show edit update destroy archive]
 
   def index
-    @archived = current_user.timelines.exists?(hidden: true)
+    @learner = current_user
+    @archived = @learner.timelines.exists?(hidden: true)
 
     @total_blocks_per_day = 0
     @total_hours_per_week = 0
     weekly_percentages = []
 
     # Eager load the subject and its topics (avoid unnecessary eager loading)
-    @timelines = current_user.timelines_sorted_by_balance
+    @timelines = @learner.timelines_sorted_by_balance
                              .where(hidden: false)
                              .includes(subject: :topics)
 
@@ -24,11 +25,10 @@ class TimelinesController < ApplicationController
     calculate_progress_and_balance(@timelines)
     # @monthly_goals = calculate_monthly_goals(@timelines)
 
-    @holidays = current_user.holidays.where("end_date >= ?", 4.months.ago)
+    @holidays = @learner.holidays.where("end_date >= ?", 4.months.ago)
 
     @has_exam_date  = @timelines.any? { |timeline| timeline.exam_date_id.present? }
-    @has_timeline = current_user.timelines.where(hidden: false).any?
-    @learner = current_user
+    @has_timeline = @learner.timelines.where(hidden: false).any?
   end
 
   def show
@@ -63,18 +63,20 @@ class TimelinesController < ApplicationController
   end
 
   def edit
+    @learner = @timeline.user
     @edit = true
     @subjects = Subject.order(:category, :name).reject do |subject|
       subject.name.blank? || subject.name.match?(/^P\d/) || subject.id == 101 || subject.id == 578 || subject.id == 105 || subject.id == 575
     end
     @max_date = Date.today + 5.year
     @min_date = Date.today - 5.year
-    @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
+    @subjects_with_timeline_ids = @learner.timelines.map(&:subject_id)
     @selected_exam_date_id = @timeline.exam_date_id
     @exam_dates_edit = ExamDate.where(subject_id: @timeline.subject_id).order(:date)
   end
 
   def update
+    @learner = @timeline.user
 
     ## i want to add a method that if i add a topic on dbeaver, it will automatically add the user_topic to all the users after update timeline
     if @timeline.update(timeline_params)
@@ -84,7 +86,7 @@ class TimelinesController < ApplicationController
 
       @timeline.save
 
-      if current_user.role == "lc" || current_user.role == "cm"
+      if current_user.role != @learner.role
         redirect_to learner_profile_path(@timeline.user_id)
       else
         redirect_to timelines_path, notice: 'Timeline was successfully updated.'
@@ -95,7 +97,7 @@ class TimelinesController < ApplicationController
       @subjects = Subject.order(:category, :name)
       @max_date = Date.today + 5.year
       @min_date = Date.today - 5.year
-      @subjects_with_timeline_ids = current_user.timelines.map(&:subject_id)
+      @subjects_with_timeline_ids = @learner.timelines.map(&:subject_id)
       @selected_exam_date_id = @timeline.exam_date_id
       @exam_dates_edit = ExamDate.where(subject_id: @timeline.subject_id).order(:date)
       flash.now[:alert] = @timeline.errors.full_messages.to_sentence
@@ -170,13 +172,14 @@ class TimelinesController < ApplicationController
   end
 
   def archived
-    @archived_timelines = Timeline.where(user: current_user, hidden: true)
+    @learner = current_user
+    @archived_timelines = Timeline.where(user: @learner, hidden: true)
                                   .includes(subject: :topics)
-    @past_holidays = current_user.holidays.where("end_date <= ?", Date.today)
+    @past_holidays = @learner.holidays.where("end_date <= ?", Date.today)
 
     # Preload all topic IDs from the archived timelines' subjects
     all_topic_ids = @archived_timelines.flat_map { |t| t.subject.topics.pluck(:id) }.uniq
-    @user_topics_by_topic = current_user.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
+    @user_topics_by_topic = @learner.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
   end
 
 

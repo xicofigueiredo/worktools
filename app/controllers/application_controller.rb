@@ -20,6 +20,7 @@ class ApplicationController < ActionController::Base
   end
 
   def check_browser
+    @unread_notifications = []
     return unless user_signed_in? # Ensure the user is logged in
     return if browser.device.mobile?
     return unless current_user.role.in?(%w[lc learner cm]) # Only for learners or LCs

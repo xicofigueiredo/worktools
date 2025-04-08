@@ -6,11 +6,11 @@ module GenerateTopicDeadlines
     subject = timeline.subject
     # Preload all topics in order and their corresponding user_topics for the current user.
     topic_ids = subject.topics.order(:order).pluck(:id)
-    user_topics_by_id = current_user.user_topics.where(topic_id: topic_ids).index_by(&:topic_id)
+    user_topics_by_id = timeline.user.user_topics.where(topic_id: topic_ids).index_by(&:topic_id)
 
     # Build an array of user_topics; if not found, build a new one.
     user_topics = subject.topics.order(:order).map do |topic|
-      user_topics_by_id[topic.id] || current_user.user_topics.build(topic: topic)
+      user_topics_by_id[topic.id] || timeline.user.user_topics.build(topic: topic)
     end
 
     working_days = calculate_working_days(timeline)
