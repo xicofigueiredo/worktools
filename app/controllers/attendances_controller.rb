@@ -154,9 +154,13 @@ class AttendancesController < ApplicationController
   def calculate_prev_date(current_date, time_frame)
     case time_frame
     when 'daily'
-      current_date - 1
+      prev_date = current_date - 1
+      prev_date -= 1 while prev_date.saturday? || prev_date.sunday?
+      prev_date
     when 'weekly'
-      current_date - 7
+      prev_date = current_date - 7
+      prev_date -= 1 while prev_date.saturday? || prev_date.sunday?
+      prev_date
     else
       current_date
     end
@@ -165,11 +169,16 @@ class AttendancesController < ApplicationController
   def calculate_next_date(current_date, time_frame)
     case time_frame
     when 'daily'
-      current_date + 1
+      next_date = current_date + 1
+      next_date += 1 while next_date.saturday? || next_date.sunday?
+      next_date
     when 'weekly'
-      current_date + 7
+      next_date = current_date + 7
+      next_date += 1 while next_date.saturday? || next_date.sunday?
+      next_date
     else
       current_date
     end
   end
+
 end
