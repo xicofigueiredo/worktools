@@ -1,0 +1,62 @@
+<!-- app/views/newsletters/index.html.erb -->
+<h1>Newsletters</h1>
+
+<% if @newsletters.any? %>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Published At</th>
+        <th>Filters</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @newsletters.each do |newsletter| %>
+        <tr>
+          <!-- Newsletter Title with link to the show page -->
+          <td>
+            <%= link_to newsletter.title, newsletter_path(newsletter) %>
+          </td>
+
+          <!-- Publication Date formatted -->
+          <td>
+            <%= newsletter.published_at.strftime("%B %d, %Y") %>
+          </td>
+
+          <!-- Display filter criteria if they exist -->
+          <td>
+            <ul class="list-unstyled mb-0">
+              <% if newsletter.filter_country.present? %>
+                <li><strong>Country:</strong> <%= newsletter.filter_country %></li>
+              <% end %>
+              <% if newsletter.filter_role.present? %>
+                <li><strong>Role:</strong> <%= newsletter.filter_role %></li>
+              <% end %>
+              <% if newsletter.filter_level.present? %>
+                <li><strong>Level:</strong> <%= newsletter.filter_level %></li>
+              <% end %>
+              <% if newsletter.filter_region.present? %>
+                <li><strong>Region:</strong> <%= newsletter.filter_region %></li>
+              <% end %>
+            </ul>
+          </td>
+
+          <!-- Actions: View (via title link), Edit and Delete -->
+          <td>
+            <%= link_to 'Edit', edit_newsletter_path(newsletter), class: "btn btn-sm btn-secondary" %>
+            <%= link_to 'Delete', newsletter_path(newsletter),
+                  method: :delete,
+                  data: { confirm: 'Are you sure you want to delete this newsletter?' },
+                  class: "btn btn-sm btn-danger" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p>No newsletters found.</p>
+<% end %>
+
+<!-- Link to create a new newsletter (visible to authorized users) -->
+<%= link_to 'New Newsletter', new_newsletter_path, class: "btn btn-primary" %>

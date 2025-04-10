@@ -131,4 +131,7 @@ Rails.application.routes.draw do
       resources :responses, only: [:new, :create, :edit, :update]
     end
 
+    resources :newsletters, only: [:index, :show, :new, :create, :edit, :update, :destroy]
+    post '/your_image_upload_endpoint', to: 'uploads#create'
+
 end

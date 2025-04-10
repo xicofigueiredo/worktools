@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_04_08_162409) do
+ActiveRecord::Schema[7.0].define(version: 2025_04_10_111255) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "action_text_rich_texts", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "body"
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["record_type", "record_id", "name"], name: "index_action_text_rich_texts_uniqueness", unique: true
+  end
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -243,6 +253,22 @@ ActiveRecord::Schema[7.0].define(version: 2025_04_08_162409) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["kda_id"], name: "index_mots_on_kda_id"
+  end
+
+  create_table "newsletters", force: :cascade do |t|
+    t.string "title", null: false
+    t.datetime "published_at", null: false
+    t.string "filter_country"
+    t.string "filter_role"
+    t.string "filter_level"
+    t.string "filter_region"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["filter_country"], name: "index_newsletters_on_filter_country"
+    t.index ["filter_level"], name: "index_newsletters_on_filter_level"
+    t.index ["filter_region"], name: "index_newsletters_on_filter_region"
+    t.index ["filter_role"], name: "index_newsletters_on_filter_role"
+    t.index ["published_at"], name: "index_newsletters_on_published_at"
   end
 
   create_table "notes", force: :cascade do |t|

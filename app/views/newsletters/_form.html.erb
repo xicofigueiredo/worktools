@@ -1,0 +1,63 @@
+<%= form_with(model: newsletter, local: true) do |f| %>
+  <% if newsletter.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(newsletter.errors.count, "error") %> prohibited this newsletter from being saved:</h2>
+      <ul>
+        <% newsletter.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Title -->
+  <div>
+    <%= f.label :title %><br>
+    <%= f.text_field :title %>
+  </div>
+
+  <!-- Content: Using ActionText if installed; otherwise fallback to a textarea -->
+  <div>
+    <%= f.label :content %><br>
+    <%= f.rich_text_area :content %>
+  </div>
+
+
+  <!-- Published At -->
+  <div>
+    <%= f.label :published_at %><br>
+    <%= f.datetime_select :published_at %>
+  </div>
+
+  <!-- Filter Fields -->
+  <div>
+    <%= f.label :filter_country %><br>
+    <%= f.text_field :filter_country %>
+  </div>
+
+  <div>
+    <%= f.label :filter_role %><br>
+    <%= f.text_field :filter_role %>
+  </div>
+
+  <div>
+    <%= f.label :filter_level %><br>
+    <%= f.text_field :filter_level %>
+  </div>
+
+  <div>
+    <%= f.label :filter_region %><br>
+    <%= f.text_field :filter_region %>
+  </div>
+
+  <!-- Additional Images (for separate image attachments via Active Storage) -->
+  <div>
+    <%= f.label :images, "Newsletter Images" %><br>
+    <%= f.file_field :images, multiple: true %>
+  </div>
+
+  <!-- Submit Button -->
+  <div>
+    <%= f.submit %>
+  </div>
+<% end %>

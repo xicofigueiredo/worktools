@@ -40,6 +40,18 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable, :confirmable
 
+  scope :with_country, ->(country) {
+    joins(userhubs: :hub).where(hubs: { country: country })
+  }
+
+  scope :with_role, ->(role) {
+    where(role: role)
+  }
+
+  scope :with_level, ->(level) {
+    joins(:timelines).where(timelines: { hidden: false, subject: level })
+  }
+
   def subjects_without_timeline
     Subject.left_outer_joins(:timelines).where(timelines: { user_id: nil })
   end
