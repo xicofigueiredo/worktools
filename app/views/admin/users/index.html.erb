@@ -1,0 +1,110 @@
+<table style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color:white; position: sticky; top: 59px;">
+      <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Full Name</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Role</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Level</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Birthday</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Nationality</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Native Language</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Kids</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Subjects</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Active</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Hubs</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @users.each do |user| %>
+      <tr class="editable-row" data-user-id="<%= user.id %>" style="cursor: pointer;">
+        <td style="padding: 8px;"><%= user.email %></td>
+        <td style="padding: 8px;"><%= user.full_name %></td>
+        <td style="padding: 8px;"><%= user.role %></td>
+        <td style="padding: 8px;"><%= user.level %></td>
+        <td style="padding: 8px;"><%= user.birthday %></td>
+        <td style="padding: 8px;"><%= user.nationality %></td>
+        <td style="padding: 8px;"><%= user.native_language %></td>
+        <td style="padding: 8px;"><%= user.kids if user.role == "guardian" %></td>
+        <td style="padding: 8px;"><%= user.subjects %></td>
+        <td style="padding: 8px;"><%= user.deactivate? ? "No" : "Yes" %></td>
+        <td style="padding: 8px;"><%= user.hubs.first if user.hubs %></td>
+      </tr>
+        <div id="editModal" style="display: none; position: fixed; top: 0; left: 0;
+          width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
+          justify-content: center; align-items: center; z-index: 9999;">
+
+          <div style="background-color: white; padding: 20px; border-radius: 8px; width: 500px; position: relative;">
+            <span id="closeModal" style="position: absolute; top: 10px; right: 15px; cursor: pointer;">✕</span>
+
+            <div id="modalFormContent">
+              <!-- Form will be injected here -->
+            </div>
+          </div>
+        </div>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const modal = document.getElementById('editModal');
+  const modalContent = document.getElementById('modalFormContent');
+  const closeBtn = document.getElementById('closeModal');
+
+  document.querySelectorAll('.editable-row').forEach(row => {
+    row.addEventListener('click', function () {
+      const userId = this.dataset.userId;
+
+      fetch(`/admin/users/${userId}/edit`)
+        .then(response => response.text())
+        .then(html => {
+          modalContent.innerHTML = html;
+          modal.style.display = 'flex';
+
+          const form = modalContent.querySelector('form');
+          if (form) {
+            form.addEventListener('submit', function(e) {
+              e.preventDefault();
+              const formData = new FormData(form);
+              fetch(form.action, {
+                method: form.method,
+                body: formData,
+                headers: {
+                  'X-Requested-With': 'XMLHttpRequest'
+                }
+              })
+              .then(response => {
+                if (response.ok) {
+                  modal.style.display = 'none';
+                  location.reload();
+                } else {
+                  console.error('Failed to save');
+                }
+              })
+              .catch(error => {
+                console.error('Error:', error);
+              });
+            });
+          }
+        });
+    });
+  });
+
+  closeBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  window.addEventListener('click', function (e) {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+});
+
+</script>
+<style>
+  .editable-row:hover {
+    background-color: #f4f8ff;
+    transition: background-color 0.2s ease-in-out;
+  }
+</style>

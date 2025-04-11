@@ -44,9 +44,6 @@ Rails.application.routes.draw do
 
     post 'sprint_goals/bulk_destroy', to: 'sprint_goals#bulk_destroy'
 
-    resources :users do
-      resources :notes, except: [:show]
-    end
     resources :learner_flags, only: [:edit, :update]
 
     get 'topics_for_subject', to: 'weekly_goals#topics_for_subject'
@@ -132,6 +129,13 @@ Rails.application.routes.draw do
     end
 
     resources :newsletters, only: [:index, :show, :new, :create, :edit, :update, :destroy]
-    post '/your_image_upload_endpoint', to: 'uploads#create'
+
+    namespace :admin do
+      resources :users, only: [:index, :edit, :update]
+    end
+
+    resources :users, only: [] do
+      resources :notes, except: [:show]
+    end
 
 end

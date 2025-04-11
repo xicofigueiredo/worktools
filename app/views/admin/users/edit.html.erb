@@ -1,0 +1,58 @@
+<h1>Edit User</h1>
+
+<%= form_with model: [:admin, @user] do |form| %>
+  <div>
+    <%= form.label :full_name %>
+    <%= form.text_field :full_name %>
+  </div>
+  
+  <div>
+    <%= form.label :email %>
+    <%= form.text_field :email %>
+  </div>
+
+
+  <div>
+    <%= form.label :role %>
+    <%= form.select :role, %w[learner admin lc guardian], include_blank: true %>
+  </div>
+
+  <div>
+    <%= form.label :level %>
+    <%= form.text_field :level %>
+  </div>
+
+  <div>
+    <%= form.label :birthday %>
+    <%= form.date_field :birthday %>
+  </div>
+
+  <div>
+    <%= form.label :nationality %>
+    <%= form.text_field :nationality %>
+  </div>
+
+  <div>
+    <%= form.label :native_language %>
+    <%= form.text_field :native_language %>
+  </div>
+
+  <div>
+    <%= form.label :kids, "Kids (only if guardian)" %>
+    <%= form.text_field :kids, multiple: true, value: @user.kids&.join(','), step: 1 %>
+  </div>
+
+  <div>
+    <%= form.label :subjects, "Subjects" %>
+    <%= form.text_field :subjects, multiple: true, value: @user.subjects&.join(','), step: 1 %>
+  </div>
+
+  <div>
+    <%= form.label :deactivate, "Deactivate User" %>
+    <%= form.check_box :deactivate %>
+  </div>
+
+  <div>
+    <%= form.submit "Save Changes" %>
+  </div>
+<% end %>

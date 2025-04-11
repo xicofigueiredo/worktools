@@ -10,7 +10,7 @@ class Week < ApplicationRecord
     if (match = name.match(/\AWeek (\d+)(?: \/ Build Week)?\z/))
       "W#{match[1]}"
     else
-      "W"
+      "-"
     end
   end
 

@@ -26,6 +26,8 @@
                 <% end %>
               <% elsif week.name.include?("Build") %>
                 <td><i class="fa-solid fa-hammer"></i></td>
+              <% elsif week.name.include?("break") %>
+                <td><i class="fa-regular fa-calendar-xmark"></i></td>
               <% else %>
                 <% if week.start_date <= Date.today %>
                   <td class="text-danger"><i class="fa-regular fa-circle-xmark"></i></td>
