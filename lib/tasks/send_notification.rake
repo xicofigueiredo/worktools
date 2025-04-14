@@ -16,8 +16,7 @@ namespace :notifications do
 
      Notification.find_or_create_by!(
        user: user,
-       message: "Good morning! 🌻
-Reminder of the workshop happening today at 12h (PT Time): Howest University Belgium: Creative tech and AI Workshop for Learners and LCs.")
+       message: "Moodle will be down for maintenance today and temporarily unavailable. We’re making some updates to improve your experience — thanks for your patience!")
     notifications_count += 1
     end
 
