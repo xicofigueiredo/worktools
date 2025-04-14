@@ -4,6 +4,8 @@
       <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Full Name</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Role</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Main Hub</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Hubs</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Level</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Birthday</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Nationality</th>
@@ -11,7 +13,6 @@
       <th style="border: 1px solid #ddd; padding: 8px;">Kids</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Subjects</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Active</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">Hubs</th>
     </tr>
   </thead>
   <tbody>
@@ -19,29 +20,38 @@
       <tr class="editable-row" data-user-id="<%= user.id %>" style="cursor: pointer;">
         <td style="padding: 8px;"><%= user.email %></td>
         <td style="padding: 8px;"><%= user.full_name %></td>
-        <td style="padding: 8px;"><%= user.role %></td>
+        <td style="padding: 8px;"><%= user.role_before_type_cast %></td>
+        <td style="padding: 8px;"><%= user.main_hub.try(:name) %></td>
+        <td style="padding: 8px;">
+          <% if user.hubs.any? %>
+            <%= user.hubs.map(&:name).join(", ") %>
+          <% end %>
+        </td>
         <td style="padding: 8px;"><%= user.level %></td>
         <td style="padding: 8px;"><%= user.birthday %></td>
         <td style="padding: 8px;"><%= user.nationality %></td>
         <td style="padding: 8px;"><%= user.native_language %></td>
         <td style="padding: 8px;"><%= user.kids if user.role == "guardian" %></td>
-        <td style="padding: 8px;"><%= user.subjects %></td>
-        <td style="padding: 8px;"><%= user.deactivate? ? "No" : "Yes" %></td>
-        <td style="padding: 8px;"><%= user.hubs.first if user.hubs %></td>
+        <td style="padding: 8px;"><%= user.subjects if user.subjects.any?  %></td>
+        <td style="padding: 8px;">
+          <% if user.deactivate? %>
+            <i class="fa-solid fa-circle" style="color: red;"></i>
+          <% else %>
+            <i class="fa-solid fa-circle" style="color: green;"></i>
+          <% end %>
+        </td>
       </tr>
-        <div id="editModal" style="display: none; position: fixed; top: 0; left: 0;
-          width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
-          justify-content: center; align-items: center; z-index: 9999;">
+      <div id="editModal" style="display: none; position: fixed; top: 0; left: 0;
+        width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center; align-items: center; z-index: 9999;">
 
-          <div style="background-color: white; padding: 20px; border-radius: 8px; width: 500px; position: relative;">
-            <span id="closeModal" style="position: absolute; top: 10px; right: 15px; cursor: pointer;">✕</span>
+        <div style="background-color: white; padding: 20px; border-radius: 8px; width: 500px; position: relative;">
+          <span id="closeModal" style="position: absolute; top: 10px; right: 15px; cursor: pointer;">✕</span>
 
-            <div id="modalFormContent">
-              <!-- Form will be injected here -->
-            </div>
+          <div id="modalFormContent">
           </div>
         </div>
-      </tr>
+      </div>
     <% end %>
   </tbody>
 </table>

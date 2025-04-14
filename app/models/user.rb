@@ -7,6 +7,12 @@ class User < ApplicationRecord
   has_many :sprint_goals, dependent: :destroy
   has_many :users_hubs, dependent: :destroy
   has_many :hubs, through: :users_hubs, dependent: :destroy
+
+  # Define an association to fetch the join record that is marked as main.
+  has_one :main_users_hub, -> { where(main: true) }, class_name: 'UsersHub'
+  # Define an association to get the actual hub that is the main hub.
+  has_one :main_hub, through: :main_users_hub, source: :hub
+
   has_many :user_topics, dependent: :destroy
   has_many :topics, through: :user_topics, dependent: :destroy
   attr_accessor :weekly_goal_completed

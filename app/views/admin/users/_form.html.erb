@@ -1,91 +1,149 @@
-<%= form_with model: [:admin, @user], html: { style: "display: flex; flex-direction: column; gap: 16px;" } do |form| %>
-  <div style="display: flex; flex-direction: column;">
-    <%= form.label :full_name, style: "font-weight: bold; margin-bottom: 4px;" %>
-    <%= form.text_field :full_name, class: "form-input" %>
-  </div>
+<div class="modal-body" style="overflow-y: auto; max-height: 70vh;">
+  <%= form_with model: [:admin, @user], html: { style: "display: flex; flex-direction: column; gap: 16px;" } do |form| %>
+    <div style="display: flex; flex-direction: column;">
+      <%= form.label :full_name, style: "font-weight: bold; margin-bottom: 4px;" %>
+      <%= form.text_field :full_name, class: "form-input" %>
+    </div>
 
-  <div style="display: flex; flex-direction: column;">
-    <%= form.label :email, style: "font-weight: bold; margin-bottom: 4px;" %>
-    <%= form.text_field :email, class: "form-input disabled" %>
-  </div>
+    <div style="display: flex; flex-direction: column;">
+      <%= form.label :email, style: "font-weight: bold; margin-bottom: 4px;" %>
+      <%= form.text_field :email, class: "form-input disabled" %>
+    </div>
 
+    <div style="display: flex; flex-direction: column;">
+      <%= form.label :role, style: "font-weight: bold; margin-bottom: 4px;" %>
+      <%= form.select :role, %w[learner lc cm guardian], { include_blank: true }, class: "form-input" %>
+    </div>
 
-  <div style="display: flex; flex-direction: column;">
-    <%= form.label :role, style: "font-weight: bold; margin-bottom: 4px;" %>
-    <%= form.select :role, %w[learner admin lc guardian], { include_blank: true }, class: "form-input" %>
-  </div>
+    <% if @is_learner || @is_admin %>
+      <div style="display: flex; flex-direction: column;">
+        <%= form.label :level, style: "font-weight: bold; margin-bottom: 4px;" %>
+        <%= form.text_field :level, class: "form-input" %>
+      </div>
 
-  <div style="display: flex; flex-direction: column;">
-    <%= form.label :level, style: "font-weight: bold; margin-bottom: 4px;" %>
-    <%= form.text_field :level, class: "form-input" %>
-  </div>
+      <div style="display: flex; flex-direction: column;">
+        <%= form.label :birthday, style: "font-weight: bold; margin-bottom: 4px;" %>
+        <%= form.date_field :birthday, class: "form-input" %>
+      </div>
 
-  <div style="display: flex; flex-direction: column;">
-    <%= form.label :birthday, style: "font-weight: bold; margin-bottom: 4px;" %>
-    <%= form.date_field :birthday, class: "form-input" %>
-  </div>
+      <div style="display: flex; flex-direction: column;">
+        <%= form.label :nationality, style: "font-weight: bold; margin-bottom: 4px;" %>
+        <%= form.text_field :nationality, class: "form-input" %>
+      </div>
 
-  <div style="display: flex; flex-direction: column;">
-    <%= form.label :nationality, style: "font-weight: bold; margin-bottom: 4px;" %>
-    <%= form.text_field :nationality, class: "form-input" %>
-  </div>
+      <div style="display: flex; flex-direction: column;">
+        <%= form.label :native_language, style: "font-weight: bold; margin-bottom: 4px;" %>
+        <%= form.text_field :native_language, class: "form-input" %>
+      </div>
+    <% end %>
 
-  <div style="display: flex; flex-direction: column;">
-    <%= form.label :native_language, style: "font-weight: bold; margin-bottom: 4px;" %>
-    <%= form.text_field :native_language, class: "form-input" %>
-  </div>
+    <% if @is_learner || @is_admin || @is_lc %>
+      <div style="display: flex; flex-direction: column;">
+        <%= form.label :hubs, "Hubs", class: "form-label fw-bold" %>
+        <div class="d-flex flex-wrap gap-2">
+          <% @hubs.all.each do |hub| %>
+            <div class="form-check" style="font-size: 10px;">
+              <%= check_box_tag "user[hub_ids][]",
+                    hub.id,
+                    (@user.hubs.present? ? @user.hubs.map(&:id).include?(hub.id) : false),
+                    id: "user_hubs_#{hub.id}",
+                    class: "form-check-input" %>
+              <%= label_tag "user_hubs_#{hub.id}",
+                    hub.name,
+                    class: "form-check-label" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      <% if @user.hubs.any? %>
+        <div style="display: flex; flex-direction: column; margin-top: 16px;">
+          <%= form.label :main_hub_id, "Main Hub", class: "form-label fw-bold" %>
+          <%= form.select :main_hub_id,
+                options_from_collection_for_select(@user.hubs, "id", "name", (@user.users_hubs.find_by(main: true)&.hub&.id)),
+                { prompt: "Select main hub" },
+                class: "form-control" %>
+        </div>
+      <% end %>
+    <% end %>
 
-  <div style="display: flex; flex-direction: column;">
-    <%= form.label :kids, "Kids", style: "font-weight: bold; margin-bottom: 4px;" %>
-    <%= form.text_field :kids, class: "form-input", value: @user.kids&.join(',') %>
-  </div>
+    <% if @is_guardian %>
+      <div style="display: flex; flex-direction: column;">
+        <%= form.label :kids, "Kids", class: "form-label fw-bold" %>
+        <div class="d-flex flex-wrap gap-2">
+          <% @learners.all.each do |kid| %>
+            <div class="form-check" style="font-size: 10px;">
+              <%= check_box_tag "user[kids][]",
+                    kid.id,
+                    (@user.kids.present? ? @user.kids.map(&:to_s).include?(kid.id.to_s) : false),
+                    id: "user_kids_#{kid.id}",
+                    class: "form-check-input" %>
+              <%= label_tag "user_kids_#{kid.id}",
+                    kid.full_name,
+                    class: "form-check-label" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
 
-  <div style="display: flex; flex-direction: column;">
-    <%= form.label :subjects, "Subjects", style: "font-weight: bold; margin-bottom: 4px;" %>
-    <%= form.text_field :subjects, class: "form-input", value: @user.subjects&.join(',') %>
-  </div>
+    <% if @is_cm %>
+      <div style="display: flex; flex-direction: column;">
+        <%= form.label :subjects, "Subjects", class: "form-label fw-bold" %>
+        <div class="d-flex flex-wrap gap-2">
+          <% @subjects.all.each do |subject| %>
+            <div class="form-check" style="font-size: 10px;">
+              <%= check_box_tag "user[subjects][]",
+                    subject.id,
+                    (@user.subjects.present? ? @user.subjects.map(&:to_s).include?(subject.id.to_s) : false),
+                    id: "user_subjects_#{subject.id}",
+                    class: "form-check-input" %>
+              <%= label_tag "user_subjects_#{subject.id}",
+                    subject.name,
+                    class: "form-check-label" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
 
-  <div style="display: flex; align-items: center; gap: 8px;">
-    <%= form.check_box :deactivate, id: "deactivate_checkbox" %>
-    <%= form.label :deactivate, "Deactivate User", for: "deactivate_checkbox", style: "font-weight: bold;" %>
-  </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <%= form.check_box :deactivate, id: "deactivate_checkbox" %>
+      <%= form.label :deactivate, "Deactivate User?", for: "deactivate_checkbox", style: "font-weight: bold;" %>
+    </div>
 
-  <div>
-    <%= form.submit "Save Changes", class: "submit-btn" %>
-  </div>
-<% end %>
-
-
-
+    <div>
+      <%= form.submit "Save Changes", class: "submit-btn" %>
+    </div>
+  <% end %>
+</div>
 
 <style>
   .form-input {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.2s ease-in-out;
-}
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s ease-in-out;
+  }
 
-.form-input:focus {
-  outline: none;
-  border-color: #4a90e2;
-}
+  .form-input:focus {
+    outline: none;
+    border-color: #4a90e2;
+  }
 
-.submit-btn {
-  padding: 12px 16px;
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.2s ease-in-out;
-}
+  .submit-btn {
+    padding: 12px 16px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s ease-in-out;
+  }
 
-.submit-btn:hover {
-  background-color: #357ab7;
-}
-
+  .submit-btn:hover {
+    background-color: #357ab7;
+  }
 </style>
