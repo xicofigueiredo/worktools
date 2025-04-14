@@ -8,7 +8,6 @@ class WeeklyGoalsController < ApplicationController
     @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
     @current_date += 2.day if @current_date.saturday? || @current_date.sunday?
 
-    @user_goals = current_user.weekly_goals
     @weekly_goal = current_user.weekly_goals.joins(:week).find_by("weeks.start_date <= ? AND weeks.end_date >= ?",
                                                                   @current_date, @current_date)
     @weekly_slots = @weekly_goal&.weekly_slots
@@ -41,6 +40,7 @@ class WeeklyGoalsController < ApplicationController
     @is_edit = false
     @special_subjects = @combined_options - @subject_names
     build_weekly_slots
+    @is_learner = current_user.role == 'learner'
   end
 
   def edit
@@ -55,12 +55,23 @@ class WeeklyGoalsController < ApplicationController
         end
       end
     end
+    @is_learner = current_user.role == 'learner'
   end
 
   def create
     @weekly_goal = current_user.weekly_goals.new(weekly_goal_params)
+
     if @weekly_goal.save
       save_weekly_slots
+      hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+        lc.hubs.count >= 3 || lc.deactivate
+      end
+      hub_lcs.each do |lc|
+        Notification.create!(
+          user: lc,
+          message: "Your learner #{current_user.full_name} has updated the weekly goals for the #{@weekly_goal.week.name}.",
+          read: false)
+      end
       redirect_to weekly_goals_navigator_path(date: @weekly_goal.week.start_date),
                   notice: 'Weekly goal was successfully created.'
     else
@@ -70,8 +81,19 @@ class WeeklyGoalsController < ApplicationController
 
   def update
     if @weekly_goal.update(weekly_goal_params)
-      Rails.logger.debug "Updated Weekly Goal Week Start Date: #{@weekly_goal.week.start_date}"
       save_weekly_slots
+      if current_user.role == 'learner'
+        hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+          lc.hubs.count >= 3 || lc.deactivate
+        end
+        hub_lcs.each do |lc|
+          notification = Notification.find_or_create_by!(
+            user: lc,
+            message: "Your learner #{current_user.full_name} has updated the weekly goals for the #{@weekly_goal.week.name}.")
+          notification.read = false
+          notification.save
+        end
+      end
       redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date),
                   notice: 'Weekly goal was successfully updated.'
     else
@@ -127,8 +149,8 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def weekly_goal_params
-    params.require(:weekly_goal).permit(:week_id, :start_date, :end_date, :user_id, :name, :subject_skill,
-                                        weekly_slots_attributes: %i[id day_of_week time_slot subject_name topic_name custom_topic])
+    params.require(:weekly_goal).permit(:week_id, :start_date, :end_date, :user_id, :name, :subject_skill, :reflection, :lc_comment,
+                                        weekly_slots_attributes: %i[id day_of_week time_slot subject_name topic_name custom_topic custom_time_range])
   end
 
   def set_subject_names

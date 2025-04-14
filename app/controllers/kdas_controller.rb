@@ -32,12 +32,14 @@ class KdasController < ApplicationController
     @kda.build_mot
     @kda.build_p2p
     @kda.build_hubp
+    @is_learner = current_user.role == 'learner'
   end
 
   # GET /kdas/1/edit
   def edit
     @kda = Kda.find(params[:id])
     @current_week = @kda.week
+    @is_learner = current_user.role == 'learner'
   end
 
   # POST /kdas
@@ -45,6 +47,15 @@ class KdasController < ApplicationController
     @kda = current_user.kdas.new(kda_params)
 
     if @kda.save
+      hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+        lc.hubs.count >= 3 || lc.deactivate
+      end
+      hub_lcs.each do |lc|
+        Notification.create!(
+          user: lc,
+          message: "Your learner #{current_user.full_name} has updated the kdas for the #{@kda.week.name}.",
+          read: false)
+      end
       redirect_to kdas_path(date: @kda.week.start_date), notice: 'Kda was successfully created.'
     else
       flash.now[:alert] = 'KDA could not be created. Please check your input.'
@@ -55,6 +66,18 @@ class KdasController < ApplicationController
   # PATCH/PUT /kdas/1
   def update
     if @kda.update(kda_params)
+      if current_user.role == 'learner'
+        hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+          lc.hubs.count >= 3 || lc.deactivate
+        end
+        hub_lcs.each do |lc|
+          notification = Notification.find_or_create_by!(
+            user: lc,
+            message: "Your learner #{current_user.full_name} has updated the kdas for the #{@kda.week.name}.")
+          notification.read = false
+          notification.save
+        end
+      end
       redirect_to kdas_path(date: @kda.week.start_date), notice: 'Kda was successfully updated.'
     else
       flash.now[:alert] = 'KDA could not be updated. Please check your input.'
@@ -77,7 +100,7 @@ class KdasController < ApplicationController
 
   def kda_params
     params.require(:kda).permit(
-      :week_id, :user_id, :date,
+      :week_id, :user_id, :date, :lc_comment, :reflection,
       sdl_attributes: %i[id rating why improve _destroy],
       ini_attributes: %i[id rating why improve _destroy],
       mot_attributes: %i[id rating why improve _destroy],

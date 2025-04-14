@@ -66,10 +66,32 @@
               </table>
             </div>
           </div>
-        </div>
-        <div class="d-flex justify-content-center gap-2 mt-3 mb-5">
-          <%= link_to "Back", weekly_goals_navigator_path(@weekly_goal.week.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
-          <%= form.submit 'Save Weekly Goal', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+          <%# lc comment and reflection boxes side by side for the user to fill in %>
+          <div class="d-flex justify-content-center gap-2" style="margin-left: 18px; margin-right: 18px;">
+            <% if @is_learner %>
+              <div class="col-md-6">
+                <h4><%= form.label :reflection, "Reflection", class: "form-label d-flex justify-content-center" %></h4>
+                <%= form.text_area :reflection, rows: 5, class: "form-control" %>
+              </div>
+              <div class="col-md-6">
+                <h4><%= form.label :lc_comment, "LC Comment", class: "form-label d-flex justify-content-center" %></h4>
+                <%= form.text_area :lc_comment, rows: 5, class: "form-control", disabled: true %>
+              </div>
+            <% else %>
+              <div class="col-md-6">
+                <h4><%= form.label :reflection, "Reflection", class: "form-label d-flex justify-content-center" %></h4>
+                <%= form.text_area :reflection, rows: 5, class: "form-control", disabled: true %>
+              </div>
+              <div class="col-md-6">
+                <h4><%= form.label :lc_comment, "LC Comment", class: "form-label d-flex justify-content-center" %></h4>
+                <%= form.text_area :lc_comment, rows: 5, class: "form-control" %>
+              </div>
+            <% end %>
+          </div>
+          <div class="d-flex justify-content-center gap-2 mt-3 mb-5">
+            <%= link_to "Back", weekly_goals_navigator_path(@weekly_goal.week.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+            <%= form.submit 'Save Weekly Goal', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+          </div>
         </div>
       </div>
     </div>

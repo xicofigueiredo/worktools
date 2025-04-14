@@ -91,6 +91,27 @@ This would also refer to participation on the Forum for the BGA online courses."
             </table>
           </div>
         </div>
+        <div class="d-flex justify-content-center gap-2" style="margin-left: 18px; margin-right: 18px;">
+          <% if @is_learner %>
+            <div class="col-md-6">
+              <h4><%= form.label :reflection, "Reflection", class: "form-label d-flex justify-content-center" %></h4>
+              <%= form.text_area :reflection, rows: 5, class: "form-control" %>
+            </div>
+            <div class="col-md-6">
+              <h4><%= form.label :lc_comment, "LC Comment", class: "form-label d-flex justify-content-center" %></h4>
+              <%= form.text_area :lc_comment, rows: 5, class: "form-control", disabled: true %>
+            </div>
+          <% else %>
+            <div class="col-md-6">
+              <h4><%= form.label :reflection, "Reflection", class: "form-label d-flex justify-content-center" %></h4>
+              <%= form.text_area :reflection, rows: 5, class: "form-control", disabled: true %>
+            </div>
+            <div class="col-md-6">
+              <h4><%= form.label :lc_comment, "LC Comment", class: "form-label d-flex justify-content-center" %></h4>
+              <%= form.text_area :lc_comment, rows: 5, class: "form-control" %>
+            </div>
+          <% end %>
+        </div>
         <div class="d-flex justify-content-center  gap-2 mt-3 mb-3">
           <%= link_to "Back", kdas_path(date: @kda.week.start_date), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
           <%= form.submit "Save KDA", class: "btn btn-primary", style: 'border-radius: 10px;' %>

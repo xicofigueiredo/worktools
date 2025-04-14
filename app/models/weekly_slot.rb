@@ -20,4 +20,8 @@ class WeeklySlot < ApplicationRecord
     afternoon: 4,
     late_afternoon: 5
   }
+
+  def display_time_slot
+    custom_time_range.presence || time_slot.humanize.titleize
+  end
 end

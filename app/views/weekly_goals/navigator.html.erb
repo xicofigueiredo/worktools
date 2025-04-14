@@ -12,7 +12,7 @@
       <i class="fa-solid fa-chevron-right"></i>
     <% end %>
   </div>
-  
+
   <!-- Message Section -->
   <div class="text-center">
     <h1>There are no Weekly Goal's this week</h1>
@@ -124,21 +124,6 @@
                                     <% end %>
                                   </div>
                                 </div>
-                                <style>
-                                  .form-group .background-overlay {
-                                    position: absolute;
-                                    top: 0;
-                                    left: 0;
-                                    right: 0;
-                                    bottom: 0;
-                                    opacity: 0.65;
-                                    z-index: 1;
-                                  }
-                                  .form-group .content {
-                                    position: relative;
-                                    z-index: 2;
-                                  }
-                                </style>
                               </td>
                             <% end %>
                           </tr>
@@ -148,8 +133,16 @@
                   </div>
                 </div>
               </div>
-
-
+            </div>
+            <div class="d-flex justify-content-center gap-2" style="margin-left: 25px; margin-right: 25px;">
+              <div class="col-md-6">
+                <h4 class="d-flex justify-content-center">Reflection</h4>
+                <p class="border p-2" style="min-height: 100px; white-space: pre-wrap; text-align: justify;"><%= @weekly_goal.reflection %></p>
+              </div>
+              <div class="col-md-6">
+                <h4 class="d-flex justify-content-center">LC Comment</h4>
+                <p class="border p-2" style="min-height: 100px; white-space: pre-wrap; text-align: justify;"><%= @weekly_goal.lc_comment %></p>
+              </div>
             </div>
           </div>
           <div class="text-center mb-5">
@@ -157,8 +150,22 @@
           </div>
         </div>
       </div>
-
     <% end %>
-
   </div>
 <% end %>
+
+<style>
+  .form-group .background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.65;
+    z-index: 1;
+  }
+  .form-group .content {
+    position: relative;
+    z-index: 2;
+  }
+</style>
