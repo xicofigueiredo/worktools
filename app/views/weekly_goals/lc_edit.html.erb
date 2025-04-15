@@ -21,19 +21,22 @@
           <div class="card shadow-sm mb-5" style="border-radius: 10px;">
             <div class="card-body position-relative">
               <div class="container">
-                  <div class="row">
-                    <div class="col-md-6">
-                      <div class="form-group text-center">
-                        <strong>Start Date:</strong> <%= @weekly_goal.week.start_date.strftime("%d/%m/%Y") %>
-                      </div>
+                <div class="form-group text-center">
+                  <strong><%= @name %></strong>
+                </div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group text-center">
+                      <strong>Start Date:</strong> <%= @weekly_goal.week.start_date.strftime("%d/%m/%Y") %>
                     </div>
-                    <div class="col-md-6">
-                      <div class="form-group text-center">
-                        <strong>End Date:</strong> <%= @weekly_goal.week.end_date.strftime("%d/%m/%Y") %>
-                      </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group text-center">
+                      <strong>End Date:</strong> <%= @weekly_goal.week.end_date.strftime("%d/%m/%Y") %>
                     </div>
                   </div>
                 </div>
+              </div>
 
               <div class="pt-4">
                 <div class="container">

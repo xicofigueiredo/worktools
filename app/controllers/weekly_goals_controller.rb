@@ -108,6 +108,7 @@ class WeeklyGoalsController < ApplicationController
   end
   def lc_edit
     @weekly_goal = WeeklyGoal.find(params[:id])
+    @name = @weekly_goal.user.full_name
     @is_edit = true
     @weekly_slots = @weekly_goal&.weekly_slots
     @timelines = @weekly_goal.user.timelines
