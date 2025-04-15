@@ -3,9 +3,37 @@ class Admin::UsersController < ApplicationController
   before_action :require_admin
 
   def index
-    userss = User.all.order(:full_name)
-    @users = userss.includes(:hubs, :main_hub)
+    @hubs = Hub.all
+
+    @users = User.all
+
+    # Filter by Role
+    @users = @users.where(role: params[:role]) if params[:role].present?
+
+    # Filter by Main Hub:
+    if params[:main_hub_id].present?
+      # Select only users that have a join record marked main for the hub with the given id.
+      @users = @users.joins(:users_hubs).where(users_hubs: { hub_id: params[:main_hub_id], main: true })
+    end
+
+    # Filter by Level (you could use a LIKE search if levels are free-form text)
+    if params[:level].present?
+      @users = @users.where("level ILIKE ?", "%#{params[:level]}%")
+    end
+
+    # Filter by Active status
+    if params[:active].present? && params[:active] != ''
+      if params[:active] == 'active'
+        @users = @users.where(deactivate: false)
+      elsif params[:active] == 'inactive'
+        @users = @users.where(deactivate: true)
+      end
+    end
+
+    # Eager load the associations to avoid N+1 queries.
+    @users = @users.includes(:hubs, :main_hub)
   end
+
 
   def edit
     @user = User.find(params[:id])
@@ -28,6 +56,10 @@ class Admin::UsersController < ApplicationController
     # Extract hub_ids and main_hub_id from the parameters and remove them so they’re not mass-assigned.
     hub_ids = (params[:user].delete(:hub_ids) || []).reject(&:blank?)
     main_hub_id = params[:user].delete(:main_hub_id)
+
+    if hub_ids.size == 1
+      main_hub_id = hub_ids.first
+    end
 
     if @user.update(user_params)
       # Wrap the association update in a transaction.

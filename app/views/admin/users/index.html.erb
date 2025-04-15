@@ -1,20 +1,40 @@
+<%= form_with url: admin_users_path, method: :get, local: true do |f| %>
 <table style="border-collapse: collapse; width: 100%;">
   <thead>
     <tr style="background-color:white; position: sticky; top: 59px;">
       <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Full Name</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">Role</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">Main Hub</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">Hubs</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">
+    <div class="col">
+      <%= f.select :role, options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"]], params[:role]),
+           { prompt: "All" },
+           { class: "form-control", onchange: "this.form.submit();" } %>
+    </div>
+      </th>
+      <th style="border: 1px solid #ddd; padding: 8px;">
+    <div class="col">
+      <%= f.select :main_hub_id,
+           options_from_collection_for_select(@hubs, "id", "name", params[:main_hub_id]),
+           { prompt: "All" },
+           { class: "form-control", onchange: "this.form.submit();" } %>
+    </div>
+      </th>
       <th style="border: 1px solid #ddd; padding: 8px;">Level</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">Birthday</th>
+      <%# <th style="border: 1px solid #ddd; padding: 8px;">Birthday</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Nationality</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Native Language</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Kids</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">Subjects</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">Active</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Subjects</th> %>
+      <th style="border: 1px solid #ddd; padding: 8px;">
+    <div class="col">
+      <%= f.select :active, options_for_select([["All", ""], ["Active", "active"], ["Inactive", "inactive"]], params[:active]),
+           { prompt: "All" },
+           { class: "form-control", onchange: "this.form.submit();" } %>
+    </div>
+      </th>
     </tr>
   </thead>
+<% end %>
   <tbody>
     <% @users.each do |user| %>
       <tr class="editable-row" data-user-id="<%= user.id %>" style="cursor: pointer;">
@@ -22,17 +42,12 @@
         <td style="padding: 8px;"><%= user.full_name %></td>
         <td style="padding: 8px;"><%= user.role_before_type_cast %></td>
         <td style="padding: 8px;"><%= user.main_hub.try(:name) %></td>
-        <td style="padding: 8px;">
-          <% if user.hubs.any? %>
-            <%= user.hubs.map(&:name).join(", ") %>
-          <% end %>
-        </td>
         <td style="padding: 8px;"><%= user.level %></td>
-        <td style="padding: 8px;"><%= user.birthday %></td>
-        <td style="padding: 8px;"><%= user.nationality %></td>
-        <td style="padding: 8px;"><%= user.native_language %></td>
-        <td style="padding: 8px;"><%= user.kids if user.role == "guardian" %></td>
-        <td style="padding: 8px;"><%= user.subjects if user.subjects.any?  %></td>
+        <%# <td style="padding: 8px;"><%= user.birthday </td>
+        <td style="padding: 8px;"><%= user.nationality </td>
+        <td style="padding: 8px;"><%= user.native_language </td>
+        <td style="padding: 8px;"><%= user.kids if user.role == "guardian" </td>
+        <td style="padding: 8px;"><%= user.subjects if user.subjects.any?  </td> %>
         <td style="padding: 8px;">
           <% if user.deactivate? %>
             <i class="fa-solid fa-circle" style="color: red;"></i>
@@ -41,6 +56,9 @@
           <% end %>
         </td>
       </tr>
+    <% end %>
+  </tbody>
+</table>
       <div id="editModal" style="display: none; position: fixed; top: 0; left: 0;
         width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
         justify-content: center; align-items: center; z-index: 9999;">
@@ -52,69 +70,72 @@
           </div>
         </div>
       </div>
-    <% end %>
-  </tbody>
-</table>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const modal = document.getElementById('editModal');
   const modalContent = document.getElementById('modalFormContent');
   const closeBtn = document.getElementById('closeModal');
 
-  document.querySelectorAll('.editable-row').forEach(row => {
-    row.addEventListener('click', function () {
-      const userId = this.dataset.userId;
+  // Attach the listener to the table's <tbody> element
+  const tableBody = document.querySelector('table tbody');
+  if (tableBody) {
+    tableBody.addEventListener('click', function(e) {
+      const row = e.target.closest('.editable-row');
+      if (row) {
+        const userId = row.dataset.userId;
+        fetch(`/admin/users/${userId}/edit`)
+          .then(response => response.text())
+          .then(html => {
+            modalContent.innerHTML = html;
+            modal.style.display = 'flex';
 
-      fetch(`/admin/users/${userId}/edit`)
-        .then(response => response.text())
-        .then(html => {
-          modalContent.innerHTML = html;
-          modal.style.display = 'flex';
-
-          const form = modalContent.querySelector('form');
-          if (form) {
-            form.addEventListener('submit', function(e) {
-              e.preventDefault();
-              const formData = new FormData(form);
-              fetch(form.action, {
-                method: form.method,
-                body: formData,
-                headers: {
-                  'X-Requested-With': 'XMLHttpRequest'
-                }
-              })
-              .then(response => {
-                if (response.ok) {
-                  modal.style.display = 'none';
-                  location.reload();
-                } else {
-                  console.error('Failed to save');
-                }
-              })
-              .catch(error => {
-                console.error('Error:', error);
+            const form = modalContent.querySelector('form');
+            if (form) {
+              form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                fetch(form.action, {
+                  method: form.method,
+                  body: formData,
+                  headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                  }
+                })
+                .then(response => {
+                  if (response.ok) {
+                    modal.style.display = 'none';
+                    location.reload();
+                  } else {
+                    console.error('Failed to save');
+                  }
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                });
               });
-            });
-          }
-        });
+            }
+          });
+      }
     });
-  });
+  }
 
+  // Close modal when clicking the close button
   closeBtn.addEventListener('click', () => {
     modal.style.display = 'none';
   });
 
+  // Close modal when clicking outside the modal content
   window.addEventListener('click', function (e) {
     if (e.target === modal) {
       modal.style.display = 'none';
     }
   });
 });
-
 </script>
+
 <style>
   .editable-row:hover {
-    background-color: #f4f8ff;
+    background-color: #d5f000;
     transition: background-color 0.2s ease-in-out;
   }
 </style>
