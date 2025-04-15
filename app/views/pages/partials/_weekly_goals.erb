@@ -88,16 +88,18 @@
             <div class="d-flex justify-content-center gap-2" style="margin-left: 25px; margin-right: 25px;">
               <div class="col-md-6">
                 <h4 class="d-flex justify-content-center">Reflection</h4>
-                <p class="border p-2" style="min-height: 100px; white-space: pre-wrap; text-align: justify;"><%= @weekly_goal.reflection %></p>
+                <p class="border p-2" style="min-height: 100px; white-space: pre-wrap; text-align: justify;"><%= @weekly_goal.reflection if @weekly_goal.reflection.present? %>
               </div>
               <div class="col-md-6">
-                <h4 class="d-flex justify-content-center">LC Comment</h4>
-                <p class="border p-2" style="min-height: 100px; white-space: pre-wrap; text-align: justify;"><%= @weekly_goal.lc_comment %></p>
-                <%= link_to "Edit", edit_weekly_goal_path(@weekly_goal),
-                  target: "_blank",
-                  rel: "noopener noreferrer",
-                  class: "btn btn-primary mr-2 d-flex justify-content-center",
-                  style: 'border-radius: 10px;' %>
+                  <h4 class="d-flex justify-content-center">LC Comment</h4>
+                  <p class="border p-2" style="min-height: 100px; white-space: pre-wrap; text-align: justify;"><%= @weekly_goal.lc_comment if @weekly_goal.lc_comment.present? %>
+                <div class="d-flex justify-content-end">
+                  <%= link_to "Edit LC Comment", lc_edit_weekly_goal_path(@weekly_goal),
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                      class: "btn btn-primary mr-2 d-flex justify-content-center",
+                      style: 'border-radius: 10px;' %>
+                </div>
               </div>
             </div>
           </div> <!-- end card-body -->

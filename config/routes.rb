@@ -29,7 +29,8 @@ Rails.application.routes.draw do
     get 'change_weekly_goal/:date/:current_week_id/:learner_id/:current_date', to: 'pages#change_weekly_goal', as: 'change_weekly_goal'
     get 'change_sprint_goal/:current_sprint_id/:learner_id/', to: 'pages#change_sprint_goal', as: 'change_sprint_goal'
     get 'change_kda/:date/:current_week_id/:learner_id/:current_date', to: 'pages#change_kda', as: 'change_kda'
-
+    get 'weekly_goals/:id/lc_edit', to: 'weekly_goals#lc_edit', as: 'lc_edit_weekly_goal'
+    patch 'weekly_goals/:id/lc_update', to: 'weekly_goals#lc_update', as: 'lc_update_weekly_goal'
 
     # Attendances Routes
     get '/attendance', to: 'attendances#attendance'

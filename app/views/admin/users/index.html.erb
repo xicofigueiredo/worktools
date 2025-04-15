@@ -6,7 +6,7 @@
       <th style="border: 1px solid #ddd; padding: 8px;">Full Name</th>
       <th style="border: 1px solid #ddd; padding: 8px;">
     <div class="col">
-      <%= f.select :role, options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"]], params[:role]),
+      <%= f.select :role, options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"], ["Admin", "admin"]], params[:role]),
            { prompt: "All" },
            { class: "form-control", onchange: "this.form.submit();" } %>
     </div>

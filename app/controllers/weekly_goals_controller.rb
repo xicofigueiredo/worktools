@@ -71,13 +71,14 @@ class WeeklyGoalsController < ApplicationController
           user: lc,
           message: "Your learner #{current_user.full_name} has updated the weekly goals for the #{@weekly_goal.week.name}.",
           read: false)
+        end
+        redirect_to weekly_goals_navigator_path(date: @weekly_goal.week.start_date),
+        notice: 'Weekly goal was successfully created.'
+      else
+        render :new
       end
-      redirect_to weekly_goals_navigator_path(date: @weekly_goal.week.start_date),
-                  notice: 'Weekly goal was successfully created.'
-    else
-      render :new
     end
-  end
+
 
   def update
     if @weekly_goal.update(weekly_goal_params)
@@ -90,20 +91,43 @@ class WeeklyGoalsController < ApplicationController
           notification = Notification.find_or_create_by!(
             user: lc,
             message: "Your learner #{current_user.full_name} has updated the weekly goals for the #{@weekly_goal.week.name}.")
-          notification.read = false
-          notification.save
+            notification.read = false
+            notification.save
+          end
         end
+        redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date),
+        notice: 'Weekly goal was successfully updated.'
+      else
+        render :edit
       end
-      redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date),
-                  notice: 'Weekly goal was successfully updated.'
-    else
-      render :edit
     end
-  end
 
   def destroy
     @weekly_goal.destroy
     redirect_to weekly_goals_url, notice: 'Weekly goal was successfully destroyed.'
+  end
+  def lc_edit
+    @weekly_goal = WeeklyGoal.find(params[:id])
+    @is_edit = true
+    @weekly_slots = @weekly_goal&.weekly_slots
+    @timelines = @weekly_goal.user.timelines
+
+    @subjects = []
+
+    @timelines.each do |timeline|
+      subject = Subject.find_by("id = ?", timeline.subject_id)
+      @subjects.append(subject)
+    end
+  end
+
+  def lc_update
+    @weekly_goal = WeeklyGoal.find(params[:id])
+    if @weekly_goal.update(lc_comment_params)
+      redirect_to learner_profile_path(@weekly_goal.user),
+                  notice: 'Weekly goal LC Comment was successfully updated.'
+    else
+      render :lc_edit
+    end
   end
 
   def topics_for_subject
@@ -113,12 +137,12 @@ class WeeklyGoalsController < ApplicationController
     if subject.present?
       # Fetch the topics based on the found subject's id
       topics = Topic.joins(:subject)
-                    .joins(:user_topics)
-                    .where(user_topics: { user_id: current_user.id })
-                    .where(subject_id: subject.id)
-                    .where("user_topics.done = ? OR user_topics.done IS NULL", false)
-                    .select(:id, :name)
-                    .order(:order)
+      .joins(:user_topics)
+      .where(user_topics: { user_id: current_user.id })
+      .where(subject_id: subject.id)
+      .where("user_topics.done = ? OR user_topics.done IS NULL", false)
+      .select(:id, :name)
+      .order(:order)
 
       render json: topics
     else
@@ -133,16 +157,20 @@ class WeeklyGoalsController < ApplicationController
 
   private
 
-  # def ensure_weekly_goal_exists
-  #   @date = params[:date] ? Date.parse(params[:date]) : Date.today
-  #   @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @date, @date)
-  #   return if @current_week.nil?
+      # def ensure_weekly_goal_exists
+      #   @date = params[:date] ? Date.parse(params[:date]) : Date.today
+      #   @current_week = Week.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+      #   return if @current_week.nil?
 
-  #   @weekly_goal = current_user.weekly_goals.find_or_create_by(week: @current_week) do |wg|
-  #     wg.week = @current_week
+      #   @weekly_goal = current_user.weekly_goals.find_or_create_by(week: @current_week) do |wg|
+      #     wg.week = @current_week
   #     build_weekly_slots(wg)
   #   end
   # end
+
+  def lc_comment_params
+    params.require(:weekly_goal).permit(:lc_comment)
+  end
 
   def set_weekly_goal
     @weekly_goal = current_user.weekly_goals.find(params[:id])

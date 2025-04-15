@@ -1,0 +1,115 @@
+<%= form_with model: @weekly_goal, url: lc_update_weekly_goal_path(@weekly_goal), local: true do |form| %>
+  <% unless @is_edit %>
+    <%= form.hidden_field :week_id, value: @current_week.id %>
+  <% end %>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-12 p-0">
+        <% if @weekly_goal.errors.any? %>
+          <div id="error_explanation" class="alert alert-danger">
+            <h2><%= pluralize(@weekly_goal.errors.count, "error") %> prohibited this weekly goal from being saved:</h2>
+            <ul>
+              <% @weekly_goal.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+      <div class="row justify-content-center">
+        <div class="col-md-12">
+          <div class="card shadow-sm mb-5" style="border-radius: 10px;">
+            <div class="card-body position-relative">
+              <div class="container">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group text-center">
+                        <strong>Start Date:</strong> <%= @weekly_goal.week.start_date.strftime("%d/%m/%Y") %>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group text-center">
+                        <strong>End Date:</strong> <%= @weekly_goal.week.end_date.strftime("%d/%m/%Y") %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              <div class="pt-4">
+                <div class="container">
+                  <div class="table-responsive">
+                    <table class="table table-bordered text-center">
+                      <thead>
+                        <tr class="bg-gray">
+                          <th class="text-uppercase">Time</th>
+                          <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                            <th class="text-uppercase" style="width: 12.5%"><%= day.split('_').first.capitalize %></th>
+                          <% end %>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% WeeklySlot.time_slots.keys.each do |time| %>
+                          <tr>
+                            <td class="align-middle"><%= time.to_s.humanize.titleize %></td>
+                            <% WeeklySlot.day_of_weeks.keys.each do |day| %>
+                              <td id="<%= time.downcase %>_<%= day.downcase %>" style="height: 1px">
+                                <% slot = @weekly_slots.find { |slot| slot.time_slot == time && slot.day_of_week == day } %>
+
+                                <% if slot && slot.subject_name.present?%>
+                                  <% subject = @subjects.find {|subject| subject.name == slot.subject_name} %>
+                                    <% if subject %>
+                                      <% timeline = @timelines.find {|timeline| timeline.subject_id == subject.id} %>
+                                    <% else %>
+                                      <% timeline = @timelines.find {|timeline| timeline.personalized_name == slot.subject_name} %>
+                                    <% end %>
+                                <% end %>
+
+                                <div class="form-group h-100 align-content-center" style="position: relative;">
+                                  <% if timeline&.color %>
+                                    <div class="background-overlay" style="background-color: <%= timeline.color %>;"></div>
+                                  <% end %>
+                                  <div class="content">
+                                    <% if slot %>
+                                      <% if slot.subject_name == 'Other' %>
+                                        <%= slot.topic_name %>
+                                        <%= slot.custom_topic %>
+                                      <% elsif slot.topic_name.blank? %>
+                                        <%= slot.subject_name %><br>
+                                        <%= slot.custom_topic %>
+                                      <% else %>
+                                        <%= slot.subject_name %><br>
+                                        <%= slot.topic_name %>
+                                      <% end %>
+                                    <% end %>
+                                  </div>
+                                </div>
+                              </td>
+                            <% end %>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <%# lc comment and reflection boxes side by side for the user to fill in %>
+          <div class="d-flex justify-content-center gap-2" style="margin-left: 18px; margin-right: 18px;">
+              <div class="col-md-6">
+                <h4><%= form.label :reflection, "Reflection", class: "form-label d-flex justify-content-center" %></h4>
+                <%= form.text_area :reflection, rows: 5, class: "form-control", disabled: true %>
+              </div>
+              <div class="col-md-6">
+                <h4><%= form.label :lc_comment, "LC Comment", class: "form-label d-flex justify-content-center" %></h4>
+                <%= form.text_area :lc_comment, rows: 5, class: "form-control" %>
+              </div>
+          </div>
+          <div class="d-flex justify-content-center gap-2 mt-3 mb-5">
+            <%= link_to "Back", learner_profile_path(@weekly_goal.user), class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+            <%= form.submit 'Save Weekly Goal', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

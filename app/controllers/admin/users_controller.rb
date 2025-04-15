@@ -31,7 +31,8 @@ class Admin::UsersController < ApplicationController
     end
 
     # Eager load the associations to avoid N+1 queries.
-    @users = @users.includes(:hubs, :main_hub).order(:full_name)
+    @users = @users.includes(:hubs, :main_hub)
+    @users = @users.order(:full_name)
   end
 
 
