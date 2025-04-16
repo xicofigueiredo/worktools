@@ -18,6 +18,30 @@ module GenerateTopicDeadlines
     assign_mock_deadlines(timeline)
   end
 
+  def moodle_generate_topic_deadlines(timeline)
+    subject = timeline.subject
+    # Preload all topics in order and their corresponding user_topics for the current user.
+    moodle_topics = timeline.moodle_topics.order(:order)
+
+    working_days = calculate_working_days(timeline)
+    moodle_distribute_deadlines(moodle_topics, working_days)
+    # moodle_assign_mock_deadlines(timeline)
+  end
+
+  def moodle_distribute_deadlines(moodle_topics, working_days)
+    total_working_days = working_days.size
+    index = 0.0
+
+    moodle_topics.each do |moodle_topic|
+      # Calculate how many working days this topic should take
+      time_per_topic = moodle_topic.moodle_calculate_percentage * total_working_days
+      deadline_date = calculate_deadline_date(index, time_per_topic, working_days)
+      moodle_topic.deadline = deadline_date
+      moodle_topic.save if moodle_topic.changed?
+      index += time_per_topic
+    end
+  end
+
   def distribute_deadlines(user_topics, working_days)
     total_working_days = working_days.size
     index = 0.0
@@ -47,6 +71,20 @@ module GenerateTopicDeadlines
     # Assign mock100 deadline
     if (mock100_topic = timeline.subject.topics.find_by(Mock100: true))
       timeline.mock100 = timeline.user.user_topics.find_by(topic: mock100_topic)&.deadline
+    end
+
+    timeline.save
+  end
+
+  def moodle_assign_mock_deadlines(timeline)
+    # Assign mock50 deadline
+    if (mock50_topic = timeline.moodle_topics.find_by(Mock50: true))
+      timeline.mock50 = timeline.moodle_topics.find_by(topic: mock50_topic)&.deadline
+    end
+
+    # Assign mock100 deadline
+    if (mock100_topic = timeline.moodle_topics.find_by(Mock100: true))
+      timeline.mock100 = timeline.moodle_topics.find_by(topic: mock100_topic)&.deadline
     end
 
     timeline.save

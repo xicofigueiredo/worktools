@@ -94,8 +94,8 @@ class MoodleApiService
 
   def create_timelines_for_learner(email)
     moodle_id = get_user_id(email)
-    user = User.find_by(moodle_id: moodle_id)
-    return puts "User not found!" if user.nil?
+    user_id = User.find_by(id: 811).id
+    return puts "User not found!" if user_id.nil?
 
     courses = get_user_courses(email) # Get enrolled courses
     return puts "No courses found!" if courses.empty?
@@ -107,7 +107,7 @@ class MoodleApiService
 
       if subject
         timeline = Timeline.find_or_create_by!(
-          user_id: user.id,
+          user_id: user_id,
           subject_id: subject.id,
           start_date: Date.today,
           end_date: Date.today + 1.year,
@@ -135,16 +135,13 @@ class MoodleApiService
                 grade: activity[:grade] == "No Grade" ? nil : activity[:grade].to_f,  # Convert grade if available
                 done: activity[:completed] == "✅ Done",  # Mark as done if completed
                 completion_date: activity[:completion_date] == "N/A" ? nil : DateTime.parse(activity[:completion_date]),
-                moodle_id: activity[:id]
+                moodle_id: activity[:id],
+                deadline: Date.today + 1.year,  # Set a default deadline
+                percentage: index * 0.001
               )
           end
         end
       end
-    end
-
-    user.user_topics.each do |topic|
-      topic.deadline = Date.today
-      topic.save!
     end
 
     puts "✅ Created #{created_timelines.size} timelines for #{email}"
@@ -238,7 +235,8 @@ class MoodleApiService
 
   def update_course_topics_for_learner(user, timeline)
     count = 0
-    course_id = timeline.subject.moodle_id
+    id = timeline.subject_id
+    course_id = Subject.find(id).moodle_id
     return puts "No Moodle ID for subject!" if course_id.nil?
 
     # Fetch completion status for activities in the course

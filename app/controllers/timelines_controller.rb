@@ -31,6 +31,24 @@ class TimelinesController < ApplicationController
     @has_timeline = @learner.timelines.where(hidden: false).any?
   end
 
+  def moodle_index
+    @learner = current_user
+    @archived = @learner.timelines.exists?(hidden: true)
+    @total_hours_per_week = 0
+    # Eager load the subject and its topics (avoid unnecessary eager loading)
+    @timelines = @learner.timelines_sorted_by_balance
+                             .where(hidden: false)
+
+    # MoodleApiService.new.create_timelines_for_learner("francisco@bravegenerationacademy.com")
+
+    moodle_calculate_progress_and_balance(@timelines)
+
+    @holidays = @learner.holidays.where("end_date >= ?", 4.months.ago)
+
+    @has_exam_date  = @timelines.any? { |timeline| timeline.exam_date_id.present? }
+    @has_timeline = @learner.timelines.where(hidden: false).any?
+  end
+
   def show
     @timeline = Timeline.find(params[:id])
     @learner = User.find(params[:learner_id]) if params[:learner_id].present?
@@ -54,6 +72,7 @@ class TimelinesController < ApplicationController
 
     if @timeline.save
       generate_topic_deadlines(@timeline)
+      # generate_topic_deadlines(@timeline)
       @timeline.save
       redirect_to timelines_path, notice: 'Timeline was successfully created.'
     else
@@ -83,6 +102,7 @@ class TimelinesController < ApplicationController
 
       @timeline.save
       generate_topic_deadlines(@timeline)
+      # moodle_generate_topic_deadlines(@timeline)
 
       @timeline.save
 
@@ -194,28 +214,28 @@ class TimelinesController < ApplicationController
                                      :mock100, :mock50, :personalized_name, :hidden)
   end
 
-  def calculate_monthly_goals(timelines)
-    Rails.cache.fetch("monthly_goals_#{Date.today.beginning_of_month}", expires_in: 1.month) do
-      timelines.filter_map do |timeline|
-        topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
-                                             .where(user_topics: { user_id: current_user.id })
-                                             .select do |topic|
-          user_topic = topic.user_topics.find do |ut|
-            ut.user_id == current_user.id
-          end
-          user_topic && user_topic.deadline &&
-            user_topic.deadline >= Date.today.beginning_of_month &&
-            user_topic.deadline <= Date.today.end_of_month
-        end
-          .group_by { |topic| topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline }
+  # def calculate_monthly_goals(timelines)
+  #   Rails.cache.fetch("monthly_goals_#{Date.today.beginning_of_month}", expires_in: 1.month) do
+  #     timelines.filter_map do |timeline|
+  #       topics_grouped_by_deadline = timeline.subject.topics.includes(:user_topics)
+  #                                            .where(user_topics: { user_id: current_user.id })
+  #                                            .select do |topic|
+  #         user_topic = topic.user_topics.find do |ut|
+  #           ut.user_id == current_user.id
+  #         end
+  #         user_topic && user_topic.deadline &&
+  #           user_topic.deadline >= Date.today.beginning_of_month &&
+  #           user_topic.deadline <= Date.today.end_of_month
+  #       end
+  #         .group_by { |topic| topic.user_topics.find { |ut| ut.user_id == current_user.id }.deadline }
 
-        latest_deadline = topics_grouped_by_deadline.keys.max
-        last_relevant_topic = topics_grouped_by_deadline[latest_deadline]&.last
+  #       latest_deadline = topics_grouped_by_deadline.keys.max
+  #       last_relevant_topic = topics_grouped_by_deadline[latest_deadline]&.last
 
-        { timeline:, topic: last_relevant_topic } if last_relevant_topic.present?
-      end.compact
-    end
-  end
+  #       { timeline:, topic: last_relevant_topic } if last_relevant_topic.present?
+  #     end.compact
+  #   end
+  # end
 
 
   def set_exam_dates(filter_future: false)

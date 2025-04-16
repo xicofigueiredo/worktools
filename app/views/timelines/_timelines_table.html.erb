@@ -35,7 +35,7 @@
                                    "N/A"
                                  end %>
               <!-- Main timeline row -->
-              <tr class="clickable" data-href="<%= timeline_path(timeline, learner_id: @learner.id) %>" style="cursor: pointer;">
+              <tr class="clickable" data-href="<%= timeline_path(timeline, learner_id: @learner.id) %>" data-timeline-id="<%= timeline.id %>" style="cursor: pointer;">
                 <td style="text-align: left;">
                   <%= timeline.subject.name.present? ? timeline.subject.name : timeline.personalized_name %>
                 </td>
@@ -143,43 +143,49 @@
 
 <!-- JavaScript to load timeline details on row click -->
 <script>
-  // Clear dynamic content before Turbo caches the page.
-  document.addEventListener("turbo:before-cache", function() {
-    var timelineDetails = document.getElementById("timeline-details");
-    if (timelineDetails) {
-      timelineDetails.innerHTML = "";
-    }
-  });
+// Clear dynamic content before Turbo caches the page.
+document.addEventListener("turbo:before-cache", function() {
+  var timelineDetails = document.getElementById("timeline-details");
+  if (timelineDetails) {
+    timelineDetails.innerHTML = "";
+  }
+});
 
-  document.addEventListener("turbo:load", function() {
-    document.querySelectorAll("tr.clickable").forEach(function(row) {
-      row.addEventListener("click", function() {
-        // If the clicked row is already selected, deselect it and clear timeline details.
-        if (this.classList.contains("selected")) {
-          this.classList.remove("selected");
+// Use Turbo's load event (or DOMContentLoaded if you're not using Turbo)
+document.addEventListener("turbo:load", function() {
+  // Attach an event listener using delegation on the table's <tbody> (adjust selector as needed).
+  const tableBody = document.querySelector("table tbody");
+  if (tableBody) {
+    tableBody.addEventListener("click", function(e) {
+      // Find the closest row with the class "clickable"
+      const row = e.target.closest(".clickable");
+      if (row) {
+        // If the row is already selected, deselect it and clear timeline details.
+        if (row.classList.contains("selected")) {
+          row.classList.remove("selected");
           document.getElementById("timeline-details").innerHTML = "";
           return;
         }
 
-        // Otherwise, remove 'selected' class from all clickable rows
+        // Remove 'selected' class from all clickable rows.
         document.querySelectorAll("tr.clickable").forEach(function(r) {
           r.classList.remove("selected");
         });
-        // Add 'selected' class to the clicked row
-        this.classList.add("selected");
+        // Mark the clicked row as selected.
+        row.classList.add("selected");
 
-        // Insert loading animation into timeline details
+        // Insert a loading message into timeline details.
         document.getElementById("timeline-details").innerHTML =
           '<div class="text-center my-3"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i> Loading...</div>';
 
-        // Fetch the timeline details from the URL in data-href
-        fetch(this.dataset.href, {
+        // Fetch the timeline details from the URL in the data-href attribute.
+        fetch(row.dataset.href, {
           headers: { "Accept": "text/html" }
         })
           .then(response => response.text())
           .then(html => {
             document.getElementById("timeline-details").innerHTML = html;
-            // Optionally, if you want to scroll, uncomment below:
+            // Optionally, scroll the details into view.
             // document.getElementById("timeline-details").scrollIntoView({ behavior: "smooth" });
           })
           .catch(error => {
@@ -187,10 +193,55 @@
             document.getElementById("timeline-details").innerHTML =
               '<div class="text-center text-danger">Error loading timeline details.</div>';
           });
-      });
+
+        // Now trigger the Moodle API update.
+        // Retrieve the timeline ID from a data attribute (make sure your row has data-timeline-id attribute).
+        const timelineId = row.dataset.timelineId;
+        // Retrieve the CSRF token from the meta tag.
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+        // Call the endpoint with the CSRF token included in the headers.
+        fetch(`/api/update_course_topics?timeline_id=${timelineId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken,
+            "Accept": "application/json"
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            console.error("Moodle API update failed:", data.error);
+          } else {
+            console.log("Moodle API update triggered successfully");
+          }
+        })
+        .catch(error => {
+          console.error("Error updating Moodle topics:", error);
+        });
+      }
     });
+  }
+
+  // Attach a listener for the modal close button.
+  const closeBtn = document.getElementById("closeModal");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      document.getElementById("editModal").style.display = "none";
+    });
+  }
+
+  // Close the modal if clicking outside the modal content.
+  window.addEventListener("click", function(e) {
+    const modal = document.getElementById("editModal");
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
   });
+});
 </script>
+
 
 <style>
 tr {

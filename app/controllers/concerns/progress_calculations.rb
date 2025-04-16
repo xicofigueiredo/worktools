@@ -62,6 +62,50 @@ module ProgressCalculations
     end
   end
 
+  def moodle_calculate_progress_and_balance(timelines)
+    # Collect all topic IDs from all timelines’ subjects (using in-memory associations if already loaded)
+    all_topic_ids = timelines.flat_map { |timeline| timeline.moodle_topics.map(&:id) }.uniq
+
+    # Preload user_topics for current_user for these topics in one query, index by topic_id
+    user_topics_by_topic = current_user.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
+
+    timelines.each do |timeline|
+      topics = timeline.moodle_topics
+      total_topics = topics.size
+
+        result = topics.each_with_object({ balance: 0, progress: 0.0, expected: 0.0 }) do |topic, h|
+
+          # Update balance based on deadline and done state
+          if topic.done && topic.deadline && topic.deadline >= Date.today
+            h[:balance] += 1
+          elsif !topic.done && topic.deadline && topic.deadline < Date.today
+            h[:balance] -= 1
+          end
+
+          # Sum progress if topic is done
+          h[:progress] += topic.percentage.to_f if topic.done
+          # Sum expected progress if deadline has passed
+          h[:expected] += topic.percentage.to_f if topic.deadline && topic.deadline < Date.today
+        end
+
+        balance = result[:balance]
+        progress = result[:progress]
+        expected_progress = result[:expected]
+
+
+      # Convert progress values into whole percentages
+      progress_percentage = (progress * 100).round
+      expected_progress_percentage = (expected_progress * 100).round
+
+      # Update the timeline record (this is a DB update per timeline)
+      timeline.update(
+        balance: balance,
+        progress: progress_percentage,
+        expected_progress: expected_progress_percentage
+      )
+    end
+  end
+
   # Refactored to preload user_topics for the given timeline to avoid N+1 queries
   def calc_remaining_blocks(timeline)
     topics = timeline.subject.topics
@@ -84,6 +128,22 @@ module ProgressCalculations
 
       remaining_hours_count += topic.time
       remaining_percentage += ut.percentage
+    end
+
+    [remaining_hours_count, remaining_percentage]
+  end
+
+  def moodle_calc_remaining_timeline_hours_and_percentage(timeline)
+    topics = timeline.moodle_topics
+
+    remaining_hours_count = 0
+    remaining_percentage = 0.0
+
+    topics.each do |topic|
+      next unless topic && topic.done
+
+      remaining_hours_count += topic.time
+      remaining_percentage += topic.percentage
     end
 
     [remaining_hours_count, remaining_percentage]

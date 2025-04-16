@@ -31,6 +31,8 @@ Rails.application.routes.draw do
     get 'change_kda/:date/:current_week_id/:learner_id/:current_date', to: 'pages#change_kda', as: 'change_kda'
     get 'weekly_goals/:id/lc_edit', to: 'weekly_goals#lc_edit', as: 'lc_edit_weekly_goal'
     patch 'weekly_goals/:id/lc_update', to: 'weekly_goals#lc_update', as: 'lc_update_weekly_goal'
+    post '/api/update_course_topics', to: 'moodle_api#update_course_topics', as: :update_course_topics
+
 
     # Attendances Routes
     get '/attendance', to: 'attendances#attendance'
