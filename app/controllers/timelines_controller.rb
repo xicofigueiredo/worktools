@@ -16,7 +16,6 @@ class TimelinesController < ApplicationController
     @total_hours_per_week = 0
     weekly_percentages = []
 
-    # Eager load the subject and its topics (avoid unnecessary eager loading)
     @timelines = @learner.timelines_sorted_by_balance
                              .where(hidden: false)
                              .includes(subject: :topics)
