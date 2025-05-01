@@ -1,47 +1,83 @@
-<div class="mx-5 mt-3">
-  <div class="d-flex justify-content-between mb-3 align-items-center">
-    <h1><%= @learner.full_name %></h1>
-    <%= link_to 'Back', attendance_path() %>
+<div class="container py-4">
+  <div class="d-flex justify-content-between mb-4 align-items-center">
+    <h2 class="fw-light mb-0"><%= @learner.full_name %></h2>
+    <%= link_to 'Back', attendance_path(), class: "btn btn-outline-secondary rounded-pill px-4" %>
   </div>
 
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr class="table-primary">
-          <th scope="col">Date</th>
-          <th scope="col">Start Time</th>
-          <th scope="col">End Time</th>
-          <th scope="col">Comments</th>
-          <th scope="col">Presence</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @attendances.each do |attendance|%>
-          <tr data-controller="attendance" data-attendance-id="<%= attendance.id %>">
-            <td><p><%= attendance.attendance_date%></p></td>
-            <td>
-              <%= form_tag(update_start_time_attendance_path(attendance), method: :patch, remote: true) do %>
-                <%= time_field_tag "attendance[start_time]", attendance.start_time&.strftime("%H:%M"), class: "form-control", data: { attendance_target: "startTime", action: "blur->attendance#updateStartTime" } %>
-              <% end %>
-            </td>
-            <td>
-              <%= form_tag(update_end_time_attendance_path(attendance), method: :patch, remote: true) do %>
-                <%= time_field_tag "attendance[end_time]", attendance.end_time&.strftime("%H:%M"), class: "form-control", data: { attendance_target: "endTime", action: "blur->attendance#updateEndTime" } %>
-              <% end %>
-            </td>
-            <td>
-              <%= form_tag(update_comments_attendance_path(attendance), method: :patch, remote: true) do %>
-               <%= text_area_tag "attendance[comments]", attendance.comments, class: "form-control", rows: 3, data: { attendance_target: "comments", action: "input->attendance#updateComments" } %>
-              <% end %>
-            </td>
-            <td>
-              <%= form_tag(update_absence_attendance_path(attendance), method: :patch) do %>
-                <%= select_tag 'absence', options_for_select(['Justified Leave', 'Unjustified Leave', 'Working Away', 'Holiday', 'Present'], attendance.absence), prompt: '-Select Option-', class: 'form-control', data: { attendance_target: "absence", action: "change->attendance#updateAbsence" } %>
-              <% end %>
-            </td>
+  <div class="card shadow-sm border-0">
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th scope="col" class="fw-semibold text-dark" style="background-color: rgb(213, 240, 0)">Date</th>
+            <th scope="col" class="fw-semibold text-dark" style="background-color: rgb(213, 240, 0)">Start Time</th>
+            <th scope="col" class="fw-semibold text-dark" style="background-color: rgb(213, 240, 0)">End Time</th>
+            <th scope="col" class="fw-semibold text-dark" style="background-color: rgb(213, 240, 0)">Comments</th>
+            <th scope="col" class="fw-semibold text-dark" style="background-color: rgb(213, 240, 0)">Presence</th>
           </tr>
-        <% end%>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @attendances.each do |attendance|%>
+            <tr data-controller="attendance" data-attendance-id="<%= attendance.id %>" class="align-middle">
+              <td class="name-cell">
+                <span class="d-block w-100 h-100 p-2 fw-medium">
+                  <%= attendance.attendance_date %>
+                </span>
+              </td>
+              <td>
+                <%= form_tag(update_start_time_attendance_path(attendance), method: :patch, remote: true) do %>
+                  <%= time_field_tag "attendance[start_time]",
+                      attendance.start_time&.strftime("%H:%M"),
+                      class: "form-control form-control-sm border-0 rounded-2",
+                      data: {
+                        attendance_target: "startTime",
+                        action: "blur->attendance#updateStartTime"
+                      } %>
+                <% end %>
+              </td>
+              <td>
+                <%= form_tag(update_end_time_attendance_path(attendance), method: :patch, remote: true) do %>
+                  <%= time_field_tag "attendance[end_time]",
+                      attendance.end_time&.strftime("%H:%M"),
+                      class: "form-control form-control-sm border-0 rounded-2",
+                      data: {
+                        attendance_target: "endTime",
+                        action: "blur->attendance#updateEndTime"
+                      } %>
+                <% end %>
+              </td>
+              <td>
+                <%= form_tag(update_comments_attendance_path(attendance), method: :patch, remote: true) do %>
+                  <%= text_area_tag "attendance[comments]",
+                      attendance.comments,
+                      class: "form-control form-control-sm border-0 rounded-2",
+                      rows: 2,
+                      placeholder: "Add comments...",
+                      data: {
+                        attendance_target: "comments",
+                        action: "input->attendance#updateComments"
+                      } %>
+                <% end %>
+              </td>
+              <td>
+                <%= form_tag(update_absence_attendance_path(attendance), method: :patch) do %>
+                  <%= select_tag 'absence',
+                      options_for_select(
+                        ['Justified Leave', 'Unjustified Leave', 'Working Away', 'Holiday', 'Present'],
+                        attendance.absence
+                      ),
+                      prompt: 'Select Status',
+                      class: 'form-select form-select-sm border-0 rounded-2',
+                      data: {
+                        attendance_target: "absence",
+                        action: "change->attendance#updateAbsence"
+                      } %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
