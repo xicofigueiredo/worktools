@@ -36,7 +36,7 @@ class TimelinesController < ApplicationController
       @timelines = @learner.timelines_sorted_by_balance
                              .where(hidden: false)
 
-      #MoodleApiService.new.create_timelines_for_learner("francisco@bravegenerationacademy.com")
+      #MoodleApiService.new.create_timelines_for_learner(current_user.email)
 
       moodle_calculate_progress_and_balance(@timelines)
 
