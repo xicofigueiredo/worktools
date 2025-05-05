@@ -48,7 +48,7 @@ class MoodleApiService
 
     # Sort courses alphabetically by 'name'
     courses.sort_by { |course| course['name'].to_s.downcase }.each do |course|
-      a << " #{course['name']} #{course['id']}"
+      a << " #{course['fullname']} #{course['id']}"
       # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
     end
     puts a
