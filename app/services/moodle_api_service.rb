@@ -47,7 +47,7 @@ class MoodleApiService
     puts "Found #{courses.size} courses."
 
     # Sort courses alphabetically by 'name'
-    courses.sort_by { |course| course['name'].to_s.downcase }.each do |course|
+    courses.sort_by { |course| course['fullname'].to_s.downcase }.each do |course|
       a << " #{course['fullname']} #{course['id']}"
       # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
     end
