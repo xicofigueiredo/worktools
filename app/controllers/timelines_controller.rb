@@ -29,7 +29,8 @@ class TimelinesController < ApplicationController
   end
 
   def index
-    if current_user.hub_ids.include?(147)
+    @boolean = current_user.hub_ids.include?(155)
+    if @boolean
       @learner = current_user
       @archived = @learner.timelines.exists?(hidden: true)
       # Eager load the subject and its topics (avoid unnecessary eager loading)
@@ -68,7 +69,7 @@ class TimelinesController < ApplicationController
   def show
     @timeline = Timeline.find(params[:id])
     @learner = User.find(params[:learner_id]) if params[:learner_id].present?
-    if current_user.hub_ids.include?(147)
+    if current_user.hub_ids.include?(155)
       render partial: "moodle_timeline_detail", locals: { timeline: @timeline }, layout: false
     else
       render partial: "timeline_detail", locals: { timeline: @timeline }, layout: false
@@ -91,7 +92,7 @@ class TimelinesController < ApplicationController
     @timeline = current_user.timelines.new(timeline_params)
 
     if @timeline.save
-      if current_user.hub_ids.include?(147)
+      if current_user.hub_ids.include?(155)
         moodle_generate_topic_deadlines(@timeline)
       else
         generate_topic_deadlines(@timeline)
@@ -124,7 +125,7 @@ class TimelinesController < ApplicationController
     if @timeline.update(timeline_params)
 
       @timeline.save
-      if current_user.hub_ids.include?(147)
+      if current_user.hub_ids.include?(155)
         moodle_generate_topic_deadlines(@timeline)
       else
         generate_topic_deadlines(@timeline)
@@ -228,6 +229,13 @@ class TimelinesController < ApplicationController
     @user_topics_by_topic = @learner.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
   end
 
+  def sync_moodle
+    MoodleApiService.new.create_timelines_for_learner("francisco@bravegenerationacademy.com")
+    respond_to do |format|
+      format.json { render json: { success: true } }
+      format.html { redirect_to timelines_path, notice: "Moodle timelines synced!" }
+    end
+  end
 
   private
 

@@ -141,4 +141,6 @@ Rails.application.routes.draw do
       resources :notes, except: [:show]
     end
 
+    post 'timelines/sync_moodle', to: 'timelines#sync_moodle', as: :sync_moodle_timelines
+
 end
