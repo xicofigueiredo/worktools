@@ -45,14 +45,15 @@ class MoodleApiService
     a = []
     courses = call('core_course_get_courses', {})
     puts "Found #{courses.size} courses."
-    courses.each do |course|
-      a << " #{course['shortname']} #{course['id']}"
+
+    # Sort courses alphabetically by 'name'
+    courses.sort_by { |course| course['name'].to_s.downcase }.each do |course|
+      a << " #{course['name']} #{course['id']}"
       # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
     end
     puts a
 
     # search Subjects with that name and populate subject.moodle_id with course['id']
-
   end
 
   # 4) Get user ID by email
