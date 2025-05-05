@@ -259,7 +259,7 @@ class MoodleApiService
     return puts "No Moodle ID for subject!" if course_id.nil?
 
     # Fetch completion status for activities in the course
-    completion_response = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: 2245 })
+    completion_response = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user.moodle_id })
     completion_lookup = {}
     if completion_response["statuses"]
       completion_response["statuses"].each do |status|
