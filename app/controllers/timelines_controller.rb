@@ -230,11 +230,12 @@ class TimelinesController < ApplicationController
   end
 
   def sync_moodle
-    MoodleApiService.new.create_timelines_for_learner("francisco@bravegenerationacademy.com")
+    MoodleApiService.new.create_timelines_for_learner(current_user.email)
     respond_to do |format|
       format.json { render json: { success: true } }
       format.html { redirect_to timelines_path, notice: "Moodle timelines synced!" }
     end
+    redirect_to timelines_path
   end
 
   private

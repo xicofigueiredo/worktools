@@ -101,23 +101,28 @@ class MoodleApiService
     courses = get_user_courses(email) # Get enrolled courses
     return puts "No courses found!" if courses.empty?
 
-    created_timelines = []
+    created_timelines = 0
 
     courses.each do |course|
       subject = Subject.find_by(moodle_id: course.split(":").first.to_i) # Extract Moodle ID and find the subject
 
       if subject
-        timeline = Timeline.find_or_initialize_by(user_id: user_id, subject_id: subject.id)
+        timeline = Timeline.find_by(user_id: user_id, subject_id: subject.id)
         # Populate or update the fields
-        timeline.start_date = Date.today
-        timeline.end_date = Date.today + 1.year
-        timeline.balance = 0
-        timeline.expected_progress = 0
-        timeline.progress = 0
-        timeline.total_time = 0
-        timeline.difference = 0
-        timeline.save! # This will create or update as needed
-        created_timelines << timeline
+        if timeline.nil? || timeline.moodle_topics.count == 0
+          timeline = Timeline.create!(
+            user_id: user_id,
+            subject_id: subject.id,
+            start_date: Date.today,
+            end_date: Date.today + 1.year,
+            balance: 0,
+            expected_progress: 0,
+            progress: 0,
+            total_time: 0,
+            difference: 0
+          )
+          created_timelines += 1
+        end
         puts "Created #{timeline.subject.name} Timeline for #{course.split(':').last.strip}"
 
         # 🔹 Fetch and Create MoodleTopics for the Timeline 🔹
@@ -162,7 +167,7 @@ class MoodleApiService
       end
     end
 
-    puts "✅ Created #{created_timelines.size} timelines for #{email}"
+    puts "✅ Created #{created_timelines} timelines for #{email}"
   end
 
 
