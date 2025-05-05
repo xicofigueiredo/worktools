@@ -36,6 +36,7 @@ class TimelinesController < ApplicationController
       # Eager load the subject and its topics (avoid unnecessary eager loading)
       @timelines = @learner.timelines_sorted_by_balance
                              .where(hidden: false)
+                             .joins(:moodle_topics)
 
       #MoodleApiService.new.create_timelines_for_learner(current_user.email)
 
