@@ -5,9 +5,15 @@
     <tr style="background-color: white; position: sticky; top: 59px;">
       <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
       <th style="border: 1px solid #ddd; padding: 8px;">Full Name</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">      <%= f.select :role, options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"]], params[:role]),
-           { prompt: "All" },
-           { class: "form-control", onchange: "this.form.submit();" } %></th>
+      <% if @role == "admin" %>
+        <th style="border: 1px solid #ddd; padding: 8px;">      <%= f.select :role, options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"], ["Admin", "admin"]], params[:role]),
+        { prompt: "All" },
+        { class: "form-control", onchange: "this.form.submit();" } %></th>
+      <% else %>
+        <th style="border: 1px solid #ddd; padding: 8px;">      <%= f.select :role, options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"]], params[:role]),
+            { prompt: "All" },
+            { class: "form-control", onchange: "this.form.submit();" } %></th>
+      <% end %>
       <th style="border: 1px solid #ddd; padding: 8px;">      <%= f.select :main_hub_id,
            options_from_collection_for_select(@hubs, "id", "name", params[:main_hub_id]),
            { prompt: "All" },

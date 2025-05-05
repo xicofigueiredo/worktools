@@ -36,7 +36,7 @@ class TimelinesController < ApplicationController
       # Eager load the subject and its topics (avoid unnecessary eager loading)
       @timelines = @learner.timelines_sorted_by_balance
                              .where(hidden: false)
-                             .joins(:moodle_topics)
+
 
       #MoodleApiService.new.create_timelines_for_learner(current_user.email)
 
@@ -236,7 +236,6 @@ class TimelinesController < ApplicationController
       format.json { render json: { success: true } }
       format.html { redirect_to timelines_path, notice: "Moodle timelines synced!" }
     end
-    redirect_to timelines_path
   end
 
   private

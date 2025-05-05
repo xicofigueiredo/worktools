@@ -3,6 +3,7 @@ class Admin::UsersController < ApplicationController
   before_action :require_admin
 
   def index
+    @role = current_user.role
     @hubs = Hub.all
 
     @users = User.all
