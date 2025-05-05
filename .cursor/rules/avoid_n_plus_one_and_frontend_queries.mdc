@@ -1,0 +1,25 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+---
+description: Prevent N+1 queries and enforce backend-only database access
+globs: ["app/**/*.rb", "app/**/*.erb", "app/**/*.js", "app/**/*.tsx"]
+alwaysApply: false
+---
+
+- Use `includes` or `eager_load` to avoid N+1 queries when accessing associated records.
+- Do not iterate over associations in views unless data has been preloaded.
+- Avoid placing database logic or `.where`, `.find`, `.pluck`, `.first` calls inside view templates (`.erb`, `.haml`) or frontend code (`.js`, `.tsx`).
+- In controllers, preload all necessary data using `includes` or `joins` before rendering.
+- Use `bullet` gem in development to catch N+1 queries.
+- Use API calls from frontend to access pre-processed data, never raw ActiveRecord logic.
+- Prefer presenter or view model patterns to shape data for the frontend.
+- Avoid triggering database queries directly in views. Instead, fetch and prepare data in the controller.
+
+
+@file config/environments/development.rb
+@file app/controllers/*
+@file app/views/*
+@file app/javascript/*

@@ -21,7 +21,7 @@ module GenerateTopicDeadlines
   def moodle_generate_topic_deadlines(timeline)
     subject = timeline.subject
     # Preload all topics in order and their corresponding user_topics for the current user.
-    moodle_topics = timeline.moodle_topics.order(:order)
+    moodle_topics = timeline.moodle_topics.order(:id)
 
     working_days = calculate_working_days(timeline)
     moodle_distribute_deadlines(moodle_topics, working_days)

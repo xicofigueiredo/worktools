@@ -106,39 +106,56 @@ class MoodleApiService
       subject = Subject.find_by(moodle_id: course.split(":").first.to_i) # Extract Moodle ID and find the subject
 
       if subject
-        timeline = Timeline.find_or_create_by!(
-          user_id: user_id,
-          subject_id: subject.id,
-          start_date: Date.today,
-          end_date: Date.today + 1.year,
-          balance: 0,
-          expected_progress: 0,
-          progress: 0,
-          total_time: 0,
-          difference: 0
-        )
+        timeline = Timeline.find_or_initialize_by(user_id: user_id, subject_id: subject.id)
+        # Populate or update the fields
+        timeline.start_date = Date.today
+        timeline.end_date = Date.today + 1.year
+        timeline.balance = 0
+        timeline.expected_progress = 0
+        timeline.progress = 0
+        timeline.total_time = 0
+        timeline.difference = 0
+        timeline.save! # This will create or update as needed
         created_timelines << timeline
         puts "Created #{timeline.subject.name} Timeline for #{course.split(':').last.strip}"
 
         # 🔹 Fetch and Create MoodleTopics for the Timeline 🔹
         course_topics = get_course_topics_for_learner(email, course.split(":").first.to_i)
 
+        # Keep track of the overall order
+        overall_order = 0
+
         course_topics.each do |section|
-          section[:activities].each_with_index do |activity, index|
-              next if activity[:completion_date] == "N/A" || activity[:completion_date]== "N/A" || activity[:visible] == "Hidden" || activity[:completed] == "❓ Unknown"
-              MoodleTopic.create!(
-                timeline: timeline,
-                time: 1,
-                name: activity[:name],
-                unit: section[:section],  # Store section name as unit
-                order: index + 1,  # Use index to maintain order
-                grade: activity[:grade] == "No Grade" ? nil : activity[:grade].to_f,  # Convert grade if available
-                done: activity[:completed] == "✅ Done",  # Mark as done if completed
-                completion_date: activity[:completion_date] == "N/A" ? nil : DateTime.parse(activity[:completion_date]),
-                moodle_id: activity[:id],
-                deadline: Date.today + 1.year,  # Set a default deadline
-                percentage: index * 0.001
-              )
+          # Skip hidden sections or sections named "Hidden" or "To finish"
+          next if section[:visible].include?("Hidden") ||
+                  section[:section].include?("Hidden") ||
+                  section[:section].include?("To finish") ||
+                  section[:section].include?("For CM Only")
+
+          section[:activities].each do |activity|
+            next if activity[:completion_date] == "N/A" ||
+                    activity[:visible] == "Hidden" ||
+                    activity[:completed] == "❓ Unknown"
+
+            overall_order += 1  # Increment order for each valid activity
+
+            moodle_topic = MoodleTopic.find_or_initialize_by(
+              timeline: timeline,
+              moodle_id: activity[:id]
+            )
+
+            # Set or update attributes
+            moodle_topic.time = 1
+            moodle_topic.name = activity[:name]
+            moodle_topic.unit = section[:section]
+            moodle_topic.order = overall_order
+            moodle_topic.grade = activity[:grade] == "No Grade" ? nil : activity[:grade].to_f
+            moodle_topic.done = activity[:completed] == "✅ Done"
+            moodle_topic.completion_date = activity[:completion_date] == "N/A" ? nil : DateTime.parse(activity[:completion_date])
+            moodle_topic.deadline = Date.today + 1.year
+            moodle_topic.percentage = overall_order * 0.01
+
+            moodle_topic.save!
           end
         end
       end
@@ -187,38 +204,40 @@ class MoodleApiService
     if course_contents.is_a?(Array) && course_contents.any?
       course_topics = []
 
-      course_contents.each do |section|
-        next if section['name'].nil? || section['modules'].nil? # Skip empty sections
+      # Sort sections by their 'section' field to maintain section order
+      course_contents.sort_by { |section| section['section'].to_i }.each do |section|
+        # SKIP hidden sections
+        next if section['visible'] == 0
+        next if section['name'].nil? || section['modules'].nil?
 
         section_title = section['name']
         section_visibility = section['visible'] == 1 ? " Visible" : "❌ Hidden"
         section_availability = section['availabilityinfo'] || "No restrictions"
 
-        activities = section['modules'].map do |mod|
-          activity_id = mod["id"]  # Capture the activity ID
-          activity_visibility = mod['visible'] == 1 ? " Visible" : "❌ Hidden"
-          activity_availability = mod['availabilityinfo'] || "No restrictions"
-
-          # Get completion state and completion date
+        # Modules come in the correct order from the API, we'll preserve that order
+        activities = section['modules'].each_with_index.map do |mod, index|
+          activity_id = mod["id"]
           completion_info = completion_lookup[activity_id] || { completed: "❓ Unknown", completion_date: "N/A" }
-
-          # Check if the activity is completed and has a grade
           grade_info = grades_lookup[activity_id]
           grade_display = grade_info ? "#{grade_info[:grade]} / #{grade_info[:max_grade]}" : "No Grade"
 
+          activity_visibility = mod['visible'] == 1 ? " Visible" : "❌ Hidden"
+
           {
-            id: activity_id,  # Added activity ID here
+            id: activity_id,
             name: mod['name'],
             visible: activity_visibility,
-            availabilityinfo: activity_availability,
+            availabilityinfo: mod['availabilityinfo'] || "No restrictions",
             completed: completion_info[:completed],
-            completion_date: completion_info[:completion_date],  # Added completion date
+            completion_date: completion_info[:completion_date],
             grade: completion_info[:completed] == "✅ Done" ? grade_display : "N/A",
+            order: index  # Using the index to preserve order
           }
         end
 
         course_topics << {
           section: section_title,
+          section_number: section['section'].to_i,  # Add section number
           visible: section_visibility,
           availabilityinfo: section_availability,
           activities: activities
@@ -240,7 +259,7 @@ class MoodleApiService
     return puts "No Moodle ID for subject!" if course_id.nil?
 
     # Fetch completion status for activities in the course
-    completion_response = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user.moodle_id })
+    completion_response = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: 2245 })
     completion_lookup = {}
     if completion_response["statuses"]
       completion_response["statuses"].each do |status|
@@ -250,6 +269,9 @@ class MoodleApiService
         }
       end
     end
+    # user = User.find_by(email: "francisco-abf@hotmail.com")
+    # timeline = Timeline.find_by(user_id: user.id, subject_id: 100)
+
 
     # Fetch grades for activities in the course
     grades_response = call('core_grades_get_gradeitems', { courseid: course_id })
