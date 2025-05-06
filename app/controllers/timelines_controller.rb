@@ -29,7 +29,7 @@ class TimelinesController < ApplicationController
   end
 
   def index
-    @boolean = current_user.hub_ids.include?(155)
+    @boolean = current_user.hub_ids.include?(147)
     if @boolean
       @learner = current_user
       @archived = @learner.timelines.exists?(hidden: true)
@@ -70,7 +70,7 @@ class TimelinesController < ApplicationController
   def show
     @timeline = Timeline.find(params[:id])
     @learner = User.find(params[:learner_id]) if params[:learner_id].present?
-    if current_user.hub_ids.include?(155)
+    if current_user.hub_ids.include?(147)
       render partial: "moodle_timeline_detail", locals: { timeline: @timeline }, layout: false
     else
       render partial: "timeline_detail", locals: { timeline: @timeline }, layout: false
@@ -93,7 +93,7 @@ class TimelinesController < ApplicationController
     @timeline = current_user.timelines.new(timeline_params)
 
     if @timeline.save
-      if current_user.hub_ids.include?(155)
+      if current_user.hub_ids.include?(147)
         moodle_generate_topic_deadlines(@timeline)
       else
         generate_topic_deadlines(@timeline)
@@ -126,7 +126,7 @@ class TimelinesController < ApplicationController
     if @timeline.update(timeline_params)
 
       @timeline.save
-      if current_user.hub_ids.include?(155)
+      if current_user.hub_ids.include?(147)
         moodle_generate_topic_deadlines(@timeline)
       else
         generate_topic_deadlines(@timeline)
