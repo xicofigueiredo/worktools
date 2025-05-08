@@ -40,7 +40,7 @@
       <%# <%= notice if notice %>
       <%= alert if alert %>
       <br>
-      <% if @unread_notifications.present? && @unread_notifications.any? %>
+      <% if @unread_notifications.present? && @unread_notifications.any? && @unread_notifications.select { |n| n.created_at >= 2.minutes.ago }.any? %>
         <div class="alert alert-warning alert-dismissible fade show" style="margin-top: 10px;"role="alert">
           <h5>You have <%= @unread_notifications.size %> unresolved notification(s):</h5>
           <ul>
