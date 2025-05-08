@@ -2,7 +2,7 @@
 <div class="notifications-container">
 
   <% if @notifications.any? %>
-    <% if @notifications_unread.any? && (current_user.role == 'lc' || current_user.role == 'admin') %>
+    <% if @notifications_unread.any? %>
     <div class="d-flex justify-content-end p-3">
       <%= button_to mark_all_as_read_notifications_path,
                     method: :patch,
