@@ -52,6 +52,9 @@ export default class extends Controller {
       if (response.ok) {
         // Update the main hub ID value
         this.mainHubIdValue = mainHubId
+        // Refresh the page or frame to update the list
+        const frame = document.getElementById("users_list")
+        if (frame) { frame.src = frame.src }
       } else {
         console.error('Failed to update hub associations')
       }

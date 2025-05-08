@@ -64,19 +64,15 @@ class Admin::UsersController < ApplicationController
     end
 
     if @user.update(user_params)
-      # Wrap the association update in a transaction.
-      ActiveRecord::Base.transaction do
-        # Destroy all existing hub associations.
-        @user.users_hubs.destroy_all
+      # Collect the filters from params
+      filters = {
+        role: params[:role],
+        main_hub_id: params[:main_hub_id],
+        level: params[:level],
+        active: params[:active]
+      }.compact # removes nil values
 
-        # For each hub_id submitted, create a new join record with the main flag set correctly.
-        hub_ids.each do |hub_id|
-          # Convert both IDs to strings for reliable comparison.
-          is_main = (hub_id.to_s == main_hub_id.to_s)
-          @user.users_hubs.create!(hub_id: hub_id, main: is_main)
-        end
-      end
-      redirect_to admin_users_path, notice: "User updated successfully"
+      redirect_back fallback_location: admin_users_path(filters), notice: "User updated successfully"
     else
       render :edit
     end

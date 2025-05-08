@@ -2,7 +2,7 @@
 <% if flash.now[:notice] %>
   <div class="alert alert-success"><%= flash.now[:notice] %></div>
 <% end %>
-<%= form_with model: @user, url: admin_user_path(@user), local: true, html: { style: "display: flex; flex-direction: column; gap: 16px;" } do |form| %>
+<%= form_with model: @user, url: admin_user_path(@user), local: true, data: { turbo: false }, html: { style: "display: flex; flex-direction: column; gap: 16px;" } do |form| %>
     <div style="display: flex; flex-direction: column;">
       <%= form.label :full_name, style: "font-weight: bold; margin-bottom: 4px;" %>
       <%= form.text_field :full_name, class: "form-input" %>
