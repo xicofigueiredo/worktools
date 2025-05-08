@@ -7,6 +7,7 @@ import AutoSaveController from "./auto_save_controller";
 import SaveKnowledgeController from "./save_knowledge_controller";
 import SaveActivityController from "./save_activity_controller";
 import HubAssociationsController from "./hub_associations_controller";
+import NotificationController from "./notification_controller"
 const application = Application.start()
 
 // Configure Stimulus development experience
@@ -21,5 +22,6 @@ Stimulus.register("auto-save", AutoSaveController);
 Stimulus.register("save-knowledge", SaveKnowledgeController);
 Stimulus.register("save-activity", SaveActivityController);
 Stimulus.register("hub-associations", HubAssociationsController);
+Stimulus.register("notification", NotificationController)
 
 export { application }

@@ -14,10 +14,25 @@ class NotificationsController < ApplicationController
   def mark_as_read
     notification = Notification.find(params[:id])
     if notification.update(read: true)
-      flash[:success] = "Notification marked as resolved."
+      respond_to do |format|
+        format.html {
+          flash[:success] = "Notification marked as resolved."
+          redirect_back fallback_location: profile_path
+        }
+        format.json {
+          render json: { status: 'success' }
+        }
+      end
     else
-      flash[:error] = "Unable to mark notification as resolved."
+      respond_to do |format|
+        format.html {
+          flash[:error] = "Unable to mark notification as resolved."
+          redirect_back fallback_location: profile_path
+        }
+        format.json {
+          render json: { status: 'error' }, status: :unprocessable_entity
+        }
+      end
     end
-    redirect_back fallback_location: profile_path
   end
 end
