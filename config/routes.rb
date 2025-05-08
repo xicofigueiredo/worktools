@@ -134,7 +134,11 @@ Rails.application.routes.draw do
     resources :newsletters, only: [:index, :show, :new, :create, :edit, :update, :destroy]
 
     namespace :admin do
-      resources :users, only: [:index, :edit, :update]
+      resources :users, only: [:index, :edit, :update] do
+        member do
+          patch :update_hubs
+        end
+      end
     end
 
     resources :users, only: [] do

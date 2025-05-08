@@ -1,124 +1,118 @@
-
-<table id="usersTable" style="border-collapse: collapse; width: 100%;">
-<%= form_with url: admin_users_path, method: :get, local: true do |f| %>
-  <thead>
-    <tr style="background-color: white; position: sticky; top: 59px;">
-      <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">Full Name</th>
-      <% if @role == "admin" %>
-        <th style="border: 1px solid #ddd; padding: 8px;">      <%= f.select :role, options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"], ["Admin", "admin"]], params[:role]),
-        { prompt: "All" },
-        { class: "form-control", onchange: "this.form.submit();" } %></th>
-      <% else %>
-        <th style="border: 1px solid #ddd; padding: 8px;">      <%= f.select :role, options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"]], params[:role]),
-            { prompt: "All" },
-            { class: "form-control", onchange: "this.form.submit();" } %></th>
-      <% end %>
-      <th style="border: 1px solid #ddd; padding: 8px;">      <%= f.select :main_hub_id,
-           options_from_collection_for_select(@hubs, "id", "name", params[:main_hub_id]),
-           { prompt: "All" },
-           { class: "form-control", onchange: "this.form.submit();" } %></th>
-      <th style="border: 1px solid #ddd; padding: 8px;">Level</th>
-      <th style="border: 1px solid #ddd; padding: 8px;">      <%= f.select :active, options_for_select([["All", ""], ["Active", "active"], ["Inactive", "inactive"]], params[:active]),
-           { prompt: "All" },
-           { class: "form-control", onchange: "this.form.submit();" } %></th>
-    </tr>
-  </thead>
-<% end %>
-  <tbody>
-    <% @users.each do |user| %>
-      <tr class="editable-row" data-user-id="<%= user.id %>" style="cursor: pointer;">
-        <td style="padding: 8px;"><%= user.email %></td>
-        <td style="padding: 8px;"><%= user.full_name %></td>
-        <td style="padding: 8px;"><%= user.role_before_type_cast %></td>
-        <td style="padding: 8px;"><%= user.main_hub.try(:name) %></td>
-        <td style="padding: 8px;"><%= user.level %></td>
-        <td style="padding: 8px;">
-          <% if user.deactivate? %>
-            <i class="fa-solid fa-circle" style="color: red;"></i>
-          <% else %>
-            <i class="fa-solid fa-circle" style="color: green;"></i>
-          <% end %>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-
-<!-- Single modal container placed outside the loop -->
-<div id="editModal" style="display: none; position: fixed; top: 0; left: 0;
-  width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
-  justify-content: center; align-items: center; z-index: 9999;">
-  <div style="background-color: white; padding: 20px; border-radius: 8px; width: 500px; position: relative;">
-    <span id="closeModal" style="position: absolute; top: 10px; right: 15px; cursor: pointer;">✕</span>
-    <div id="modalFormContent">
-      <!-- This content will be loaded from the server when a row is clicked -->
+<div class="container">
+  <div class="card main-card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <%= form_with url: admin_users_path, method: :get, local: true, class: "d-flex" do |f| %>
+          <table id="usersTable" style="border-collapse: collapse; width: 100%;">
+            <thead>
+              <tr style="background-color: white; position: sticky; top: 0; z-index: 1000;">
+                <th style="border: 1px solid #ddd; padding: 8px;">
+                  <div>Email</div>
+                </th>
+                <th style="border: 1px solid #ddd; padding: 8px;">
+                  <div>Full Name</div>
+                </th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                  <% if @role == "admin" %>
+                    <%= f.select :role,
+                        options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"], ["Admin", "admin"]], params[:role]),
+                        {},
+                        { class: "form-select form-select-sm", style: "width: 120px; font-size: 0.8rem; padding: 2px 4px;", onchange: "this.form.submit()" } %>
+                  <% else %>
+                    <%= f.select :role,
+                        options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"]], params[:role]),
+                        { },
+                        { class: "form-select form-select-sm", style: "width: 120px; font-size: 0.8rem; padding: 2px 4px;", onchange: "this.form.submit()" } %>
+                  <% end %>
+                </th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                  <%= f.select :main_hub_id,
+                      options_from_collection_for_select(@hubs, "id", "name", params[:main_hub_id]),
+                      { prompt: "All" },
+                      { class: "form-select form-select-sm", style: "width: 120px; font-size: 0.8rem; padding: 2px 4px;", onchange: "this.form.submit()" } %>
+                </th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                  <%= f.select :active,
+                      options_for_select([["All", ""], ["Active", "active"], ["Inactive", "inactive"]], params[:active]),
+                      { },
+                      { class: "form-select form-select-sm", style: "width: 120px; font-size: 0.8rem; padding: 2px 4px;", onchange: "this.form.submit()" } %>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if @users.any? %>
+                <% @users.each do |user| %>
+                  <tr class="editable-row"
+                      data-user-id="<%= user.id %>"
+                      style="cursor: pointer;"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editUserModal">
+                    <td style="padding: 8px;"><%= user.email %></td>
+                    <td style="padding: 8px;"><%= user.full_name %></td>
+                    <td style="padding: 8px; text-align: center;"><%= user.role_before_type_cast %></td>
+                    <td style="padding: 8px; text-align: center;"><%= user.main_hub.try(:name) %></td>
+                    <td style="padding: 8px; text-align: center;">
+                      <% if user.deactivate? %>
+                        <i class="fa-solid fa-circle" style="color: red;"></i>
+                      <% else %>
+                        <i class="fa-solid fa-circle" style="color: green;"></i>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              <% else %>
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 20px;">
+                    <div class="alert alert-info mb-0">
+                      <i class="fas fa-info-circle me-2"></i>No users found.
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const modal = document.getElementById('editModal');
-  const modalContent = document.getElementById('modalFormContent');
-  const closeBtn = document.getElementById('closeModal');
-
-  // Use event delegation on the table's <tbody>
-  const tableBody = document.querySelector('#usersTable tbody');
-  tableBody.addEventListener('click', function (e) {
-    const row = e.target.closest('.editable-row');
-    if (row) {
-      const userId = row.dataset.userId;
-      fetch(`/admin/users/${userId}/edit`)
-        .then(response => response.text())
-        .then(html => {
-          modalContent.innerHTML = html;
-          modal.style.display = 'flex';
-
-          // Attach any form submission handlers if needed
-          const form = modalContent.querySelector('form');
-          if (form) {
-            form.addEventListener('submit', function(e) {
-              e.preventDefault();
-              const formData = new FormData(form);
-              fetch(form.action, {
-                method: form.method,
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-              })
-              .then(response => {
-                if (response.ok) {
-                  modal.style.display = 'none';
-                  location.reload();
-                } else {
-                  console.error('Failed to save');
-                }
-              })
-              .catch(error => console.error('Error:', error));
-            });
-          }
-        });
-    }
-  });
-
-  // Close modal when clicking the close button
-  closeBtn.addEventListener('click', () => {
-    modal.style.display = 'none';
-  });
-
-  // Close modal when clicking outside the modal content
-  window.addEventListener('click', function (e) {
-    if (e.target === modal) {
-      modal.style.display = 'none';
-    }
-  });
-});
-
-</script>
+<!-- Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Modal content will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
 
 <style>
   .editable-row:hover {
-    background-color: #d5f000;
-    transition: background-color 0.2s ease-in-out;
+    background-color: rgb(213, 240, 0);
+    transition: background-color 0.2s ease;
   }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('editUserModal');
+    const modalBody = modal.querySelector('.modal-body');
+
+    document.querySelectorAll('.editable-row').forEach(row => {
+      row.addEventListener('click', function() {
+        const userId = this.dataset.userId;
+        fetch(`/admin/users/${userId}/edit`)
+          .then(response => response.text())
+          .then(html => {
+            modalBody.innerHTML = html;
+          });
+      });
+    });
+  });
+</script>

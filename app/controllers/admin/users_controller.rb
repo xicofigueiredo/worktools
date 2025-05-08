@@ -14,7 +14,7 @@ class Admin::UsersController < ApplicationController
     # Filter by Main Hub:
     if params[:main_hub_id].present?
       # Select only users that have a join record marked main for the hub with the given id.
-      @users = @users.joins(:users_hubs).where(users_hubs: { hub_id: params[:main_hub_id], main: true })
+      @users = @users.joins(:users_hubs).where(users_hubs: { hub_id: params[:main_hub_id] })
     end
 
     # Filter by Level (you could use a LIKE search if levels are free-form text)
@@ -55,7 +55,7 @@ class Admin::UsersController < ApplicationController
   def update
     @user = User.find(params[:id])
 
-    # Extract hub_ids and main_hub_id from the parameters and remove them so they’re not mass-assigned.
+    # Extract hub_ids and main_hub_id from the parameters and remove them so they're not mass-assigned.
     hub_ids = (params[:user].delete(:hub_ids) || []).reject(&:blank?)
     main_hub_id = params[:user].delete(:main_hub_id)
 
@@ -82,7 +82,29 @@ class Admin::UsersController < ApplicationController
     end
   end
 
+  def update_hubs
+    @user = User.find(params[:id])
 
+    hub_ids = params[:hub_ids] || []
+    main_hub_id = params[:main_hub_id]
+
+    if hub_ids.size == 1
+      main_hub_id = hub_ids.first
+    end
+
+    ActiveRecord::Base.transaction do
+      @user.users_hubs.destroy_all
+
+      hub_ids.each do |hub_id|
+        is_main = (hub_id.to_s == main_hub_id.to_s)
+        @user.users_hubs.create!(hub_id: hub_id, main: is_main)
+      end
+    end
+
+    head :ok
+  rescue ActiveRecord::RecordInvalid
+    head :unprocessable_entity
+  end
 
   private
 
