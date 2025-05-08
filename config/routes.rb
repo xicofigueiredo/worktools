@@ -125,6 +125,9 @@ Rails.application.routes.draw do
         patch :mark_as_read
         delete :destroy
       end
+      collection do
+        patch :mark_all_as_read
+      end
     end
 
     resources :forms, only: [:index, :show] do

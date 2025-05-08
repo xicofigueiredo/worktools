@@ -1,7 +1,18 @@
 <!-- Notifications Container -->
 <div class="notifications-container">
+
   <% if @notifications.any? %>
+    <% if @notifications_unread.any? && (current_user.role == 'lc' || current_user.role == 'admin') %>
+    <div class="d-flex justify-content-end p-3">
+      <%= button_to mark_all_as_read_notifications_path,
+                    method: :patch,
+                    class: "btn btn-outline-primary" do %>
+      <i class="fa-regular fa-circle-check"></i> Mark all as resolved
+      <% end %>
+    </div>
+    <% end %>
     <div class="notification-list">
+
       <% @notifications.each do |notification| %>
         <%
           # Determine notification type based on content
@@ -70,6 +81,17 @@
           </div>
         </div>
       <% end %>
+    </div>
+
+    <div class="notification-footer p-3 border-top">
+      <div class="d-flex justify-content-end">
+        <%= button_to mark_all_as_read_notifications_path,
+                      method: :patch,
+                      class: "btn btn-outline-primary" do %>
+          <i class="fa-regular fa-check-double me-2"></i>
+          Mark all as resolved
+        <% end %>
+      </div>
     </div>
   <% else %>
     <div class="empty-state">
@@ -178,5 +200,22 @@
     padding: 40px 20px;
     text-align: center;
     color: #888;
+  }
+
+  .notification-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #eee;
+  }
+
+  .btn-outline-primary {
+    color: #4a6cf7;
+    border: 1px solid #4a6cf7;
+    background-color: transparent;
+    transition: all 0.2s ease;
+  }
+
+  .btn-outline-primary:hover {
+    background-color: #4a6cf7;
+    color: white;
   }
 </style>

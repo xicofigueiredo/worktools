@@ -35,4 +35,9 @@ class NotificationsController < ApplicationController
       end
     end
   end
+
+  def mark_all_as_read
+    current_user.notifications.where(read: false).update_all(read: true)
+    redirect_to notifications_path, notice: "All notifications marked as resolved."
+  end
 end
