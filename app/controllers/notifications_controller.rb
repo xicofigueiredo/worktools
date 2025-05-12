@@ -1,13 +1,15 @@
 class NotificationsController < ApplicationController
   def index
-    @notifications = current_user.notifications.order(created_at: :desc)
+    # Only notifications from February 12, 2024 onward
+    earliest_date = Date.today - 3.months
+    @notifications = current_user.notifications.where('created_at >= ?', earliest_date).order(created_at: :desc)
     @notifications_unread = @notifications.where(read: false)
     hub_lcs = []
     if current_user.role == 'admin' || current_user.role == 'lc' || current_user.role == 'learner'
       hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
         lc.hubs.count >= 3 || lc.deactivate
-        @lcs_emails = hub_lcs.map(&:email)
       end
+      @lcs_emails = hub_lcs.map(&:email)
     end
     @notifications_by_month = @notifications.group_by { |n| n.created_at.strftime('%B %Y') }
   end

@@ -42,7 +42,7 @@
                   <%= simple_format(notification.message) %>
                 </div>
                 <div class="notification-content">
-                  (<%= time_ago_in_words(notification.created_at) %> ago)
+                  (<%= notification.created_at.strftime('%d %b') %>)
                 </div>
                 <div class="notification-actions">
                   <% unless notification.read? %>
