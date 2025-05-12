@@ -9,6 +9,7 @@ class NotificationsController < ApplicationController
         @lcs_emails = hub_lcs.map(&:email)
       end
     end
+    @notifications_by_month = @notifications.group_by { |n| n.created_at.strftime('%B %Y') }
   end
 
   def mark_as_read
