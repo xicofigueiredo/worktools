@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_05_08_153830) do
+ActiveRecord::Schema[7.0].define(version: 2025_05_13_151543) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -74,6 +74,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_05_08_153830) do
     t.text "plan"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "category"
     t.index ["sprint_goal_id"], name: "index_communities_on_sprint_goal_id"
   end
 
@@ -402,6 +403,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_05_08_153830) do
     t.text "plan"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "category"
     t.index ["sprint_goal_id"], name: "index_skills_on_sprint_goal_id"
   end
 
