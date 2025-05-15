@@ -29,7 +29,8 @@ class TimelinesController < ApplicationController
   end
 
   def index
-    @boolean = current_user.hub_ids.include?(147)
+    # @boolean = current_user.hub_ids.include?(147)
+    @boolean = false
     if @boolean
       @learner = current_user
       @archived = @learner.timelines.exists?(hidden: true)
@@ -230,13 +231,13 @@ class TimelinesController < ApplicationController
     @user_topics_by_topic = @learner.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
   end
 
-  def sync_moodle
-    MoodleApiService.new.create_timelines_for_learner(current_user.email)
-    respond_to do |format|
-      format.json { render json: { success: true } }
-      format.html { redirect_to timelines_path, notice: "Moodle timelines synced!" }
-    end
-  end
+  # def sync_moodle
+  #   MoodleApiService.new.create_timelines_for_learner(current_user.email)
+  #   respond_to do |format|
+  #     format.json { render json: { success: true } }
+  #     format.html { redirect_to timelines_path, notice: "Moodle timelines synced!" }
+  #   end
+  # end
 
   private
 
