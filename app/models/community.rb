@@ -5,14 +5,39 @@ class Community < ApplicationRecord
   after_create :create_report_activity
   after_update :update_report_activity
 
-  CATEGORIES = [
-    "Social / Community",
-    "Volunteering",
-    "Group Projects & Clubs",
-    "Networking & Professional Groups",
-    "Community Advocacy & Activism"
-  ].freeze
   CATEGORY_GROUPS = {
+    "Creative / Arts" => [
+      "Visual Arts",
+      "Performing Arts",
+      "Literary Arts",
+      "Digital & Media Arts",
+      "Crafts & Maker"
+    ],
+    "Physical / Fitness" => [
+      "Cardio & Endurance",
+      "Strength & Conditioning",
+      "Flexibility & Balance",
+      "Sports & Recreation",
+      "Outdoor Adventure"
+    ],
+    "Academic / Skill-based" => [
+      "Languages",
+      "Formal Coursework",
+      "Professional Development",
+      "Technical & Practical Skills"
+    ],
+    "Personal Well-being" => [
+      "Mindfulness & Mental Health",
+      "Reading & Intellectual Growth",
+      "Self-Care & Habits",
+      "Creative Self-Expression"
+    ],
+    "Other" => [
+      "Pets & Animal Care",
+      "Home & Garden",
+      "Travel & Exploration",
+      "Finance & Planning"
+    ],
     "Social / Community" => [
       "Volunteering",
       "Group Projects & Clubs",

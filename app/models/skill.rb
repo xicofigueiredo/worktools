@@ -37,6 +37,12 @@ class Skill < ApplicationRecord
       "Home & Garden",
       "Travel & Exploration",
       "Finance & Planning"
+    ],
+    "Social / Community" => [
+      "Volunteering",
+      "Group Projects & Clubs",
+      "Networking & Professional Groups",
+      "Community Advocacy & Activism"
     ]
   }.freeze
   # serialize :categories, Array # (if not using Postgres array)

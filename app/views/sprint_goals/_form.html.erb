@@ -247,11 +247,11 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th class="custom-font-size">Category</th>
                     <th class="custom-font-size">How do you plan to get involved in your community, are there any BGA Clubs, Hub Projects, or Volunteering that you want to get involved in?</th>
                     <th class="custom-font-size">What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
                     <th class="custom-font-size">What difficulties do you expect to encounter with this target?</th>
                     <th class="custom-font-size">Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+                    <th class="custom-font-size" style="vertical-align: middle">Category</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -259,18 +259,20 @@
                   <% @sprint_goal.communities.each_with_index do |community, index| %>
                     <%= form.fields_for :communities, community, child_index: index do |community_form| %>
                       <tr>
-                        <td>
-                          <% Community::CATEGORIES.each do |cat| %>
-                            <div class="form-check">
-                              <%= community_form.check_box :categories, { multiple: true, class: "form-check-input" }, cat, nil %>
-                              <%= community_form.label :categories, cat.titleize, value: cat, class: "form-check-label" %>
-                            </div>
-                          <% end %>
-                        </td>
                         <td><%= community_form.text_field :involved, class: 'form-control' %></td>
                         <td><%= community_form.text_area :smartgoals, class: 'form-control' %></td>
                         <td><%= community_form.text_area :difficulties, class: 'form-control' %></td>
-                        <td><%= community_form.text_area :plan, class: 'form-control' %></td>
+                        <td style="vertical-align: middle"><%= community_form.text_area :plan, class: 'form-control' %></td>
+                        <td style="vertical-align: middle">
+                          <%= community_form.select :categories,
+                            grouped_options_for_select(
+                              Community::CATEGORY_GROUPS.transform_values { |cats| cats.map { |c| [c, c] } },
+                              community_form.object.categories
+                            ),
+                            {},
+                            { multiple: true, class: "form-select category-multiselect", data: { behavior: "category-multiselect" } }
+                          %>
+                        </td>
                         <td style="vertical-align: middle">
                           <button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow" data-community-id="<%= community.id %>" data-kind="communities">
                             <i class="fa-solid fa-trash"></i>
@@ -288,18 +290,20 @@
                 <%= form.fields_for :communities, Community.new, child_index: "TEMPLATE_INDEX" do |community_form| %>
                   <tr>
                     <td>
-                      <% Community::CATEGORIES.each do |cat| %>
-                        <div class="form-check">
-                          <%= community_form.check_box :categories, { multiple: true, class: "form-check-input" }, cat, nil %>
-                          <%= community_form.label :categories, cat.titleize, value: cat, class: "form-check-label" %>
-                        </div>
-                      <% end %>
+                      <%= community_form.select :categories,
+                        grouped_options_for_select(
+                          Community::CATEGORY_GROUPS.transform_values { |cats| cats.map { |c| [c, c] } },
+                          community_form.object.categories
+                        ),
+                        {},
+                        { multiple: true, class: "form-select category-multiselect", data: { behavior: "category-multiselect" } }
+                      %>
                     </td>
                     <td><%= community_form.text_field :involved, class: 'form-control' %></td>
                     <td><%= community_form.text_area :smartgoals, class: 'form-control' %></td>
                     <td><%= community_form.text_area :difficulties, class: 'form-control' %></td>
                     <td><%= community_form.text_area :plan, class: 'form-control' %></td>
-                    <td style="vertical-align: middle">
+                    <td>
                       <button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow">
                         <i class="fa-solid fa-trash"></i>
                       </button>
