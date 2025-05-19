@@ -42,7 +42,7 @@ class Skill < ApplicationRecord
   # serialize :categories, Array # (if not using Postgres array)
 
   def create_report_activity
-    report = Report.find_by(user: self.sprint_goal.user, sprint: self.sprint_goal.sprint)
+    report = Report.find_or_create_by(user: self.sprint_goal.user, sprint: self.sprint_goal.sprint)
     ReportActivity.create(report: report, activity: self.extracurricular, goal: self.smartgoals, skill_id: self.id)
   end
 
