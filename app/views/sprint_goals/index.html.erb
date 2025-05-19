@@ -128,18 +128,27 @@
                 <th style="vertical-align: middle;">What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
                 <th style="vertical-align: middle;">What difficulties do you expect to encounter with this target?</th>
                 <th style="vertical-align: middle;">Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+                <th style="vertical-align: middle;">Category</th>
               </tr>
             </thead>
             <tbody data-nested-form-target="skillsContainer">
-
               <% if @sprint_goal.skills.exists? %>
-                <% @sprint_goal.skills.each do |skill, index| %>
-                    <tr>
-                      <td><%= skill.extracurricular %></td>
-                      <td><%= skill.smartgoals %></td>
-                      <td><%= skill.difficulties %></td>
-                      <td><%= skill.plan %></td>
-                    </tr>
+                <% @sprint_goal.skills.each do |skill| %>
+                  <tr>
+                    <td><%= skill.extracurricular %></td>
+                    <td><%= skill.smartgoals %></td>
+                    <td><%= skill.difficulties %></td>
+                    <td><%= skill.plan %></td>
+                    <td>
+                      <% if skill.categories.present? %>
+                        <% skill.categories.each do |cat| %>
+                          <span class="badge bg-primary me-7"><%= cat %></span>
+                        <% end %>
+                      <% else %>
+                        <span class="text-muted">None</span>
+                      <% end %>
+                    </td>
+                  </tr>
                 <% end %>
               <% else %>
                  <tr>
@@ -151,7 +160,6 @@
                   </td>
                 </tr>
               <% end %>
-
             </tbody>
           </table>
         </div>

@@ -14,6 +14,11 @@
       .custom-font-size {
         font-size: 13px;
       }
+      .ts-optgroup-header {
+        font-weight: bold;
+        font-size: 1.05em;
+        padding: 4px 8px 2px 8px;
+      }
     </style>
     <div class="py-2">
       <div class="mb-4">
@@ -169,6 +174,7 @@
                     <th class="custom-font-size" style="vertical-align: middle;">
                       Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)
                     </th>
+                    <th class="custom-font-size" style="vertical-align: middle;">Category</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -176,11 +182,25 @@
                   <% @sprint_goal.skills.each_with_index do |skill, index| %>
                     <%= form.fields_for :skills, skill, child_index: index do |skill_form| %>
                       <tr>
-                        <td><%= skill_form.text_field :extracurricular, class: 'form-control'  %></td>
-                        <td><%= skill_form.text_area :smartgoals, class: 'form-control'  %></td>
-                        <td><%= skill_form.text_area :difficulties, class: 'form-control'  %></td>
-                        <td><%= skill_form.text_area :plan, class: 'form-control'  %></td>
-                        <td style="vertical-align: middle"><button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow" data-skill-id="<%= skill.id %>" data-kind="skills"><i class="fa-solid fa-trash"></i></button></td>
+                        <td><%= skill_form.text_field :extracurricular, class: 'form-control' %></td>
+                        <td><%= skill_form.text_area :smartgoals, class: 'form-control' %></td>
+                        <td><%= skill_form.text_area :difficulties, class: 'form-control' %></td>
+                        <td><%= skill_form.text_area :plan, class: 'form-control' %></td>
+                        <td>
+                          <%= skill_form.select :categories,
+                            grouped_options_for_select(
+                              Skill::CATEGORY_GROUPS.transform_values { |cats| cats.map { |c| [c, c] } },
+                              skill_form.object.categories
+                            ),
+                            {},
+                            { multiple: true, class: "form-select category-multiselect", data: { behavior: "category-multiselect" } }
+                          %>
+                        </td>
+                        <td style="vertical-align: middle">
+                          <button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow" data-skill-id="<%= skill.id %>" data-kind="skills">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
+                        </td>
                       </tr>
                     <% end %>
                   <% end %>
@@ -192,11 +212,25 @@
               <template data-nested-form-target="template" data-kind="skills">
                 <%= form.fields_for :skills, Skill.new, child_index: "TEMPLATE_INDEX" do |skill_form| %>
                   <tr>
-                    <td><%= skill_form.text_field :extracurricular, class: 'form-control'  %></td>
-                    <td><%= skill_form.text_area :smartgoals, class: 'form-control'  %></td>
-                    <td><%= skill_form.text_area :difficulties, class: 'form-control'  %></td>
-                    <td><%= skill_form.text_area :plan, class: 'form-control'  %></td>
-                    <td style="vertical-align: middle"><button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow"><i class="fa-solid fa-trash"></i></button></td>
+                    <td><%= skill_form.text_field :extracurricular, class: 'form-control' %></td>
+                    <td><%= skill_form.text_area :smartgoals, class: 'form-control' %></td>
+                    <td><%= skill_form.text_area :difficulties, class: 'form-control' %></td>
+                    <td><%= skill_form.text_area :plan, class: 'form-control' %></td>
+                    <td>
+                      <%= skill_form.select :categories,
+                        grouped_options_for_select(
+                          Skill::CATEGORY_GROUPS.transform_values { |cats| cats.map { |c| [c, c] } },
+                          skill_form.object.categories
+                        ),
+                        {},
+                        { multiple: true, class: "form-select category-multiselect", data: { behavior: "category-multiselect" } }
+                      %>
+                    </td>
+                    <td style="vertical-align: middle">
+                      <button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </td>
                   </tr>
                 <% end %>
               </template>
@@ -213,10 +247,11 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th class="custom-font-size" >How do you plan to get involved in your community, are there any BGA Clubs, Hub Projects, or Volunteering that you want to get involved in? </th>
-                    <th class="custom-font-size" >What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
-                    <th class="custom-font-size" >What difficulties do you expect to encounter with this target?</th>
-                    <th class="custom-font-size" >Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+                    <th class="custom-font-size">Category</th>
+                    <th class="custom-font-size">How do you plan to get involved in your community, are there any BGA Clubs, Hub Projects, or Volunteering that you want to get involved in?</th>
+                    <th class="custom-font-size">What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
+                    <th class="custom-font-size">What difficulties do you expect to encounter with this target?</th>
+                    <th class="custom-font-size">Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -224,11 +259,23 @@
                   <% @sprint_goal.communities.each_with_index do |community, index| %>
                     <%= form.fields_for :communities, community, child_index: index do |community_form| %>
                       <tr>
-                        <td><%= community_form.text_field :involved, class: 'form-control'  %></td>
-                        <td><%= community_form.text_area :smartgoals, class: 'form-control'  %></td>
-                        <td><%= community_form.text_area :difficulties, class: 'form-control'  %></td>
-                        <td><%= community_form.text_area :plan, class: 'form-control'  %></td>
-                        <td style="vertical-align: middle"><button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow" data-community-id="<%= community.id %>" data-kind="communities"><i class="fa-solid fa-trash"></i></button></td>
+                        <td>
+                          <% Community::CATEGORIES.each do |cat| %>
+                            <div class="form-check">
+                              <%= community_form.check_box :categories, { multiple: true, class: "form-check-input" }, cat, nil %>
+                              <%= community_form.label :categories, cat.titleize, value: cat, class: "form-check-label" %>
+                            </div>
+                          <% end %>
+                        </td>
+                        <td><%= community_form.text_field :involved, class: 'form-control' %></td>
+                        <td><%= community_form.text_area :smartgoals, class: 'form-control' %></td>
+                        <td><%= community_form.text_area :difficulties, class: 'form-control' %></td>
+                        <td><%= community_form.text_area :plan, class: 'form-control' %></td>
+                        <td style="vertical-align: middle">
+                          <button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow" data-community-id="<%= community.id %>" data-kind="communities">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
+                        </td>
                       </tr>
                     <% end %>
                   <% end %>
@@ -240,11 +287,23 @@
               <template data-nested-form-target="template" data-kind="communities">
                 <%= form.fields_for :communities, Community.new, child_index: "TEMPLATE_INDEX" do |community_form| %>
                   <tr>
+                    <td>
+                      <% Community::CATEGORIES.each do |cat| %>
+                        <div class="form-check">
+                          <%= community_form.check_box :categories, { multiple: true, class: "form-check-input" }, cat, nil %>
+                          <%= community_form.label :categories, cat.titleize, value: cat, class: "form-check-label" %>
+                        </div>
+                      <% end %>
+                    </td>
                     <td><%= community_form.text_field :involved, class: 'form-control' %></td>
                     <td><%= community_form.text_area :smartgoals, class: 'form-control' %></td>
                     <td><%= community_form.text_area :difficulties, class: 'form-control' %></td>
                     <td><%= community_form.text_area :plan, class: 'form-control' %></td>
-                    <td style="vertical-align: middle"><button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow"><i class="fa-solid fa-trash"></i></button></td>
+                    <td style="vertical-align: middle">
+                      <button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </td>
                   </tr>
                 <% end %>
               </template>
@@ -259,3 +318,37 @@
       </div>
     </div>
 <% end %>
+
+<script>
+  document.addEventListener('turbo:load', function() {
+    // Initialize select2 for all category selects
+    document.querySelectorAll('select[multiple]').forEach(function(select) {
+      new TomSelect(select, {
+        plugins: ['remove_button'],
+        maxItems: null
+      });
+    });
+  });
+
+  function initializeCategoryMultiselects() {
+    document.querySelectorAll('.category-multiselect').forEach(function(select) {
+      // Only initialize if not already initialized
+      if (!select.tomselect) {
+        new TomSelect(select, {
+          plugins: ['remove_button'],
+          persist: false,
+          create: false,
+          maxItems: null,
+          render: {
+            item: function(data, escape) {
+              return `<div class="badge bg-primary me-1 mb-1">${escape(data.text)}</div>`;
+            },
+            optgroup: function(data, escape) {
+              return `<div class="ts-optgroup"><div class="ts-optgroup-header" style="font-weight:bold;">${escape(data.label)}</div><div class="ts-optgroup-options"></div></div>`;
+            }
+          }
+        });
+      }
+    });
+  }
+</script>

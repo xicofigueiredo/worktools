@@ -286,7 +286,6 @@ class ReportsController < ApplicationController
     pdf.bounding_box([0, cursor], width: pdf.bounds.width / 3) do
       pdf.text "#{@learner.full_name}", size: 18, style: :bold
       pdf.text "#{@learner.users_hubs.find_by(main: true)&.hub.name} Hub", size: 15
-      pdf.text "Attendance: #{@attendance}%", size: 12
     end
 
     # Center Section (Sprint Info)
@@ -304,6 +303,11 @@ class ReportsController < ApplicationController
     pdf.move_down 10
     pdf.stroke_color "000000" # Black color for line
     pdf.stroke_line([0, pdf.cursor], [pdf.bounds.width, pdf.cursor]) # Draw horizontal line at current cursor position
+    pdf.move_down 10
+
+    # Add attendance breakdown in one line
+    pdf.text "Attendance: #{@attendance}% | Present: #{@p} | Working away: #{@wa} | Unjustified absences: #{@ul} | Justified absences: #{@jl} | Holidays: #{@h}", size: 10, align: :center
+
     pdf.move_down 10
 
     # General Comments Section

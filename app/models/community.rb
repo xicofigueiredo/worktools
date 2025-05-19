@@ -3,8 +3,21 @@ class Community < ApplicationRecord
   has_one :report_activity, dependent: :destroy
 
   after_create :create_report_activity
-
-  enum category: { test: 'test', sports: 'sports', music: 'music', art: 'art', other: 'other' }
+  CATEGORIES = [
+    "Social / Community",
+    "Volunteering",
+    "Group Projects & Clubs",
+    "Networking & Professional Groups",
+    "Community Advocacy & Activism"
+  ].freeze
+  CATEGORY_GROUPS = {
+    "Social / Community" => [
+      "Volunteering",
+      "Group Projects & Clubs",
+      "Networking & Professional Groups",
+      "Community Advocacy & Activism"
+    ]
+  }.freeze
 
   def create_report_activity
     report = Report.find_by(user: self.sprint_goal.user, sprint: self.sprint_goal.sprint)

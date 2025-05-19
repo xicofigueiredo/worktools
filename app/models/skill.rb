@@ -5,7 +5,41 @@ class Skill < ApplicationRecord
   after_create :create_report_activity
   after_update :update_report_activity
 
-  enum category: { test: 'test', sports: 'sports', music: 'music', art: 'art', other: 'other' }
+  CATEGORY_GROUPS = {
+    "Creative / Arts" => [
+      "Visual Arts",
+      "Performing Arts",
+      "Literary Arts",
+      "Digital & Media Arts",
+      "Crafts & Maker"
+    ],
+    "Physical / Fitness" => [
+      "Cardio & Endurance",
+      "Strength & Conditioning",
+      "Flexibility & Balance",
+      "Sports & Recreation",
+      "Outdoor Adventure"
+    ],
+    "Academic / Skill-based" => [
+      "Languages",
+      "Formal Coursework",
+      "Professional Development",
+      "Technical & Practical Skills"
+    ],
+    "Personal Well-being" => [
+      "Mindfulness & Mental Health",
+      "Reading & Intellectual Growth",
+      "Self-Care & Habits",
+      "Creative Self-Expression"
+    ],
+    "Other" => [
+      "Pets & Animal Care",
+      "Home & Garden",
+      "Travel & Exploration",
+      "Finance & Planning"
+    ]
+  }.freeze
+  # serialize :categories, Array # (if not using Postgres array)
 
   def create_report_activity
     report = Report.find_by(user: self.sprint_goal.user, sprint: self.sprint_goal.sprint)
