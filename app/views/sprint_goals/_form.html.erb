@@ -289,6 +289,10 @@
               <template data-nested-form-target="template" data-kind="communities">
                 <%= form.fields_for :communities, Community.new, child_index: "TEMPLATE_INDEX" do |community_form| %>
                   <tr>
+                    <td><%= community_form.text_field :involved, class: 'form-control' %></td>
+                    <td><%= community_form.text_area :smartgoals, class: 'form-control' %></td>
+                    <td><%= community_form.text_area :difficulties, class: 'form-control' %></td>
+                    <td><%= community_form.text_area :plan, class: 'form-control' %></td>
                     <td>
                       <%= community_form.select :categories,
                         grouped_options_for_select(
@@ -299,10 +303,6 @@
                         { multiple: true, class: "form-select category-multiselect", data: { behavior: "category-multiselect" } }
                       %>
                     </td>
-                    <td><%= community_form.text_field :involved, class: 'form-control' %></td>
-                    <td><%= community_form.text_area :smartgoals, class: 'form-control' %></td>
-                    <td><%= community_form.text_area :difficulties, class: 'form-control' %></td>
-                    <td><%= community_form.text_area :plan, class: 'form-control' %></td>
                     <td>
                       <button class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->nested-form#removeRow">
                         <i class="fa-solid fa-trash"></i>
