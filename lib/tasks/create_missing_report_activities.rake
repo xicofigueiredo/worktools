@@ -1,11 +1,11 @@
 namespace :db do
-  desc "Ensure all skills and communities for sprint_goal_id=12 have corresponding report_activities"
+  desc "Ensure all skills and communities for sprint_goal_id=13 have corresponding report_activities"
   task create_missing_report_activities: :environment do
     count = 0
 
-    SprintGoal.where(sprint_id: 12).find_each do |sprint_goal|
+    SprintGoal.where(sprint_id: 13).find_each do |sprint_goal|
       # Get the associated report for the user and sprint
-      report = Report.find_by(user_id: sprint_goal.user_id, sprint: 12)
+      report = Report.find_by(user_id: sprint_goal.user_id, sprint: 13)
 
       next unless report # Skip if no report exists for this sprint_goal
 
