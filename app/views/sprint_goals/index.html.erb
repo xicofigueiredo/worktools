@@ -142,7 +142,7 @@
                     <td>
                       <% if skill.categories.present? %>
                         <% skill.categories.each do |cat| %>
-                          <span class="badge bg-primary me-7"><%= cat %></span>
+                          <span class="badge bg-secondary me-7"><%= cat %></span>
                         <% end %>
                       <% else %>
                         <span class="text-muted">None</span>
@@ -191,7 +191,7 @@
                       <td>
                         <% if community.categories.present? %>
                           <% community.categories.each do |cat| %>
-                            <span class="badge bg-danger me-7"><%= cat %></span>
+                            <span class="badge bg-secondary me-7"><%= cat %></span>
                           <% end %>
                         <% else %>
                           <span class="text-muted">None</span>
