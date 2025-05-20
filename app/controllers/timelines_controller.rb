@@ -71,7 +71,8 @@ class TimelinesController < ApplicationController
   def show
     @timeline = Timeline.find(params[:id])
     @learner = User.find(params[:learner_id]) if params[:learner_id].present?
-    if current_user.hub_ids.include?(147)
+    # if current_user.hub_ids.include?(147)
+    if false
       render partial: "moodle_timeline_detail", locals: { timeline: @timeline }, layout: false
     else
       render partial: "timeline_detail", locals: { timeline: @timeline }, layout: false
@@ -94,7 +95,8 @@ class TimelinesController < ApplicationController
     @timeline = current_user.timelines.new(timeline_params)
 
     if @timeline.save
-      if current_user.hub_ids.include?(147)
+      # if current_user.hub_ids.include?(147)
+      if false
         moodle_generate_topic_deadlines(@timeline)
       else
         generate_topic_deadlines(@timeline)
@@ -127,7 +129,8 @@ class TimelinesController < ApplicationController
     if @timeline.update(timeline_params)
 
       @timeline.save
-      if current_user.hub_ids.include?(147)
+      # if current_user.hub_ids.include?(147)
+      if false
         moodle_generate_topic_deadlines(@timeline)
       else
         generate_topic_deadlines(@timeline)
