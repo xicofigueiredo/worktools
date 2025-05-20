@@ -177,6 +177,7 @@
                 <th>What are your goals for this activity? Make them SMART (Specific, Measurable, Attainable, Relevant, Time-constrained)</th>
                 <th>What difficulties do you expect to encounter with this target?</th>
                 <th>Explain your plan to achieve your goal in 3 steps or more. (Include how you plan to overcome your difficulties)</th>
+                <th>Category</th>
               </tr>
             </thead>
             <tbody data-nested-form-target="communitiesContainer">
@@ -187,6 +188,15 @@
                       <td><%= community.smartgoals %></td>
                       <td><%= community.difficulties %></td>
                       <td><%= community.plan %></td>
+                      <td>
+                        <% if community.categories.present? %>
+                          <% community.categories.each do |cat| %>
+                            <span class="badge bg-danger me-7"><%= cat %></span>
+                          <% end %>
+                        <% else %>
+                          <span class="text-muted">None</span>
+                        <% end %>
+                      </td>
                     </tr>
                 <% end %>
               <% else %>
