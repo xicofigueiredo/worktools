@@ -2,24 +2,24 @@ namespace :notifications do
   desc "Send notifications to Level 4 Business users, Learning Coaches, and about the Spring Equinox Party"
   task send_notifications: :environment do
     notifications_count = 0
-    # subject_ids = [559]
+    subject_ids = [559,569]
 
-    #  Timeline.where(subject_id: subject_ids, hidden: [false, nil]).find_each do |timeline|
-    #    user = timeline.user
-    #    Notification.find_or_create_by!(
-    #      user: user,
-    #      message: "Please update your #{timeline.subject.name} timeline."
-    #      )
-    #      notifications_count += 1
-    #  end
+     Timeline.where(subject_id: subject_ids, hidden: [false, nil]).find_each do |timeline|
+       user = timeline.user
+       Notification.find_or_create_by!(
+         user: user,
+         message: "Please update your #{timeline.subject.name} timeline."
+         )
+         notifications_count += 1
+     end
 
-    User.where(role: "learner").or(User.where(role: "lc")).or(User.where(role: "admin")).find_each do |user|
-      Notification.find_or_create_by!(
-        user: user,
-        message: "Luis is back from leave, so please revert all communication regarding worktools' support back to him."
-      )
-      notifications_count += 1
-    end
+    # User.where(role: "learner").or(User.where(role: "lc")).or(User.where(role: "admin")).find_each do |user|
+    #   Notification.find_or_create_by!(
+    #     user: user,
+    #     message: "Luis is back from leave, so please revert all communication regarding worktools' support back to him."
+    #   )
+    #   notifications_count += 1
+    # end
 
     puts "Completed: #{notifications_count} notifications sent."
 

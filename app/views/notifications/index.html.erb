@@ -80,6 +80,18 @@
 
                   <% elsif notification.message.include?("For more detailed information, you can take a look at this document" ) %>
                     <%= link_to "Check here document", "https://edubgabravegeneration-my.sharepoint.com/:w:/g/personal/luis_bravegenerationacademy_com/EX5rW1krkmZDjfYQFpAOaUkBeA4IKx3kvlo9zhLLaQ2pPw?e=x8xpTf&isSPOFile=1&ovuser=1ac2d08d-bbbe-4e3c-9622-88fbe8ac9830%2Cfrancisco%40bravegenerationacademy.com&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI1MC8yNTAzMDIwMTAxMCIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D", class: "btn btn-outline", target: "_blank" %>
+
+
+                  <% elsif notification.message.include?("has updated the weekly goals") %>
+                      <% learner_name = notification.message.match(/Your learner (.*?) has updated the weekly goals for the Week \d+/)[1] %>
+                      <% learner = User.find_by(full_name: learner_name) %>
+                      <%= link_to "Check Weekly Goals", learner_profile_path(learner, active_tab: 'weekly'), class: "btn btn-outline", data: { turbo: false } %>
+
+                  <% elsif notification.message.include?("has updated the kdas") %>
+                      <% learner_name = notification.message.match(/Your learner (.*?) has updated the kdas for the Week \d+/)[1] %>
+                      <% learner = User.find_by(full_name: learner_name) %>
+                      <%= link_to "Check KDAs", learner_profile_path(learner, active_tab: 'kda'), class: "btn btn-outline", data: { turbo: false } %>
+
                   <% end %>
 
                 </div>
