@@ -8,7 +8,15 @@ export default class extends Controller {
 
   markAsRead(event) {
     event.preventDefault()
+    this.markNotificationAsRead()
+  }
 
+  markAsReadAndNavigate(event) {
+    // Don't prevent default here, so the link navigation will work
+    this.markNotificationAsRead()
+  }
+
+  markNotificationAsRead() {
     fetch(`/notifications/${this.idValue}/mark_as_read`, {
       method: 'PATCH',
       headers: {
@@ -21,10 +29,15 @@ export default class extends Controller {
     .then(response => {
       if (response.ok) {
         this.itemTarget.classList.add('resolved')
-        this.buttonTarget.remove()
+        const buttonTarget = this.element.querySelector('[data-notification-target="button"]')
+        if (buttonTarget) {
+          buttonTarget.remove()
+        }
         // Update the envelope icon
         const iconContainer = this.itemTarget.querySelector('.d-flex')
-        iconContainer.innerHTML = '<i class="fa-regular fa-envelope-open"></i>'
+        if (iconContainer) {
+          iconContainer.innerHTML = '<i class="fa-regular fa-envelope-open"></i>'
+        }
       } else {
         console.error('Failed to mark notification as read')
       }
