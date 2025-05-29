@@ -240,6 +240,39 @@ class TimelinesController < ApplicationController
   #     format.json { render json: { success: true } }
   #     format.html { redirect_to timelines_path, notice: "Moodle timelines synced!" }
   #   end
+
+  #   if true
+
+  #     current_user.timelines.each do |timeline|
+  #       subject_names << timeline.moodle_topics.map(&:unit)
+  #       combined_names = [timeline.subject.name, timeline.moodle_topics.map(&:unit)]
+  #     end
+
+  #     @timeline = Timeline.create(user: current_user,
+  #      subject_id: 666,
+  #      personalized_name: "Lower Secondary Y7",
+  #      start_date: Date.today,
+  #      end_date: Date.today + 1.year,
+  #      total_time: 100,
+  #      category: "LWS",
+  #      hidden: false)
+
+  #      combined_names.each_with_index do |combined_name, index|
+  #        MoodleTopic.create(user: current_user,
+  #         name: combined_names[1],
+  #         unit: combined_names[0],
+  #         deadline: Date.today + 1.year,
+  #         time: 1,
+  #         timeline_id: @timeline.id,
+  #         order: index + 1
+  #         )
+  #      end
+
+
+
+  #   else
+  #     redirect_to timelines_path, notice: "Moodle timelines synced!"
+  #   end
   # end
 
   private

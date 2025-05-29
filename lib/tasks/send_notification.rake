@@ -13,7 +13,10 @@ namespace :notifications do
     #      notifications_count += 1
     #  end
 
+    hub_ids = [148, 151, 152, 153, 154, 155, 156, 157, 158, 160, 161, 162, 163, 164, 165, 167, 168, 169, 170, 171, 172, 175, 176, 178, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 192]
+
     User.where(role: "lc").find_each do |user|
+      next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
       Notification.find_or_create_by!(
         user: user,
         message: "Webinar on the Portuguese curriculum for all LCs taking place on the 28th at 2pm. Link will be shared soon."
@@ -53,7 +56,7 @@ namespace :notifications do
 #       Notification.find_or_create_by!(
 #         user: user,
 #         message: "
-# 🌸Join the 1st edition of BGA for Change’s Spring Equinox Party🪻
+# 🌸Join the 1st edition of BGA for Change's Spring Equinox Party🪻
 # Details:
 # Location: CCB Hub
 # Date: Thursday, March 20th
