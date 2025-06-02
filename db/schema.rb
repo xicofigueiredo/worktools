@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_04_15_230616) do
+ActiveRecord::Schema[7.0].define(version: 2025_06_02_161101) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -246,6 +246,12 @@ ActiveRecord::Schema[7.0].define(version: 2025_04_15_230616) do
     t.integer "moodle_id"
     t.date "deadline"
     t.float "percentage"
+    t.boolean "mock50", default: false
+    t.boolean "mock100", default: false
+    t.integer "completion_data"
+    t.string "submission_date"
+    t.string "evaluation_date"
+    t.integer "number_attempts", default: 0
     t.index ["timeline_id"], name: "index_moodle_topics_on_timeline_id"
   end
 
