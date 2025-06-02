@@ -126,6 +126,9 @@ Rails.application.routes.draw do
         patch :mark_as_read
         delete :destroy
       end
+      collection do
+        patch :mark_all_as_read
+      end
     end
 
     resources :forms, only: [:index, :show] do
@@ -135,11 +138,17 @@ Rails.application.routes.draw do
     resources :newsletters, only: [:index, :show, :new, :create, :edit, :update, :destroy]
 
     namespace :admin do
-      resources :users, only: [:index, :edit, :update]
+      resources :users, only: [:index, :edit, :update] do
+        member do
+          patch :update_hubs
+        end
+      end
     end
 
     resources :users, only: [] do
       resources :notes, except: [:show]
     end
+
+    post 'timelines/sync_moodle', to: 'timelines#sync_moodle', as: :sync_moodle_timelines
 
 end

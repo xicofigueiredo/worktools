@@ -1,89 +1,143 @@
 <!-- Notifications Container -->
+<% if @notifications_unread.any? %>
+  <div class="d-flex justify-content-center p-3">
+    <%= button_to mark_all_as_read_notifications_path,
+                  method: :patch,
+                  class: "btn btn-outline-primary" do %>
+    <i class="fa-regular fa-circle-check"></i> Mark all as resolved
+    <% end %>
+  </div>
+<% end %>
 <div class="notifications-container">
+
   <% if @notifications.any? %>
     <div class="notification-list">
-      <% @notifications.each do |notification| %>
-        <%
-          # Determine notification type based on content
-          notification_type = if notification.message.include?("error") || notification.message.include?("update")
-                               "error"
-                             elsif notification.message.include?("shouldn't appear")
-                               "warning"
-                             else
-                               "info"
-                             end
-        %>
-
-        <div class="notification-item <%= notification_type %> <%= notification.read? ? 'resolved' : '' %>">
-            <% if notification.read? %>
-              <div class="d-flex justify-content-end"><i class="fa-regular fa-envelope-open"></i></div>
-            <% else %>
-              <div class="d-flex justify-content-end"><i class="fa-regular fa-envelope"></i></i></div>
-            <% end %>
-          <div class="notification-content">
-            <%= simple_format(notification.message) %>
+      <% @notifications_by_month.each do |month, notifications| %>
+        <div class="month-section">
+          <div class="month-header">
+            <h3><%= month %></h3>
           </div>
-          <div class="notification-content">
-            (<%= time_ago_in_words(notification.created_at) %> ago)
-          </div>
-          <div class="notification-actions">
-            <% unless notification.read? %>
-              <%= button_to "Mark as resolved",
-                          mark_as_read_notification_path(notification),
-                          method: :patch,
-                          class: "btn btn-primary" %>
+          <div class="month-content">
+            <% notifications.each do |notification| %>
+              <%
+                # Determine notification type based on content
+                notification_type = if notification.message.include?("error") || notification.message.include?("update")
+                                     "error"
+                                   elsif notification.message.include?("shouldn't appear")
+                                     "warning"
+                                   else
+                                     "info"
+                                   end
+              %>
+              <div class="notification-item <%= notification_type %> <%= notification.read? ? 'resolved' : '' %>"
+                   data-controller="notification"
+                   data-notification-id-value="<%= notification.id %>"
+                   data-notification-target="item">
+                <% if notification.read? %>
+                  <div class="d-flex justify-content-end"><i class="fa-regular fa-envelope-open"></i></div>
+                <% else %>
+                  <div class="d-flex justify-content-end"><i class="fa-regular fa-envelope"></i></div>
+                <% end %>
+                <div class="notification-content">
+                  <%= simple_format(notification.message) %>
+                </div>
+                <div class="notification-content">
+                  (<%= notification.created_at.strftime('%d %b') %>)
+                </div>
+                <div class="notification-actions">
+                  <% unless notification.read? %>
+                    <button class="btn btn-primary"
+                            data-action="notification#markAsRead"
+                            data-notification-target="button">
+                      Mark as resolved
+                    </button>
+                  <% end %>
+
+                  <% if notification_type == "error" && (notification.message.include?("timeline") || notification.message.include?("update your")) %>
+                    <% timeline_name = notification.message.match(/timeline '(.*?)'|your (.*?) timeline/)[1] || notification.message.match(/your (.*?) timeline/)[1] rescue nil %>
+                    <% timeline = timeline_name ? current_user.timelines.joins(:subject).find_by(subjects: { name: timeline_name }) : nil %>
+
+                    <% if timeline && !timeline.hidden %>
+                      <%= link_to "Update Timeline", edit_timeline_path(timeline.id), class: "btn btn-outline" %>
+                    <% end %>
+
+                  <% elsif notification_type == "warning" && notification.message.include?("please let your Learning Coach know") %>
+                    <% if @lcs_emails.present? %>
+                      <%= link_to "Message LC on Teams", "msteams:/l/chat/0/0?users=#{@lcs_emails.join(',')}", class: "btn btn-outline" %>
+                    <% end %>
+
+                  <% elsif notification.message.include?("please message Luís Brito e Faro") %>
+                    <%= link_to "Message Luis", "msteams:/l/chat/0/0?users=luis@bravegenerationacademy.com", class: "btn btn-outline" %>
+
+                  <% elsif notification.message.include?("You have new forms to fill") %>
+                    <%= link_to "Check Forms", forms_path, class: "btn btn-outline" %>
+
+                  <% elsif notification.message.include?("Reminder of the workshop happening today at 12h") %>
+                    <%= link_to "Join here", "https://zaf01.safelinks.protection.outlook.com/ap/t-59584e83/?url=https%3A%2F%2Fteams.microsoft.com%2Fl%2Fmeetup-join%2F19%253ameeting_OGY2NWI0MjAtMGE2Yi00ZjFiLTk3MmUtNDkwNGQyZTkxODIz%2540thread.v2%2F0%3Fcontext%3D%257b%2522Tid%2522%253a%25224ded4bb1-6bff-42b3-aed7-6a36a503bf7a%2522%252c%2522Oid%2522%253a%2522faa9ddf3-136e-4128-b0cc-7cb3a0a79ca1%2522%257d&data=05%7C02%7Cluis%40bravegenerationacademy.com%7C3849e219e4dd42a85de108dd7284d879%7C1ac2d08dbbbe4e3c962288fbe8ac9830%7C0%7C0%7C638792637075967615%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=bDzMA%2F6NNu7iA%2F%2FUDfo5C%2FMJjwVXxE9kT0TZTreHHSQ%3D&reserved=0", class: "btn btn-outline", target: "_blank" %>
+
+                  <% elsif notification.message.include?("register and pay") %>
+                    <%= link_to "Register and pay here!", "https://donorbox.org/events/745324", class: "btn btn-outline", target: "_blank"  %>
+
+                  <% elsif notification.message.include?("For more detailed information, you can take a look at this document" ) %>
+                    <%= link_to "Check here document", "https://edubgabravegeneration-my.sharepoint.com/:w:/g/personal/luis_bravegenerationacademy_com/EX5rW1krkmZDjfYQFpAOaUkBeA4IKx3kvlo9zhLLaQ2pPw?e=x8xpTf&isSPOFile=1&ovuser=1ac2d08d-bbbe-4e3c-9622-88fbe8ac9830%2Cfrancisco%40bravegenerationacademy.com&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI1MC8yNTAzMDIwMTAxMCIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D", class: "btn btn-outline", target: "_blank" %>
+
+                  <% elsif notification.message.include?("has updated the weekly goals") %>
+                    <% if (match_data = notification.message.match(/Your learner (.*?) has updated the weekly goals/)) %>
+                        <% learner_name = match_data[1] %>
+                        <% learner = User.find_by(full_name: learner_name) %>
+                        <% if learner %>
+                            <div data-controller="notification" data-notification-id-value="<%= notification.id %>">
+                                <%= link_to "Check Weekly Goals",
+                                    learner_profile_path(learner, active_tab: 'weekly'),
+                                    class: "btn btn-outline",
+                                    data: {
+                                        turbo: false,
+                                        action: "notification#markAsReadAndNavigate"
+                                    } %>
+                            </div>
+                        <% end %>
+                    <% end %>
+
+                  <% elsif notification.message.include?("has updated the kdas") %>
+                    <% if (match_data = notification.message.match(/Your learner (.*?) has updated the kdas/)) %>
+                        <% learner_name = match_data[1] %>
+                        <% learner = User.find_by(full_name: learner_name) %>
+                        <% if learner %>
+                            <div data-controller="notification" data-notification-id-value="<%= notification.id %>">
+                                <%= link_to "Check KDAs",
+                                    learner_profile_path(learner, active_tab: 'kda'),
+                                    class: "btn btn-outline",
+                                    data: {
+                                        turbo: false,
+                                        action: "notification#markAsReadAndNavigate"
+                                    } %>
+                            </div>
+                        <% end %>
+                    <% end %>
+
+                  <% end %>
+
+                </div>
+              </div>
             <% end %>
-
-
-            <% if notification_type == "error" && (notification.message.include?("timeline") || notification.message.include?("update your")) %>
-              <% timeline_name = notification.message.match(/timeline '(.*?)'|your (.*?) timeline/)[1] || notification.message.match(/your (.*?) timeline/)[1] rescue nil %>
-              <% timeline = timeline_name ? current_user.timelines.joins(:subject).find_by(subjects: { name: timeline_name }) : nil %>
-
-              <% if timeline && !timeline.hidden %>
-                <%= link_to "Update Timeline", edit_timeline_path(timeline.id), class: "btn btn-outline" %>
-              <% end %>
-
-            <% elsif notification_type == "warning" && notification.message.include?("please let your Learning Coach know") %>
-              <% if @lcs_emails.present? %>
-                <%= link_to "Message LC on Teams", "msteams:/l/chat/0/0?users=#{@lcs_emails.join(',')}", class: "btn btn-outline" %>
-              <% end %>
-
-            <% elsif notification.message.include?("please message Luís Brito e Faro") %>
-              <%= link_to "Message Luis", "msteams:/l/chat/0/0?users=luis@bravegenerationacademy.com", class: "btn btn-outline" %>
-
-            <% elsif notification.message.include?("You have new forms to fill") %>
-              <%= link_to "Check Forms", forms_path, class: "btn btn-outline" %>
-
-            <% elsif notification.message.include?("Reminder of the workshop happening today at 12h") %>
-              <%= link_to "Join here", "https://zaf01.safelinks.protection.outlook.com/ap/t-59584e83/?url=https%3A%2F%2Fteams.microsoft.com%2Fl%2Fmeetup-join%2F19%253ameeting_OGY2NWI0MjAtMGE2Yi00ZjFiLTk3MmUtNDkwNGQyZTkxODIz%2540thread.v2%2F0%3Fcontext%3D%257b%2522Tid%2522%253a%25224ded4bb1-6bff-42b3-aed7-6a36a503bf7a%2522%252c%2522Oid%2522%253a%2522faa9ddf3-136e-4128-b0cc-7cb3a0a79ca1%2522%257d&data=05%7C02%7Cluis%40bravegenerationacademy.com%7C3849e219e4dd42a85de108dd7284d879%7C1ac2d08dbbbe4e3c962288fbe8ac9830%7C0%7C0%7C638792637075967615%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=bDzMA%2F6NNu7iA%2F%2FUDfo5C%2FMJjwVXxE9kT0TZTreHHSQ%3D&reserved=0", class: "btn btn-outline", target: "_blank" %>
-
-            <% elsif notification.message.include?("register and pay") %>
-              <%= link_to "Register and pay here!", "https://donorbox.org/events/745324", class: "btn btn-outline", target: "_blank"  %>
-
-            <% elsif notification.message.include?("For more detailed information, you can take a look at this document" ) %>
-              <%= link_to "Check here document", "https://edubgabravegeneration-my.sharepoint.com/:w:/g/personal/luis_bravegenerationacademy_com/EX5rW1krkmZDjfYQFpAOaUkBeA4IKx3kvlo9zhLLaQ2pPw?e=x8xpTf&isSPOFile=1&ovuser=1ac2d08d-bbbe-4e3c-9622-88fbe8ac9830%2Cfrancisco%40bravegenerationacademy.com&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI1MC8yNTAzMDIwMTAxMCIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D", class: "btn btn-outline", target: "_blank" %>
-            <% end %>
-
           </div>
         </div>
       <% end %>
     </div>
+
   <% else %>
     <div class="empty-state">
       <p>No notifications at this time.</p>
     </div>
   <% end %>
+  <br>
 </div>
 
 <!-- Add this CSS to your stylesheet -->
 <style>
   .notifications-container {
-    max-width: 800px;
+    max-width: 80%;
     margin: 0 auto;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    overflow: hidden;
   }
 
   .notifications-header {
@@ -114,19 +168,22 @@
 
   .notification-item.warning {
     border-left: 4px solid #ff9800;
+    background-color: white;
   }
 
   .notification-item.error {
     border-left: 4px solid #f44336;
+    background-color: white;
   }
 
   .notification-item.info {
     border-left: 4px solid #2196f3;
+    background-color: white;
   }
 
   .notification-item.resolved {
     background-color: #f9f9f9;
-    opacity: 0.7;
+    opacity: 0.5;
   }
 
   .notification-content {
@@ -175,5 +232,40 @@
     padding: 40px 20px;
     text-align: center;
     color: #888;
+  }
+
+  .notification-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #eee;
+  }
+
+  .btn-outline-primary {
+    color: #4a6cf7;
+    border: 1px solid #4a6cf7;
+    background-color: transparent;
+    transition: all 0.2s ease;
+  }
+
+  .btn-outline-primary:hover {
+    background-color: #4a6cf7;
+    color: white;
+  }
+
+  .month-section {
+    border: 2px solid #eee;
+    margin: 20px;
+  }
+
+  .month-header {
+    background-color:rgb(212, 240, 0);
+    padding: 15px 20px;
+    border: 1px solid #eee;
+  }
+
+  .month-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: 600;
   }
 </style>

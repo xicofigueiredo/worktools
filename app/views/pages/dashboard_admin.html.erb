@@ -25,7 +25,7 @@
     </div>
   <% end %>
   <% @hubs.each do |hub_data| %>
-    <h2><%= hub_data[:hub].name.capitalize %></h2>
+    <h2><%= hub_data[:hub].name.capitalize %></h2>Hub_id: <%= hub_data[:hub].id %>
     <% hub_data[:learners].each_slice(3) do |users_slice| %>
       <div class="row mb-4">
         <% users_slice.each do |user| %>

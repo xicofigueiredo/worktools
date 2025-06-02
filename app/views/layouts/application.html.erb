@@ -4,19 +4,38 @@
     <% current_user ? name = current_user.role.capitalize + "'s " : '' %>
     <title><%= name %>Worktools</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <!-- BUG: Trix problem Issue Open https://github.com/basecamp/trix/issues/1182 -->
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Worktools">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-touch-fullscreen" content="yes">
+
+    <!-- PWA Icons -->
+     <!-- <link rel="apple-touch-icon" sizes="180x180" href="<%= asset_path("icons100.png") %>"> -->
+     <!-- <link rel="apple-touch-icon" sizes="152x152" href="<%= asset_path("icons100.png") %>"> -->
+     <!-- <link rel="apple-touch-icon" sizes="120x120" href="<%= asset_path("icons100.png") %>"> -->
+     <!-- <link rel="apple-touch-icon" href="<%= asset_path("icons100.png") %>"> %> -->
+     <!-- <link rel="icon" type="image/png" sizes="32x32" href="<%= asset_path("icons32.png") %>"> -->
+   <!-- <link rel="icon" type="image/png" sizes="16x16" href="<%= asset_path("icons16.png") %>"> -->
+
+    <!-- PWA Manifest -->
+     <!-- <link rel="manifest" href="/pwa/manifest.json"> %> -->
+
+    <!-- Rest of your head content -->
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
     <script type="text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
-    <link rel="apple-touch-icon" sizes="180x180" href="<%= asset_path("icons100.png") %>">
-    <link rel="icon" type="image/png" sizes="32x32" href="<%= asset_path("icons32.png") %>">
-    <link rel="icon" type="image/png" sizes="16x16" href="<%= asset_path("icons16.png") %>">
   </head>
 
   <body>
@@ -42,15 +61,27 @@
       <br>
       <% if @unread_notifications.present? && @unread_notifications.any? %>
         <div class="alert alert-warning alert-dismissible fade show" style="margin-top: 10px;"role="alert">
-          <h5>You have <%= @unread_notifications.size %> unresolved notification(s):</h5>
-          <ul>
-            <% @unread_notifications.each do |notification| %>
-              <li>
-                <%= notification.message %>
-                <small class="text-muted">(<%= time_ago_in_words(notification.created_at) %> ago)</small>
-              </li>
-            <% end %>
-          </ul>
+          <% if current_user.role == "lc" %>
+            <h5>You have <%= @unread_notifications.size %> unresolved notification(s)!</h5>
+            <ul>
+              <% @unread_notifications.select { |n| n.created_at >= 2.minutes.ago }.each do |notification| %>
+                <li>
+                  <%= notification.message %>
+                  <small class="text-muted">(<%= time_ago_in_words(notification.created_at) %> ago)</small>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <h5>You have <%= @unread_notifications.size %> unresolved notification(s):</h5>
+            <ul>
+              <% @unread_notifications.each do |notification| %>
+                <li>
+                  <%= notification.message %>
+                  <small class="text-muted">(<%= time_ago_in_words(notification.created_at) %> ago)</small>
+                </li>
+              <% end %>
+            </ul>
+          <% end %>
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       <% end %>

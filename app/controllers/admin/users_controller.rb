@@ -3,6 +3,7 @@ class Admin::UsersController < ApplicationController
   before_action :require_admin
 
   def index
+    @role = current_user.role
     @hubs = Hub.all
 
     @users = User.all
@@ -13,7 +14,7 @@ class Admin::UsersController < ApplicationController
     # Filter by Main Hub:
     if params[:main_hub_id].present?
       # Select only users that have a join record marked main for the hub with the given id.
-      @users = @users.joins(:users_hubs).where(users_hubs: { hub_id: params[:main_hub_id], main: true })
+      @users = @users.joins(:users_hubs).where(users_hubs: { hub_id: params[:main_hub_id] })
     end
 
     # Filter by Level (you could use a LIKE search if levels are free-form text)
@@ -54,7 +55,7 @@ class Admin::UsersController < ApplicationController
   def update
     @user = User.find(params[:id])
 
-    # Extract hub_ids and main_hub_id from the parameters and remove them so they’re not mass-assigned.
+    # Extract hub_ids and main_hub_id from the parameters and remove them so they're not mass-assigned.
     hub_ids = (params[:user].delete(:hub_ids) || []).reject(&:blank?)
     main_hub_id = params[:user].delete(:main_hub_id)
 
@@ -63,25 +64,43 @@ class Admin::UsersController < ApplicationController
     end
 
     if @user.update(user_params)
-      # Wrap the association update in a transaction.
-      ActiveRecord::Base.transaction do
-        # Destroy all existing hub associations.
-        @user.users_hubs.destroy_all
+      # Collect the filters from params
+      filters = {
+        role: params[:role],
+        main_hub_id: params[:main_hub_id],
+        level: params[:level],
+        active: params[:active]
+      }.compact # removes nil values
 
-        # For each hub_id submitted, create a new join record with the main flag set correctly.
-        hub_ids.each do |hub_id|
-          # Convert both IDs to strings for reliable comparison.
-          is_main = (hub_id.to_s == main_hub_id.to_s)
-          @user.users_hubs.create!(hub_id: hub_id, main: is_main)
-        end
-      end
-      redirect_to admin_users_path, notice: "User updated successfully"
+      redirect_back fallback_location: admin_users_path(filters), notice: "User updated successfully"
     else
       render :edit
     end
   end
 
+  def update_hubs
+    @user = User.find(params[:id])
 
+    hub_ids = params[:hub_ids] || []
+    main_hub_id = params[:main_hub_id]
+
+    if hub_ids.size == 1
+      main_hub_id = hub_ids.first
+    end
+
+    ActiveRecord::Base.transaction do
+      @user.users_hubs.destroy_all
+
+      hub_ids.each do |hub_id|
+        is_main = (hub_id.to_s == main_hub_id.to_s)
+        @user.users_hubs.create!(hub_id: hub_id, main: is_main)
+      end
+    end
+
+    head :ok
+  rescue ActiveRecord::RecordInvalid
+    head :unprocessable_entity
+  end
 
   private
 

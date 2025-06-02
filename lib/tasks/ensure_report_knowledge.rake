@@ -1,5 +1,5 @@
 namespace :db do
-  desc "Ensure ReportKnowledge exists for Knowledge entries in Sprint 12"
+  desc "Ensure ReportKnowledge exists for Knowledge entries in Sprint 13"
   task ensure_report_knowledges: :environment do
     created_count = 0
     skipped_count = 0
@@ -7,8 +7,8 @@ namespace :db do
 
 
     User.where(role: "learner").find_each do |learner|
-      report = learner.reports.find_by(sprint: 12)
-      sprint_goal = learner.sprint_goals.find_by(sprint: 12)
+      report = learner.reports.find_by(sprint: 13)
+      sprint_goal = learner.sprint_goals.find_by(sprint: 13)
 
       # Skip if no report or sprint_goal
       next unless report && sprint_goal
@@ -21,7 +21,7 @@ namespace :db do
         if report_knowledge
           # Skip if ReportKnowledge already exists
           skipped_count += 1
-          puts "Skipped: ReportKnowledge already exists for Knowledge ID: #{knowledge.id}"
+          # puts "Skipped: ReportKnowledge already exists for Knowledge ID: #{knowledge.id}"
         else
           if subjects.key?(knowledge.subject_name)
             personalized = false
@@ -44,6 +44,7 @@ namespace :db do
             progress: progress,
             difference: difference
           )
+
           created_count += 1
           puts "Created ReportKnowledge for Knowledge ID: #{knowledge.id}"
           rescue => e

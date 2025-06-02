@@ -2,7 +2,7 @@ class Timeline < ApplicationRecord
   belongs_to :user
   belongs_to :subject, optional: true
 
-  after_create :create_user_topics
+  # after_create :create_user_topics
   after_save :clear_monthly_goals_cache, if: :dates_changed?
   before_save :calculate_difference, if: :progress_and_expected_progress_present?
 
@@ -22,11 +22,11 @@ class Timeline < ApplicationRecord
   validate :dates_cannot_be_holidays
   validate :end_date_before_expected
 
-  def create_user_topics
-    subject.topics.order(:order).find_each do |topic|
-      user.user_topics.create!(topic:, done: false)
-    end
-  end
+  # def create_user_topics
+  #   subject.topics.order(:order).find_each do |topic|
+  #     user.user_topics.create!(topic:, done: false)
+  #   end
+  # end
 
   def start_date_before_end_date
     return unless start_date && end_date && start_date >= end_date

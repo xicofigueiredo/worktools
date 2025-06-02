@@ -10,7 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
+<<<<<<< HEAD
 ActiveRecord::Schema[7.0].define(version: 2025_06_02_161101) do
+=======
+ActiveRecord::Schema[7.0].define(version: 2025_05_15_134945) do
+>>>>>>> 88cefa797a63dedc5baa074e1d51edcfa8f7cba8
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -74,6 +78,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_02_161101) do
     t.text "plan"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "category"
+    t.string "categories", default: [], array: true
     t.index ["sprint_goal_id"], name: "index_communities_on_sprint_goal_id"
   end
 
@@ -400,14 +406,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_02_161101) do
     t.index ["kda_id"], name: "index_sdls_on_kda_id"
   end
 
-  create_table "settings", force: :cascade do |t|
-    t.boolean "report"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "sprint_id", null: false
-    t.index ["sprint_id"], name: "index_settings_on_sprint_id"
-  end
-
   create_table "skills", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
     t.string "extracurricular"
@@ -416,6 +414,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_02_161101) do
     t.text "plan"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "category"
+    t.string "categories", default: [], array: true
     t.index ["sprint_goal_id"], name: "index_skills_on_sprint_goal_id"
   end
 
@@ -578,6 +578,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_02_161101) do
     t.boolean "main", default: true, null: false
     t.index ["hub_id"], name: "index_users_hubs_on_hub_id"
     t.index ["user_id"], name: "index_users_hubs_on_user_id"
+    t.index ["user_id"], name: "index_users_hubs_on_user_id_main_true", unique: true, where: "(main = true)"
   end
 
   create_table "wednesday_slots", force: :cascade do |t|
@@ -674,7 +675,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_02_161101) do
   add_foreign_key "responses", "form_interrogation_joins"
   add_foreign_key "responses", "users"
   add_foreign_key "sdls", "kdas"
-  add_foreign_key "settings", "sprints"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"

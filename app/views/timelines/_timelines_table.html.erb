@@ -21,7 +21,6 @@
           <% if @timelines.any? %>
             <% total_columns = @has_exam_date ? 9 : 8 %>
             <% @timelines.each do |timeline| %>
-              <%# Compute exam season display if needed %>
               <% exam_season = if timeline.exam_date.present?
                                    case timeline.exam_date.date.month
                                    when 5, 6

@@ -116,6 +116,43 @@
     </div>
 </div>
 
+<script>
+  function activateTab() {
+    // Get the active tab from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('active_tab');
+
+    if (activeTab) {
+      // Remove active class from all tabs
+      document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
+      });
+
+      // Remove active class from all tab panes
+      document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('show', 'active');
+      });
+
+      // Activate the specified tab
+      const targetTab = document.querySelector(`#${activeTab}-tab`);
+      const targetPane = document.querySelector(`#${activeTab}`);
+
+      if (targetTab && targetPane) {
+        targetTab.classList.add('active');
+        targetTab.setAttribute('aria-selected', 'true');
+        targetPane.classList.add('show', 'active');
+      }
+    }
+  }
+
+  // Run on initial page load
+  document.addEventListener('DOMContentLoaded', activateTab);
+
+  // Run after Turbo navigation
+  document.addEventListener('turbo:load', activateTab);
+</script>
+
 <style>
   .nav-tabs .nav-link.active {
     color: #000 !important;

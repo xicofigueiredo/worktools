@@ -20,8 +20,19 @@
           <div>
             <p>Create and manage your timelines here:</p>
           </div>
-          <div>
-            <%= link_to "New Timeline", new_timeline_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
+          <div class="d-flex ">
+            <% if @boolean  %>
+              <%= button_to "Sync With Moodle", sync_moodle_timelines_path,
+                    method: :post,
+                    remote: true,
+                    form: { "data-turbo-frame": "_top" },
+                    class: "btn btn-primary",
+                    style: 'border-radius: 10px;',
+                    id: "sync-moodle-btn" %>
+              <span id="sync-moodle-status"></span>
+            <% else %>
+              <%= link_to "New Timeline", new_timeline_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
+            <% end %>
             <% if @archived %>
               <%= link_to "Archive", archived_timelines_path, class: "btn btn-secondary ms-2", style: 'border-radius: 10px;' %>
             <% end %>
@@ -30,6 +41,7 @@
       </div>
       <div class="mb-5">
         <% if @has_timeline %>
+          <%# <%= render partial: 'timelines/moodle_timelines_table' %>
           <%= render partial: 'timelines/timelines_table' %>
         <% end %>
       </div>

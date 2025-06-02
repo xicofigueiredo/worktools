@@ -176,31 +176,11 @@ document.addEventListener("turbo:load", function() {
 
         // Insert a loading message into timeline details.
         document.getElementById("timeline-details").innerHTML =
-          '<div class="text-center my-3"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i> Loading...</div>';
+          '<div class="text-center my-3"><i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i> Updating...</div>';
 
-        // Fetch the timeline details from the URL in the data-href attribute.
-        fetch(row.dataset.href, {
-          headers: { "Accept": "text/html" }
-        })
-          .then(response => response.text())
-          .then(html => {
-            document.getElementById("timeline-details").innerHTML = html;
-            // Optionally, scroll the details into view.
-            // document.getElementById("timeline-details").scrollIntoView({ behavior: "smooth" });
-          })
-          .catch(error => {
-            console.error("Error loading timeline details:", error);
-            document.getElementById("timeline-details").innerHTML =
-              '<div class="text-center text-danger">Error loading timeline details.</div>';
-          });
-
-        // Now trigger the Moodle API update.
-        // Retrieve the timeline ID from a data attribute (make sure your row has data-timeline-id attribute).
+        // First, trigger the Moodle API update.
         const timelineId = row.dataset.timelineId;
-        // Retrieve the CSRF token from the meta tag.
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-
-        // Call the endpoint with the CSRF token included in the headers.
         fetch(`/api/update_course_topics?timeline_id=${timelineId}`, {
           method: "POST",
           headers: {
@@ -213,12 +193,30 @@ document.addEventListener("turbo:load", function() {
         .then(data => {
           if (!data.success) {
             console.error("Moodle API update failed:", data.error);
-          } else {
-            console.log("Moodle API update triggered successfully");
+            document.getElementById("timeline-details").innerHTML =
+              '<div class="text-center text-danger">Error updating Moodle topics.</div>';
+            return;
           }
+          // Now fetch the timeline details from the URL in the data-href attribute.
+          fetch(row.dataset.href, {
+            headers: { "Accept": "text/html" }
+          })
+            .then(response => response.text())
+            .then(html => {
+              document.getElementById("timeline-details").innerHTML = html;
+              // Optionally, scroll the details into view.
+              // document.getElementById("timeline-details").scrollIntoView({ behavior: "smooth" });
+            })
+            .catch(error => {
+              console.error("Error loading timeline details:", error);
+              document.getElementById("timeline-details").innerHTML =
+                '<div class="text-center text-danger">Error loading timeline details.</div>';
+            });
         })
         .catch(error => {
           console.error("Error updating Moodle topics:", error);
+          document.getElementById("timeline-details").innerHTML =
+            '<div class="text-center text-danger">Error updating Moodle topics.</div>';
         });
       }
     });

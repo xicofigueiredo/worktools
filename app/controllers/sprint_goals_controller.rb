@@ -190,8 +190,14 @@ class SprintGoalsController < ApplicationController
   def sprint_goal_params
     params.require(:sprint_goal).permit(:name, :start_date, :end_date, :sprint_id,
                                         knowledges_attributes: %i[id difficulties plan _destroy subject_name mock50 mock100 exam_season],
-                                        skills_attributes: %i[id extracurricular smartgoals difficulties plan _destroy],
-                                        communities_attributes: %i[id involved smartgoals difficulties plan _destroy])
+                                        skills_attributes: [
+                                          :id, :extracurricular, :smartgoals, :difficulties, :plan, :_destroy,
+                                          { categories: [] }
+                                        ],
+                                        communities_attributes: [
+                                          :id, :involved, :smartgoals, :difficulties, :plan, :_destroy,
+                                          { categories: [] }
+                                        ])
   end
 
   def current_sprint

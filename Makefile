@@ -17,7 +17,7 @@ seed: ## Seed the database.
 	docker compose run server rails db:seed
 
 sync: ## Sync the application to the server
-	rsync -av -e "ssh" --exclude='.git' --exclude='*.log' --exclude='.tmp' --exclude='tmp' --exclude='data' . worktools_server_new:~/worktools
+	rsync -av -e "ssh" --exclude='node_modules' --exclude='.git' --exclude='*.log' --exclude='.tmp' --exclude='tmp' --exclude='data' . worktools_server_new:~/worktools
 
 connect: ## Connect to the server
 	ssh worktools_server_new

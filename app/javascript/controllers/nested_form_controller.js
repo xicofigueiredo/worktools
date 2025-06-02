@@ -141,6 +141,7 @@ export default class extends Controller {
 
       if (kind === "skills") {
         this.skillsContainerTarget.insertAdjacentHTML("beforeend", content);
+        initializeCategoryMultiselects();
       } else if (kind === "communities") {
         this.communitiesContainerTarget.insertAdjacentHTML(
           "beforeend",
@@ -149,11 +150,11 @@ export default class extends Controller {
       } else if (kind === "knowledges") {
         this.knowledgesContainerTarget.insertAdjacentHTML("beforeend", content);
       }
+
+      this.updateKnowledgeAddBtn();
     } else {
       console.error("Template for", kind, "not found.");
     }
-
-    this.updateKnowledgeAddBtn();
   }
 
   removeRow(event) {

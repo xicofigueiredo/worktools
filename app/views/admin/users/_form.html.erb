@@ -1,5 +1,8 @@
 <div class="modal-body" style="overflow-y: auto; max-height: 70vh;">
-<%= form_with model: @user, url: admin_user_path(@user), local: true, html: { style: "display: flex; flex-direction: column; gap: 16px;" } do |form| %>
+<% if flash.now[:notice] %>
+  <div class="alert alert-success"><%= flash.now[:notice] %></div>
+<% end %>
+<%= form_with model: @user, url: admin_user_path(@user), local: true, data: { turbo: false }, html: { style: "display: flex; flex-direction: column; gap: 16px;" } do |form| %>
     <div style="display: flex; flex-direction: column;">
       <%= form.label :full_name, style: "font-weight: bold; margin-bottom: 4px;" %>
       <%= form.text_field :full_name, class: "form-input" %>
@@ -12,7 +15,7 @@
 
     <div style="display: flex; flex-direction: column;">
       <%= form.label :role, style: "font-weight: bold; margin-bottom: 4px;" %>
-      <%= form.select :role, %w[learner lc cm guardian], { include_blank: true }, class: "form-input" %>
+      <%= form.select :role, %w[learner lc cm guardian admin], { include_blank: true }, class: "form-input" %>
     </div>
 
     <% if @is_learner || @is_admin %>
@@ -38,32 +41,42 @@
     <% end %>
 
     <% if @is_learner || @is_admin || @is_lc %>
-      <div style="display: flex; flex-direction: column;">
-        <%= form.label :hubs, "Hubs", class: "form-label fw-bold" %>
-        <div class="d-flex flex-wrap gap-2">
-          <% @hubs.all.each do |hub| %>
-            <div class="form-check" style="font-size: 10px;">
-              <%= check_box_tag "user[hub_ids][]",
-                    hub.id,
-                    (@user.hubs.present? ? @user.hubs.map(&:id).include?(hub.id) : false),
-                    id: "user_hubs_#{hub.id}",
-                    class: "form-check-input" %>
-              <%= label_tag "user_hubs_#{hub.id}",
-                    hub.name,
-                    class: "form-check-label" %>
-            </div>
-          <% end %>
+      <div data-controller="hub-associations"
+           data-hub-associations-user-id-value="<%= @user.id %>"
+           data-hub-associations-main-hub-id-value="<%= @user.users_hubs.find_by(main: true)&.hub&.id %>">
+        <div style="display: flex; flex-direction: column;">
+          <%= form.label :hubs, "Hubs", class: "form-label fw-bold" %>
+          <div class="d-flex flex-wrap gap-2" data-hub-associations-target="hubList">
+            <% @hubs.all.each do |hub| %>
+              <div class="form-check" style="font-size: 10px;">
+                <%= check_box_tag "user[hub_ids][]",
+                      hub.id,
+                      (@user.hubs.present? ? @user.hubs.map(&:id).include?(hub.id) : false),
+                      id: "user_hubs_#{hub.id}",
+                      class: "form-check-input",
+                      data: {
+                        hub_associations_target: "hubCheckbox",
+                        action: "change->hub-associations#hubCheckboxChanged"
+                      } %>
+                <%= label_tag "user_hubs_#{hub.id}",
+                      hub.name,
+                      class: "form-check-label" %>
+              </div>
+            <% end %>
+          </div>
         </div>
-      </div>
-      <% if @user.hubs.any? %>
         <div style="display: flex; flex-direction: column; margin-top: 16px;">
           <%= form.label :main_hub_id, "Main Hub", class: "form-label fw-bold" %>
           <%= form.select :main_hub_id,
                 options_from_collection_for_select(@user.hubs, "id", "name", (@user.users_hubs.find_by(main: true)&.hub&.id)),
                 { prompt: "Select main hub" },
-                class: "form-control" %>
+                class: "form-control",
+                data: {
+                  hub_associations_target: "mainHubSelect",
+                  action: "change->hub-associations#mainHubChanged"
+                } %>
         </div>
-      <% end %>
+      </div>
     <% end %>
 
     <% if @is_guardian %>
