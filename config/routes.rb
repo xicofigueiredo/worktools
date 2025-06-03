@@ -69,7 +69,7 @@ Rails.application.routes.draw do
         patch :toggle_archive
         get :personalized_edit
         patch :personalized_update
-
+        get :moodle_show
       end
     end
 

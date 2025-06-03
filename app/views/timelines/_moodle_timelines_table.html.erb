@@ -153,7 +153,7 @@ document.addEventListener("turbo:before-cache", function() {
 
 // Use Turbo's load event (or DOMContentLoaded if you're not using Turbo)
 document.addEventListener("turbo:load", function() {
-  // Attach an event listener using delegation on the table's <tbody> (adjust selector as needed).
+  // Attach an event listener using delegation on the table's <tbody>
   const tableBody = document.querySelector("table tbody");
   if (tableBody) {
     tableBody.addEventListener("click", function(e) {
@@ -197,21 +197,19 @@ document.addEventListener("turbo:load", function() {
               '<div class="text-center text-danger">Error updating Moodle topics.</div>';
             return;
           }
-          // Now fetch the timeline details from the URL in the data-href attribute.
-          fetch(row.dataset.href, {
+          // Now fetch the timeline details using the moodle_show endpoint
+          fetch(`/timelines/${timelineId}/moodle_show`, {
             headers: { "Accept": "text/html" }
           })
-            .then(response => response.text())
-            .then(html => {
-              document.getElementById("timeline-details").innerHTML = html;
-              // Optionally, scroll the details into view.
-              // document.getElementById("timeline-details").scrollIntoView({ behavior: "smooth" });
-            })
-            .catch(error => {
-              console.error("Error loading timeline details:", error);
-              document.getElementById("timeline-details").innerHTML =
-                '<div class="text-center text-danger">Error loading timeline details.</div>';
-            });
+          .then(response => response.text())
+          .then(html => {
+            document.getElementById("timeline-details").innerHTML = html;
+          })
+          .catch(error => {
+            console.error("Error loading timeline details:", error);
+            document.getElementById("timeline-details").innerHTML =
+              '<div class="text-center text-danger">Error loading timeline details.</div>';
+          });
         })
         .catch(error => {
           console.error("Error updating Moodle topics:", error);

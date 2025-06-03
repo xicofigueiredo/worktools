@@ -50,14 +50,14 @@ class TimelinesController < ApplicationController
   def show
     @timeline = Timeline.find(params[:id])
     @learner = User.find(params[:learner_id]) if params[:learner_id].present?
-    # if current_user.hub_ids.include?(147)
-    if false
-      render partial: "moodle_timeline_detail", locals: { timeline: @timeline }, layout: false
-    else
-      render partial: "timeline_detail", locals: { timeline: @timeline }, layout: false
-    end
+    render partial: "timeline_detail", locals: { timeline: @timeline }, layout: false
   end
 
+  def moodle_show
+    @timeline = Timeline.find(params[:id])
+    @learner = User.find(params[:learner_id]) if params[:learner_id].present?
+    render partial: "moodle_timeline_detail", locals: { timeline: @timeline }, layout: false
+  end
 
   def new
     @timeline = Timeline.new
