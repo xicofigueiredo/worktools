@@ -8,9 +8,14 @@
           <tr>
             <th><%= @timeline.subject.category.include?("lws") ? 'Project' : 'Unit' %></th>
             <th>Topic</th>
+            <th>Attempts</th>
+            <th>Submission</th>
+            <th>Evaluation</th>
+            <th>Grade</th>
+            <th>Completion</th>
             <% unless @timeline.subject.category.include?("lws") %>
               <th>Hours</th>
-              <th width="120px">Date</th>
+              <th width="120px">Deadline</th>
             <% end %>
           </tr>
         </thead>
@@ -36,6 +41,11 @@
               <td style="background-color: <%= background_color %>;"><%= moodle_topic.name %></td>
               <% if moodle_topic && moodle_topic.deadline.present? %>
                 <% unless @timeline.subject.category.include?("lws") %>
+                  <td style="background-color: <%= background_color %>;"><%= moodle_topic.number_attempts %></td>
+                  <td style="background-color: <%= background_color %>;"><%= moodle_topic.submission_date %></td>
+                  <td style="background-color: <%= background_color %>;"><%= moodle_topic.evaluation_date %></td>
+                  <td style="background-color: <%= background_color %>;"><%= moodle_topic.grade %></td>
+                  <td style="background-color: <%= background_color %>;"><%= moodle_topic.completion_date %></td>
                   <td style="background-color: <%= background_color %>;"><%= moodle_topic.time %></td>
                   <td style="background-color: <%= background_color %>;"><%= moodle_topic.deadline.strftime('%d-%m-%Y') %></td>
                 <% end %>

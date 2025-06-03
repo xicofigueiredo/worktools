@@ -63,7 +63,7 @@ Rails.application.routes.draw do
         post :personalized_create
         patch :update_colors
         get :archived
-        get :sync_moodle
+        post :sync_moodle
       end
       member do
         patch :toggle_archive
@@ -150,4 +150,5 @@ Rails.application.routes.draw do
       resources :notes, except: [:show]
     end
     get 'moodle_index', to: 'timelines#moodle_index', as: :moodle_index
+
 end
