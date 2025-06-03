@@ -1,0 +1,80 @@
+<div class="container mt-3">
+  <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="timelines-tab" data-bs-toggle="tab" data-bs-target="#timelines" type="button" role="tab" aria-controls="timelines" aria-selected="true">
+        <h2>Timelines</h2>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="holidays-tab" data-bs-toggle="tab" data-bs-target="#holidays" type="button" role="tab" aria-controls="holidays" aria-selected="false">
+        <h2>Holidays</h2>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content mt-3" id="dashboardTabsContent">
+    <!-- Timelines Tab -->
+    <div class="tab-pane fade show active" id="timelines" role="tabpanel" aria-labelledby="timelines-tab">
+      <div id="timelines-section" class="mb-5">
+        <div class="d-flex justify-content-between">
+          <div>
+            <p>Create and manage your timelines here:</p>
+          </div>
+          <div class="d-flex ">
+            <%= button_to "Sync With Moodle", sync_moodle_timelines_path,
+                  method: :post,
+                  remote: true,
+                  form: { "data-turbo-frame": "_top" },
+                  class: "btn btn-primary",
+                  style: 'border-radius: 10px;',
+                  id: "sync-moodle-btn" %>
+            <span id="sync-moodle-status"></span>
+            <% if @archived %>
+              <%= link_to "Archive", archived_timelines_path, class: "btn btn-secondary ms-2", style: 'border-radius: 10px;' %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      <div class="mb-5">
+        <% if @has_timeline %>
+           <%= render partial: 'timelines/moodle_timelines_table' %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Holidays Tab -->
+    <div class="tab-pane fade" id="holidays" role="tabpanel" aria-labelledby="holidays-tab">
+      <div id="holidays-section" class="mb-5">
+        <div class="d-flex justify-content-between mb-5">
+          <div>
+            <p>Create and manage your holidays here:</p>
+          </div>
+          <div>
+            <%= link_to "New Holiday", new_holiday_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
+            <%= link_to "Archive", archived_timelines_path, class: "btn btn-secondary ms-2", style: 'border-radius: 10px;' %>
+          </div>
+        </div>
+        <div id="holidays-content" class="row row-cols-4">
+          <% @holidays.each do |holiday| %>
+            <div class="col mb-3">
+              <div class="card shadow-sm" style="border-radius: 10px;">
+                <div class="p-3">
+                  <%= render partial: 'holiday', locals: { holiday: holiday } %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .nav-tabs .nav-link.active {
+  color: #000 !important;
+}
+
+.nav-tabs .nav-link {
+  color: lightgrey !important;
+}
+</style>

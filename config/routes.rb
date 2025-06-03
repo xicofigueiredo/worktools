@@ -69,6 +69,7 @@ Rails.application.routes.draw do
         patch :toggle_archive
         get :personalized_edit
         patch :personalized_update
+
       end
     end
 
@@ -148,7 +149,5 @@ Rails.application.routes.draw do
     resources :users, only: [] do
       resources :notes, except: [:show]
     end
-
-    post 'timelines/sync_moodle', to: 'timelines#sync_moodle', as: :sync_moodle_timelines
-
+    get 'moodle_index', to: 'timelines#moodle_index', as: :moodle_index
 end

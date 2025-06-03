@@ -1,4 +1,57 @@
 <!-- Accordion content OPEN by default -->
+<% if current_user.hub_ids.include?(147) %>
+<div id="collapse<%= @timeline.id %>" class="accordion-collapse collapse show"
+     aria-labelledby="heading<%= @timeline.id %>" data-bs-parent="#parentAccordion">
+  <div class="accordion-body p-2">
+    <div class="card shadow-sm px-2" style="border-radius: 10px;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th><%= @timeline.subject.category.include?("lws") ? 'Project' : 'Unit' %></th>
+            <th>Topic</th>
+            <% unless @timeline.subject.category.include?("lws") %>
+              <th>Hours</th>
+              <th width="120px">Date</th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% previous_unit = nil %>
+          <% @timeline.moodle_topics.order(:id).each do |moodle_topic| %>
+            <% background_color = if moodle_topic && !moodle_topic.done && moodle_topic.deadline && moodle_topic.deadline < Date.today && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)
+                                    '#ff193499'
+                                  elsif moodle_topic && !moodle_topic.done && moodle_topic.deadline && Date.today.monday? && moodle_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)
+                                    'lightgrey'
+                                  elsif moodle_topic && moodle_topic.done
+                                    '#00ce00a6'
+                                  else
+                                    'transparent'
+                                  end %>
+            <tr>
+              <td style="background-color: <%= background_color %>;">
+                <% if moodle_topic.unit != previous_unit %>
+                  <%= moodle_topic.unit %>
+                  <% previous_unit = moodle_topic.unit %>
+                <% end %>
+              </td>
+              <td style="background-color: <%= background_color %>;"><%= moodle_topic.name %></td>
+              <% if moodle_topic && moodle_topic.deadline.present? %>
+                <% unless @timeline.subject.category.include?("lws") %>
+                  <td style="background-color: <%= background_color %>;"><%= moodle_topic.time %></td>
+                  <td style="background-color: <%= background_color %>;"><%= moodle_topic.deadline.strftime('%d-%m-%Y') %></td>
+                <% end %>
+              <% else %>
+                <td style="background-color: <%= background_color %>;">Update Dates</td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<% else %>
 <div id="collapse<%= @timeline.id %>" class="accordion-collapse collapse show"
      aria-labelledby="heading<%= @timeline.id %>" data-bs-parent="#parentAccordion">
   <div class="accordion-body p-2">
@@ -68,3 +121,4 @@
     </div>
   </div>
 </div>
+<% end %>

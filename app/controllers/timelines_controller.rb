@@ -8,7 +8,7 @@ class TimelinesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_timeline, only: %i[show edit update destroy archive]
 
-  def findex
+  def index
     @learner = current_user
     @archived = @learner.timelines.exists?(hidden: true)
 
@@ -28,10 +28,7 @@ class TimelinesController < ApplicationController
     @has_timeline = @learner.timelines.where(hidden: false).any?
   end
 
-  def index
-    # @boolean = current_user.hub_ids.include?(147)
-    @boolean = false
-    if @boolean
+  def moodle_index
       @learner = current_user
       @archived = @learner.timelines.exists?(hidden: true)
       # Eager load the subject and its topics (avoid unnecessary eager loading)
@@ -47,25 +44,7 @@ class TimelinesController < ApplicationController
 
       @has_exam_date  = @timelines.any? { |timeline| timeline.exam_date_id.present? }
       @has_timeline = @learner.timelines.where(hidden: false).any?
-    else
-      @learner = current_user
-      @archived = @learner.timelines.exists?(hidden: true)
 
-      weekly_percentages = []
-
-      @timelines = @learner.timelines_sorted_by_balance
-                               .where(hidden: false)
-                               .includes(subject: :topics)
-
-      @average_weekly_percentage = calc_array_average(weekly_percentages).round(1)
-      calculate_progress_and_balance(@timelines)
-      # @monthly_goals = calculate_monthly_goals(@timelines)
-
-      @holidays = @learner.holidays.where("end_date >= ?", 4.months.ago)
-
-      @has_exam_date  = @timelines.any? { |timeline| timeline.exam_date_id.present? }
-      @has_timeline = @learner.timelines.where(hidden: false).any?
-    end
   end
 
   def show
@@ -234,46 +213,38 @@ class TimelinesController < ApplicationController
     @user_topics_by_topic = @learner.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
   end
 
-  # def sync_moodle
-  #   MoodleApiService.new.create_timelines_for_learner(current_user.email)
-  #   respond_to do |format|
-  #     format.json { render json: { success: true } }
-  #     format.html { redirect_to timelines_path, notice: "Moodle timelines synced!" }
-  #   end
-
-  #   if true
-
-  #     current_user.timelines.each do |timeline|
-  #       subject_names << timeline.moodle_topics.map(&:unit)
-  #       combined_names = [timeline.subject.name, timeline.moodle_topics.map(&:unit)]
-  #     end
-
-  #     @timeline = Timeline.create(user: current_user,
-  #      subject_id: 666,
-  #      personalized_name: "Lower Secondary Y7",
-  #      start_date: Date.today,
-  #      end_date: Date.today + 1.year,
-  #      total_time: 100,
-  #      category: "LWS",
-  #      hidden: false)
-
-  #      combined_names.each_with_index do |combined_name, index|
-  #        MoodleTopic.create(user: current_user,
-  #         name: combined_names[1],
-  #         unit: combined_names[0],
-  #         deadline: Date.today + 1.year,
-  #         time: 1,
-  #         timeline_id: @timeline.id,
-  #         order: index + 1
-  #         )
-  #      end
+  def sync_moodle
+    MoodleApiService.new.create_timelines_for_learner(current_user.email)
 
 
+    if false
 
-  #   else
-  #     redirect_to timelines_path, notice: "Moodle timelines synced!"
-  #   end
-  # end
+      current_user.timelines.each do |timeline|
+        subject_names << timeline.moodle_topics.map(&:unit)
+        combined_names = [timeline.subject.name, timeline.moodle_topics.map(&:unit)]
+      end
+
+      @timeline = Timeline.create(user: current_user,
+       subject_id: 666,
+       personalized_name: "Lower Secondary Y7",
+       start_date: Date.today,
+       end_date: Date.today + 1.year,
+       total_time: 100,
+       category: "LWS",
+       hidden: false)
+
+       combined_names.each_with_index do |combined_name, index|
+         MoodleTopic.create(user: current_user,
+          name: combined_names[1],
+          unit: combined_names[0],
+          deadline: Date.today + 1.year,
+          time: 1,
+          timeline_id: @timeline.id,
+          order: index + 1
+          )
+       end
+    end
+  end
 
   private
 
