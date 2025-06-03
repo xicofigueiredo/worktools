@@ -402,14 +402,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_02_161101) do
     t.index ["kda_id"], name: "index_sdls_on_kda_id"
   end
 
-  create_table "settings", force: :cascade do |t|
-    t.boolean "report"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "sprint_id", null: false
-    t.index ["sprint_id"], name: "index_settings_on_sprint_id"
-  end
-
   create_table "skills", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
     t.string "extracurricular"
