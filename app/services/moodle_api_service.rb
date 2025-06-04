@@ -162,42 +162,71 @@ class MoodleApiService
   end
 
   def get_with_ect_activities
+    # Define the category IDs we want to filter by
+    target_categories = [3, 4, 5, 15, 18, 19, 33]
+
     # First, get all courses
     courses = call('core_course_get_courses', {})
 
     if courses.is_a?(Array)
-      puts "\n📊 ECT Statistics for All Courses:"
-      puts "================================="
+      # Filter courses by category ID
+      filtered_courses = courses.select { |course| target_categories.include?(course['categoryid'].to_i) }
+
+      puts "\n📊 ECT Statistics for Selected Categories (#{target_categories.join(', ')}):"
+      puts "================================================================="
+      puts "Found #{filtered_courses.size} courses in selected categories"
 
       total_with_ect = 0
       total_without_ect = 0
 
-      courses.each do |course|
-        course_id = course['id']
-        course_name = course['shortname']
+      # Group courses by category for better organization
+      courses_by_category = filtered_courses.group_by { |course| course['categoryid'] }
 
-        # Get activities for this course using an admin or manager user ID
-        activities = get_course_activities(course_id, 2) # Assuming user ID 2 is admin/manager
+      courses_by_category.each do |category_id, category_courses|
+        puts "\n📚 Category #{category_id}:"
+        puts "------------------------"
 
-        if activities.is_a?(Array)
-          with_ect = activities.count { |activity| activity[:ect].to_i > 0 }
-          without_ect = activities.count { |activity| activity[:ect].to_i == 0 }
+        category_courses.each do |course|
+          course_id = course['id']
+          course_name = course['shortname']
 
-          total_with_ect += with_ect
-          total_without_ect += without_ect
+          # Get activities for this course using an admin or manager user ID
+          activities = get_course_activities(course_id, 2)
 
-          puts "\nCourse: #{course_name} (ID: #{course_id})"
-          puts "- Activities with ECT: #{with_ect}"
-          puts "- Activities without ECT: #{without_ect}"
-          puts "- Total activities: #{activities.length}"
+          if activities.is_a?(Array)
+            with_ect = activities.count { |activity| activity[:ect].to_i > 0 }
+            without_ect = activities.count { |activity| activity[:ect].to_i == 0 }
+
+            total_with_ect += with_ect
+            total_without_ect += without_ect
+
+            puts "\n  Course: #{course_name} (ID: #{course_id})"
+            puts "  - Activities with ECT: #{with_ect}"
+            puts "  - Activities without ECT: #{without_ect}"
+            puts "  - Total activities: #{activities.length}"
+          end
         end
       end
 
       puts "\n📈 Overall Statistics:"
       puts "===================="
+      puts "Total courses analyzed: #{filtered_courses.size}"
       puts "Total activities with ECT: #{total_with_ect}"
       puts "Total activities without ECT: #{total_without_ect}"
       puts "Total activities: #{total_with_ect + total_without_ect}"
+
+      # Category breakdown
+      puts "\n📊 Category Breakdown:"
+      courses_by_category.each do |category_id, category_courses|
+        category_total_activities = category_courses.sum do |course|
+          activities = get_course_activities(course['id'], 2)
+          activities.is_a?(Array) ? activities.length : 0
+        end
+
+        puts "Category #{category_id}:"
+        puts "- Courses: #{category_courses.size}"
+        puts "- Total activities: #{category_total_activities}"
+      end
     else
       puts "Error fetching courses"
     end
@@ -217,8 +246,8 @@ class MoodleApiService
     a = []
     courses = call('core_course_get_courses', {})
     puts "Found #{courses.size} courses."
-    courses.each do |course|
-      a << " #{course['shortname']} #{course['id']}"
+    courses.sort_by { |c| c['categoryid'] }.each do |course|
+      a << " #{course['shortname']} #{course['id']} #{course['categoryid']}"
       # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
     end
     puts a
