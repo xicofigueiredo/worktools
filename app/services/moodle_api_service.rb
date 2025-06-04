@@ -52,6 +52,8 @@ class MoodleApiService
           mock100: activity['mock100']
         }
       end
+
+
     else
       puts "Error fetching completed course activities: #{response}"
       []
@@ -175,6 +177,7 @@ class MoodleApiService
       mt = MoodleTopic.find_by(timeline: timeline, moodle_id: activity[:id])
 
       if mt.nil?
+        # Create new MoodleTopic if it doesn't exist
         mt = MoodleTopic.create!(
           timeline: timeline,
           time: activity[:ect].to_i || 1,
@@ -204,6 +207,7 @@ class MoodleApiService
           completion_data: activity[:completiondata]
         )
       else
+        # Update existing MoodleTopic
         mt.update!(
           time: activity[:ect].to_i || 1,
           name: activity[:name],
@@ -243,6 +247,48 @@ class MoodleApiService
     puts "✅ Updated #{count} Moodle topics for timeline ID #{timeline.id} (Course ID: #{course_id})"
   end
 
+  def get_with_ect_activities
+    # First, get all courses
+    courses = call('core_course_get_courses', {})
+
+    if courses.is_a?(Array)
+      puts "\n📊 ECT Statistics for All Courses:"
+      puts "================================="
+
+      total_with_ect = 0
+      total_without_ect = 0
+
+      courses.each do |course|
+        course_id = course['id']
+        course_name = course['shortname']
+
+        # Get activities for this course using an admin or manager user ID
+        activities = get_course_activities(course_id, 2) # Assuming user ID 2 is admin/manager
+
+        if activities.is_a?(Array)
+          with_ect = activities.count { |activity| activity[:ect].to_i > 0 }
+          without_ect = activities.count { |activity| activity[:ect].to_i == 0 }
+
+          total_with_ect += with_ect
+          total_without_ect += without_ect
+
+          puts "\nCourse: #{course_name} (ID: #{course_id})"
+          puts "- Activities with ECT: #{with_ect}"
+          puts "- Activities without ECT: #{without_ect}"
+          puts "- Total activities: #{activities.length}"
+        end
+      end
+
+      puts "\n📈 Overall Statistics:"
+      puts "===================="
+      puts "Total activities with ECT: #{total_with_ect}"
+      puts "Total activities without ECT: #{total_without_ect}"
+      puts "Total activities: #{total_with_ect + total_without_ect}"
+    else
+      puts "Error fetching courses"
+    end
+  end
+
   # 1) Find a course by shortname
   def find_course_by_shortname(shortname)
     call('core_course_get_courses_by_field', { field: 'shortname', value: shortname })
@@ -262,6 +308,7 @@ class MoodleApiService
       # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
     end
     puts a
+    puts a.size
 
     # search Subjects with that name and populate subject.moodle_id with course['id']
 
