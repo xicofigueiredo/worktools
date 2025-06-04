@@ -37,6 +37,7 @@ class MoodleApiService
     if response.is_a?(Array)
       response.map do |activity|
         {
+          id: activity['id'],
           section_name: activity['section_name'],
           section_visible: activity['section_visible'],
           name: activity['name'],
@@ -52,8 +53,6 @@ class MoodleApiService
           mock100: activity['mock100']
         }
       end
-
-
     else
       puts "Error fetching completed course activities: #{response}"
       []
@@ -438,57 +437,66 @@ class MoodleApiService
   def update_course_topics_for_learner(user, timeline)
     count = 0
     course_id = timeline.subject.moodle_id
-    return puts "No Moodle ID for subject!" if course_id.nil?
+    return { error: "No Moodle ID for subject!" } if course_id.nil?
 
-    # Get course activities using the new API method
     activities = get_course_activities(course_id, user.moodle_id)
-    return puts "No activities found for course!" if activities.empty?
+    return { error: "No activities found for course!" } if activities.empty?
 
-    # Update MoodleTopics in the given timeline
+    updated_topics = []
+    skipped_topics = []
+
     activities.each do |activity|
       next if activity[:section_visible] == 0
 
       mt = MoodleTopic.find_by(timeline: timeline, name: activity[:name])
 
       if mt
-        updated_attributes = {
-          done: activity[:completiondata] == 1,
-          grade: activity[:grade],
-          completion_date: begin
-            if activity[:evaluation_date].present?
-              DateTime.parse(activity[:evaluation_date])
-            else
+        begin
+          updated_attributes = {
+            done: activity[:completiondata] == 1,
+            grade: activity[:grade],
+            completion_date: begin
+              if activity[:evaluation_date].present?
+                DateTime.parse(activity[:evaluation_date])
+              else
+                nil
+              end
+            rescue Date::Error => e
               nil
-            end
-          rescue Date::Error => e
-            puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
-            nil
-          end,
-          time: activity[:ect].to_i || 1,
-          unit: activity[:section_name],
-          mock50: activity[:mock50] == 1,
-          mock100: activity[:mock100] == 1,
-          number_attempts: activity[:number_attempts],
-          submission_date: activity[:submission_date],
-          evaluation_date: activity[:evaluation_date],
-          completion_data: activity[:completiondata]
-        }
+            end,
+            time: activity[:ect].to_i || 1,
+            unit: activity[:section_name],
+            mock50: activity[:mock50] == 1,
+            mock100: activity[:mock100] == 1,
+            number_attempts: activity[:number_attempts],
+            submission_date: activity[:submission_date],
+            evaluation_date: activity[:evaluation_date],
+            completion_data: activity[:completiondata]
+          }
 
-        mt.update!(updated_attributes)
-        count += 1
-
-        puts "Updating Moodle Topic: #{mt.name}"
-        puts " - Done: #{activity[:completiondata] == 1}"
-        puts " - Grade: #{activity[:grade]}"
-        puts " - ECT: #{activity[:ect]}"
-        puts " - Completion Date: #{activity[:evaluation_date]}"
-        puts " - Mock50: #{activity[:mock50] == 1}"
-        puts " - Mock100: #{activity[:mock100] == 1}"
-        puts " - Number of attempts: #{activity[:number_attempts]}"
+          if mt.update(updated_attributes)
+            count += 1
+            updated_topics << {
+              name: activity[:name],
+              done: activity[:completiondata] == 1,
+              ect: activity[:ect]
+            }
+          end
+        rescue => e
+          skipped_topics << { name: activity[:name], error: e.message }
+        end
       end
     end
 
-    puts "✅ Updated #{count} Moodle topics for timeline ID #{timeline.id} (Course ID: #{course_id})"
+    {
+      success: true,
+      total_activities: activities.size,
+      updated_count: count,
+      updated_topics: updated_topics,
+      skipped_topics: skipped_topics,
+      timeline_id: timeline.id,
+      course_id: course_id
+    }
   end
 
 
