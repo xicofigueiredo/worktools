@@ -161,92 +161,6 @@ class MoodleApiService
     puts "✅ Created #{created_timelines.size} timelines for #{email}"
   end
 
-  def update_moodle_topic_for_course(timeline, user_id)
-    count = 0
-    course_id = timeline.subject.moodle_id
-    return puts "No Moodle ID for subject!" if course_id.nil?
-
-    # Get course activities using the existing method
-    activities = get_course_activities(course_id, user_id)
-    return puts "No activities found for course!" if activities.empty?
-
-    # Update MoodleTopics in the given timeline
-    activities.each_with_index do |activity, index|
-      next if activity[:section_visible] == 0
-
-      mt = MoodleTopic.find_by(timeline: timeline, moodle_id: activity[:id])
-
-      if mt.nil?
-        # Create new MoodleTopic if it doesn't exist
-        mt = MoodleTopic.create!(
-          timeline: timeline,
-          time: activity[:ect].to_i || 1,
-          name: activity[:name],
-          unit: activity[:section_name],
-          order: index + 1,
-          grade: activity[:grade],
-          done: activity[:completiondata] == 1,
-          completion_date: begin
-            if activity[:evaluation_date].present?
-              DateTime.parse(activity[:evaluation_date])
-            else
-              nil
-            end
-          rescue Date::Error => e
-            puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
-            nil
-          end,
-          moodle_id: activity[:id],
-          deadline: Date.today + 1.year,
-          percentage: index * 0.001,
-          mock50: activity[:mock50] == 1,
-          mock100: activity[:mock100] == 1,
-          number_attempts: activity[:number_attempts],
-          submission_date: activity[:submission_date],
-          evaluation_date: activity[:evaluation_date],
-          completion_data: activity[:completiondata]
-        )
-      else
-        # Update existing MoodleTopic
-        mt.update!(
-          time: activity[:ect].to_i || 1,
-          name: activity[:name],
-          unit: activity[:section_name],
-          order: index + 1,
-          grade: activity[:grade],
-          done: activity[:completiondata] == 1,
-          completion_date: begin
-            if activity[:evaluation_date].present?
-              DateTime.parse(activity[:evaluation_date])
-            else
-              nil
-            end
-          rescue Date::Error => e
-            puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
-            nil
-          end,
-          mock50: activity[:mock50] == 1,
-          mock100: activity[:mock100] == 1,
-          number_attempts: activity[:number_attempts],
-          submission_date: activity[:submission_date],
-          evaluation_date: activity[:evaluation_date],
-          completion_data: activity[:completiondata]
-        )
-      end
-
-      count += 1
-      puts "Updating Moodle Topic ID #{mt.id}:"
-      puts " - Name: #{activity[:name]}"
-      puts " - Done: #{activity[:completiondata] == 1}"
-      puts " - Grade: #{activity[:grade]}"
-      puts " - Mock50: #{activity[:mock50] == 1}"
-      puts " - Mock100: #{activity[:mock100] == 1}"
-      puts " - Number of attempts: #{activity[:number_attempts]}"
-    end
-
-    puts "✅ Updated #{count} Moodle topics for timeline ID #{timeline.id} (Course ID: #{course_id})"
-  end
-
   def get_with_ect_activities
     # First, get all courses
     courses = call('core_course_get_courses', {})
@@ -494,56 +408,55 @@ class MoodleApiService
 
   def update_course_topics_for_learner(user, timeline)
     count = 0
-    id = timeline.subject_id
-    course_id = Subject.find(id).moodle_id
+    course_id = timeline.subject.moodle_id
     return puts "No Moodle ID for subject!" if course_id.nil?
 
-    # Fetch completion status for activities in the course
-    completion_response = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user.moodle_id })
-    completion_lookup = {}
-    if completion_response["statuses"]
-      completion_response["statuses"].each do |status|
-        completion_lookup[status["cmid"]] = {
-          completed: status["state"] == 1,  # Moodle's state 1 means completed
-          completion_date: status["timecompleted"] ? Time.at(status["timecompleted"]) : nil
-        }
-      end
-    end
-
-    # Fetch grades for activities in the course
-    grades_response = call('core_grades_get_gradeitems', { courseid: course_id })
-    grades_lookup = {}
-    if grades_response["gradeitems"]
-      grades_response["gradeitems"].each do |grade|
-        grades_lookup[grade["cmid"]] = {
-          grade: grade["graderaw"],
-          max_grade: grade["grademax"]
-        }
-      end
-    end
+    # Get course activities using the new API method
+    activities = get_course_activities(course_id, user.moodle_id)
+    return puts "No activities found for course!" if activities.empty?
 
     # Update MoodleTopics in the given timeline
-    timeline.moodle_topics.each do |topic|
-      moodle_activity_id = topic.moodle_id  # Ensure this is the correct field
+    activities.each do |activity|
+      next if activity[:section_visible] == 0
 
-      if completion_lookup.key?(moodle_activity_id)
-        completion_data = completion_lookup[moodle_activity_id]
-        grade_data = grades_lookup[moodle_activity_id]
+      mt = MoodleTopic.find_by(timeline: timeline, name: activity[:name])
 
-        updated_attributes = {}
-        updated_attributes[:done] = completion_data[:completed] if topic.done != completion_data[:completed]
-        updated_attributes[:completion_date] = completion_data[:completion_date] if topic.completion_date != completion_data[:completion_date]
-        updated_attributes[:grade] = grade_data[:grade] if grade_data && topic.grade != grade_data[:grade]
+      if mt
+        updated_attributes = {
+          done: activity[:completiondata] == 1,
+          grade: activity[:grade],
+          completion_date: begin
+            if activity[:evaluation_date].present?
+              DateTime.parse(activity[:evaluation_date])
+            else
+              nil
+            end
+          rescue Date::Error => e
+            puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
+            nil
+          end,
+          time: activity[:ect].to_i || 1,
+          unit: activity[:section_name],
+          mock50: activity[:mock50] == 1,
+          mock100: activity[:mock100] == 1,
+          number_attempts: activity[:number_attempts],
+          submission_date: activity[:submission_date],
+          evaluation_date: activity[:evaluation_date],
+          completion_data: activity[:completiondata]
+        }
 
-        topic.update!(updated_attributes) unless updated_attributes.empty?
+        mt.update!(updated_attributes)
         count += 1
-        puts "Checking completion for Moodle Topic ID #{topic.id}:"
-        puts " - Existing Done: #{topic.done}, New Done: #{completion_data[:completed]}"
-        puts " - Existing Date: #{topic.completion_date}, New Date: #{completion_data[:completion_date]}"
-        puts " - Existing Grade: #{topic.grade}, New Grade: #{grade_data[:grade]}" if grade_data
+
+        puts "Updating Moodle Topic: #{mt.name}"
+        puts " - Done: #{activity[:completiondata] == 1}"
+        puts " - Grade: #{activity[:grade]}"
+        puts " - ECT: #{activity[:ect]}"
+        puts " - Completion Date: #{activity[:evaluation_date]}"
+        puts " - Mock50: #{activity[:mock50] == 1}"
+        puts " - Mock100: #{activity[:mock100] == 1}"
+        puts " - Number of attempts: #{activity[:number_attempts]}"
       end
-
-
     end
 
     puts "✅ Updated #{count} Moodle topics for timeline ID #{timeline.id} (Course ID: #{course_id})"

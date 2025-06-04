@@ -6,7 +6,7 @@ class MoodleApiController < ApplicationController
     timeline = Timeline.find(params[:timeline_id])
 
     # Call the service method.
-    MoodleApiService.new.update_moodle_topic_for_course(timeline, current_user.id)
+    MoodleApiService.new.update_course_topics_for_learner(current_user, timeline)
     render json: { success: true }
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Timeline not found" }, status: :not_found
