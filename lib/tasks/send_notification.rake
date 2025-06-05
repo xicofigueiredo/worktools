@@ -17,46 +17,18 @@ namespace :notifications do
 
     User.where(role: "lc").or(User.where(role: "learner")).find_each do |user|
       # next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
-      if user.role == "lc"
         Notification.find_or_create_by!(
           user: user,
-          link: "https://forms.office.com/r/CL0H1dXCEZ",
-          message: "📣 BGA Brand Ambassador Program – Reminder
+          link: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_ZTY1M2Q4MTYtMDJhMC00YWE4LTgxYjEtNmNkMWJiNzUxOGY0%40thread.v2/0?context=%7b%22Tid%22%3a%221ac2d08d-bbbe-4e3c-9622-88fbe8ac9830%22%2c%22Oid%22%3a%22b2f38093-aa8e-4086-b774-338ec8512012%22%7d ",
+          message: "Final University Workshop of the 24/25 Academic Season
 
-Following the internal staff meeting, we’ve launched the BGA Brand Ambassador Program — a fun way for Learners to get involved, share their BGA experience online, and earn up to €7/month for their Hub budget!
-
-Learners must follow the content guidelines for posts to count — all content should be appropriate for BGA’s audience.
-Full instructions + video were shared via Central Communication on Teams and are also available on the Marketing SharePoint.
-They must submit this form by the last day of the month to be eligible: https://forms.office.com/r/CL0H1dXCEZ
-Only those who meet the guidelines and submit the form on time will be eligible for the monthly rewards or the quarterly creative prize. Let’s help them make the most of it!
-
-Thanks for encouraging your Learners to take part!
-
-— The Marketing Team "
+On Wednesday, June 11th at 11am, we’ll be hosting the last University Workshop of the 24/25 Academic season. This session will be led by Hyll Education and is especially relevant for learners still aiming for a 2025 university start.
+�� We’ll cover:
+What options are available if a learner hasn’t secured a university place yet
+Steps for those who are late in applying
+Key preparation tips for learners planning to apply to universities in the USA for 2026 start – particularly what should be done over the summer
+Meeting link bellow!"
         )
-      elsif user.role == "learner"
-        Notification.find_or_create_by!(
-          user: user,
-          link: "https://forms.office.com/r/CL0H1dXCEZ",
-          message: "Want to earn money for your Hub just by posting on social media?
-
-We’re excited to introduce the BGA Brand Ambassador Program — your chance to get creative, show off your BGA journey, and earn up to €7/month for your Hub budget!
-
-Whether you're sharing a day at your Hub, a sports session, a cool project, or your BGA adventures while travelling  — this is your moment to inspire others and represent BGA online.
-
-You can:
-Repost our content on Instagram, or
-Create your own original content on Instagram or TikTok
-
-Ask your LCs for more details! They've been given full instructions + a short explainer video.
-
-All you need to do to earn is to submit this form by the last day of every month: https://forms.office.com/r/CL0H1dXCEZ
-
-We can’t wait to see what you create!
-
-— The Marketing Team"
-        )
-      end
       notifications_count += 1
     end
 
