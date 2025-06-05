@@ -115,6 +115,14 @@
                         <% end %>
                     <% end %>
 
+                  <% elsif notification.message.include?("BGA Brand Ambassador Program – Reminder") %>
+                    <%= link_to "Check here", notification.link, class: "btn btn-outline", target: "_blank" %>
+
+                  <% elsif notification.message.include?("Want to earn money for your Hub just by posting on social media?") %>
+                    <%= link_to "Check here", notification.link, class: "btn btn-outline", target: "_blank" %>
+
+                  <% elsif notification.link.present? %>
+                    <%= link_to "Check here", notification.link, class: "btn btn-outline", target: "_blank" %>
                   <% end %>
 
                 </div>

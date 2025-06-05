@@ -13,14 +13,50 @@ namespace :notifications do
     #      notifications_count += 1
     #  end
 
-    hub_ids = [148, 151, 152, 153, 154, 155, 156, 157, 158, 160, 161, 162, 163, 164, 165, 167, 168, 169, 170, 171, 172, 175, 176, 178, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 192]
+    # hub_ids = [148, 151, 152, 153, 154, 155, 156, 157, 158, 160, 161, 162, 163, 164, 165, 167, 168, 169, 170, 171, 172, 175, 176, 178, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 192]
 
-    User.where(role: "lc").find_each do |user|
-      next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
-      Notification.find_or_create_by!(
-        user: user,
-        message: "Webinar on the Portuguese curriculum for all LCs taking place on the 28th at 2pm. Link will be shared soon."
-      )
+    User.where(role: "lc").or(User.where(role: "learner")).find_each do |user|
+      # next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
+      if user.role == "lc"
+        Notification.find_or_create_by!(
+          user: user,
+          link: "https://forms.office.com/r/CL0H1dXCEZ",
+          message: "📣 BGA Brand Ambassador Program – Reminder
+
+Following the internal staff meeting, we’ve launched the BGA Brand Ambassador Program — a fun way for Learners to get involved, share their BGA experience online, and earn up to €7/month for their Hub budget!
+
+Learners must follow the content guidelines for posts to count — all content should be appropriate for BGA’s audience.
+Full instructions + video were shared via Central Communication on Teams and are also available on the Marketing SharePoint.
+They must submit this form by the last day of the month to be eligible: https://forms.office.com/r/CL0H1dXCEZ
+Only those who meet the guidelines and submit the form on time will be eligible for the monthly rewards or the quarterly creative prize. Let’s help them make the most of it!
+
+Thanks for encouraging your Learners to take part!
+
+— The Marketing Team "
+        )
+      elsif user.role == "learner"
+        Notification.find_or_create_by!(
+          user: user,
+          link: "https://forms.office.com/r/CL0H1dXCEZ",
+          message: "Want to earn money for your Hub just by posting on social media?
+
+We’re excited to introduce the BGA Brand Ambassador Program — your chance to get creative, show off your BGA journey, and earn up to €7/month for your Hub budget!
+
+Whether you're sharing a day at your Hub, a sports session, a cool project, or your BGA adventures while travelling  — this is your moment to inspire others and represent BGA online.
+
+You can:
+Repost our content on Instagram, or
+Create your own original content on Instagram or TikTok
+
+Ask your LCs for more details! They've been given full instructions + a short explainer video.
+
+All you need to do to earn is to submit this form by the last day of every month: https://forms.office.com/r/CL0H1dXCEZ
+
+We can’t wait to see what you create!
+
+— The Marketing Team"
+        )
+      end
       notifications_count += 1
     end
 
