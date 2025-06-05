@@ -17,6 +17,7 @@ namespace :notifications do
 
     User.where(role: "lc").or(User.where(role: "learner")).find_each do |user|
       # next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
+      if user.deactivate != true
         Notification.find_or_create_by!(
           user: user,
           link: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_ZTY1M2Q4MTYtMDJhMC00YWE4LTgxYjEtNmNkMWJiNzUxOGY0%40thread.v2/0?context=%7b%22Tid%22%3a%221ac2d08d-bbbe-4e3c-9622-88fbe8ac9830%22%2c%22Oid%22%3a%22b2f38093-aa8e-4086-b774-338ec8512012%22%7d ",
@@ -29,7 +30,8 @@ Steps for those who are late in applying
 Key preparation tips for learners planning to apply to universities in the USA for 2026 start – particularly what should be done over the summer
 Meeting link bellow!"
         )
-      notifications_count += 1
+        notifications_count += 1
+      end
     end
 
     puts "Completed: #{notifications_count} notifications sent."
