@@ -1,7 +1,7 @@
 namespace :db do
   desc "Send journey emails to all parents"
   task send_journey_emails: :environment do
-    parents = User.where(role: 'parent')
+    parents = User.where(role: 'Parent')
     total = parents.count
     sent = 0
     failed = 0
