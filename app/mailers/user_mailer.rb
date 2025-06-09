@@ -50,4 +50,17 @@ class UserMailer < Devise::Mailer
       subject: "Notification Summary: You have #{notifications.size} unread notifications"
     )
   end
+
+  def parent_journey_email(parent)
+    @parent = parent
+    @name = parent.full_name
+    @email = parent.email
+    @password = parent.encrypted_password
+
+    mail(
+      to: @parent.email,
+      from: 'worktools@bravegenerationacademy.com',
+      subject: "Don't Miss Out – Follow Your Child's Journey on Worktools"
+    )
+  end
 end
