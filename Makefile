@@ -84,3 +84,6 @@ create_cm:
 
 delete_usertopics:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake user_topics:dedupe"
+
+send_journey_emails:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake db:send_journey_emails"
