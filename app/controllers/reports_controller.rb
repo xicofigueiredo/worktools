@@ -5,6 +5,7 @@ class ReportsController < ApplicationController
 
   def lc_view
     redirect_to root_path if current_user.role != 'lc' && current_user.role != 'admin'
+
     @learners = User.joins(:hubs)
     .where(hubs: { id: current_user.hubs.ids }, role: 'learner', diactivate: [false, nil])
     .distinct
@@ -37,49 +38,55 @@ class ReportsController < ApplicationController
         unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin' || current_user.kids.include?(@learner.id)
           redirect_to reports_path, alert: "You do not have permission to access this report."
             return
-          end
-        else
-          @learner = User.find_by(id: current_user.kids.first)
         end
       else
-        @learners = User.joins(:hubs)
-        .where(hubs: { id: current_user.hubs.ids }, role: 'learner', deactivate: [false, nil])
+        @learner = User.find_by(id: current_user.kids.first)
+      end
+    else
+
+      @learners = User.joins(:hubs)
+        .where(hubs: { id: current_user.hubs.ids }, role: 'learner')
+        .where("users.deactivate = ? OR (users.graduated_at BETWEEN ? AND ?)",
+               false,
+               @sprint.start_date,
+               @sprint.end_date)
         .select('users.*, hubs.name as hub_name')
         .order('hub_name ASC, users.full_name ASC')
         .distinct
 
-        @grouped_learners = @learners.group_by { |learner| learner.hub_name }
 
-        # Determine which learner's report to show
-        if params[:learner_id].present?
-          @learner = User.find_by(id: params[:learner_id])
+      @grouped_learners = @learners.group_by { |learner| learner.hub_name }
 
-          if @learner.nil?
-            redirect_to reports_path, alert: "No valid learner found."
-            return
-          end
+      # Determine which learner's report to show
+      if params[:learner_id].present?
+        @learner = User.find_by(id: params[:learner_id])
 
-          # Ensure the current user has permission to view this learner's report
-          unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
-            redirect_to reports_path, alert: "You do not have permission to access this report."
-              return
-            end
-          else
-            @learner = @learners.first
-          end
+        if @learner.nil?
+          redirect_to reports_path, alert: "No valid learner found."
+          return
         end
 
-        @timelines = @learner.timelines.where(hidden: false).order(difference: :asc)
-        calc_nav_dates(@sprint)
-        @report = @learner.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
-
-        if @report.new_record?
-          @report.last_update_check = Date.today
+        # Ensure the current user has permission to view this learner's report
+        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
+          redirect_to reports_path, alert: "You do not have permission to access this report."
+          return
         end
+      else
+        @learner = @learners.first
+      end
+    end
+
+    @timelines = @learner.timelines.where(hidden: false).order(difference: :asc)
+    calc_nav_dates(@sprint)
+    @report = @learner.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
+
+    if @report.new_record?
+      @report.last_update_check = Date.today
+    end
 
 
-        @report.save
-        @attendance = calc_sprint_presence(@learner, @sprint)
+    @report.save
+    @attendance = calc_sprint_presence(@learner, @sprint)
 
     if @sprint
       @report = @learner.reports.find_by(sprint: @sprint)
