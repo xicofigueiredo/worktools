@@ -15,20 +15,13 @@ namespace :notifications do
 
     # hub_ids = [148, 151, 152, 153, 154, 155, 156, 157, 158, 160, 161, 162, 163, 164, 165, 167, 168, 169, 170, 171, 172, 175, 176, 178, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 192]
 
-    User.where(role: "lc").or(User.where(role: "learner")).find_each do |user|
+    User.where(role: "learner").or(User.where(role: "learner")).find_each do |user|
       # next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
       if user.deactivate != true
         Notification.find_or_create_by!(
           user: user,
-          link: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_ZTY1M2Q4MTYtMDJhMC00YWE4LTgxYjEtNmNkMWJiNzUxOGY0%40thread.v2/0?context=%7b%22Tid%22%3a%221ac2d08d-bbbe-4e3c-9622-88fbe8ac9830%22%2c%22Oid%22%3a%22b2f38093-aa8e-4086-b774-338ec8512012%22%7d ",
-          message: "Final University Workshop of the 24/25 Academic Season
-
-On Wednesday, June 11th at 11am, we’ll be hosting the last University Workshop of the 24/25 Academic season. This session will be led by Hyll Education and is especially relevant for learners still aiming for a 2025 university start.
-�� We’ll cover:
-What options are available if a learner hasn’t secured a university place yet
-Steps for those who are late in applying
-Key preparation tips for learners planning to apply to universities in the USA for 2026 start – particularly what should be done over the summer
-Meeting link bellow!"
+          link: "https://forms.office.com/Pages/ResponsePage.aspx?id=jdDCGr67PE6WIoj76KyYMEaNhWEu28JNlhDvRH9nCKlUNTlZQUYzQzJWUks0MzQwUUxMTVJGSzFWMC4u",
+          message: "Hi, we are collecting feedback on how GenAI is used by learners to help shape the future of GenAI use at BGA. We would appreciate it if you would spend a few minutes to complete this form. It would be great if you can submit your responses by 20th June 2025. Thank you!"
         )
         notifications_count += 1
       end
