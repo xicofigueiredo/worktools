@@ -39,6 +39,8 @@ class User < ApplicationRecord
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', dc: 'Development Coach', guardian: 'Parent', cm: 'Course Manager' }
   validate :email_domain_check, on: :create
 
+  before_save :ensure_deactivated_if_graduated
+
   after_create :associate_with_hubs, :create_learner_flag
   # after_commit :send_welcome_email, on: :create
   # after_commit :post_create_actions, on: :create
@@ -100,6 +102,12 @@ class User < ApplicationRecord
 
   def can_access_learner?(learner)
     self == learner || (self.role.in?(['Admin', 'Learning Coach']) && (self.hubs & learner.hubs).present?)
+  end
+
+  def ensure_deactivated_if_graduated
+    if graduated_at.present? && !deactivate
+      self.deactivate = true
+    end
   end
 
 end

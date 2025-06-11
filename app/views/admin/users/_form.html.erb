@@ -124,6 +124,11 @@
       <%= form.label :deactivate, "Deactivate User?", for: "deactivate_checkbox", style: "font-weight: bold;" %>
     </div>
 
+    <div style="display: flex; flex-direction: column;">
+      <%= form.label :graduated_at, "Graduated At", class: "form-label fw-bold" %>
+      <%= form.date_field :graduated_at, class: "form-input" %>
+    </div>
+
     <div>
       <%= form.submit "Save Changes", class: "submit-btn" %>
     </div>
