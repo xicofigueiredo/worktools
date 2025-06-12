@@ -105,7 +105,7 @@ class User < ApplicationRecord
   end
 
   def ensure_deactivated_if_graduated
-    if graduated_at.present? && !deactivate
+    if attribute_present?("graduated_at") && !deactivate
       self.deactivate = true
     end
   end
