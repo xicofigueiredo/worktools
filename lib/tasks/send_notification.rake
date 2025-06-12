@@ -15,13 +15,13 @@ namespace :notifications do
 
     # hub_ids = [148, 151, 152, 153, 154, 155, 156, 157, 158, 160, 161, 162, 163, 164, 165, 167, 168, 169, 170, 171, 172, 175, 176, 178, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 192]
 
-    User.where(role: "learner").or(User.where(role: "learner")).find_each do |user|
+    User.where(role: "lc").or(User.where(role: "lc")).find_each do |user|
       # next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
       if user.deactivate != true
         Notification.find_or_create_by!(
           user: user,
-          link: "https://forms.office.com/Pages/ResponsePage.aspx?id=jdDCGr67PE6WIoj76KyYMEaNhWEu28JNlhDvRH9nCKlUNTlZQUYzQzJWUks0MzQwUUxMTVJGSzFWMC4u",
-          message: "Hi, we are collecting feedback on how GenAI is used by learners to help shape the future of GenAI use at BGA. We would appreciate it if you would spend a few minutes to complete this form. It would be great if you can submit your responses by 20th June 2025. Thank you!"
+          link: "",
+          message: "If you have a learner who has graduated (and is deactivated in worktools) but still need to issue his or her sprint report, please message Luís."
         )
         notifications_count += 1
       end

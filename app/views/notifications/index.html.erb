@@ -66,7 +66,7 @@
                       <%= link_to "Message LC on Teams", "msteams:/l/chat/0/0?users=#{@lcs_emails.join(',')}", class: "btn btn-outline" %>
                     <% end %>
 
-                  <% elsif notification.message.include?("please message Luís Brito e Faro") %>
+                  <% elsif notification.message.include?("please message Luís") %>
                     <%= link_to "Message Luis", "msteams:/l/chat/0/0?users=luis@bravegenerationacademy.com", class: "btn btn-outline" %>
 
                   <% elsif notification.message.include?("You have new forms to fill") %>
