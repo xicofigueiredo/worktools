@@ -119,6 +119,7 @@ Rails.application.routes.draw do
         get 'report'
         patch 'update_knowledges'
         patch 'update_activities'
+        post 'remove_lc'
       end
     end
 

@@ -132,7 +132,7 @@ Below is the information on the goals that they have been working on for the las
   <%= hidden_field_tag :redirect_path, reports_path(date: @report.sprint.start_date, learner_id: @learner.id) %>
     <div class="section">
         <div class="section-title">Key Development Areas <i class="fa-solid fa-circle-info"
-          title="At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner’s entire study experience and impact their broader life journey.
+          title="At Brave Generation Academy, we see Key Development Areas (KDAs) as essential meta-skills that shape a learner's entire study experience and impact their broader life journey.
 
 These KDAs represent critical growth areas unique to each learner, helping them build the independence, confidence, and resilience needed for lifelong learning and personal success."></i>
         </div>
@@ -347,6 +347,38 @@ This would also refer to participation on the Forum for the BGA online courses."
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="section" data-controller="lc-manager">
+      <div class="section-title">Learning Coaches</div>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody data-lc-manager-target="lcList">
+            <% @lcs.each do |lc| %>
+              <tr id="lc_<%= lc.id %>">
+                <td><%= lc.full_name %></td>
+                <td><%= lc.email %></td>
+                <td>
+                  <button
+                    class="btn btn-danger btn-sm"
+                    data-action="click->lc-manager#remove"
+                    data-report-id="<%= @report.id %>"
+                    data-lc-id="<%= lc.id %>">
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   <footer style="border-top: 1px solid #ccc; padding: 20px;">

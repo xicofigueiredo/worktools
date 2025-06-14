@@ -50,7 +50,7 @@
 
     <div>
       <% if current_user.role != 'guardian' %>
-        <%= link_to 'Edit Report', edit_report_path(@report), class: "btn btn-primary", style: 'border-radius: 10px; margin-left: 5px;' %>
+        <%= link_to 'Edit Report', edit_report_path(@report, lc_id: current_user.id), class: "btn btn-primary", style: 'border-radius: 10px; margin-left: 5px;' %>
       <% end %>
       <% if @hide != true || current_user.role != 'learner' %>
         <%= link_to report_report_url(@report.id), class: 'btn btn-secondary', style: 'border-radius: 10px;', target: '_blank' do %>

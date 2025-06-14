@@ -215,6 +215,11 @@ class ReportsController < ApplicationController
       redirect_to root_path, alert: 'You do not have permission to edit this report.'
     end
 
+    # Add the current LC to lc_ids if not already present
+    if current_user.role == 'lc' && !@report.lc_ids.include?(current_user.id)
+      @report.lc_ids = (@report.lc_ids + [current_user.id]).uniq
+      @report.save
+    end
   end
 
   def update
@@ -663,6 +668,22 @@ class ReportsController < ApplicationController
     end
   end
 
+  def remove_lc
+    @report = Report.find(params[:id])
+    lc_id = params[:lc_id].to_i
+
+    if @report.lc_ids.include?(lc_id)
+      @report.lc_ids = @report.lc_ids - [lc_id]
+
+      if @report.save
+        render json: { success: true }
+      else
+        render json: { success: false, error: 'Failed to remove Learning Coach' }
+      end
+    else
+      render json: { success: false, error: 'Learning Coach not found in report' }
+    end
+  end
 
   private
 
