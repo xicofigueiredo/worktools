@@ -3,6 +3,7 @@ class User < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   has_many :holidays, dependent: :destroy
   has_many :timelines, dependent: :destroy
+  has_many :moodle_timelines, dependent: :destroy
   has_many :weekly_goals, dependent: :destroy
   has_many :sprint_goals, dependent: :destroy
   has_many :users_hubs, dependent: :destroy
