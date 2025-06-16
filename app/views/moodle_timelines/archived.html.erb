@@ -1,0 +1,59 @@
+<div class="container mt-3">
+  <div class="container">
+    <!-- Past Holidays Section -->
+    <div class="mb-5">
+      <div class="d-flex justify-content-between">
+        <div>
+          <h2>Holidays</h2>
+          <p>See past Holidays here:</p>
+        </div>
+      </div>
+      <div class="row row-cols-4">
+        <% @past_holidays.each do |holiday| %>
+          <div>
+            <div class="card shadow-sm mb-3" style="border-radius: 10px">
+              <div class="p-3">
+                <div class="d-flex justify-content-between mb-2 align-items-center">
+                  <h5><%= holiday.name %></h5>
+                  <div class="d-flex gap-2">
+                    <%= link_to edit_holiday_path(holiday) do %>
+                      <i class="fa-solid fa-pencil" title="Edit" style="font-size: 20px; color: gray;"></i>
+                    <% end %>
+                    <%= link_to holiday_path(holiday), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } do %>
+                      <i class="fa-solid fa-trash" title="Delete" style="font-size: 20px; color: gray;"></i>
+                    <% end %>
+                  </div>
+                </div>
+                <div>
+                  <div class="d-flex justify-content-between">
+                    <p class="mb-1" style="color: gray">Start Date:</p>
+                    <span><%= holiday.start_date.strftime('%d-%m-%Y') %></span>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <p class="mb-1" style="color: gray">End Date:</p>
+                    <span><%= holiday.end_date.strftime('%d-%m-%Y') %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Archived Timelines Section -->
+    <div class="mb-5">
+      <div class="d-flex justify-content-between">
+        <div>
+          <h2>Archived Timelines</h2>
+          <p>See your Timelines here</p>
+        </div>
+      </div>
+      <div class="accordion" id="parentAccordion">
+        <% @archived_moodle_timelines.each_with_index do |moodle_timeline, index| %>
+          <%= render partial: "moodle_timeline_archived", locals: { moodle_timeline: moodle_timeline, index: index, user_topics_by_topic: @user_topics_by_topic } %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -69,6 +69,10 @@ class User < ApplicationRecord
     timelines.order(balance: :asc, start_date: :asc)
   end
 
+  def moodle_timelines_sorted_by_balance
+    moodle_timelines.order(balance: :asc, start_date: :asc)
+  end
+
   def subject_records
     Subject.where(id: subjects)
   end

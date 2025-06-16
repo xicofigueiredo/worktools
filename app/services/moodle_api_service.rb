@@ -160,6 +160,62 @@ class MoodleApiService
     puts "✅ Created #{created_timelines.size} timelines for #{email}"
   end
 
+  #create moodle timelines
+  def create_moodle_timelines_for_learner(email)
+    moodle_user_id = get_user_id(email)
+    user_id = User.find_by(email: email).id
+    return puts "User not found!" if user_id.nil?
+
+    courses = get_user_courses(email) # Get enrolled courses
+    return puts "No courses found!" if courses.empty?
+
+    created_timelines = []
+    courses.each do |course|
+      course_id = course.split(":").first.to_i
+      category = course.split(" ").last.to_i    # Gets "4" from the end of the string
+      subject = Subject.find_by(moodle_id: course_id) # Extract Moodle ID and find the subject
+
+      as1 = nil
+      as2 = nil
+
+      if category == 4
+        as1 = true
+        as2 = true
+      end
+
+      if subject
+        moodle_timeline = MoodleTimeline.find_by(
+          user_id: user_id,
+          subject_id: subject.id,
+        )
+        if moodle_timeline.nil?
+          moodle_timeline = MoodleTimeline.create!(
+            user_id: user_id,
+            subject_id: subject.id,
+            start_date: Date.today,
+            end_date: Date.today + 1.year,
+            balance: 0,
+            expected_progress: 0,
+            progress: 0,
+            total_time: 0,
+            difference: 0,
+            category: category,
+            moodle_id: course_id,
+            hidden: false,
+            as1: as1,
+            as2: as2
+          )
+        end
+
+        created_timelines << moodle_timeline
+        puts "Created #{moodle_timeline.subject.name} Moodle Timeline for #{course.split(':').last.strip}"
+
+      end
+    end
+
+    puts "✅ Created #{created_timelines.size} timelines for #{email}"
+  end
+
   def get_with_ect_activities
     # Define the category IDs we want to filter by
     target_categories = [3, 4, 5, 15, 18, 19, 33]
@@ -245,9 +301,17 @@ class MoodleApiService
     a = []
     courses = call('core_course_get_courses', {})
     puts "Found #{courses.size} courses."
-    courses.sort_by { |c| c['categoryid'] }.each do |course|
-      a << " #{course['shortname']} #{course['id']} #{course['categoryid']}"
-      # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
+
+    # Group courses by category for better organization
+    courses_by_category = courses.sort_by { |c| c['categoryid'] }.group_by { |c| c['categoryid'] }
+
+    courses_by_category.each do |category_id, category_courses|
+      puts "\nCategory #{category_id}:"
+      puts "------------------------"
+      category_courses.each do |course|
+        a << " #{course['shortname']} #{course['id']} #{course['categoryid']}"
+        # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
+      end
     end
     puts a
     puts a.size
@@ -280,7 +344,7 @@ class MoodleApiService
 
     if courses.is_a?(Array) && courses.any?
       formatted_courses = courses.map do |course|
-        "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
+        "#{course['id']}: #{course['fullname']} (#{course['shortname']}) #{course['category']}"
       end
 
       puts formatted_courses.join("\n") # Print the formatted courses list

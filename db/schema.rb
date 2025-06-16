@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_06_11_164649) do
+ActiveRecord::Schema[7.0].define(version: 2025_06_16_015535) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -234,8 +234,36 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_11_164649) do
     t.index ["weekly_meeting_id"], name: "index_monday_slots_on_weekly_meeting_id"
   end
 
+  create_table "moodle_timelines", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.date "start_date"
+    t.date "end_date"
+    t.integer "total_time"
+    t.integer "balance"
+    t.integer "expected_progress"
+    t.integer "progress"
+    t.bigint "exam_date_id"
+    t.integer "category", null: false
+    t.datetime "mock50"
+    t.datetime "mock100"
+    t.string "personalized_name"
+    t.string "color"
+    t.boolean "hidden"
+    t.integer "difference"
+    t.integer "course_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "subject_id"
+    t.integer "moodle_id"
+    t.boolean "as1"
+    t.boolean "as2"
+    t.index ["exam_date_id"], name: "index_moodle_timelines_on_exam_date_id"
+    t.index ["subject_id"], name: "index_moodle_timelines_on_subject_id"
+    t.index ["user_id"], name: "index_moodle_timelines_on_user_id"
+  end
+
   create_table "moodle_topics", force: :cascade do |t|
-    t.bigint "timeline_id", null: false
+    t.bigint "timeline_id"
     t.float "time", null: false
     t.string "name", null: false
     t.string "unit", null: false
@@ -254,6 +282,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_11_164649) do
     t.string "submission_date"
     t.string "evaluation_date"
     t.integer "number_attempts", default: 0
+    t.bigint "moodle_timeline_id"
+    t.boolean "as1"
+    t.boolean "as2"
+    t.index ["moodle_timeline_id"], name: "index_moodle_topics_on_moodle_timeline_id"
     t.index ["timeline_id"], name: "index_moodle_topics_on_timeline_id"
   end
 
@@ -658,6 +690,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_11_164649) do
   add_foreign_key "monday_slots", "users", column: "lc_id"
   add_foreign_key "monday_slots", "users", column: "learner_id"
   add_foreign_key "monday_slots", "weekly_meetings"
+  add_foreign_key "moodle_timelines", "exam_dates"
+  add_foreign_key "moodle_timelines", "subjects"
+  add_foreign_key "moodle_timelines", "users"
+  add_foreign_key "moodle_topics", "moodle_timelines"
   add_foreign_key "moodle_topics", "timelines"
   add_foreign_key "mots", "kdas"
   add_foreign_key "notes", "users"

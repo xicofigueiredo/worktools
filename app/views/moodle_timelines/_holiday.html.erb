@@ -1,0 +1,21 @@
+<div class="d-flex justify-content-between align-items-center">
+  <h5><%= holiday["name"] %></h5>
+  <div class="d-flex gap-2">
+    <%= link_to edit_holiday_path(holiday["id"]) do %>
+      <i class="fa-solid fa-pencil" title="Edit" style="font-size: 20px; color: gray;"></i>
+    <% end %>
+    <%= link_to holiday_path(holiday["id"]), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" } do %>
+      <i class="fa-solid fa-trash" title="Delete" style="font-size: 20px; color: gray;"></i>
+    <% end %>
+  </div>
+</div>
+<div>
+  <div class="d-flex justify-content-between">
+    <p class="mb-1" style="color: gray">Start Date:</p>
+    <p><%= holiday["start_date"].strftime('%d-%m-%Y') %></p>
+  </div>
+  <div class="d-flex justify-content-between">
+    <p class="mb-1" style="color: gray">End Date:</p>
+    <p><%= holiday["end_date"].strftime('%d-%m-%Y') %></p>
+  </div>
+</div>

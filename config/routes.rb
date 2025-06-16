@@ -73,6 +73,18 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :moodle_timelines do
+      member do
+        post :update_topics
+        get :moodle_show
+        patch :toggle_archive
+      end
+      collection do
+        get :archived
+        post :sync_moodle
+      end
+    end
+
     get 'weekly_goals/week/', to: 'weekly_goals#navigator', as: :weekly_goals_navigator
     get 'weekly_goals/week/color_picker', to: 'weekly_goals#color_picker', as: :weekly_goals_color_picker
 
