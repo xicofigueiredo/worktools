@@ -188,6 +188,7 @@ class MoodleApiService
           user_id: user_id,
           subject_id: subject.id,
         )
+
         if moodle_timeline.nil?
           moodle_timeline = MoodleTimeline.create!(
             user_id: user_id,
@@ -206,6 +207,76 @@ class MoodleApiService
             as2: as2
           )
         end
+
+        # if course.id == 65
+        #   MoodleTimeline.create!(
+        #     user_id: user_id,
+        #     subject_id: subject.id,
+        #     start_date: Date.today,
+        #     end_date: Date.today + 1.year,
+        #     balance: 0,
+        #     expected_progress: 0,
+        #     progress: 0,
+        #     total_time: 0,
+        #     difference: 0,
+        #     category: category,
+        #     moodle_id: course_id,
+        #     hidden: false,
+        #     as1: nil,
+        #     as2: nil
+        #   )
+
+        #   MoodleTimeline.create!(
+        #     user_id: user_id,
+        #     subject_id: subject.id,
+        #     start_date: Date.today,
+        #     end_date: Date.today + 1.year,
+        #     balance: 0,
+        #     expected_progress: 0,
+        #     progress: 0,
+        #     total_time: 0,
+        #     difference: 0,
+        #     category: category,
+        #     moodle_id: course_id,
+        #     hidden: false,
+        #     as1: nil,
+        #     as2: nil
+        #   )
+
+        #   MoodleTimeline.create!(
+        #     user_id: user_id,
+        #     subject_id: subject.id,
+        #     start_date: Date.today,
+        #     end_date: Date.today + 1.year,
+        #     balance: 0,
+        #     expected_progress: 0,
+        #     progress: 0,
+        #     total_time: 0,
+        #     difference: 0,
+        #     category: category,
+        #     moodle_id: course_id,
+        #     hidden: false,
+        #     as1: nil,
+        #     as2: nil
+        #   )
+
+        #   MoodleTimeline.create!(
+        #     user_id: user_id,
+        #     subject_id: subject.id,
+        #     start_date: Date.today,
+        #     end_date: Date.today + 1.year,
+        #     balance: 0,
+        #     expected_progress: 0,
+        #     progress: 0,
+        #     total_time: 0,
+        #     difference: 0,
+        #     category: category,
+        #     moodle_id: course_id,
+        #     hidden: false,
+        #     as1: nil,
+        #     as2: nil
+        #   )
+        # end
 
         created_timelines << moodle_timeline
         puts "Created #{moodle_timeline.subject.name} Moodle Timeline for #{course.split(':').last.strip}"
