@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_06_16_015535) do
+ActiveRecord::Schema[7.0].define(version: 2025_06_17_172911) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -257,6 +257,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_16_015535) do
     t.integer "moodle_id"
     t.boolean "as1"
     t.boolean "as2"
+    t.boolean "blocks", default: [false, false, false, false], array: true
     t.index ["exam_date_id"], name: "index_moodle_timelines_on_exam_date_id"
     t.index ["subject_id"], name: "index_moodle_timelines_on_subject_id"
     t.index ["user_id"], name: "index_moodle_timelines_on_user_id"

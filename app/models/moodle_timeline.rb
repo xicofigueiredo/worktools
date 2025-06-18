@@ -21,65 +21,159 @@ class MoodleTimeline < ApplicationRecord
   validate :end_date_before_expected
   belongs_to :exam_date, optional: true
 
+  after_create :check_if_math_al_timeline
+  after_update :check_if_math_al_timeline
+
+
+  def check_if_math_al_timeline
+    if self.subject_id == 80
+      if self.blocks.first
+        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
+        MoodleTimeline.create!(
+          user_id: user_id,
+          subject_id: 1001,
+          start_date: Date.today,
+          end_date: Date.today + 1.year,
+          balance: 0,
+          expected_progress: 0,
+          progress: 0,
+          total_time: 0,
+          difference: 0,
+          category: category,
+          moodle_id: course_id,
+          hidden: false,
+          as1: nil,
+          as2: nil
+          )
+      else
+        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
+        mt.destroy if mt.present?
+      end
+      if self.blocks.second
+        MoodleTimeline.create!(
+          user_id: user_id,
+          subject_id: 1002,
+          start_date: Date.today,
+          end_date: Date.today + 1.year,
+          balance: 0,
+          expected_progress: 0,
+          progress: 0,
+          total_time: 0,
+          difference: 0,
+          category: category,
+          moodle_id: course_id,
+          hidden: false,
+          as1: nil,
+          as2: nil
+          )
+      else
+        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
+        mt.destroy if mt.present?
+      end
+      if self.blocks.third
+        MoodleTimeline.create!(
+          user_id: user_id,
+          subject_id: 1003,
+          start_date: Date.today,
+          end_date: Date.today + 1.year,
+          balance: 0,
+          expected_progress: 0,
+          progress: 0,
+          total_time: 0,
+          difference: 0,
+          category: category,
+          moodle_id: course_id,
+          hidden: false,
+          as1: nil,
+          as2: nil
+          )
+      else
+        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
+        mt.destroy if mt.present?
+      end
+      if self.blocks.fourth
+        MoodleTimeline.create!(
+          user_id: user_id,
+          subject_id: 1004,
+          start_date: Date.today,
+          end_date: Date.today + 1.year,
+          balance: 0,
+          expected_progress: 0,
+          progress: 0,
+          total_time: 0,
+          difference: 0,
+          category: category,
+          moodle_id: course_id,
+          hidden: false,
+          as1: nil,
+          as2: nil
+          )
+      else
+        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
+        mt.destroy if mt.present?
+      end
+    end
+  end
 
   def create_moodle_topics
+    if self.subject_id != 80
+      user_id = self.user.moodle_id
+      course_id = self.moodle_id
+      completed_activities = MoodleApiService.new.get_course_activities(course_id, user_id)
+      ref_index = -1
+      as1 = nil
+      as2 = nil
 
-    user_id = self.user.moodle_id
-    course_id = self.moodle_id
-    completed_activities = MoodleApiService.new.get_course_activities(course_id, user_id)
-    ref_index = -1
-    as1 = nil
-    as2 = nil
+      completed_activities.each_with_index do |activity, index|
 
-    completed_activities.each_with_index do |activity, index|
-
-      next if activity[:section_visible] == 0
-      if self.category == 4
-        if index > ref_index
-          as1 = true
-          as2 = false
-        else
-          as1 = false
-          as2 = true
-        end
-
-        if activity[:mock50] == 1
-          ref_index = index + 1
-        else
-          ref_index += 1
-        end
-      end
-
-      MoodleTopic.create!(
-        moodle_timeline_id: self.id,
-        time: activity[:ect].to_i || 1,  # Default to 1 if ect is nil or 0
-        name: activity[:name],
-        unit: activity[:section_name],  # Store section name as unit
-        order: index + 1,  # Use index to maintain order
-        grade: activity[:grade],  # Grade is already a number from the API
-        done: activity[:completiondata] == 1,  # Mark as done if completed
-        completion_date: begin
-          if activity[:evaluation_date].present?
-            DateTime.parse(activity[:evaluation_date])
+        next if activity[:section_visible] == 0
+        if self.category == 4
+          if index > ref_index
+            as1 = true
+            as2 = false
           else
-            nil
+            as1 = false
+            as2 = true
           end
-        rescue Date::Error => e
-          puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
-          nil
-        end,
-        moodle_id: activity[:id],
-        deadline: Date.today + 1.year,  # Set a default deadline
-        percentage: index * 0.001,
-        mock50: activity[:mock50] == 1,
-        mock100: activity[:mock100] == 1,
-        number_attempts: activity[:number_attempts],
-        submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
-        evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
-        completion_data: Time.at(activity[:completiondata].to_i).strftime("%d/%m/%Y %H:%M"),
-        as1: as1,
-        as2: as2
-      )
+
+          if activity[:mock50] == 1
+            ref_index = index + 1
+          else
+            ref_index += 1
+          end
+        end
+
+        MoodleTopic.create!(
+          moodle_timeline_id: self.id,
+          time: activity[:ect].to_i || 1,  # Default to 1 if ect is nil or 0
+          name: activity[:name],
+          unit: activity[:section_name],  # Store section name as unit
+          order: index + 1,  # Use index to maintain order
+          grade: activity[:grade],  # Grade is already a number from the API
+          done: activity[:completiondata] == 1,  # Mark as done if completed
+          completion_date: begin
+            if activity[:evaluation_date].present?
+              DateTime.parse(activity[:evaluation_date])
+            else
+              nil
+            end
+          rescue Date::Error => e
+            puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
+            nil
+          end,
+          moodle_id: activity[:id],
+          deadline: Date.today + 1.year,  # Set a default deadline
+          percentage: index * 0.001,
+          mock50: activity[:mock50] == 1,
+          mock100: activity[:mock100] == 1,
+          number_attempts: activity[:number_attempts],
+          submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
+          evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
+          completion_data: Time.at(activity[:completiondata].to_i).strftime("%d/%m/%Y %H:%M"),
+          as1: as1,
+          as2: as2
+        )
+      end
     end
   end
 
@@ -92,34 +186,84 @@ class MoodleTimeline < ApplicationRecord
   end
 
   def update_moodle_topics
-    user_id = self.user.moodle_id
-    course_id = self.moodle_id
-    completed_activities = MoodleApiService.new.get_course_activities(course_id, user_id)
+    if self.subject_id != 80
+      user_id = self.user.moodle_id
+      course_id = self.moodle_id
+      completed_activities = MoodleApiService.new.get_course_activities(course_id, user_id)
 
-    completed_activities.each do |activity|
-      next if activity[:section_visible] == 0
+      completed_activities.each do |activity|
+        next if activity[:section_visible] == 0
 
-      moodle_topic = self.moodle_topics.find_by(moodle_id: activity[:id])
-      next unless moodle_topic
+        moodle_topic = self.moodle_topics.find_by(moodle_id: activity[:id])
+        next unless moodle_topic
 
-      moodle_topic.update!(
-        grade: activity[:grade],
-        done: activity[:completiondata] == 1,
-        completion_date: begin
-          if activity[:evaluation_date].present?
-            DateTime.parse(activity[:evaluation_date])
-          else
+        moodle_topic.update!(
+          grade: activity[:grade],
+          done: activity[:completiondata] == 1,
+          completion_date: begin
+            if activity[:evaluation_date].present?
+              DateTime.parse(activity[:evaluation_date])
+            else
+              nil
+            end
+          rescue Date::Error => e
+            puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
             nil
-          end
-        rescue Date::Error => e
-          puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
-          nil
-        end,
-        number_attempts: activity[:number_attempts],
-        submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
-        evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
-        completion_data: Time.at(activity[:completiondata].to_i).strftime("%d/%m/%Y %H:%M")
-      )
+          end,
+          number_attempts: activity[:number_attempts],
+          submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
+          evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
+          completion_data: Time.at(activity[:completiondata].to_i).strftime("%d/%m/%Y %H:%M")
+        )
+      end
+    else
+      user_id = self.user.moodle_id
+      course_id = self.moodle_id
+
+      done_block_1 = false
+      done_block_2 = false
+      done_block_3 = false
+      done_block_4 = false
+      # done_block_1 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001).progress == 100
+      # done_block_2 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002).progress == 100
+      # done_block_3 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003).progress == 100
+      # done_block_4 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004).progress == 100
+
+      topics = []
+      if self.blocks.first
+        topics << { name: "Block 1", unit: "Block 1", order: 1, done: done_block_1 }
+      end
+      if self.blocks.second
+        topics << { name: "Block 2",unit: "Block 2",order: 2,done: done_block_2 }
+      end
+      if self.blocks.third
+        topics << { name: "Block 3",unit: "Block 3",order: 3,done: done_block_3 }
+      end
+      if self.blocks.fourth
+        topics << { name: "Block 4",unit: "Block 4",order: 4,done: done_block_4 }
+      end
+
+      topics.each do |topic|
+
+        MoodleTopic.create!(
+          moodle_timeline_id: self.id,
+          name: topic[:name],
+          unit: topic[:unit],
+          order: topic[:order],
+          time: 1,
+          done: topic[:done],  # Mark as done if completed
+          deadline: Date.today + 1.year,  # Set a default deadline
+          percentage: 25,
+          mock50: false,
+          mock100: false,
+          number_attempts: nil,
+          submission_date: nil,
+          evaluation_date: nil,
+          completion_data: nil,
+          as1: nil,
+          as2: nil
+        )
+      end
     end
   end
 

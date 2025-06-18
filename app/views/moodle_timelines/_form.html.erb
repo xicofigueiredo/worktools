@@ -75,8 +75,6 @@
                 </div>
               <% end %>
 
-
-
               <!-- End Date -->
               <div class="form-group">
                 <%= form.label :end_date %>
@@ -85,7 +83,7 @@
                       data: { "timeline-form-target": "endDate" } %>
               </div>
               <br>
-              <% if @moodle_timeline.category == 4 %>
+              <% if @moodle_timeline.category == 4 && @moodle_timeline.subject_id != 80 %>
                 <div class="d-flex justify-content-center gap-4 mt-3">
                   <!-- AS1 -->
                   <div class="form-check">
@@ -102,6 +100,18 @@
                         checked: @moodle_timeline.as2 %>
                     <%= form.label :as2, class: 'form-check-label' %>
                   </div>
+                </div>
+              <% elsif @moodle_timeline.subject_id == 80 %>
+                <div class="d-flex justify-content-center gap-4 mt-3">
+                  <% 4.times do |i| %>
+                    <div class="form-check">
+                      <%= form.check_box "blocks[#{i}]",
+                          { class: 'form-check-input', checked: @moodle_timeline.blocks&.[](i) || false },
+                          true,
+                          false %>
+                      <%= form.label "blocks[#{i}]", "Block #{i + 1}", class: 'form-check-label' %>
+                    </div>
+                  <% end %>
                 </div>
               <% end %>
               <!-- Submit Buttons -->

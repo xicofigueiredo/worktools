@@ -208,79 +208,8 @@ class MoodleApiService
           )
         end
 
-        # if course.id == 65
-        #   MoodleTimeline.create!(
-        #     user_id: user_id,
-        #     subject_id: subject.id,
-        #     start_date: Date.today,
-        #     end_date: Date.today + 1.year,
-        #     balance: 0,
-        #     expected_progress: 0,
-        #     progress: 0,
-        #     total_time: 0,
-        #     difference: 0,
-        #     category: category,
-        #     moodle_id: course_id,
-        #     hidden: false,
-        #     as1: nil,
-        #     as2: nil
-        #   )
-
-        #   MoodleTimeline.create!(
-        #     user_id: user_id,
-        #     subject_id: subject.id,
-        #     start_date: Date.today,
-        #     end_date: Date.today + 1.year,
-        #     balance: 0,
-        #     expected_progress: 0,
-        #     progress: 0,
-        #     total_time: 0,
-        #     difference: 0,
-        #     category: category,
-        #     moodle_id: course_id,
-        #     hidden: false,
-        #     as1: nil,
-        #     as2: nil
-        #   )
-
-        #   MoodleTimeline.create!(
-        #     user_id: user_id,
-        #     subject_id: subject.id,
-        #     start_date: Date.today,
-        #     end_date: Date.today + 1.year,
-        #     balance: 0,
-        #     expected_progress: 0,
-        #     progress: 0,
-        #     total_time: 0,
-        #     difference: 0,
-        #     category: category,
-        #     moodle_id: course_id,
-        #     hidden: false,
-        #     as1: nil,
-        #     as2: nil
-        #   )
-
-        #   MoodleTimeline.create!(
-        #     user_id: user_id,
-        #     subject_id: subject.id,
-        #     start_date: Date.today,
-        #     end_date: Date.today + 1.year,
-        #     balance: 0,
-        #     expected_progress: 0,
-        #     progress: 0,
-        #     total_time: 0,
-        #     difference: 0,
-        #     category: category,
-        #     moodle_id: course_id,
-        #     hidden: false,
-        #     as1: nil,
-        #     as2: nil
-        #   )
-        # end
-
         created_timelines << moodle_timeline
         puts "Created #{moodle_timeline.subject.name} Moodle Timeline for #{course.split(':').last.strip}"
-
       end
     end
 
@@ -373,22 +302,27 @@ class MoodleApiService
     courses = call('core_course_get_courses', {})
     puts "Found #{courses.size} courses."
 
-    # Group courses by category for better organization
-    courses_by_category = courses.sort_by { |c| c['categoryid'] }.group_by { |c| c['categoryid'] }
+    target_categories = [3, 4, 5, 15, 18, 19, 33]
 
-    courses_by_category.each do |category_id, category_courses|
+    # Filter and group courses by target categories only
+    courses_by_category = courses.select { |c| target_categories.include?(c['categoryid']) }
+                                .sort_by { |c| [c['categoryid'], c['shortname']] }
+                                .group_by { |c| c['categoryid'] }
+
+    # Sort categories by ID
+    target_categories.sort.each do |category_id|
+      next unless courses_by_category[category_id]
       puts "\nCategory #{category_id}:"
       puts "------------------------"
-      category_courses.each do |course|
-        a << " #{course['shortname']} #{course['id']} #{course['categoryid']}"
-        # puts "#{course['id']}: #{course['fullname']} (#{course['shortname']})"
+      courses_by_category[category_id].each do |course|
+        a << "#{course['shortname']} #{course['id']} #{course['categoryid']}"
       end
     end
+
     puts a
     puts a.size
 
     # search Subjects with that name and populate subject.moodle_id with course['id']
-
   end
 
   # 4) Get user ID by email

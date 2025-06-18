@@ -145,8 +145,20 @@ class MoodleTimelinesController < ApplicationController
   end
 
   def moodle_timeline_params
-    params.require(:moodle_timeline).permit(:user_id, :start_date, :end_date, :total_time, :exam_date_id,
-                                     :mock100, :mock50, :personalized_name, :hidden, :updated_at, :as1, :as2)
+    permitted = params.require(:moodle_timeline).permit(:user_id, :start_date, :end_date, :total_time, :exam_date_id,
+    :mock100, :mock50, :personalized_name, :hidden, :updated_at, :as1, :as2)
+
+
+    if params[:moodle_timeline][:blocks].present?
+      # Convert the form data to a proper boolean array
+      blocks_array = [false] * 4
+      params[:moodle_timeline][:blocks].each do |index, value|
+        blocks_array[index.to_i] = (value == "true")
+      end
+      permitted[:blocks] = blocks_array
+    end
+
+    permitted
   end
 
   def set_exam_dates(filter_future: false)
