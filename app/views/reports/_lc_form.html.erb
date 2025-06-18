@@ -38,6 +38,7 @@
 <%= form_with(model: @report, url: update_knowledges_report_path(@report), method: :patch, local: true, data: { controller: "save-knowledge" }) do |f| %>
   <div class="section">
     <div class="section-title">Knowledge <i class="fa-solid fa-circle-info" title="..."></i></div>
+    <%= link_to "LWS Calculator", "https://edubgabravegeneration.sharepoint.com/:x:/s/EducationalDepartment/EXneLAemM65AraRgL78x80UBUhDIJnKcE7zE8F6e8RTemw?e=84negu", class: "btn btn-primary", target: "_blank" %>
     <table class="knowledge-table">
       <thead>
         <tr>
