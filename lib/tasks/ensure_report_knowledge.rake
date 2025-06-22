@@ -6,7 +6,7 @@ namespace :db do
     subjects = Subject.pluck(:name, :id).to_h
 
 
-    User.where(role: "learner").find_each do |learner|
+    User.where(role: "learner", deactivate: false).find_each do |learner|
       report = learner.reports.find_by(sprint: 13)
       sprint_goal = learner.sprint_goals.find_by(sprint: 13)
 

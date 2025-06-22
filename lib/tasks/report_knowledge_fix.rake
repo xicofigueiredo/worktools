@@ -2,7 +2,7 @@ namespace :db do
   desc "Backfill knowledge_id for report_knowledges by matching subject names and sprint"
   task report_knowledge_fix: :environment do
     count = 0
-    User.where(role: "learner").find_each do |learner|
+    User.where(role: "learner", deactivate: false).find_each do |learner|
       report = learner.reports.find_by(sprint: 12)
       sprint_goal = learner.sprint_goals.find_by(sprint: 12)
 

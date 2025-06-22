@@ -11,7 +11,7 @@ namespace :db do
 
       # Process skills for the sprint_goal
       Skill.where(sprint_goal_id: sprint_goal.id).find_each do |skill|
-        unless report.report_activities.exists?(activity: skill.extracurricular)
+        unless report.report_activities.exists?(skill_id: skill.id)
           report.report_activities.create!(
             activity: skill.extracurricular,
             goal: skill.smartgoals,
@@ -24,7 +24,7 @@ namespace :db do
 
       # Process communities for the sprint_goal
       Community.where(sprint_goal_id: sprint_goal.id).find_each do |community|
-        unless report.report_activities.exists?(activity: community.involved)
+        unless report.report_activities.exists?(community_id: community.id)
           report.report_activities.create!(
             activity: community.involved,
             goal: community.smartgoals,
