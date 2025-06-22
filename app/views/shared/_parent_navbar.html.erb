@@ -1,42 +1,54 @@
 <div class="navbar navbar-expand-sm navbar-light navbar-lewagon sticky-top" style="margin-bottom: 12px; border-bottom: 1px solid #e9ecef;">
   <div class="container-fluid">
     <%= link_to "#", class: "navbar-brand" do %>
-      <div ><%= image_tag "bga_logo.png" %></div>
+      <div><%= image_tag "bga_logo.png" %></div>
     <% end %>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+    <!-- Mobile: Bell + Hamburger -->
+    <div class="d-flex d-sm-none align-items-center">
+      <div class="me-3 position-relative">
+        <%= link_to notifications_path, class: "nav-link position-relative" do %>
+          <i class="fa-solid fa-bell"></i>
+          <% if @notification_count.to_i.positive? %>
+            <span class="position-absolute top-10 start-80 translate-middle badge rounded-pill bg-danger" style="transform: translate(-50%, -50%); font-size: 0.6em;">
+              <%= @notification_count %>
+            </span>
+          <% end %>
+        <% end %>
+      </div>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
 
+    <!-- Desktop menu -->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <!-- Desktop: Bell -->
+        <li class="nav-item d-none d-sm-block me-3">
+          <%= link_to notifications_path, class: "nav-link position-relative" do %>
+            <i class="fa-solid fa-bell"></i>
+            <% if @notification_count.to_i.positive? %>
+              <span class="position-absolute top-10 start-80 translate-middle badge rounded-pill bg-danger" style="transform: translate(-50%, -50%); font-size: 0.6em;">
+                <%= @notification_count %>
+              </span>
+            <% end %>
+          <% end %>
+        </li>
+
         <% if user_signed_in? %>
           <% current_user.kids.each do |kid| %>
             <li class="nav-item">
               <% user = User.find_by(id: kid) %>
-              <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(link_to learner_profile_path(user))%>">
+              <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%);' if current_page?(link_to learner_profile_path(user))%>">
                 <%= link_to user.full_name, learner_profile_path(kid), class: "nav-link" %>
               </div>
             </li>
           <% end %>
-          <li class="nav-item">
-            <div class="p-1 position-relative" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(forms_path) %>">
-              <%= link_to notifications_path, class: "nav-link position-relative" do %>
-                <i class="fa-solid fa-bell"></i>
-                <% if @notification_count.to_i.positive? %>
-                  <span class="position-absolute top-10 start-80 translate-middle badge rounded-pill bg-danger" style="transform: translate(-50%, -50%); font-size: 0.6em;">
-                    <%= @notification_count %>
-                    <span class="visually-hidden">unread notifications</span>
-                  </span>
-                <% end %>
-              <% end %>
-            </div>
-          </li>
           <li class="nav-item dropdown">
             <%= link_to 'Profile', class: 'avatar', id: 'navbarDropdown', 'data-bs-toggle': 'dropdown', 'aria-haspopup': true, 'aria-expanded': false do %>
               <%= image_tag "profile.jpeg", class: "avatar", alt: "dropdown menu" %>
             <% end %>
-          </a>
             <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
               <%= link_to about_path, class: "dropdown-item" do %>
                 <i class="fa-regular fa-circle-question"></i> About
