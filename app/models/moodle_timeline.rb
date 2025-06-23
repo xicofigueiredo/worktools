@@ -1,13 +1,13 @@
 class MoodleTimeline < ApplicationRecord
   belongs_to :user
   belongs_to :subject, optional: true
+
   after_create :create_moodle_topics
   after_update :update_moodle_topics
   after_update :update_as1_as2
   after_save :clear_monthly_goals_cache, if: :dates_changed?
   before_save :calculate_difference, if: :progress_and_expected_progress_present?
 
-  # has_many :knowledges, dependent: :destroy
   before_destroy :destroy_associated_moodle_topics
   # belongs_to :exam_date, optional: true
   # has_many :timeline_progresses, dependent: :destroy
@@ -29,85 +29,96 @@ class MoodleTimeline < ApplicationRecord
     if self.subject_id == 80
       if self.blocks.first
         mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
-        MoodleTimeline.create!(
-          user_id: user_id,
-          subject_id: 1001,
-          start_date: Date.today,
-          end_date: Date.today + 1.year,
-          balance: 0,
-          expected_progress: 0,
-          progress: 0,
-          total_time: 0,
-          difference: 0,
-          category: category,
-          moodle_id: course_id,
-          hidden: false,
-          as1: nil,
-          as2: nil
+        if mt.nil?
+          MoodleTimeline.create!(
+            user_id: user_id,
+            subject_id: 1001,
+            start_date: Date.today,
+            end_date: Date.today + 1.year,
+            balance: 0,
+            expected_progress: 0,
+            progress: 0,
+            total_time: 0,
+            difference: 0,
+            category: category,
+            moodle_id: course_id,
+            hidden: false,
+            as1: nil,
+            as2: nil
           )
+        end
       else
         mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
         mt.destroy if mt.present?
       end
       if self.blocks.second
-        MoodleTimeline.create!(
-          user_id: user_id,
-          subject_id: 1002,
-          start_date: Date.today,
-          end_date: Date.today + 1.year,
-          balance: 0,
-          expected_progress: 0,
-          progress: 0,
-          total_time: 0,
-          difference: 0,
-          category: category,
-          moodle_id: course_id,
-          hidden: false,
-          as1: nil,
-          as2: nil
+        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
+        if mt.nil?
+          MoodleTimeline.create!(
+            user_id: user_id,
+            subject_id: 1002,
+            start_date: Date.today,
+            end_date: Date.today + 1.year,
+            balance: 0,
+            expected_progress: 0,
+            progress: 0,
+            total_time: 0,
+            difference: 0,
+            category: category,
+            moodle_id: course_id,
+            hidden: false,
+            as1: nil,
+            as2: nil
           )
+        end
       else
         mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
         mt.destroy if mt.present?
       end
       if self.blocks.third
-        MoodleTimeline.create!(
-          user_id: user_id,
-          subject_id: 1003,
-          start_date: Date.today,
-          end_date: Date.today + 1.year,
-          balance: 0,
-          expected_progress: 0,
-          progress: 0,
-          total_time: 0,
-          difference: 0,
-          category: category,
-          moodle_id: course_id,
-          hidden: false,
-          as1: nil,
-          as2: nil
+        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
+        if mt.nil?
+          MoodleTimeline.create!(
+            user_id: user_id,
+            subject_id: 1003,
+            start_date: Date.today,
+            end_date: Date.today + 1.year,
+            balance: 0,
+            expected_progress: 0,
+            progress: 0,
+            total_time: 0,
+            difference: 0,
+            category: category,
+            moodle_id: course_id,
+            hidden: false,
+            as1: nil,
+            as2: nil
           )
+        end
       else
         mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
         mt.destroy if mt.present?
       end
       if self.blocks.fourth
-        MoodleTimeline.create!(
-          user_id: user_id,
-          subject_id: 1004,
-          start_date: Date.today,
-          end_date: Date.today + 1.year,
-          balance: 0,
-          expected_progress: 0,
-          progress: 0,
-          total_time: 0,
-          difference: 0,
-          category: category,
-          moodle_id: course_id,
-          hidden: false,
-          as1: nil,
-          as2: nil
+        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
+        if mt.nil?
+          MoodleTimeline.create!(
+            user_id: user_id,
+            subject_id: 1004,
+            start_date: Date.today,
+            end_date: Date.today + 1.year,
+            balance: 0,
+            expected_progress: 0,
+            progress: 0,
+            total_time: 0,
+            difference: 0,
+            category: category,
+            moodle_id: course_id,
+            hidden: false,
+            as1: nil,
+            as2: nil
           )
+        end
       else
         mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
         mt.destroy if mt.present?
@@ -174,6 +185,15 @@ class MoodleTimeline < ApplicationRecord
           as2: as2
         )
       end
+    else
+      MoodleTopic.create!(
+        moodle_timeline_id: self.id,
+        name: "Edit this timeline and select which blocks you want to track",
+        unit: "Setup your timeline",
+        order: 1,
+        time: 0.1,
+        done: false
+      )
     end
   end
 
@@ -245,24 +265,34 @@ class MoodleTimeline < ApplicationRecord
 
       topics.each do |topic|
 
-        MoodleTopic.create!(
+        mt = MoodleTopic.find_by(
           moodle_timeline_id: self.id,
           name: topic[:name],
           unit: topic[:unit],
           order: topic[:order],
           time: 1,
-          done: topic[:done],  # Mark as done if completed
-          deadline: Date.today + 1.year,  # Set a default deadline
-          percentage: 25,
-          mock50: false,
-          mock100: false,
-          number_attempts: nil,
-          submission_date: nil,
-          evaluation_date: nil,
-          completion_data: nil,
-          as1: nil,
-          as2: nil
+          done: topic[:done]
         )
+        if mt.nil?
+          MoodleTopic.create!(
+            moodle_timeline_id: self.id,
+            name: topic[:name],
+            unit: topic[:unit],
+            order: topic[:order],
+            time: 1,
+            done: topic[:done],  # Mark as done if completed
+            deadline: Date.today + 1.year,  # Set a default deadline
+            percentage: 25,
+            mock50: false,
+            mock100: false,
+            number_attempts: nil,
+            submission_date: nil,
+            evaluation_date: nil,
+            completion_data: nil,
+            as1: nil,
+            as2: nil
+          )
+        end
       end
     end
   end

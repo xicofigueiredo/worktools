@@ -163,7 +163,10 @@ class MoodleApiService
   #create moodle timelines
   def create_moodle_timelines_for_learner(email)
     moodle_user_id = get_user_id(email)
-    user_id = User.find_by(email: email).id
+    user = User.find_by(email: email)
+    user_id = user.id
+    user.moodle_id = moodle_user_id
+    user.save!
     return puts "User not found!" if user_id.nil?
 
     courses = get_user_courses(email) # Get enrolled courses
