@@ -26,103 +26,105 @@ class MoodleTimeline < ApplicationRecord
 
 
   def check_if_math_al_timeline
-    if self.subject_id == 80
-      if self.blocks.first
-        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
-        if mt.nil?
-          MoodleTimeline.create!(
-            user_id: user_id,
-            subject_id: 1001,
-            start_date: Date.today,
-            end_date: Date.today + 1.year,
-            balance: 0,
-            expected_progress: 0,
-            progress: 0,
-            total_time: 0,
-            difference: 0,
-            category: category,
-            moodle_id: course_id,
-            hidden: false,
-            as1: nil,
-            as2: nil
-          )
-        end
-      else
-        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
-        mt.destroy if mt.present?
+    return if self.subject_id != 80
+    if self.blocks.first
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
+      if mt.nil?
+        MoodleTimeline.create!(
+          user_id: user_id,
+          subject_id: 1001,
+          start_date: Date.today,
+          end_date: Date.today + 1.year,
+          balance: 0,
+          expected_progress: 0,
+          progress: 0,
+          total_time: 0,
+          difference: 0,
+          category: category,
+          moodle_id: course_id,
+          hidden: false,
+          as1: nil,
+          as2: nil
+        )
       end
-      if self.blocks.second
-        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
-        if mt.nil?
-          MoodleTimeline.create!(
-            user_id: user_id,
-            subject_id: 1002,
-            start_date: Date.today,
-            end_date: Date.today + 1.year,
-            balance: 0,
-            expected_progress: 0,
-            progress: 0,
-            total_time: 0,
-            difference: 0,
-            category: category,
-            moodle_id: course_id,
-            hidden: false,
-            as1: nil,
-            as2: nil
-          )
-        end
-      else
-        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
-        mt.destroy if mt.present?
+    else
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
+      mt.destroy if mt.present?
+    end
+    if self.blocks.second
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
+      if mt.nil?
+        MoodleTimeline.create!(
+          user_id: user_id,
+          subject_id: 1002,
+          start_date: Date.today,
+          end_date: Date.today + 1.year,
+          balance: 0,
+          expected_progress: 0,
+          progress: 0,
+          total_time: 0,
+          difference: 0,
+          category: category,
+          moodle_id: course_id,
+          hidden: false,
+          as1: nil,
+          as2: nil
+        )
       end
-      if self.blocks.third
-        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
-        if mt.nil?
-          MoodleTimeline.create!(
-            user_id: user_id,
-            subject_id: 1003,
-            start_date: Date.today,
-            end_date: Date.today + 1.year,
-            balance: 0,
-            expected_progress: 0,
-            progress: 0,
-            total_time: 0,
-            difference: 0,
-            category: category,
-            moodle_id: course_id,
-            hidden: false,
-            as1: nil,
-            as2: nil
-          )
-        end
-      else
-        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
-        mt.destroy if mt.present?
+    else
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
+      mt.destroy if mt.present?
+    end
+    if self.blocks.third
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
+      if mt.nil?
+        MoodleTimeline.create!(
+          user_id: user_id,
+          subject_id: 1003,
+          start_date: Date.today,
+          end_date: Date.today + 1.year,
+          balance: 0,
+          expected_progress: 0,
+          progress: 0,
+          total_time: 0,
+          difference: 0,
+          category: category,
+          moodle_id: course_id,
+          hidden: false,
+          as1: nil,
+          as2: nil
+        )
       end
-      if self.blocks.fourth
-        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
-        if mt.nil?
-          MoodleTimeline.create!(
-            user_id: user_id,
-            subject_id: 1004,
-            start_date: Date.today,
-            end_date: Date.today + 1.year,
-            balance: 0,
-            expected_progress: 0,
-            progress: 0,
-            total_time: 0,
-            difference: 0,
-            category: category,
-            moodle_id: course_id,
-            hidden: false,
-            as1: nil,
-            as2: nil
-          )
-        end
-      else
-        mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
-        mt.destroy if mt.present?
+    else
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
+      mt.destroy if mt.present?
+    end
+    if self.blocks.fourth
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
+      if mt.nil?
+        MoodleTimeline.create!(
+          user_id: user_id,
+          subject_id: 1004,
+          start_date: Date.today,
+          end_date: Date.today + 1.year,
+          balance: 0,
+          expected_progress: 0,
+          progress: 0,
+          total_time: 0,
+          difference: 0,
+          category: category,
+          moodle_id: course_id,
+          hidden: false,
+          as1: nil,
+          as2: nil
+        )
       end
+    else
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
+      mt.destroy if mt.present?
+    end
+    if self.moodle_topics.count > 1
+      self.moodle_topics.first.destroy
     end
   end
 
