@@ -158,11 +158,11 @@ class MoodleTimeline < ApplicationRecord
 
         MoodleTopic.create!(
           moodle_timeline_id: self.id,
-          time: activity[:ect].to_i || 1,  # Default to 1 if ect is nil or 0
+          time: activity[:ect] || 1,  # Default to 1 if ect is nil or 0
           name: activity[:name],
           unit: activity[:section_name],  # Store section name as unit
           order: index + 1,  # Use index to maintain order
-          grade: activity[:grade],  # Grade is already a number from the API
+          grade: activity[:grade].present? ? activity[:grade].round(2) : nil,  # Grade is already a number from the API
           done: activity[:completiondata] == 1,  # Mark as done if completed
           completion_date: begin
             if activity[:evaluation_date].present?

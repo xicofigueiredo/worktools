@@ -100,41 +100,13 @@ class MoodleApiService
         completed_activities.each_with_index do |activity, index|
           next if activity[:section_visible] == 0
 
-          MoodleTopic.find_or_create_by!(
-            timeline: timeline,
-            time: activity[:ect].to_i || 1,  # Default to 1 if ect is nil or 0
-            name: activity[:name],
-            unit: activity[:section_name],  # Store section name as unit
-            order: index + 1,  # Use index to maintain order
-            grade: activity[:grade],  # Grade is already a number from the API
-            done: activity[:completiondata] == 1,  # Mark as done if completed
-            completion_date: begin
-              if activity[:evaluation_date].present?
-                DateTime.parse(activity[:evaluation_date])
-              else
-                nil
-              end
-            rescue Date::Error => e
-              puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
-              nil
-            end,
-            moodle_id: activity[:id],
-            deadline: Date.today + 1.year,  # Set a default deadline
-            percentage: index * 0.001,
-            mock50: activity[:mock50] == 1,
-            mock100: activity[:mock100] == 1,
-            number_attempts: activity[:number_attempts],
-            submission_date: activity[:submission_date],
-            evaluation_date: activity[:evaluation_date],
-            completion_data: activity[:completiondata]
-          )
 
           MoodleTopic.find_by(timeline: timeline, moodle_id: activity[:id]).update!(
             time: activity[:ect].to_i || 1,
             name: activity[:name],
             unit: activity[:section_name],
             order: index + 1,
-            grade: activity[:grade],
+            grade: activity[:grade].round(2),
             done: activity[:completiondata] == 1,
             completion_date: begin
               if activity[:evaluation_date].present?
