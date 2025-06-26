@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_06_17_172911) do
+ActiveRecord::Schema[7.0].define(version: 2025_06_26_103424) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -85,6 +85,42 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_17_172911) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["subject_id"], name: "index_exam_dates_on_subject_id"
+  end
+
+  create_table "exam_enrolls", force: :cascade do |t|
+    t.string "hub"
+    t.string "learning_coach"
+    t.string "learning_coach_email"
+    t.string "learner_name"
+    t.string "learner_id_type"
+    t.string "learner_id_number"
+    t.date "date_of_birth"
+    t.string "gender"
+    t.boolean "native_language_english"
+    t.string "subject_name"
+    t.integer "code"
+    t.string "qualification"
+    t.string "progress_cut_off"
+    t.string "mock_results"
+    t.string "bga_exam_centre"
+    t.string "exam_board"
+    t.boolean "has_special_accommodations"
+    t.string "special_accommodations_personalized"
+    t.string "additional_comments"
+    t.string "extension_justification"
+    t.boolean "extension_cm_approval"
+    t.string "extension_cm_comment"
+    t.boolean "extension_edu_approval"
+    t.string "extension_edu_comment"
+    t.string "exception_justification"
+    t.boolean "exception_cm_approval"
+    t.string "exception_cm_comment"
+    t.boolean "exception_edu_approval"
+    t.string "exception_edu_comment"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "moodle_timeline_id"
+    t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
   end
 
   create_table "excel_imports", force: :cascade do |t|
@@ -675,6 +711,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_17_172911) do
   add_foreign_key "attendances", "users"
   add_foreign_key "communities", "sprint_goals"
   add_foreign_key "exam_dates", "subjects"
+  add_foreign_key "exam_enrolls", "moodle_timelines"
   add_foreign_key "form_interrogation_joins", "forms"
   add_foreign_key "form_interrogation_joins", "interrogations"
   add_foreign_key "friday_slots", "users", column: "lc_id"
