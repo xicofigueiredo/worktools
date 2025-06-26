@@ -3,7 +3,23 @@ class ExamEnrollsController < ApplicationController
   before_action :set_exam_enroll, only: [:show, :edit, :update, :destroy]
 
   def index
-    @exam_enrolls = ExamEnroll.includes(:moodle_timeline).all
+    # Get the target sprint based on date parameter or default to current sprint
+    if params[:date].present?
+      target_date = Date.parse(params[:date])
+      @sprint = Sprint.where("start_date <= ? AND end_date >= ?", target_date, target_date).first
+    end
+
+    # Fallback to current sprint if no sprint found
+    @sprint ||= Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+
+    # Get adjacent sprints for navigation
+    @previous_sprint = Sprint.where("end_date < ?", @sprint.start_date).order(end_date: :desc).first
+    @next_sprint = Sprint.where("start_date > ?", @sprint.end_date).order(start_date: :asc).first
+
+    @exam_enrolls = ExamEnroll.includes(moodle_timeline: [:subject, :exam_date])
+                             .joins(moodle_timeline: :exam_date)
+                             .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+                             .order('exam_dates.date ASC')
   end
 
   def show
