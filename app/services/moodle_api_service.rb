@@ -33,9 +33,10 @@ class MoodleApiService
 
   def get_course_activities(course_id, user_id)
     response = call('local_wsbga_get_course', { courseid: course_id, userid: user_id })
-
+    total_ect = 0
     if response.is_a?(Array)
       response.map do |activity|
+        total_ect += activity['ect'].to_f
         {
           id: activity['id'],
           section_name: activity['section_name'],
@@ -52,9 +53,63 @@ class MoodleApiService
           mock50: activity['mock50'],
           mock100: activity['mock100']
         }
+        puts "Total ECT: #{activity['ect']}"
+        puts "name: #{activity['name']}"
       end
+      puts "Total ECT: #{total_ect}"
     else
       puts "Error fetching completed course activities: #{response}"
+      []
+    end
+  end
+
+  def get_all_course_activities(course_id)
+    # Fetch course contents (topics & activities) using standard Moodle API
+    course_contents = call('core_course_get_contents', { courseid: course_id })
+
+    if course_contents.is_a?(Array) && course_contents.any?
+      all_activities = []
+      total_activities = 0
+      total_ect = 0
+
+      course_contents.each do |section|
+        next if section['name'].nil? || section['modules'].nil?
+
+        section_title = section['name']
+        section_visible = section['visible'] == 1
+
+        section['modules'].each do |mod|
+          total_activities += 1
+          total_ect += mod['ect'].to_f
+          activity = {
+            id: mod['id'],
+            section_name: section_title,
+            section_visible: section_visible,
+            name: mod['name'],
+            modname: mod['modname'],
+            visible: mod['visible'] == 1,
+            availabilityinfo: mod['availabilityinfo'] || "No restrictions",
+            description: mod['description'] || "",
+            url: mod['url'] || "",
+            ect: mod['ect'] || 0,
+            grade: nil,
+            completion: nil,
+            completiondata: nil,
+            submission_date: nil,
+            evaluation_date: nil,
+            number_attempts: nil,
+            mock50: nil,
+            mock100: nil
+          }
+          all_activities << activity
+        end
+      end
+
+      puts "Found #{total_activities} activities in course #{course_id}"
+      puts "Sections: #{course_contents.length}"
+      all_activities
+    else
+      puts "Error fetching course activities: #{course_contents}"
       []
     end
   end
@@ -102,7 +157,7 @@ class MoodleApiService
 
 
           MoodleTopic.find_by(timeline: timeline, moodle_id: activity[:id]).update!(
-            time: activity[:ect].to_i || 1,
+            time: activity[:ect].to_f || 1,
             name: activity[:name],
             unit: activity[:section_name],
             order: index + 1,
@@ -224,8 +279,9 @@ class MoodleApiService
           activities = get_course_activities(course_id, 2)
 
           if activities.is_a?(Array)
-            with_ect = activities.count { |activity| activity[:ect].to_i > 0 }
-            without_ect = activities.count { |activity| activity[:ect].to_i == 0 }
+            with_ect = activities.count { |activity| activity[:ect].to_f > 0 }
+            without_ect = activities.count { |activity| activity[:ect].to_f == 0 }
+            total_ect = activities.sum { |activity| activity[:ect].to_f }
 
             total_with_ect += with_ect
             total_without_ect += without_ect
@@ -234,6 +290,7 @@ class MoodleApiService
             puts "  - Activities with ECT: #{with_ect}"
             puts "  - Activities without ECT: #{without_ect}"
             puts "  - Total activities: #{activities.length}"
+            puts "  - Total ECT: #{total_ect}"
           end
         end
       end
@@ -508,7 +565,7 @@ class MoodleApiService
             rescue Date::Error => e
               nil
             end,
-            time: activity[:ect].to_i || 1,
+            time: activity[:ect].to_f || 1,
             unit: activity[:section_name],
             mock50: activity[:mock50] == 1,
             mock100: activity[:mock100] == 1,
