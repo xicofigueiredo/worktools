@@ -6,14 +6,21 @@ class ReportsController < ApplicationController
   def lc_view
     redirect_to root_path if current_user.role != 'lc' && current_user.role != 'admin'
 
-    @learners = User.joins(:hubs)
-    .where(hubs: { id: current_user.hubs.ids }, role: 'learner', diactivate: [false, nil])
+    @learners = User.joins(:users_hubs)
+    .joins("INNER JOIN hubs ON hubs.id = users_hubs.hub_id")
+    .where(hubs: { id: current_user.hubs.ids }, role: 'learner', deactivate: [false, nil])
     .distinct
   end
 
   def index
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
+
+    # Check if sprint exists
+    if @sprint.nil?
+      redirect_to reports_path, alert: "No sprint found for the current date."
+      return
+    end
 
     if @sprint && @sprint.id < 12
       redirect_to reports_path, alert: "There are no reports from earlier sprints."
@@ -44,7 +51,9 @@ class ReportsController < ApplicationController
       end
     else
 
-      @learners = User.joins(:hubs)
+
+      @learners = User.joins(:users_hubs)
+        .joins("INNER JOIN hubs ON hubs.id = users_hubs.hub_id")
         .where(hubs: { id: current_user.hubs.ids }, role: 'learner')
         .where("users.deactivate = ? OR (users.graduated_at BETWEEN ? AND ?)",
                false,
@@ -232,14 +241,14 @@ class ReportsController < ApplicationController
 
 
   def toggle_hide
-    lcs = @report.user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+    lcs = @report.user.users_hubs.includes(:hub).find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
       lc.hubs.count >= 3
     end
 
     lc_ids = lcs.present? ? lcs.map(&:id) : []
 
     @report.update(hide: !@report.hide, lc_ids: lc_ids)
-    redirect_to report_path(@report), notice: "Visibility toggled successfully."
+    redirect_back fallback_location: reports_path, notice: "Visibility toggled successfully."
   end
 
   def update_knowledges
@@ -684,6 +693,7 @@ class ReportsController < ApplicationController
       render json: { success: false, error: 'Learning Coach not found in report' }
     end
   end
+
 
   private
 

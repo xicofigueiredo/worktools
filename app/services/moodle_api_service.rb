@@ -63,53 +63,48 @@ class MoodleApiService
     end
   end
 
-  def get_all_course_activities(course_id)
-    # Fetch course contents (topics & activities) using standard Moodle API
-    course_contents = call('core_course_get_contents', { courseid: course_id })
+  def get_all_course_activities(course_id, user_id = 1398)
+    # Use the custom API that includes ECT values (similar to get_course_activities)
+    response = call('local_wsbga_get_course', { courseid: course_id, userid: user_id })
+    total_ect = 0
+    activities_with_ect = 0
+    activities_without_ect = 0
 
-    if course_contents.is_a?(Array) && course_contents.any?
+    if response.is_a?(Array)
       all_activities = []
-      total_activities = 0
-      total_ect = 0
 
-      course_contents.each do |section|
-        next if section['name'].nil? || section['modules'].nil?
+      response.each do |activity|
+        ect_value = activity['ect'].to_f
+        total_ect += ect_value
 
-        section_title = section['name']
-        section_visible = section['visible'] == 1
-
-        section['modules'].each do |mod|
-          total_activities += 1
-          total_ect += mod['ect'].to_f
-          activity = {
-            id: mod['id'],
-            section_name: section_title,
-            section_visible: section_visible,
-            name: mod['name'],
-            modname: mod['modname'],
-            visible: mod['visible'] == 1,
-            availabilityinfo: mod['availabilityinfo'] || "No restrictions",
-            description: mod['description'] || "",
-            url: mod['url'] || "",
-            ect: mod['ect'] || 0,
-            grade: nil,
-            completion: nil,
-            completiondata: nil,
-            submission_date: nil,
-            evaluation_date: nil,
-            number_attempts: nil,
-            mock50: nil,
-            mock100: nil
-          }
-          all_activities << activity
+        if ect_value > 0
+          activities_with_ect += 1
+        else
+          activities_without_ect += 1
         end
+
+        all_activities << {
+          id: activity['id'],
+          section_name: activity['section_name'],
+          section_visible: activity['section_visible'],
+          name: activity['name'],
+          modname: activity['modname'],
+          ect: ect_value,
+          visible: activity['visible'] == 1,
+          availabilityinfo: activity['availabilityinfo'] || "No restrictions",
+          description: activity['description'] || "",
+          url: activity['url'] || ""
+        }
       end
 
-      puts "Found #{total_activities} activities in course #{course_id}"
-      puts "Sections: #{course_contents.length}"
+      puts "Found #{all_activities.length} activities in course #{course_id}"
+      puts "Total ECTs: #{total_ect}"
+      puts "Activities with ECT: #{activities_with_ect}"
+      puts "Activities without ECT: #{activities_without_ect}"
+
       all_activities
     else
-      puts "Error fetching course activities: #{course_contents}"
+      puts "Error fetching course activities: #{response}"
       []
     end
   end

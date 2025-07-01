@@ -20,14 +20,25 @@
       <% if @report && current_user.role != 'lc' && current_user.role != 'admin'%>
         <h1 class="text-center">Report</h1>
       <% else %>
-        <div class="d-flex justify-content-between mb-3 align-items-center position-relative" style="margin-top: 17px;">
-          <b style="color:black; margin-right:6px;">Visible</b>
-          <%= button_to toggle_hide_report_path(@report), data: { turbo_method: :patch }, class: "btn", style: "border-radius: 10px; font-color: white; background-color: #28a745;", title:"Change this report visibility for the learner and parents" do %>
-            <i class="fa-regular fa-eye" style="color:white"></i>
-            <i class="fa-regular fa-eye-slash" style="color:#28a745;"></i>
-          <% end %>
-          <b style="color:black; margin-left:6px;">Hidden</b>
-        </div>
+        <% if @report.hide %>
+          <div class="d-flex justify-content-between mb-3 align-items-center position-relative" style="margin-top: 17px;">
+            <b style="color:black; margin-right:6px;">Visible</b>
+            <%= button_to toggle_hide_report_path(@report), data: { turbo_method: :patch }, class: "btn", style: "border-radius: 10px; font-color: white; background-color: #dc3545;", title:"Change this report visibility for the learner and parents" do %>
+              <i class="fa-regular fa-eye" style="color:#dc3545"></i>
+              <i class="fa-regular fa-eye-slash" style="color:white"></i>
+            <% end %>
+            <b style="color:black; margin-left:6px;">Hidden</b>
+          </div>
+        <% else %>
+          <div class="d-flex justify-content-between mb-3 align-items-center position-relative" style="margin-top: 17px;">
+            <b style="color:black; margin-right:6px;">Visible</b>
+            <%= button_to toggle_hide_report_path(@report), data: { turbo_method: :patch }, class: "btn", style: "border-radius: 10px; font-color: white; background-color: #28a745;", title:"Change this report visibility for the learner and parents" do %>
+              <i class="fa-regular fa-eye" style="color:white"></i>
+              <i class="fa-regular fa-eye-slash" style="color:#28a745;"></i>
+            <% end %>
+            <b style="color:black; margin-left:6px;">Hidden</b>
+          </div>
+        <% end %>
       <% end %>
     </div>
 
