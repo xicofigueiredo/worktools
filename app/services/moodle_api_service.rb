@@ -63,7 +63,7 @@ class MoodleApiService
     end
   end
 
-  def get_all_course_activities(course_id, user_id = 1398)
+  def get_all_course_activities(course_id, user_id)
     # Use the custom API that includes ECT values (similar to get_course_activities)
     response = call('local_wsbga_get_course', { courseid: course_id, userid: user_id })
     total_ect = 0
