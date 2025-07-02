@@ -108,6 +108,17 @@ class ExamEnrollsController < ApplicationController
     end
   end
 
+  def delete_document
+    @exam_enroll = ExamEnroll.find(params[:id])
+    document = @exam_enroll.exam_enroll_documents.find(params[:document_id])
+    document.purge
+
+    respond_to do |format|
+      format.html { redirect_to edit_exam_enroll_path(@exam_enroll), notice: 'Document was successfully deleted.' }
+      format.json { head :no_content }
+    end
+  end
+
   private
 
   def set_exam_enroll

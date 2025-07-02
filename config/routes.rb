@@ -164,6 +164,10 @@ Rails.application.routes.draw do
     end
     get 'moodle_index', to: 'timelines#moodle_index', as: :moodle_index
 
-    resources :exam_enrolls, only: [:index, :show, :new, :create, :edit, :update, :destroy]
+    resources :exam_enrolls, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
+      member do
+        delete :delete_document
+      end
+    end
 
 end
