@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_02_213238) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_02_220954) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -144,6 +144,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_02_213238) do
     t.string "failed_mock_exception_dc_comment"
     t.boolean "failed_mock_exception_edu_approval"
     t.string "failed_mock_exception_edu_comment"
+    t.string "status"
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
   end
 
