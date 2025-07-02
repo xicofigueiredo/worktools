@@ -145,55 +145,6 @@ class ExamEnrollsController < ApplicationController
     @exam_enroll = ExamEnroll.find(params[:id])
   end
 
-  def authorize_approval_actions
-    # Skip authorization for admin users
-    return if current_user.role == 'admin'
-
-    case current_user.role
-    when 'cm'
-      # Only allow CM to modify CM approval and comment fields
-      params[:exam_enroll].delete(:pre_registration_exception_dc_approval)
-      params[:exam_enroll].delete(:pre_registration_exception_dc_comment)
-      params[:exam_enroll].delete(:pre_registration_exception_edu_approval)
-      params[:exam_enroll].delete(:pre_registration_exception_edu_comment)
-      params[:exam_enroll].delete(:failed_mock_exception_dc_approval)
-      params[:exam_enroll].delete(:failed_mock_exception_dc_comment)
-      params[:exam_enroll].delete(:failed_mock_exception_edu_approval)
-      params[:exam_enroll].delete(:failed_mock_exception_edu_comment)
-      params[:exam_enroll].delete(:extension_dc_approval)
-      params[:exam_enroll].delete(:extension_dc_comment)
-      params[:exam_enroll].delete(:extension_edu_approval)
-      params[:exam_enroll].delete(:extension_edu_comment)
-    when 'dc'
-      # Only allow DC to modify DC approval and comment fields
-      params[:exam_enroll].delete(:pre_registration_exception_cm_approval)
-      params[:exam_enroll].delete(:pre_registration_exception_cm_comment)
-      params[:exam_enroll].delete(:pre_registration_exception_edu_approval)
-      params[:exam_enroll].delete(:pre_registration_exception_edu_comment)
-      params[:exam_enroll].delete(:failed_mock_exception_cm_approval)
-      params[:exam_enroll].delete(:failed_mock_exception_cm_comment)
-      params[:exam_enroll].delete(:failed_mock_exception_edu_approval)
-      params[:exam_enroll].delete(:failed_mock_exception_edu_comment)
-      params[:exam_enroll].delete(:extension_cm_approval)
-      params[:exam_enroll].delete(:extension_cm_comment)
-      params[:exam_enroll].delete(:extension_edu_approval)
-      params[:exam_enroll].delete(:extension_edu_comment)
-    when 'edu'
-      # Only allow EDU to modify EDU approval and comment fields
-      params[:exam_enroll].delete(:pre_registration_exception_cm_approval)
-      params[:exam_enroll].delete(:pre_registration_exception_cm_comment)
-      params[:exam_enroll].delete(:pre_registration_exception_dc_approval)
-      params[:exam_enroll].delete(:pre_registration_exception_dc_comment)
-      params[:exam_enroll].delete(:failed_mock_exception_cm_approval)
-      params[:exam_enroll].delete(:failed_mock_exception_cm_comment)
-      params[:exam_enroll].delete(:failed_mock_exception_dc_approval)
-      params[:exam_enroll].delete(:failed_mock_exception_dc_comment)
-      params[:exam_enroll].delete(:extension_cm_approval)
-      params[:exam_enroll].delete(:extension_cm_comment)
-      params[:exam_enroll].delete(:extension_dc_approval)
-      params[:exam_enroll].delete(:extension_dc_comment)
-    end
-  end
 
   def exam_enroll_params
     params.require(:exam_enroll).permit(
