@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_02_161755) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_02_213238) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -123,20 +123,27 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_02_161755) do
     t.string "extension_cm_comment"
     t.boolean "extension_edu_approval"
     t.string "extension_edu_comment"
-    t.string "exception_justification"
-    t.boolean "exception_cm_approval"
-    t.string "exception_cm_comment"
-    t.boolean "exception_edu_approval"
-    t.string "exception_edu_comment"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "moodle_timeline_id"
     t.boolean "extension_dc_approval"
     t.string "extension_dc_comment"
-    t.boolean "exception_dc_approval"
-    t.string "exception_dc_comment"
     t.boolean "repeating", default: false
     t.boolean "graduating", default: false
+    t.string "pre_registration_exception_justification"
+    t.boolean "pre_registration_exception_cm_approval"
+    t.string "pre_registration_exception_cm_comment"
+    t.boolean "pre_registration_exception_dc_approval"
+    t.string "pre_registration_exception_dc_comment"
+    t.boolean "pre_registration_exception_edu_approval"
+    t.string "pre_registration_exception_edu_comment"
+    t.string "failed_mock_exception_justification"
+    t.boolean "failed_mock_exception_cm_approval"
+    t.string "failed_mock_exception_cm_comment"
+    t.boolean "failed_mock_exception_dc_approval"
+    t.string "failed_mock_exception_dc_comment"
+    t.boolean "failed_mock_exception_edu_approval"
+    t.string "failed_mock_exception_edu_comment"
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
   end
 

@@ -187,7 +187,6 @@
   </div>
 
   <div class="accordion" id="approvalAccordion">
-
     <!-- Pre-registration Exception Section -->
     <div class="accordion-item">
       <h2 class="accordion-header">
@@ -205,53 +204,204 @@
             </div>
             <div class="col-md-4 mb-3">
               <label class="form-label">Course Manager Approval</label>
-              <%= f.hidden_field :pre_registration_exception_cm_approval, value: '', include_hidden: true %>
-              <div class="btn-group" role="group" aria-label="CM Approval buttons">
-                <%= f.radio_button :pre_registration_exception_cm_approval, "true", class: 'btn-check' %>
-                <%= f.label :pre_registration_exception_cm_approval_true, 'Approve', class: 'btn btn-outline-success' %>
+              <% if current_user.role == 'cm' || current_user.role == 'admin' %>
+                <%= f.hidden_field :pre_registration_exception_cm_approval, value: '', include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="CM Approval buttons">
+                  <%= f.radio_button :pre_registration_exception_cm_approval, true, class: 'btn-check' %>
+                  <%= f.label :pre_registration_exception_cm_approval_true, 'Approve', class: 'btn btn-outline-success' %>
 
-                <%= f.radio_button :pre_registration_exception_cm_approval, "false", class: 'btn-check' %>
-                <%= f.label :pre_registration_exception_cm_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
-              </div>
+                  <%= f.radio_button :pre_registration_exception_cm_approval, false, class: 'btn-check' %>
+                  <%= f.label :pre_registration_exception_cm_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
+                </div>
+              <% else %>
+                <%= f.hidden_field :pre_registration_exception_cm_approval, include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="CM Approval buttons">
+                  <%= f.radio_button :pre_registration_exception_cm_approval, true, class: 'btn-check', disabled: true %>
+                  <%= f.label :pre_registration_exception_cm_approval_true, 'Approve', class: "btn btn-outline-success #{@exam_enroll.pre_registration_exception_cm_approval == true ? 'active' : ''}", disabled: true %>
 
+                  <%= f.radio_button :pre_registration_exception_cm_approval, false, class: 'btn-check', disabled: true %>
+                  <%= f.label :pre_registration_exception_cm_approval_false, 'Reject', class: "btn btn-outline-danger #{@exam_enroll.pre_registration_exception_cm_approval == false ? 'active' : ''}", disabled: true %>
+                </div>
+              <% end %>
               <div class="mt-3">
                 <%= f.label :pre_registration_exception_cm_comment, "CM Comment", class: "form-label" %>
-                <%= f.text_area :pre_registration_exception_cm_comment, class: "form-control", rows: 2 %>
+                <%= f.text_area :pre_registration_exception_cm_comment,
+                    class: "form-control",
+                    rows: 2,
+                    disabled: !(current_user.role == 'cm' || current_user.role == 'admin') %>
               </div>
             </div>
 
             <div class="col-md-4 mb-3">
-              <label class="form-label">DC Approval</label>
-              <%= f.hidden_field :pre_registration_exception_dc_approval, value: '', include_hidden: true %>
-              <div class="btn-group" role="group" aria-label="DC Approval buttons">
-                <%= f.radio_button :pre_registration_exception_dc_approval, "true", class: 'btn-check' %>
-                <%= f.label :pre_registration_exception_dc_approval_true, 'Approve', class: 'btn btn-outline-success' %>
+              <label class="form-label">Development Coach Approval</label>
+              <% if current_user.role == 'dc' || current_user.role == 'admin' %>
+                <%= f.hidden_field :pre_registration_exception_dc_approval, value: '', include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="DC Approval buttons">
+                  <%= f.radio_button :pre_registration_exception_dc_approval, true, class: 'btn-check' %>
+                  <%= f.label :pre_registration_exception_dc_approval_true, 'Approve', class: 'btn btn-outline-success' %>
 
-                <%= f.radio_button :pre_registration_exception_dc_approval, "false", class: 'btn-check' %>
-                <%= f.label :pre_registration_exception_dc_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
-              </div>
+                  <%= f.radio_button :pre_registration_exception_dc_approval, false, class: 'btn-check' %>
+                  <%= f.label :pre_registration_exception_dc_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
+                </div>
+              <% else %>
+                <%= f.hidden_field :pre_registration_exception_dc_approval, include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="DC Approval buttons">
+                  <%= f.radio_button :pre_registration_exception_dc_approval, true, class: 'btn-check', disabled: true %>
+                  <%= f.label :pre_registration_exception_dc_approval_true, 'Approve', class: "btn btn-outline-success #{@exam_enroll.pre_registration_exception_dc_approval == true ? 'active' : ''}", disabled: true %>
 
+                  <%= f.radio_button :pre_registration_exception_dc_approval, false, class: 'btn-check', disabled: true %>
+                  <%= f.label :pre_registration_exception_dc_approval_false, 'Reject', class: "btn btn-outline-danger #{@exam_enroll.pre_registration_exception_dc_approval == false ? 'active' : ''}", disabled: true %>
+                </div>
+              <% end %>
               <div class="mt-3">
                 <%= f.label :pre_registration_exception_dc_comment, "DC Comment", class: "form-label" %>
-                <%= f.text_area :pre_registration_exception_dc_comment, class: "form-control", rows: 2 %>
+                <%= f.text_area :pre_registration_exception_dc_comment,
+                    class: "form-control",
+                    rows: 2,
+                    disabled: !(current_user.role == 'dc' || current_user.role == 'admin') %>
               </div>
             </div>
 
             <div class="col-md-4 mb-3">
               <label class="form-label">Education Team Approval</label>
-              <%= f.hidden_field :pre_registration_exception_edu_approval, value: '', include_hidden: true %>
-              <div class="btn-group" role="group" aria-label="EDU Approval buttons">
-                <%= f.radio_button :pre_registration_exception_edu_approval, "true", class: 'btn-check' %>
-                <%= f.label :pre_registration_exception_edu_approval_true, 'Approve', class: 'btn btn-outline-success' %>
+              <% if current_user.role == 'edu' || current_user.role == 'admin' %>
+                <%= f.hidden_field :pre_registration_exception_edu_approval, value: '', include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="EDU Approval buttons">
+                  <%= f.radio_button :pre_registration_exception_edu_approval, true, class: 'btn-check' %>
+                  <%= f.label :pre_registration_exception_edu_approval_true, 'Approve', class: 'btn btn-outline-success' %>
 
-                <%= f.radio_button :pre_registration_exception_edu_approval, "false", class: 'btn-check' %>
-                <%= f.label :pre_registration_exception_edu_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
-              </div>
+                  <%= f.radio_button :pre_registration_exception_edu_approval, false, class: 'btn-check' %>
+                  <%= f.label :pre_registration_exception_edu_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
+                </div>
+              <% else %>
+                <%= f.hidden_field :pre_registration_exception_edu_approval, include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="EDU Approval buttons">
+                  <%= f.radio_button :pre_registration_exception_edu_approval, true, class: 'btn-check', disabled: true %>
+                  <%= f.label :pre_registration_exception_edu_approval_true, 'Approve', class: "btn btn-outline-success #{@exam_enroll.pre_registration_exception_edu_approval == true ? 'active' : ''}", disabled: true %>
 
+                  <%= f.radio_button :pre_registration_exception_edu_approval, false, class: 'btn-check', disabled: true %>
+                  <%= f.label :pre_registration_exception_edu_approval_false, 'Reject', class: "btn btn-outline-danger #{@exam_enroll.pre_registration_exception_edu_approval == false ? 'active' : ''}", disabled: true %>
+                </div>
+              <% end %>
               <div class="mt-3">
                 <%= f.label :pre_registration_exception_edu_comment, "EDU Comment", class: "form-label" %>
-                <%= f.text_area :pre_registration_exception_edu_comment, class: "form-control", rows: 2 %>
+                <%= f.text_area :pre_registration_exception_edu_comment,
+                    class: "form-control",
+                    rows: 2,
+                    disabled: !(current_user.role == 'edu' || current_user.role == 'admin') %>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Failed Mock Exception Section -->
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed card-header d-flex align-items-center gap-1" type="button" data-bs-toggle="collapse" data-bs-target="#failedMockException" style="background-color: #ececec;">
+          <h5>Failed Mock Exception</h5>
+          <i class="fa-solid fa-circle-info" style="color:rgb(108 117 126);" title="In case your learner has received a U as the Mock result, but still wants to be enrolled in the respective exam, an exception requirement must be submitted for the educational department to review"></i>
+        </button>
+      </h2>
+      <div id="failedMockException" class="accordion-collapse collapse" data-bs-parent="#approvalAccordion">
+        <div class="accordion-body">
+          <div class="row">
+            <div class="col-12 mb-3">
+              <%= f.label :failed_mock_exception_justification, "Justification:", class: "form-label" %>
+              <%= f.text_area :failed_mock_exception_justification, class: "form-control", rows: 3 %>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Course Manager Approval</label>
+              <% if current_user.role == 'cm' || current_user.role == 'admin' %>
+                <%= f.hidden_field :failed_mock_exception_cm_approval, value: '', include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="CM Approval buttons">
+                  <%= f.radio_button :failed_mock_exception_cm_approval, true, class: 'btn-check' %>
+                  <%= f.label :failed_mock_exception_cm_approval_true, 'Approve', class: 'btn btn-outline-success' %>
+
+                  <%= f.radio_button :failed_mock_exception_cm_approval, false, class: 'btn-check' %>
+                  <%= f.label :failed_mock_exception_cm_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
+                </div>
+
+                <div class="mt-3">
+                  <%= f.label :failed_mock_exception_cm_comment, "CM Comment", class: "form-label" %>
+                  <%= f.text_area :failed_mock_exception_cm_comment,
+                      class: "form-control",
+                      rows: 2,
+                      disabled: !(current_user.role == 'cm' || current_user.role == 'admin') %>
+                </div>
+              <% else %>
+                <%= f.hidden_field :failed_mock_exception_cm_approval, include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="CM Approval buttons">
+                  <%= f.radio_button :failed_mock_exception_cm_approval, true, class: 'btn-check', disabled: true %>
+                  <%= f.label :failed_mock_exception_cm_approval_true, 'Approve', class: "btn btn-outline-success #{@exam_enroll.failed_mock_exception_cm_approval == true ? 'active' : ''}", disabled: true %>
+
+                  <%= f.radio_button :failed_mock_exception_cm_approval, false, class: 'btn-check', disabled: true %>
+                  <%= f.label :failed_mock_exception_cm_approval_false, 'Reject', class: "btn btn-outline-danger #{@exam_enroll.failed_mock_exception_cm_approval == false ? 'active' : ''}", disabled: true %>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <label class="form-label">DC Approval</label>
+              <% if current_user.role == 'dc' || current_user.role == 'admin' %>
+                <%= f.hidden_field :failed_mock_exception_dc_approval, value: '', include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="DC Approval buttons">
+                  <%= f.radio_button :failed_mock_exception_dc_approval, true, class: 'btn-check' %>
+                  <%= f.label :failed_mock_exception_dc_approval_true, 'Approve', class: 'btn btn-outline-success' %>
+
+                  <%= f.radio_button :failed_mock_exception_dc_approval, false, class: 'btn-check' %>
+                  <%= f.label :failed_mock_exception_dc_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
+                </div>
+
+                <div class="mt-3">
+                  <%= f.label :failed_mock_exception_dc_comment, "DC Comment", class: "form-label" %>
+                  <%= f.text_area :failed_mock_exception_dc_comment,
+                      class: "form-control",
+                      rows: 2,
+                      disabled: !(current_user.role == 'dc' || current_user.role == 'admin') %>
+                </div>
+              <% else %>
+                <%= f.hidden_field :failed_mock_exception_dc_approval, include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="DC Approval buttons">
+                  <%= f.radio_button :failed_mock_exception_dc_approval, true, class: 'btn-check', disabled: true %>
+                  <%= f.label :failed_mock_exception_dc_approval_true, 'Approve', class: "btn btn-outline-success #{@exam_enroll.failed_mock_exception_dc_approval == true ? 'active' : ''}", disabled: true %>
+
+                  <%= f.radio_button :failed_mock_exception_dc_approval, false, class: 'btn-check', disabled: true %>
+                  <%= f.label :failed_mock_exception_dc_approval_false, 'Reject', class: "btn btn-outline-danger #{@exam_enroll.failed_mock_exception_dc_approval == false ? 'active' : ''}", disabled: true %>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Education Team Approval</label>
+              <% if current_user.role == 'edu' || current_user.role == 'admin' %>
+                <%= f.hidden_field :failed_mock_exception_edu_approval, value: '', include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="EDU Approval buttons">
+                  <%= f.radio_button :failed_mock_exception_edu_approval, true, class: 'btn-check' %>
+                  <%= f.label :failed_mock_exception_edu_approval_true, 'Approve', class: 'btn btn-outline-success' %>
+
+                  <%= f.radio_button :failed_mock_exception_edu_approval, false, class: 'btn-check' %>
+                  <%= f.label :failed_mock_exception_edu_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
+                </div>
+
+                <div class="mt-3">
+                  <%= f.label :failed_mock_exception_edu_comment, "EDU Comment", class: "form-label" %>
+                  <%= f.text_area :failed_mock_exception_edu_comment,
+                      class: "form-control",
+                      rows: 2,
+                      disabled: !(current_user.role == 'edu' || current_user.role == 'admin') %>
+                </div>
+              <% else %>
+                <%= f.hidden_field :failed_mock_exception_edu_approval, include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="EDU Approval buttons">
+                  <%= f.radio_button :failed_mock_exception_edu_approval, true, class: 'btn-check', disabled: true %>
+                  <%= f.label :failed_mock_exception_edu_approval_true, 'Approve', class: "btn btn-outline-success #{@exam_enroll.failed_mock_exception_edu_approval == true ? 'active' : ''}", disabled: true %>
+
+                  <%= f.radio_button :failed_mock_exception_edu_approval, false, class: 'btn-check', disabled: true %>
+                  <%= f.label :failed_mock_exception_edu_approval_false, 'Reject', class: "btn btn-outline-danger #{@exam_enroll.failed_mock_exception_edu_approval == false ? 'active' : ''}", disabled: true %>
+                </div>
+              <% end %>
             </div>
           </div>
         </div>
@@ -275,125 +425,97 @@
             </div>
             <div class="col-md-4 mb-3">
               <label class="form-label">Course Manager Approval</label>
-              <%= f.hidden_field :extension_cm_approval, value: '', include_hidden: true %>
-              <div class="btn-group" role="group" aria-label="CM Approval buttons">
-                <%= f.radio_button :extension_cm_approval, "true", class: 'btn-check' %>
-                <%= f.label :extension_cm_approval_true, 'Approve', class: 'btn btn-outline-success' %>
+              <% if current_user.role == 'cm' || current_user.role == 'admin' %>
+                <%= f.hidden_field :extension_cm_approval, value: '', include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="CM Approval buttons">
+                  <%= f.radio_button :extension_cm_approval, "true", class: 'btn-check' %>
+                  <%= f.label :extension_cm_approval_true, 'Approve', class: 'btn btn-outline-success' %>
 
-                <%= f.radio_button :extension_cm_approval, "false", class: 'btn-check' %>
-                <%= f.label :extension_cm_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
-              </div>
+                  <%= f.radio_button :extension_cm_approval, "false", class: 'btn-check' %>
+                  <%= f.label :extension_cm_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
+                </div>
 
-              <div class="mt-3">
-                <%= f.label :extension_cm_comment, "CM Comment", class: "form-label" %>
-                <%= f.text_area :extension_cm_comment, class: "form-control", rows: 2 %>
-              </div>
+                <div class="mt-3">
+                  <%= f.label :extension_cm_comment, "CM Comment", class: "form-label" %>
+                  <%= f.text_area :extension_cm_comment,
+                      class: "form-control",
+                      rows: 2,
+                      disabled: !(current_user.role == 'cm' || current_user.role == 'admin') %>
+                </div>
+              <% else %>
+                <%= f.hidden_field :extension_cm_approval, include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="CM Approval buttons">
+                  <%= f.radio_button :extension_cm_approval, "true", class: 'btn-check', disabled: true %>
+                  <%= f.label :extension_cm_approval_true, 'Approve', class: "btn btn-outline-success #{@exam_enroll.extension_cm_approval == true ? 'active' : ''}", disabled: true %>
+
+                  <%= f.radio_button :extension_cm_approval, "false", class: 'btn-check', disabled: true %>
+                  <%= f.label :extension_cm_approval_false, 'Reject', class: "btn btn-outline-danger #{@exam_enroll.extension_cm_approval == false ? 'active' : ''}", disabled: true %>
+                </div>
+              <% end %>
             </div>
 
             <div class="col-md-4 mb-3">
               <label class="form-label">DC Approval</label>
-              <%= f.hidden_field :extension_dc_approval, value: '', include_hidden: true %>
-              <div class="btn-group" role="group" aria-label="DC Approval buttons">
-                <%= f.radio_button :extension_dc_approval, "true", class: 'btn-check' %>
-                <%= f.label :extension_dc_approval_true, 'Approve', class: 'btn btn-outline-success' %>
+              <% if current_user.role == 'dc' || current_user.role == 'admin' %>
+                <%= f.hidden_field :extension_dc_approval, value: '', include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="DC Approval buttons">
+                  <%= f.radio_button :extension_dc_approval, "true", class: 'btn-check' %>
+                  <%= f.label :extension_dc_approval_true, 'Approve', class: 'btn btn-outline-success' %>
 
-                <%= f.radio_button :extension_dc_approval, "false", class: 'btn-check' %>
-                <%= f.label :extension_dc_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
-              </div>
+                  <%= f.radio_button :extension_dc_approval, "false", class: 'btn-check' %>
+                  <%= f.label :extension_dc_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
+                </div>
 
-              <div class="mt-3">
-                <%= f.label :extension_dc_comment, "DC Comment", class: "form-label" %>
-                <%= f.text_area :extension_dc_comment, class: "form-control", rows: 2 %>
-              </div>
+                <div class="mt-3">
+                  <%= f.label :extension_dc_comment, "DC Comment", class: "form-label" %>
+                  <%= f.text_area :extension_dc_comment,
+                      class: "form-control",
+                      rows: 2,
+                      disabled: !(current_user.role == 'dc' || current_user.role == 'admin') %>
+                </div>
+              <% else %>
+                <%= f.hidden_field :extension_dc_approval, include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="DC Approval buttons">
+                  <%= f.radio_button :extension_dc_approval, "true", class: 'btn-check', disabled: true %>
+                  <%= f.label :extension_dc_approval_true, 'Approve', class: "btn btn-outline-success #{@exam_enroll.extension_dc_approval == true ? 'active' : ''}", disabled: true %>
+
+                  <%= f.radio_button :extension_dc_approval, "false", class: 'btn-check', disabled: true %>
+                  <%= f.label :extension_dc_approval_false, 'Reject', class: "btn btn-outline-danger #{@exam_enroll.extension_dc_approval == false ? 'active' : ''}", disabled: true %>
+                </div>
+              <% end %>
             </div>
 
             <div class="col-md-4 mb-3">
               <label class="form-label">Education Team Approval</label>
-              <%= f.hidden_field :extension_edu_approval, value: '', include_hidden: true %>
-              <div class="btn-group" role="group" aria-label="EDU Approval buttons">
-                <%= f.radio_button :extension_edu_approval, "true", class: 'btn-check' %>
-                <%= f.label :extension_edu_approval_true, 'Approve', class: 'btn btn-outline-success' %>
+              <% if current_user.role == 'edu' || current_user.role == 'admin' %>
+                <%= f.hidden_field :extension_edu_approval, value: '', include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="EDU Approval buttons">
+                  <%= f.radio_button :extension_edu_approval, "true", class: 'btn-check' %>
+                  <%= f.label :extension_edu_approval_true, 'Approve', class: 'btn btn-outline-success' %>
 
-                <%= f.radio_button :extension_edu_approval, "false", class: 'btn-check' %>
-                <%= f.label :extension_edu_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
-              </div>
+                  <%= f.radio_button :extension_edu_approval, "false", class: 'btn-check' %>
+                  <%= f.label :extension_edu_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
+                </div>
 
-              <div class="mt-3">
-                <%= f.label :extension_edu_comment, "EDU Comment", class: "form-label" %>
-                <%= f.text_area :extension_edu_comment, class: "form-control", rows: 2 %>
-              </div>
+                <div class="mt-3">
+                  <%= f.label :extension_edu_comment, "EDU Comment", class: "form-label" %>
+                  <%= f.text_area :extension_edu_comment,
+                      class: "form-control",
+                      rows: 2,
+                      disabled: !(current_user.role == 'edu' || current_user.role == 'admin') %>
+                </div>
+              <% else %>
+                <%= f.hidden_field :extension_edu_approval, include_hidden: true %>
+                <div class="btn-group" role="group" aria-label="EDU Approval buttons">
+                  <%= f.radio_button :extension_edu_approval, "true", class: 'btn-check', disabled: true %>
+                  <%= f.label :extension_edu_approval_true, 'Approve', class: "btn btn-outline-success #{@exam_enroll.extension_edu_approval == true ? 'active' : ''}", disabled: true %>
+
+                  <%= f.radio_button :extension_edu_approval, "false", class: 'btn-check', disabled: true %>
+                  <%= f.label :extension_edu_approval_false, 'Reject', class: "btn btn-outline-danger #{@exam_enroll.extension_edu_approval == false ? 'active' : ''}", disabled: true %>
+                </div>
+              <% end %>
             </div>
 
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Failed Mock Exception Section -->
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed card-header d-flex align-items-center gap-1" type="button" data-bs-toggle="collapse" data-bs-target="#poorMockResultException" style="background-color: #ececec;">
-            <h5>Failed Mock Exception</h5>
-            <i class="fa-solid fa-circle-info" style="color:rgb(108 117 126);" title="In case your learner has received a U as the Mock result, but still wants to be enrolled in the respective exam, an exception requirement must be submitted for the educational department to review"></i>
-        </button>
-      </h2>
-      <div id="poorMockResultException" class="accordion-collapse collapse" data-bs-parent="#approvalAccordion">
-        <div class="accordion-body">
-          <div class="row">
-            <div class="col-12 mb-3">
-              <%= f.label :poor_mock_result_exception_justification, "Justification:", class: "form-label" %>
-              <%= f.text_area :poor_mock_result_exception_justification, class: "form-control", rows: 3 %>
-            </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label">Course Manager Approval</label>
-              <%= f.hidden_field :poor_mock_result_exception_cm_approval, value: '', include_hidden: true %>
-              <div class="btn-group" role="group" aria-label="CM Approval buttons">
-                <%= f.radio_button :poor_mock_result_exception_cm_approval, "true", class: 'btn-check' %>
-                <%= f.label :poor_mock_result_exception_cm_approval_true, 'Approve', class: 'btn btn-outline-success' %>
-
-                <%= f.radio_button :poor_mock_result_exception_cm_approval, "false", class: 'btn-check' %>
-                <%= f.label :poor_mock_result_exception_cm_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
-              </div>
-
-              <div class="mt-3">
-                <%= f.label :poor_mock_result_exception_cm_comment, "CM Comment", class: "form-label" %>
-                <%= f.text_area :poor_mock_result_exception_cm_comment, class: "form-control", rows: 2 %>
-              </div>
-            </div>
-
-            <div class="col-md-4 mb-3">
-              <label class="form-label">DC Approval</label>
-              <%= f.hidden_field :poor_mock_result_exception_dc_approval, value: '', include_hidden: true %>
-              <div class="btn-group" role="group" aria-label="DC Approval buttons">
-                <%= f.radio_button :poor_mock_result_exception_dc_approval, "true", class: 'btn-check' %>
-                <%= f.label :poor_mock_result_exception_dc_approval_true, 'Approve', class: 'btn btn-outline-success' %>
-
-                <%= f.radio_button :poor_mock_result_exception_dc_approval, "false", class: 'btn-check' %>
-                <%= f.label :poor_mock_result_exception_dc_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
-              </div>
-
-              <div class="mt-3">
-                <%= f.label :poor_mock_result_exception_dc_comment, "DC Comment", class: "form-label" %>
-                <%= f.text_area :poor_mock_result_exception_dc_comment, class: "form-control", rows: 2 %>
-              </div>
-            </div>
-
-            <div class="col-md-4 mb-3">
-              <label class="form-label">Education Team Approval</label>
-              <%= f.hidden_field :poor_mock_result_exception_edu_approval, value: '', include_hidden: true %>
-              <div class="btn-group" role="group" aria-label="EDU Approval buttons">
-                <%= f.radio_button :poor_mock_result_exception_edu_approval, "true", class: 'btn-check' %>
-                <%= f.label :poor_mock_result_exception_edu_approval_true, 'Approve', class: 'btn btn-outline-success' %>
-
-                <%= f.radio_button :poor_mock_result_exception_edu_approval, "false", class: 'btn-check' %>
-                <%= f.label :poor_mock_result_exception_edu_approval_false, 'Reject', class: 'btn btn-outline-danger' %>
-              </div>
-
-              <div class="mt-3">
-                <%= f.label :poor_mock_result_exception_edu_comment, "EDU Comment", class: "form-label" %>
-                <%= f.text_area :poor_mock_result_exception_edu_comment, class: "form-control", rows: 2 %>
-              </div>
-            </div>
           </div>
         </div>
       </div>
