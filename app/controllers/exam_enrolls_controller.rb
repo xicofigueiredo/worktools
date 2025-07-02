@@ -19,6 +19,25 @@ class ExamEnrollsController < ApplicationController
     @exam_enrolls = ExamEnroll.includes(:moodle_timeline)
                              .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
                              .order('moodle_timelines.start_date ASC')
+
+    if current_user.role == 'lc'
+      @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
+      .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+      .where(lc_ids: current_user.id)
+      .order('moodle_timelines.start_date ASC')
+    elsif current_user.role == 'admin'
+      @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
+      .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+      .order('moodle_timelines.start_date ASC')
+    elsif current_user.role == 'dc'
+      @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
+      .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+      .order('moodle_timelines.start_date ASC')
+    elsif current_user.role == 'exams'
+      @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
+      .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+      .order('moodle_timelines.start_date ASC')
+    end
   end
 
   def show
@@ -154,14 +173,23 @@ class ExamEnrollsController < ApplicationController
       :extension_edu_comment,
       :extension_dc_approval,
       :extension_dc_comment,
-      :exception_justification,
-      :exception_cm_approval,
-      :exception_cm_comment,
-      :exception_edu_approval,
-      :exception_edu_comment,
-      :exception_dc_approval,
-      :exception_dc_comment,
+      :pre_registration_exception_justification,
+      :pre_registration_exception_cm_approval,
+      :pre_registration_exception_cm_comment,
+      :pre_registration_exception_dc_approval,
+      :pre_registration_exception_dc_comment,
+      :pre_registration_exception_edu_approval,
+      :pre_registration_exception_edu_comment,
+      :poor_mock_result_exception_justification,
+      :poor_mock_result_exception_cm_approval,
+      :poor_mock_result_exception_cm_comment,
+      :poor_mock_result_exception_dc_approval,
+      :poor_mock_result_exception_dc_comment,
+      :poor_mock_result_exception_edu_approval,
+      :poor_mock_result_exception_edu_comment,
       :specific_papers,
+      :repeating,
+      :graduating,
       documents: [],
       document_description: []
     )
