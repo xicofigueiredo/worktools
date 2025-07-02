@@ -46,9 +46,58 @@ class ExamEnroll < ApplicationRecord
     status == 'registered'
   end
 
+  # Callbacks to handle status changes
+  # after_save :update_status_based_on_approvals
+
   private
 
   def dc_approval_present?
     !dc_approval.nil?
+  end
+
+  def update_status_based_on_approvals
+    # Check if DC approval fields changed
+    if saved_change_to_pre_registration_exception_dc_approval? ||
+       saved_change_to_failed_mock_exception_dc_approval? ||
+       saved_change_to_extension_dc_approval?
+
+      handle_dc_approval_change
+    end
+
+    # Check if EDU approval fields changed
+    if saved_change_to_pre_registration_exception_edu_approval? ||
+       saved_change_to_failed_mock_exception_edu_approval? ||
+       saved_change_to_extension_edu_approval?
+
+      handle_edu_approval_change
+    end
+  end
+
+  def handle_dc_approval_change
+    if pre_registration_exception_dc_approval == false ||
+       failed_mock_exception_dc_approval == false ||
+       extension_dc_approval == false
+      # If DC rejected any exception
+      update_column(:status, 'rejected')
+    elsif pre_registration_exception_dc_approval == true ||
+          failed_mock_exception_dc_approval == true ||
+          extension_dc_approval == true
+      # If DC approved, move to EDU approval pending
+      update_column(:status, 'approval_pending')
+    end
+  end
+
+  def handle_edu_approval_change
+    if pre_registration_exception_edu_approval == false ||
+       failed_mock_exception_edu_approval == false ||
+       extension_edu_approval == false
+      # If EDU rejected any exception
+      update_column(:status, 'rejected')
+    elsif pre_registration_exception_edu_approval == true ||
+          failed_mock_exception_edu_approval == true ||
+          extension_edu_approval == true
+      # If EDU approved
+      update_column(:status, 'mock_pending')
+    end
   end
 end

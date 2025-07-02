@@ -17,27 +17,25 @@ class ExamEnrollsController < ApplicationController
     @previous_sprint = Sprint.where("end_date < ?", @sprint.start_date).order(end_date: :desc).first
     @next_sprint = Sprint.where("start_date > ?", @sprint.end_date).order(start_date: :asc).first
 
-    @exam_enrolls = ExamEnroll.includes(:moodle_timeline)
-                             .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-                             .order('moodle_timelines.start_date ASC')
+    @exam_enrolls = ExamEnroll.all
 
     if current_user.role == 'lc'
       @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
-      .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-      .where(lc_ids: current_user.id)
-      .order('moodle_timelines.start_date ASC')
+        .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+        .where('exam_enrolls.hub IN (?)', current_user.hubs.map(&:to_s))
+        .order('moodle_timelines.start_date ASC')
     elsif current_user.role == 'admin'
       @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
-      .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-      .order('moodle_timelines.start_date ASC')
+        .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+        .order('moodle_timelines.start_date ASC')
     elsif current_user.role == 'dc'
       @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
-      .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-      .order('moodle_timelines.start_date ASC')
+        .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+        .order('moodle_timelines.start_date ASC')
     elsif current_user.role == 'exams'
       @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
-      .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-      .order('moodle_timelines.start_date ASC')
+        .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+        .order('moodle_timelines.start_date ASC')
     end
   end
 
@@ -82,27 +80,25 @@ class ExamEnrollsController < ApplicationController
   end
 
   def update
-    # Add current LC to lc_ids if not already present
-    if current_user.role == 'lc' && !@exam_enroll.lc_ids.include?(current_user.id)
-      @exam_enroll.lc_ids = (@exam_enroll.lc_ids + [current_user.id]).uniq
-    end
+    respond_to do |format|
+      if @exam_enroll.update(exam_enroll_params)
+        message = case @exam_enroll.status
+                  when 'rejected'
+                    'Enrollment was rejected.'
+                  when 'approval_pending'
+                    'Pending EDU department approval.'
+                  when 'mock_pending'
+                    'Approved. Waiting for mock exam.'
+                  else
+                    'Exam enrollment was successfully updated.'
+                  end
 
-    if @exam_enroll.update(exam_enroll_params)
-      # Handle document uploads
-      if params[:exam_enroll][:documents].present?
-        params[:exam_enroll][:documents].each do |doc|
-          @exam_enroll.exam_enroll_documents.create!(
-            file_name: doc.original_filename,
-            file_type: doc.content_type,
-            file_path: doc.tempfile.path,
-            description: params[:exam_enroll][:document_description]
-          )
-        end
+        format.html { redirect_to @exam_enroll, notice: message }
+        format.json { render :show, status: :ok, location: @exam_enroll }
+      else
+        format.html { render :edit }
+        format.json { render json: @exam_enroll.errors, status: :unprocessable_entity }
       end
-      redirect_to @exam_enroll, notice: 'Exam enrollment was successfully updated.'
-    else
-      @moodle_timelines = MoodleTimeline.all
-      render :edit
     end
   end
 
