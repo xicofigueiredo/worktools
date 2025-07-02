@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_06_26_103424) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_01_154706) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -87,6 +87,17 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_26_103424) do
     t.index ["subject_id"], name: "index_exam_dates_on_subject_id"
   end
 
+  create_table "exam_enroll_documents", force: :cascade do |t|
+    t.bigint "exam_enroll_id", null: false
+    t.string "file_name"
+    t.string "file_type"
+    t.string "file_path"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["exam_enroll_id"], name: "index_exam_enroll_documents_on_exam_enroll_id"
+  end
+
   create_table "exam_enrolls", force: :cascade do |t|
     t.string "hub"
     t.string "learning_coach"
@@ -120,6 +131,12 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_26_103424) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "moodle_timeline_id"
+    t.string "specific_papers"
+    t.integer "lc_ids", default: [], array: true
+    t.boolean "extension_dc_approval"
+    t.string "extension_dc_comment"
+    t.boolean "exception_dc_approval"
+    t.string "exception_dc_comment"
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
   end
 
@@ -472,6 +489,14 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_26_103424) do
     t.index ["kda_id"], name: "index_sdls_on_kda_id"
   end
 
+  create_table "settings", force: :cascade do |t|
+    t.boolean "report"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "sprint_id", null: false
+    t.index ["sprint_id"], name: "index_settings_on_sprint_id"
+  end
+
   create_table "skills", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
     t.string "extracurricular"
@@ -711,6 +736,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_26_103424) do
   add_foreign_key "attendances", "users"
   add_foreign_key "communities", "sprint_goals"
   add_foreign_key "exam_dates", "subjects"
+  add_foreign_key "exam_enroll_documents", "exam_enrolls"
   add_foreign_key "exam_enrolls", "moodle_timelines"
   add_foreign_key "form_interrogation_joins", "forms"
   add_foreign_key "form_interrogation_joins", "interrogations"
@@ -747,6 +773,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_26_103424) do
   add_foreign_key "responses", "form_interrogation_joins"
   add_foreign_key "responses", "users"
   add_foreign_key "sdls", "kdas"
+  add_foreign_key "settings", "sprints"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"

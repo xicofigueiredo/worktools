@@ -9,6 +9,19 @@
 
   <div class="card mb-4">
     <div class="card-header">
+      <h5>Moodle Timeline</h5>
+    </div>
+    <div class="card-body">
+      <% if @exam_enroll.moodle_timeline %>
+        <p><strong>Timeline:</strong> <%= @exam_enroll.moodle_timeline.subject.name %></p>
+      <% else %>
+        <p class="text-muted">No Moodle Timeline associated</p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
       <h5>Learner Information</h5>
     </div>
     <div class="card-body">
@@ -43,9 +56,9 @@
           <p><strong>Code:</strong> <%= @exam_enroll.code %></p>
         </div>
       </div>
-      <div class="row">
+      <div class="row mt-3">
         <div class="col-md-12">
-          <p><strong>Qualification:</strong> <%= @exam_enroll.qualification %></p>
+          <p><strong>Specific Papers:</strong> <%= @exam_enroll.specific_papers %></p>
         </div>
       </div>
     </div>
@@ -56,8 +69,14 @@
       <h5>Learning Coach Information</h5>
     </div>
     <div class="card-body">
-      <p><strong>Name:</strong> <%= @exam_enroll.learning_coach %></p>
-      <p><strong>Email:</strong> <%= @exam_enroll.learning_coach_email %></p>
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Name:</strong> <%= @exam_enroll.learning_coach %></p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Email:</strong> <%= @exam_enroll.learning_coach_email %></p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -67,18 +86,54 @@
     </div>
     <div class="card-body">
       <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3">
           <p><strong>Progress Cut-off:</strong> <%= @exam_enroll.progress_cut_off %></p>
           <p><strong>Mock Results:</strong> <%= @exam_enroll.mock_results %></p>
-          <p><strong>BGA Exam Centre:</strong> <%= @exam_enroll.bga_exam_centre %></p>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3">
+          <p><strong>BGA Exam Centre:</strong> <%= @exam_enroll.bga_exam_centre %></p>
           <p><strong>Exam Board:</strong> <%= @exam_enroll.exam_board %></p>
-          <p><strong>Special Accommodations Required:</strong> <%= @exam_enroll.has_special_accommodations ? "Yes" : "No" %></p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 mb-3">
+          <p>
+            <strong>Special Accommodations Required:</strong>
+            <%= @exam_enroll.has_special_accommodations ? "Yes" : "No" %>
+          </p>
+        </div>
+
+        <div class="col-md-4">
           <% if @exam_enroll.has_special_accommodations %>
-            <p><strong>Special Accommodations Details:</strong> <%= @exam_enroll.special_accommodations_personalized %></p>
+            <div class="mb-3">
+              <strong>Special Accommodations Details:</strong>
+              <p class="mt-2"><%= @exam_enroll.special_accommodations_personalized %></p>
+            </div>
           <% end %>
-          <p><strong>Additional Comments:</strong> <%= @exam_enroll.additional_comments %></p>
+        </div>
+
+        <div class="col-md-4">
+          <% if @documents.any? %>
+            <div class="mb-3">
+              <strong>Supporting Documents:</strong>
+              <ul class="list-group mt-2">
+                <% @documents.each do |doc| %>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <%= doc.file_name %>
+                    <small class="text-muted"><%= doc.description %></small>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="col-md-4">
+          <div class="mb-3">
+            <strong>Additional Comments:</strong>
+            <p class="mt-2"><%= @exam_enroll.additional_comments %></p>
+          </div>
         </div>
       </div>
     </div>
@@ -89,14 +144,19 @@
       <h5>Extension Request</h5>
     </div>
     <div class="card-body">
-      <p><strong>Extension Justification:</strong> <%= @exam_enroll.extension_justification %></p>
-      <div class="row mt-3">
-        <div class="col-md-6">
+      <div class="row">
+        <div class="col-12 mb-3">
+          <p><strong>Extension Justification:</strong></p>
+          <p><%= @exam_enroll.extension_justification %></p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
           <p>
             <strong>CM Approval:</strong>
-            <% if @exam_enroll.extension_cm_approval == nil && @exam_enroll.extension_justification == "" %>
+            <% if @exam_enroll.extension_cm_approval == nil && @exam_enroll.extension_justification.blank? %>
               <span class="badge bg-secondary">Not Requested</span>
-            <% elsif @exam_enroll.extension_cm_approval == nil && @exam_enroll.extension_justification != "" %>
+            <% elsif @exam_enroll.extension_cm_approval == nil %>
               <span class="badge bg-secondary">Pending</span>
             <% else %>
               <span class="badge <%= @exam_enroll.extension_cm_approval ? 'bg-success' : 'bg-danger' %>">
@@ -104,14 +164,16 @@
               </span>
             <% end %>
           </p>
-          <p><strong>CM Comment:</strong> <%= @exam_enroll.extension_cm_comment %></p>
+          <p><strong>CM Comment:</strong></p>
+          <p><%= @exam_enroll.extension_cm_comment %></p>
         </div>
-        <div class="col-md-6">
+
+        <div class="col-md-4">
           <p>
-            <strong>Edu Approval:</strong>
-            <% if @exam_enroll.extension_edu_approval == nil && @exam_enroll.extension_justification == "" %>
+            <strong>EDU Approval:</strong>
+            <% if @exam_enroll.extension_edu_approval == nil && @exam_enroll.extension_justification.blank? %>
               <span class="badge bg-secondary">Not Requested</span>
-            <% elsif @exam_enroll.extension_edu_approval == nil && @exam_enroll.extension_justification != "" %>
+            <% elsif @exam_enroll.extension_edu_approval == nil %>
               <span class="badge bg-secondary">Pending</span>
             <% else %>
               <span class="badge <%= @exam_enroll.extension_edu_approval ? 'bg-success' : 'bg-danger' %>">
@@ -119,7 +181,25 @@
               </span>
             <% end %>
           </p>
-          <p><strong>Edu Comment:</strong> <%= @exam_enroll.extension_edu_comment %></p>
+          <p><strong>EDU Comment:</strong></p>
+          <p><%= @exam_enroll.extension_edu_comment %></p>
+        </div>
+
+        <div class="col-md-4">
+          <p>
+            <strong>DC Approval:</strong>
+            <% if @exam_enroll.extension_dc_approval == nil && @exam_enroll.extension_justification.blank? %>
+              <span class="badge bg-secondary">Not Requested</span>
+            <% elsif @exam_enroll.extension_dc_approval == nil %>
+              <span class="badge bg-secondary">Pending</span>
+            <% else %>
+              <span class="badge <%= @exam_enroll.extension_dc_approval ? 'bg-success' : 'bg-danger' %>">
+                <%= @exam_enroll.extension_dc_approval ? 'Approved' : 'Rejected' %>
+              </span>
+            <% end %>
+          </p>
+          <p><strong>DC Comment:</strong></p>
+          <p><%= @exam_enroll.extension_dc_comment %></p>
         </div>
       </div>
     </div>
@@ -130,14 +210,19 @@
       <h5>Exception Request</h5>
     </div>
     <div class="card-body">
-      <p><strong>Exception Justification:</strong> <%= @exam_enroll.exception_justification %></p>
-      <div class="row mt-3">
-        <div class="col-md-6">
+      <div class="row">
+        <div class="col-12 mb-3">
+          <p><strong>Exception Justification:</strong></p>
+          <p><%= @exam_enroll.exception_justification %></p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
           <p>
             <strong>CM Approval:</strong>
-            <% if @exam_enroll.exception_cm_approval == nil && @exam_enroll.exception_justification == "" %>
+            <% if @exam_enroll.exception_cm_approval == nil && @exam_enroll.exception_justification.blank? %>
               <span class="badge bg-secondary">Not Requested</span>
-            <% elsif @exam_enroll.exception_cm_approval == nil && @exam_enroll.exception_justification != "" %>
+            <% elsif @exam_enroll.exception_cm_approval == nil %>
               <span class="badge bg-secondary">Pending</span>
             <% else %>
               <span class="badge <%= @exam_enroll.exception_cm_approval ? 'bg-success' : 'bg-danger' %>">
@@ -145,14 +230,16 @@
               </span>
             <% end %>
           </p>
-          <p><strong>CM Comment:</strong> <%= @exam_enroll.exception_cm_comment %></p>
+          <p><strong>CM Comment:</strong></p>
+          <p><%= @exam_enroll.exception_cm_comment %></p>
         </div>
-        <div class="col-md-6">
+
+        <div class="col-md-4">
           <p>
-            <strong>Edu Approval:</strong>
-            <% if @exam_enroll.exception_edu_approval == nil && @exam_enroll.exception_justification == "" %>
+            <strong>EDU Approval:</strong>
+            <% if @exam_enroll.exception_edu_approval == nil && @exam_enroll.exception_justification.blank? %>
               <span class="badge bg-secondary">Not Requested</span>
-            <% elsif @exam_enroll.exception_edu_approval == nil && @exam_enroll.exception_justification != "" %>
+            <% elsif @exam_enroll.exception_edu_approval == nil %>
               <span class="badge bg-secondary">Pending</span>
             <% else %>
               <span class="badge <%= @exam_enroll.exception_edu_approval ? 'bg-success' : 'bg-danger' %>">
@@ -160,7 +247,25 @@
               </span>
             <% end %>
           </p>
-          <p><strong>Edu Comment:</strong> <%= @exam_enroll.exception_edu_comment %></p>
+          <p><strong>EDU Comment:</strong></p>
+          <p><%= @exam_enroll.exception_edu_comment %></p>
+        </div>
+
+        <div class="col-md-4">
+          <p>
+            <strong>DC Approval:</strong>
+            <% if @exam_enroll.exception_dc_approval == nil && @exam_enroll.exception_justification.blank? %>
+              <span class="badge bg-secondary">Not Requested</span>
+            <% elsif @exam_enroll.exception_dc_approval == nil %>
+              <span class="badge bg-secondary">Pending</span>
+            <% else %>
+              <span class="badge <%= @exam_enroll.exception_dc_approval ? 'bg-success' : 'bg-danger' %>">
+                <%= @exam_enroll.exception_dc_approval ? 'Approved' : 'Rejected' %>
+              </span>
+            <% end %>
+          </p>
+          <p><strong>DC Comment:</strong></p>
+          <p><%= @exam_enroll.exception_dc_comment %></p>
         </div>
       </div>
     </div>
@@ -168,14 +273,26 @@
 
   <div class="card mb-4">
     <div class="card-header">
-      <h5>Moodle Timeline Information</h5>
+      <h5>Learning Coaches</h5>
     </div>
     <div class="card-body">
-      <% if @exam_enroll.moodle_timeline %>
-        <p><strong>Timeline:</strong> <%= @exam_enroll.moodle_timeline.subject.name %></p>
-        <!-- Add any other relevant Moodle Timeline fields you want to display -->
+      <% if @exam_enroll.lc_ids.any? %>
+        <div class="row">
+          <% @exam_enroll.lc_ids.each do |lc_id| %>
+            <% if lc = User.find_by(id: lc_id) %>
+              <div class="col-md-4 mb-3">
+                <div class="card">
+                  <div class="card-body">
+                    <h6 class="card-title"><%= lc.name %></h6>
+                    <p class="card-text"><small class="text-muted"><%= lc.email %></small></p>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
       <% else %>
-        <p class="text-muted">No Moodle Timeline associated</p>
+        <p class="text-muted">No Learning Coaches assigned</p>
       <% end %>
     </div>
   </div>

@@ -22,6 +22,7 @@ class ExamEnrollsController < ApplicationController
   end
 
   def show
+    @documents = @exam_enroll.exam_enroll_documents
   end
 
   def new
@@ -36,7 +37,23 @@ class ExamEnrollsController < ApplicationController
   def create
     @exam_enroll = ExamEnroll.new(exam_enroll_params)
 
+    # Add current LC to lc_ids if not already present
+    if current_user.role == 'lc' && !@exam_enroll.lc_ids.include?(current_user.id)
+      @exam_enroll.lc_ids = (@exam_enroll.lc_ids + [current_user.id]).uniq
+    end
+
     if @exam_enroll.save
+      # Handle document uploads
+      if params[:exam_enroll][:documents].present?
+        params[:exam_enroll][:documents].each do |doc|
+          @exam_enroll.exam_enroll_documents.create!(
+            file_name: doc.original_filename,
+            file_type: doc.content_type,
+            file_path: doc.tempfile.path,
+            description: params[:exam_enroll][:document_description]
+          )
+        end
+      end
       redirect_to @exam_enroll, notice: 'Exam enrollment was successfully created.'
     else
       @moodle_timelines = MoodleTimeline.all
@@ -45,7 +62,23 @@ class ExamEnrollsController < ApplicationController
   end
 
   def update
+    # Add current LC to lc_ids if not already present
+    if current_user.role == 'lc' && !@exam_enroll.lc_ids.include?(current_user.id)
+      @exam_enroll.lc_ids = (@exam_enroll.lc_ids + [current_user.id]).uniq
+    end
+
     if @exam_enroll.update(exam_enroll_params)
+      # Handle document uploads
+      if params[:exam_enroll][:documents].present?
+        params[:exam_enroll][:documents].each do |doc|
+          @exam_enroll.exam_enroll_documents.create!(
+            file_name: doc.original_filename,
+            file_type: doc.content_type,
+            file_path: doc.tempfile.path,
+            description: params[:exam_enroll][:document_description]
+          )
+        end
+      end
       redirect_to @exam_enroll, notice: 'Exam enrollment was successfully updated.'
     else
       @moodle_timelines = MoodleTimeline.all
@@ -56,6 +89,23 @@ class ExamEnrollsController < ApplicationController
   def destroy
     @exam_enroll.destroy
     redirect_to exam_enrolls_path, notice: 'Exam enrollment was successfully deleted.'
+  end
+
+  def remove_lc
+    @exam_enroll = ExamEnroll.find(params[:id])
+    lc_id = params[:lc_id].to_i
+
+    if @exam_enroll.lc_ids.include?(lc_id)
+      @exam_enroll.lc_ids = @exam_enroll.lc_ids - [lc_id]
+
+      if @exam_enroll.save
+        render json: { success: true }
+      else
+        render json: { success: false, error: 'Failed to remove Learning Coach' }
+      end
+    else
+      render json: { success: false, error: 'Learning Coach not found in exam enrollment' }
+    end
   end
 
   private
@@ -91,11 +141,18 @@ class ExamEnrollsController < ApplicationController
       :extension_cm_comment,
       :extension_edu_approval,
       :extension_edu_comment,
+      :extension_dc_approval,
+      :extension_dc_comment,
       :exception_justification,
       :exception_cm_approval,
       :exception_cm_comment,
       :exception_edu_approval,
-      :exception_edu_comment
+      :exception_edu_comment,
+      :exception_dc_approval,
+      :exception_dc_comment,
+      :specific_papers,
+      documents: [],
+      document_description: []
     )
   end
 end
