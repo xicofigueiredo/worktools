@@ -136,7 +136,19 @@
       <div class="row">
         <div class="col-md-6 mb-3">
           <%= f.label :bga_exam_centre, "BGA Exam Centre", class: "form-label" %>
-          <%= f.text_field :bga_exam_centre, class: "form-control", disabled: field_disabled?(:bga_exam_centre, current_user) %>
+          <%= f.select :bga_exam_centre,
+              grouped_options_for_select({
+                "Cambridge" => [["Portuguese", "Cambridge - Portuguese"]],
+                "Pearson" => [
+                  ["Mozambique", "Pearson - Mozambique"],
+                  ["Angola", "Pearson - Angola"],
+                  ["Malawi", "Pearson - Malawi"],
+                  ["Zambia", "Pearson - Zambia"],
+                  ["Zimbabwe", "Pearson - Zimbabwe"]
+                ]
+              }, @exam_enroll.bga_exam_centre),
+              { prompt: "Select an exam centre" },
+              { class: "form-control", disabled: field_disabled?(:bga_exam_centre, current_user) } %>
         </div>
         <div class="col-md-6 mb-3">
           <%= f.label :exam_board, class: "form-label" %>

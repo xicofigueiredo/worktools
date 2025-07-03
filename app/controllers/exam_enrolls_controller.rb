@@ -92,6 +92,14 @@ class ExamEnrollsController < ApplicationController
 
   def edit
     @moodle_timelines = current_user.moodle_timelines.all.map { |mt| [mt.subject.name, mt.id] }
+    @exam_centres = {
+      "Cambridge" => "Portuguese",
+      "Pearson" => "Mozambique",
+      "Pearson" => "Angola",
+      "Pearson" => "Malawi",
+      "Pearson" => "Zambia",
+      "Pearson" => "Zimbabwe"
+    }
   end
 
   def create
