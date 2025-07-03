@@ -1,4 +1,18 @@
 <%= form_with(model: exam_enroll, local: true) do |f| %>
+  <% if flash[:alert] %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <%= flash[:alert] %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% end %>
+
+  <% if flash[:warning] %>
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+      <%= flash[:warning] %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% end %>
+
   <% if exam_enroll.errors.any? %>
     <div class="alert alert-danger">
       <h4><%= pluralize(exam_enroll.errors.count, "error") %> prohibited this enrollment from being saved:</h4>
@@ -555,6 +569,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const fileInput = document.querySelector('input[type="file"][name="exam_enroll[documents][]"]');
+  const progressCheckbox = document.querySelector('#exam_enroll_progress_cut_off');
+  const form = document.querySelector('form');
+  const isAdmin = <%= current_user.role == 'admin' ? 'true' : 'false' %>;
 
   if (fileInput) {
     fileInput.addEventListener('change', function(e) {
@@ -570,6 +587,20 @@ document.addEventListener('DOMContentLoaded', function() {
           return false;
         }
       });
+    });
+  }
+
+  if (progressCheckbox && isAdmin) {
+    form.addEventListener('submit', function(e) {
+      console.log('Form submitted');
+      console.log('User role: <%= current_user.role %>');
+      console.log('Progress checkbox checked:', progressCheckbox.checked);
+
+      if (progressCheckbox && !progressCheckbox.checked) {
+        e.preventDefault();
+        alert('⚠️ WARNING: Progress cut-off is not met!\n\nPlease verify the learner\'s progress or proceed with an exception request.');
+        return false;
+      }
     });
   }
 });

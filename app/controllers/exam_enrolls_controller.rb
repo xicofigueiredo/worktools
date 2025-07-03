@@ -101,6 +101,11 @@ class ExamEnrollsController < ApplicationController
       @exam_enroll.learning_coach_ids = (@exam_enroll.learning_coach_ids + [current_user.id]).uniq
     end
 
+    # Check for progress cut-off warning
+    if current_user.role == 'admin' && @exam_enroll.progress_cut_off == false
+      flash.now[:warning] = "⚠️ Progress cut-off is not met. Please verify the learner's progress or proceed with an exception request in the form below."
+    end
+
     if @exam_enroll.save
       # Handle document uploads
       if params[:exam_enroll][:documents].present?
@@ -115,7 +120,6 @@ class ExamEnrollsController < ApplicationController
             )
             document.file.attach(doc)
 
-            # Check if the document is valid after attaching the file
             unless document.valid?
               document.destroy
               upload_errors << "#{doc.original_filename}: #{document.errors.full_messages.join(', ')}"
@@ -138,6 +142,9 @@ class ExamEnrollsController < ApplicationController
   end
 
   def update
+    # Check for progress cut-off warning BEFORE updating
+    show_warning = current_user.role == 'admin' && exam_enroll_params[:progress_cut_off] == '0'
+
     respond_to do |format|
       if @exam_enroll.update(exam_enroll_params)
         # Handle document uploads
@@ -153,7 +160,6 @@ class ExamEnrollsController < ApplicationController
               )
               document.file.attach(doc)
 
-              # Check if the document is valid after attaching the file
               unless document.valid?
                 document.destroy
                 upload_errors << "#{doc.original_filename}: #{document.errors.full_messages.join(', ')}"
@@ -168,9 +174,17 @@ class ExamEnrollsController < ApplicationController
           end
         end
 
-        format.html { redirect_to @exam_enroll, notice: 'Exam enrollment was successfully updated.' }
+
+
+        # Add warning message if needed
+        if show_warning
+          flash[:warning] = "⚠️ WARNING: Progress cut-off is not met! Please verify the learner's progress or consider submitting an exception request."
+        end
+
+        format.html { redirect_to @exam_enroll }
         format.json { render :show, status: :ok, location: @exam_enroll }
       else
+        @moodle_timelines = current_user.moodle_timelines.all.map { |mt| [mt.subject.name, mt.id] }
         format.html { render :edit }
         format.json { render json: @exam_enroll.errors, status: :unprocessable_entity }
       end
