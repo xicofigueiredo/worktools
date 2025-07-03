@@ -20,22 +20,52 @@ class ExamEnrollsController < ApplicationController
     @exam_enrolls = ExamEnroll.all
 
     if current_user.role == 'lc'
-      @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
-        .joins(timeline: :exam_date)
+      # Debug: Check current user's main hub
+      main_hub = current_user.users_hubs.find_by(main: true)
+
+      # Get users who belong to the same main hub as current user
+      main_hub_user_ids = User.joins(:users_hubs)
+                              .where(users_hubs: {
+                                hub_id: main_hub&.hub_id,
+                                main: true
+                              })
+                              .pluck(:id)
+
+      # Get hub names instead of hub objects
+      current_user_hub_names = current_user.users_hubs.map(&:hub).map(&:name)
+
+      @exam_enrolls = @exam_enrolls.includes(timeline: [:exam_date, :user])
+        .joins(timeline: [:exam_date, :user])
         .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-        .where('exam_enrolls.hub IN (?)', current_user.hubs.map(&:to_s))
+
+      @exam_enrolls = @exam_enrolls.where('exam_enrolls.hub IN (?)', current_user_hub_names)  # Use hub names
+
+
+      @exam_enrolls = @exam_enrolls.where('timelines.user_id IN (?)', main_hub_user_ids)
         .order('exam_dates.date ASC')
-    elsif current_user.role == 'admin'
-      @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
-        .joins(timeline: :exam_date)
-        .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-        .order('exam_dates.date ASC')
+
     elsif current_user.role == 'dc'
-      @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
-        .joins(timeline: :exam_date)
-        .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-        .order('exam_dates.date ASC')
-    elsif current_user.role == 'exams'
+      # Get all hub IDs where the DC is assigned
+      dc_hub_ids = current_user.users_hubs.pluck(:hub_id)
+
+      # Get users who belong to any of the DC's hubs (with main = true)
+      dc_hub_user_ids = User.joins(:users_hubs)
+      .where(users_hubs: {
+        hub_id: dc_hub_ids,
+        main: true
+      })
+      .pluck(:id)
+
+      # Get hub names for filtering exam enrolls
+      dc_hub_names = Hub.where(id: dc_hub_ids).pluck(:name)
+
+      @exam_enrolls = @exam_enrolls.includes(timeline: [:exam_date, :user])
+      .joins(timeline: [:exam_date, :user])
+      .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+      .where('exam_enrolls.hub IN (?)', dc_hub_names)
+      .where('timelines.user_id IN (?)', dc_hub_user_ids)
+      .order('exam_dates.date ASC')
+    else
       @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
         .joins(timeline: :exam_date)
         .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
