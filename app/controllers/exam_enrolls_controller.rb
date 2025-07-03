@@ -21,10 +21,20 @@ class ExamEnrollsController < ApplicationController
     # Get all unique statuses for the filter dropdown
     @available_statuses = ExamEnroll.distinct.pluck(:status).compact.sort
 
-    # Apply status filter if provided
-    if params[:status].present? && params[:status] != 'all'
-      @exam_enrolls = @exam_enrolls.where(status: params[:status])
+    # Set default status to "Edu Approval Pending" only for Marcela's email
+    if current_user.email == 'marcela@bravegenerationacademy.com' && params[:status].blank?
+      status_filter = 'Edu Approval Pending'
+    else
+      status_filter = params[:status].present? ? params[:status] : 'all'
     end
+
+    # Apply status filter
+    if status_filter != 'all'
+      @exam_enrolls = @exam_enrolls.where(status: status_filter)
+    end
+
+    # Store the current status for the view
+    @current_status = status_filter
 
     if current_user.role == 'real lc' #future lc logic
       # Debug: Check current user's main hub

@@ -26,7 +26,7 @@
       <%= form_with url: exam_enrolls_path, method: :get, local: true, class: "d-flex align-items-end gap-2" do |form| %>
         <div class="flex-grow-1">
           <%= form.select :status,
-              options_for_select([['All Statuses', 'all']] + @available_statuses.map { |status| [status, status] }, params[:status]),
+              options_for_select([['All Statuses', 'all']] + @available_statuses.map { |status| [status, status] }, @current_status),
               {},
               { class: "form-select" } %>
         </div>
@@ -47,7 +47,6 @@
               <th>Hub</th>
               <th>Name</th>
               <th>Subject</th>
-              <th>Code</th>
               <th>Waiting</th>
               <th>Status</th>
               <th>Actions</th>
@@ -61,7 +60,6 @@
                   <td><%= enrollment.hub %></td>
                   <td><%= enrollment.learner_name %></td>
                   <td><%= enrollment.subject_name %></td>
-                  <td><%= enrollment.code %></td>
                   <td><%= enrollment.exam_board %></td>
                   <td>
                     <%= enrollment.status %>
