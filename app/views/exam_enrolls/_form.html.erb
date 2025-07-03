@@ -105,7 +105,7 @@
         </div>
         <div class="col-md-4 mb-3">
           <%= f.label :code, class: "form-label" %>
-          <%= f.number_field :code, class: "form-control", disabled: field_disabled?(:code, current_user) %>
+          <%= f.text_field :code, class: "form-control", disabled: field_disabled?(:code, current_user) %>
         </div>
         <div class="col-md-4 mb-3">
           <%= f.label :qualification, class: "form-label" %>

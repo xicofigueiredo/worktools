@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_02_220954) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_03_143025) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -109,7 +109,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_02_220954) do
     t.string "gender"
     t.boolean "native_language_english"
     t.string "subject_name"
-    t.integer "code"
+    t.string "code"
     t.string "qualification"
     t.string "progress_cut_off"
     t.string "mock_results"
