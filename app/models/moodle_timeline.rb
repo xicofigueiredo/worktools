@@ -1,6 +1,7 @@
 class MoodleTimeline < ApplicationRecord
   belongs_to :user
   belongs_to :subject, optional: true
+  has_one :exam_enroll, dependent: :destroy
 
   after_create :create_moodle_topics
   after_update :update_moodle_topics
@@ -23,6 +24,39 @@ class MoodleTimeline < ApplicationRecord
 
   after_create :check_if_math_al_timeline
   after_update :check_if_math_al_timeline
+  after_update :update_exam_enroll_status
+
+  def update_exam_enroll_status
+    exam_enroll = ExamEnroll.find_by(user_id: user_id, subject_id: subject_id)
+    if exam_enroll.present?
+    else
+      hub = self.user.users_hubs.find_by(main: true).hub.name
+      lcs = self.user.users_hubs.includes(:hub).find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+        lc.hubs.count >= 3
+      end
+      lc_ids = lcs.present? ? lcs.map(&:id) : []
+      native_language_english = self.user.native_language == 'English' ? true : false
+
+      exam_enroll = ExamEnroll.create!(
+        user_id: user_id,
+        subject_id: subject_id,
+        hub: hub,
+        learning_coach_ids: lc_ids,
+        date_of_birth: self.user.birthday,
+        # gender: self.user.gender,
+        native_language_english: native_language_english,
+        subject_name: self.subject.name,
+        # code: self.subject.code,
+        # qualification: self.subject.qualification,
+        # progress_cut_off: self.progress_cut_off,
+        moodle_timeline_id: self.id
+        )
+
+        if self.progress > 80
+          exam_enroll.update(status: 'Registered')
+        end
+    end
+  end
 
 
   def check_if_math_al_timeline

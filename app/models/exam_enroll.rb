@@ -1,5 +1,6 @@
 class ExamEnroll < ApplicationRecord
-  belongs_to :moodle_timeline
+  belongs_to :moodle_timeline, optional: true
+  belongs_to :timeline, optional: true
   has_many :exam_enroll_documents, dependent: :destroy
 
   # Validations for DC approval
@@ -48,6 +49,9 @@ class ExamEnroll < ApplicationRecord
 
   # Callbacks to handle status changes
   # after_save :update_status_based_on_approvals
+
+  # Add validation to ensure at least one timeline is present
+  validate :must_have_one_timeline
 
   private
 
@@ -98,6 +102,12 @@ class ExamEnroll < ApplicationRecord
           extension_edu_approval == true
       # If EDU approved
       update_column(:status, 'mock_pending')
+    end
+  end
+
+  def must_have_one_timeline
+    if moodle_timeline_id.blank? && timeline_id.blank?
+      errors.add(:base, "Must have either a Moodle Timeline or a Timeline")
     end
   end
 end

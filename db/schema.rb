@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_03_143025) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_03_152036) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -100,8 +100,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_03_143025) do
 
   create_table "exam_enrolls", force: :cascade do |t|
     t.string "hub"
-    t.string "learning_coach"
-    t.string "learning_coach_email"
     t.string "learner_name"
     t.string "learner_id_type"
     t.string "learner_id_number"
@@ -145,7 +143,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_03_143025) do
     t.boolean "failed_mock_exception_edu_approval"
     t.string "failed_mock_exception_edu_comment"
     t.string "status"
+    t.integer "learning_coach_ids", default: [], array: true
+    t.integer "timeline_id"
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
+    t.index ["timeline_id"], name: "index_exam_enrolls_on_timeline_id"
   end
 
   create_table "excel_imports", force: :cascade do |t|
@@ -738,6 +739,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_03_143025) do
   add_foreign_key "exam_dates", "subjects"
   add_foreign_key "exam_enroll_documents", "exam_enrolls"
   add_foreign_key "exam_enrolls", "moodle_timelines"
+  add_foreign_key "exam_enrolls", "timelines", on_delete: :nullify
   add_foreign_key "form_interrogation_joins", "forms"
   add_foreign_key "form_interrogation_joins", "interrogations"
   add_foreign_key "friday_slots", "users", column: "lc_id"

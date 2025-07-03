@@ -145,9 +145,9 @@ class MoodleApiService
         puts "Created #{timeline.subject.name} Timeline for #{course.split(':').last.strip}"
 
         # 🔹 Fetch and Create MoodleTopics for the Timeline using the new method 🔹
-        completed_activities = get_course_activities(course_id, moodle_id)
+        activities = get_course_activities(course_id, moodle_id)
 
-        completed_activities.each_with_index do |activity, index|
+        activities.each_with_index do |activity, index|
           next if activity[:section_visible] == 0
 
 
