@@ -138,13 +138,29 @@
           <%= f.label :bga_exam_centre, "BGA Exam Centre", class: "form-label" %>
           <%= f.select :bga_exam_centre,
               grouped_options_for_select({
-                "Cambridge" => [["Portuguese", "Cambridge - Portuguese"]],
                 "Pearson" => [
-                  ["Mozambique", "Pearson - Mozambique"],
-                  ["Angola", "Pearson - Angola"],
-                  ["Malawi", "Pearson - Malawi"],
-                  ["Zambia", "Pearson - Zambia"],
-                  ["Zimbabwe", "Pearson - Zimbabwe"]
+                  ["Portugal/North – Aveiro", "Pearson - Portugal/North – Aveiro"],
+                  ["Portugal/Center – Linhó", "Pearson - Portugal/Center – Linhó"],
+                  ["Portugal/South – Tavira", "Pearson - Portugal/South – Tavira"],
+                  ["Portugal/Madeira Island – Funchal", "Pearson - Portugal/Madeira Island – Funchal"],
+                  ["South Africa – Durban", "Pearson - South Africa – Durban"],
+                  ["South Africa – Tyger Valley", "Pearson - South Africa – Tyger Valley"],
+                  ["South Africa – Nelspruit", "Pearson - South Africa – Nelspruit"],
+                  ["Namibia – Windhoek", "Pearson - Namibia – Windhoek"],
+                  ["Mozambique – Maputo", "Pearson - Mozambique – Maputo"],
+                  ["Mozambique – Tofo", "Pearson - Mozambique – Tofo"],
+                  ["Tutors and Exams – Valencia", "Pearson - Tutors and Exams – Valencia"]
+                ],
+                "Cambridge" => [
+                  ["International School of Palmela/Partner School - Portugal (Center/North)", "Cambridge - International School of Palmela/Partner School - Portugal (Center/North)"],
+                  ["Aljezur International School/Partner School - Portugal (South)", "Cambridge - Aljezur International School/Partner School - Portugal (South)"],
+                  ["El Plantio International School – Valencia", "Cambridge - El Plantio International School – Valencia"]
+                ],
+                "Pearson & Cambridge" => [
+                  ["The British School of Málaga – Marbella", "Pearson & Cambridge - The British School of Málaga – Marbella"]
+                ],
+                "Other" => [
+                  ["Remote Invigilation Service – Gaza", "Other - Remote Invigilation Service – Gaza"]
                 ]
               }, @exam_enroll.bga_exam_centre),
               { prompt: "Select an exam centre" },
