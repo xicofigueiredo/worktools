@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_03_152036) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_03_221322) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -145,6 +145,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_03_152036) do
     t.string "status"
     t.integer "learning_coach_ids", default: [], array: true
     t.integer "timeline_id"
+    t.string "specific_papers"
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
     t.index ["timeline_id"], name: "index_exam_enrolls_on_timeline_id"
   end

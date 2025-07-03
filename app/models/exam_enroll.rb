@@ -9,6 +9,8 @@ class ExamEnroll < ApplicationRecord
 
 
   def set_status
+    users_ids = self.learning_coach_ids + [self.user_id]
+
     # pre-registration
     if self.pre_registration_exception_comment.present? && self.pre_registration_exception_dc_approval == nil
       self.status = "DC Approval Pending"
@@ -17,13 +19,31 @@ class ExamEnroll < ApplicationRecord
     elsif self.pre_registration_exception_comment.present? && self.pre_registration_exception_dc_approval == false
       self.status = "Rejected"
       #notify lc and learner to reset exam season
+      users_ids.each do |user_id|
+        Notification.create(
+          user_id: user_id,
+          message: "A pre-registration exception has been rejected. A new exam season for #{self.subject_name}(#{self.learner_name}) is needed. Please update it! "
+        )
+      end
     elsif self.pre_registration_exception_comment.present? && self.pre_registration_exception_edu_approval == false
       self.status = "Rejected"
       #notify lc and learner to reset exam season
+      users_ids.each do |user_id|
+        Notification.create(
+          user_id: user_id,
+          message: "A pre-registration exception has been rejected. A new exam season for #{self.subject_name}(#{self.learner_name}) is needed. Please update it! "
+        )
+      end
     elsif self.pre_registration_exception_comment.present? && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == true
       if self.result == "U" || self.result == "0"
         self.status = "Failed Mock"
         #notify lc and learner to request a failed mock exception
+        users_ids.each do |user_id|
+          Notification.create(
+            user_id: user_id,
+            message: "A pre-registration exception has been rejected. Please request a failed mock exception for #{self.subject_name}(#{self.learner_name})"
+          )
+        end
       elsif self.result.nil?
         self.status = "Mock Pending"
       else
@@ -44,6 +64,12 @@ class ExamEnroll < ApplicationRecord
       if self.result == "U" || self.result == "0"
        self.status = "Failed Mock (Registered)"
        # notify lc and learner to request a failed mock exceptionvv
+       users_ids.each do |user_id|
+        Notification.create(
+          user_id: user_id,
+          message: "An extension has been rejected. Please request a new failed mock exception for #{self.subject_name}(#{self.learner_name})"
+        )
+      end
       elsif self.result.nil?
         self.status = "Mock Pending (Registered)"
       else
@@ -59,9 +85,21 @@ class ExamEnroll < ApplicationRecord
     elsif self.failed_mock_exception_comment.present? && self.failed_mock_exception_dc_approval == false
       self.status = "Rejected"
       #notify lc and learner to reset exam season
+      users_ids.each do |user_id|
+        Notification.create(
+          user_id: user_id,
+          message: "A failed mock exception has been rejected. A new exam season for #{self.subject_name} Timeline (#{self.learner_name}) is needed. Please update it! "
+        )
+      end
     elsif self.failed_mock_exception_comment.present? && self.failed_mock_exception_edu_approval == false
       self.status = "Rejected"
       #notify lc and learner to reset exam season
+      users_ids.each do |user_id|
+        Notification.create(
+          user_id: user_id,
+          message: "A failed mock exception has been rejected. A new exam season for #{self.subject_name} Timeline (#{self.learner_name}) is needed. Please update it! "
+        )
+      end
     elsif self.failed_mock_exception_comment.present? && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == true
       self.status = "Registered"
     end

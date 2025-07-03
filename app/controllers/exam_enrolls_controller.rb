@@ -1,7 +1,6 @@
 class ExamEnrollsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_exam_enroll, only: [:show, :edit, :update, :destroy]
-  before_action :authorize_approval_actions, only: [:update]
 
   def index
     # Get the target sprint based on date parameter or default to current sprint
@@ -97,9 +96,9 @@ class ExamEnrollsController < ApplicationController
   def create
     @exam_enroll = ExamEnroll.new(exam_enroll_params)
 
-    # Add current LC to lc_ids if not already present
-    if current_user.role == 'lc' && !@exam_enroll.lc_ids.include?(current_user.id)
-      @exam_enroll.lc_ids = (@exam_enroll.lc_ids + [current_user.id]).uniq
+    # Add current LC to learning_coach_ids if not already present
+    if current_user.role == 'lc' && !@exam_enroll.learning_coach_ids.include?(current_user.id)
+      @exam_enroll.learning_coach_ids = (@exam_enroll.learning_coach_ids + [current_user.id]).uniq
     end
 
     if @exam_enroll.save
@@ -124,6 +123,19 @@ class ExamEnrollsController < ApplicationController
   def update
     respond_to do |format|
       if @exam_enroll.update(exam_enroll_params)
+        # Handle document uploads
+        if params[:exam_enroll][:documents].present?
+          params[:exam_enroll][:documents].each do |doc|
+            next if doc.blank? || doc.is_a?(String) # Skip empty strings
+            @exam_enroll.exam_enroll_documents.create!(
+              file_name: doc.original_filename,
+              file_type: doc.content_type,
+              file_path: doc.tempfile.path,
+              description: params[:exam_enroll][:document_description]
+            )
+          end
+        end
+
         message = case @exam_enroll.status
                   when 'rejected'
                     'Enrollment was rejected.'
@@ -153,8 +165,8 @@ class ExamEnrollsController < ApplicationController
     @exam_enroll = ExamEnroll.find(params[:id])
     lc_id = params[:lc_id].to_i
 
-    if @exam_enroll.lc_ids.include?(lc_id)
-      @exam_enroll.lc_ids = @exam_enroll.lc_ids - [lc_id]
+    if @exam_enroll.learning_coach_ids.include?(lc_id)
+      @exam_enroll.learning_coach_ids = @exam_enroll.learning_coach_ids - [lc_id]
 
       if @exam_enroll.save
         render json: { success: true }
@@ -188,8 +200,6 @@ class ExamEnrollsController < ApplicationController
     params.require(:exam_enroll).permit(
       :moodle_timeline_id,
       :hub,
-      :learning_coach,
-      :learning_coach_email,
       :learner_name,
       :learner_id_type,
       :learner_id_number,
@@ -201,6 +211,7 @@ class ExamEnrollsController < ApplicationController
       :qualification,
       :progress_cut_off,
       :mock_results,
+      :specific_papers,
       :bga_exam_centre,
       :exam_board,
       :has_special_accommodations,
@@ -220,18 +231,16 @@ class ExamEnrollsController < ApplicationController
       :pre_registration_exception_dc_comment,
       :pre_registration_exception_edu_approval,
       :pre_registration_exception_edu_comment,
-      :poor_mock_result_exception_justification,
-      :poor_mock_result_exception_cm_approval,
-      :poor_mock_result_exception_cm_comment,
-      :poor_mock_result_exception_dc_approval,
-      :poor_mock_result_exception_dc_comment,
-      :poor_mock_result_exception_edu_approval,
-      :poor_mock_result_exception_edu_comment,
-      :specific_papers,
+      :failed_mock_exception_justification,
+      :failed_mock_exception_cm_approval,
+      :failed_mock_exception_cm_comment,
+      :failed_mock_exception_dc_approval,
+      :failed_mock_exception_dc_comment,
+      :failed_mock_exception_edu_approval,
+      :failed_mock_exception_edu_comment,
       :repeating,
       :graduating,
-      documents: [],
-      document_description: []
+      learning_coach_ids: []
     )
   end
 end
