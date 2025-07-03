@@ -20,22 +20,26 @@ class ExamEnrollsController < ApplicationController
     @exam_enrolls = ExamEnroll.all
 
     if current_user.role == 'lc'
-      @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
-        .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+      @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
+        .joins(timeline: :exam_date)
+        .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
         .where('exam_enrolls.hub IN (?)', current_user.hubs.map(&:to_s))
-        .order('moodle_timelines.start_date ASC')
+        .order('exam_dates.date ASC')
     elsif current_user.role == 'admin'
-      # @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
-      #   .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-      #   .order('moodle_timelines.start_date ASC')
+      @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
+        .joins(timeline: :exam_date)
+        .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+        .order('exam_dates.date ASC')
     elsif current_user.role == 'dc'
-      @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
-        .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-        .order('moodle_timelines.start_date ASC')
+      @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
+        .joins(timeline: :exam_date)
+        .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+        .order('exam_dates.date ASC')
     elsif current_user.role == 'exams'
-      @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
-        .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-        .order('moodle_timelines.start_date ASC')
+      @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
+        .joins(timeline: :exam_date)
+        .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+        .order('exam_dates.date ASC')
     end
   end
 
