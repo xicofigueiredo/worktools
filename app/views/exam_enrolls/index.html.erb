@@ -22,7 +22,19 @@
         <i class="fa-solid fa-chevron-right"></i>
       <% end %>
     </div>
-    <%= link_to "New Exam Enrollment", new_exam_enroll_path, class: "btn btn-primary" %>
+    <div class=" d-flex align-items-end gap-2 justify-content-end">
+      <%= form_with url: exam_enrolls_path, method: :get, local: true, class: "d-flex align-items-end gap-2" do |form| %>
+        <div class="flex-grow-1">
+          <%= form.select :status,
+              options_for_select([['All Statuses', 'all']] + @available_statuses.map { |status| [status, status] }, params[:status]),
+              {},
+              { class: "form-select" } %>
+        </div>
+        <%= form.hidden_field :date, value: params[:date] if params[:date].present? %>
+        <%= form.submit "Filter", class: "btn btn-primary" %>
+      <% end %>
+      <%# <%= link_to "New Exam", new_exam_enroll_path, class: "btn btn-primary" %>
+    </div>
   </div>
 
   <div class="card">
@@ -36,7 +48,7 @@
               <th>Name</th>
               <th>Subject</th>
               <th>Code</th>
-              <th>Exam Board</th>
+              <th>Waiting</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>

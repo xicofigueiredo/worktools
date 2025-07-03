@@ -19,7 +19,15 @@ class ExamEnrollsController < ApplicationController
 
     @exam_enrolls = ExamEnroll.all
 
-    if current_user.role == 'lc'
+    # Get all unique statuses for the filter dropdown
+    @available_statuses = ExamEnroll.distinct.pluck(:status).compact.sort
+
+    # Apply status filter if provided
+    if params[:status].present? && params[:status] != 'all'
+      @exam_enrolls = @exam_enrolls.where(status: params[:status])
+    end
+
+    if current_user.role == 'real lc' #future lc logic
       # Debug: Check current user's main hub
       main_hub = current_user.users_hubs.find_by(main: true)
 
@@ -44,7 +52,7 @@ class ExamEnrollsController < ApplicationController
       @exam_enrolls = @exam_enrolls.where('timelines.user_id IN (?)', main_hub_user_ids)
         .order('exam_dates.date ASC')
 
-    elsif current_user.role == 'dc'
+    elsif current_user.role == 'lc' #dc logic
       # Get all hub IDs where the DC is assigned
       dc_hub_ids = current_user.users_hubs.pluck(:hub_id)
 

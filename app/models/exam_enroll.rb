@@ -8,7 +8,65 @@ class ExamEnroll < ApplicationRecord
   # validates :dc_approval_comment, presence: true, if: :dc_approval_present?
 
 
+  def set_status
+    # pre-registration
+    if self.pre_registration_exception_comment.present? && self.pre_registration_exception_dc_approval == nil
+      self.status = "DC Approval Pending"
+    elsif self.pre_registration_exception_comment.present? && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == nil
+      self.status = "EDU Approval Pending"
+    elsif self.pre_registration_exception_comment.present? && self.pre_registration_exception_dc_approval == false
+      self.status = "Rejected"
+      #notify lc and learner to reset exam season
+    elsif self.pre_registration_exception_comment.present? && self.pre_registration_exception_edu_approval == false
+      self.status = "Rejected"
+      #notify lc and learner to reset exam season
+    elsif self.pre_registration_exception_comment.present? && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == true
+      if self.result == "U" || self.result == "0"
+        self.status = "Failed Mock"
+        #notify lc and learner to request a failed mock exception
+      elsif self.result.nil?
+        self.status = "Mock Pending"
+      else
+        self.status = "Registered"
+      end
+    end
 
+    # extension
+    if self.extension_comment.present? && self.extension_dc_approval == nil
+      self.status = "DC Approval Pending"
+    elsif self.extension_comment.present? && self.extension_dc_approval == true && self.extension_edu_approval == nil
+      self.status = "EDU Approval Pending"
+    elsif self.extension_comment.present? && self.extension_dc_approval == false
+      self.status = "Rejected"
+    elsif self.extension_comment.present? && self.extension_edu_approval == false
+      self.status = "Rejected"
+    elsif self.extension_comment.present? && self.extension_dc_approval == true && self.extension_edu_approval == true
+      if self.result == "U" || self.result == "0"
+       self.status = "Failed Mock (Registered)"
+       # notify lc and learner to request a failed mock exceptionvv
+      elsif self.result.nil?
+        self.status = "Mock Pending (Registered)"
+      else
+        self.status = "Registered"
+      end
+    end
+
+    # failed mock
+    if self.failed_mock_exception_comment.present? && self.failed_mock_exception_dc_approval == nil
+      self.status = "DC Approval Pending"
+    elsif self.failed_mock_exception_comment.present? && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == nil
+      self.status = "EDU Approval Pending"
+    elsif self.failed_mock_exception_comment.present? && self.failed_mock_exception_dc_approval == false
+      self.status = "Rejected"
+      #notify lc and learner to reset exam season
+    elsif self.failed_mock_exception_comment.present? && self.failed_mock_exception_edu_approval == false
+      self.status = "Rejected"
+      #notify lc and learner to reset exam season
+    elsif self.failed_mock_exception_comment.present? && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == true
+      self.status = "Registered"
+    end
+
+  end
 
   # Optional: Add helper methods to check status
   def rejected?
