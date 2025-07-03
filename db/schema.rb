@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_03_222133) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_03_230745) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -107,7 +107,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_03_222133) do
     t.string "subject_name"
     t.string "code"
     t.string "qualification"
-    t.string "progress_cut_off"
     t.string "mock_results"
     t.string "bga_exam_centre"
     t.string "exam_board"
@@ -144,6 +143,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_03_222133) do
     t.integer "learning_coach_ids", default: [], array: true
     t.integer "timeline_id"
     t.string "specific_papers"
+    t.boolean "progress_cut_off", default: false
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
     t.index ["timeline_id"], name: "index_exam_enrolls_on_timeline_id"
   end

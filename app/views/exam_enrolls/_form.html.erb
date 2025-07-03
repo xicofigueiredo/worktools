@@ -12,23 +12,6 @@
 
   <div class="card mb-4">
     <div class="card-header">
-      <h5>Moodle Timeline</h5>
-    </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-12 mb-3">
-          <%= f.label :moodle_timeline_id, "Select Moodle Timeline", class: "form-label" %>
-          <%= f.collection_select :moodle_timeline_id, @moodle_timelines,
-              :last, :first,
-              { prompt: "Select a Moodle Timeline" },
-              { class: "form-select" } %>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card mb-4">
-    <div class="card-header">
       <h5>Learner Information</h5>
     </div>
     <div class="card-body">
@@ -112,8 +95,10 @@
           <%= f.text_field :qualification, class: "form-control", disabled: field_disabled?(:qualification, current_user) %>
         </div>
         <div class="col-md-6 mb-3">
-          <%= f.label :progress_cut_off, class: "form-label" %>
-          <%= f.text_field :progress_cut_off, class: "form-control", disabled: field_disabled?(:progress_cut_off, current_user) %>
+          <div class="form-check mt-4">
+            <%= f.check_box :progress_cut_off, class: "form-check-input", disabled: field_disabled?(:progress_cut_off, current_user) %>
+            <%= f.label :progress_cut_off, "Progress Cut-off Met", class: "form-check-label" %>
+          </div>
         </div>
         <div class="col-md-6 mb-3">
           <%= f.label :mock_results, class: "form-label" %>
