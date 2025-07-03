@@ -29,6 +29,39 @@ class Timeline < ApplicationRecord
   #   end
   # end
 
+  after_update :create_exam_enroll
+
+  def create_exam_enroll
+    exam_enroll = ExamEnroll.find_by(timeline_id: self.id)
+    if exam_enroll.nil?
+      if self.exam_date.present?
+        hub = self.user.users_hubs.find_by(main: true).hub.name
+        lcs = self.user.users_hubs.includes(:hub).find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+          lc.hubs.count >= 3
+        end
+        lc_ids = lcs.present? ? lcs.map(&:id) : []
+        native_language_english = self.user.native_language == 'English' ? true : false
+
+        exam_enroll = ExamEnroll.create!(
+          timeline_id: self.id,
+          status: "In Progress",
+          learner_name: self.user.full_name,
+          hub: hub,
+          learning_coach_ids: lc_ids,
+          date_of_birth: self.user.birthday,
+          native_language_english: native_language_english,
+          subject_name: self.subject.name,
+          progress_cut_off: self.progress
+        )
+
+      end
+    else
+      if self.progress > 80
+        exam_enroll.update(status: "Registered")
+      end
+    end
+  end
+
   def start_date_before_end_date
     return unless start_date && end_date && start_date >= end_date
 

@@ -7,24 +7,8 @@ class ExamEnroll < ApplicationRecord
   # validates :dc_approval_justification, presence: true, if: :dc_approval_present?
   # validates :dc_approval_comment, presence: true, if: :dc_approval_present?
 
-  STATUSES = %w[
-    Rejected
-    Approval Pending
-    Mock Pending
-    Failed Mock
-    Registered
-  ].freeze
 
-  validates :status, inclusion: { in: STATUSES }
 
-  # Enum for status
-  enum status: {
-    rejected: 'Rejected',
-    approval_pending: 'Approval Pending',
-    mock_pending: 'Mock Pending',
-    failed_mock: 'Failed Mock',
-    registered: 'Registered'
-  }
 
   # Optional: Add helper methods to check status
   def rejected?
@@ -50,8 +34,6 @@ class ExamEnroll < ApplicationRecord
   # Callbacks to handle status changes
   # after_save :update_status_based_on_approvals
 
-  # Add validation to ensure at least one timeline is present
-  validate :must_have_one_timeline
 
   private
 
@@ -102,12 +84,6 @@ class ExamEnroll < ApplicationRecord
           extension_edu_approval == true
       # If EDU approved
       update_column(:status, 'mock_pending')
-    end
-  end
-
-  def must_have_one_timeline
-    if moodle_timeline_id.blank? && timeline_id.blank?
-      errors.add(:base, "Must have either a Moodle Timeline or a Timeline")
     end
   end
 end

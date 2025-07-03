@@ -31,16 +31,13 @@
         <table class="table table-striped">
           <thead>
             <tr>
-              <th>Exam Date</th>
-              <th>Timeline</th>
+              <th>Exam Season</th>
               <th>Hub</th>
               <th>Name</th>
-              <th>LC</th>
               <th>Subject</th>
               <th>Code</th>
               <th>Exam Board</th>
-              <th>Extension</th>
-              <th>Exception</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -48,35 +45,14 @@
             <% if @exam_enrolls.any? %>
               <% @exam_enrolls.each do |enrollment| %>
                 <tr>
-                  <td><%= enrollment.moodle_timeline.exam_date&.date&.strftime("%B %d, %Y") %></td>
-                  <td><%= enrollment.moodle_timeline.id %></td>
+                  <td><%= enrollment.timeline.exam_date&.date&.strftime("%B %Y") %></td>
                   <td><%= enrollment.hub %></td>
                   <td><%= enrollment.learner_name %></td>
-                  <td><%= enrollment.learning_coach %></td>
                   <td><%= enrollment.subject_name %></td>
                   <td><%= enrollment.code %></td>
                   <td><%= enrollment.exam_board %></td>
                   <td>
-                    <% if enrollment.extension_edu_approval && enrollment.extension_cm_approval %>
-                      <span class="badge bg-success">Approved</span>
-                    <% elsif enrollment.extension_edu_approval == false || enrollment.extension_cm_approval == false %>
-                      <span class="badge bg-danger">Rejected</span>
-                    <% elsif enrollment.extension_justification.present? %>
-                      <span class="badge bg-warning">Pending</span>
-                    <% else %>
-                      <span class="badge bg-secondary">Not Requested</span>
-                    <% end %>
-                  </td>
-                  <td>
-                    <% if enrollment.exception_edu_approval && enrollment.exception_cm_approval %>
-                      <span class="badge bg-success">Approved</span>
-                    <% elsif enrollment.exception_edu_approval == false || enrollment.exception_cm_approval == false %>
-                      <span class="badge bg-danger">Rejected</span>
-                    <% elsif enrollment.exception_justification.present? %>
-                      <span class="badge bg-warning">Pending</span>
-                    <% else %>
-                      <span class="badge bg-secondary">Not Requested</span>
-                    <% end %>
+                    <%= enrollment.status %>
                   </td>
                   <td>
                     <div class="d-flex justify-content-center">
@@ -86,11 +62,13 @@
                       <%= link_to edit_exam_enroll_path(enrollment), class: "btn btn-sm btn-warning me-1" do %>
                         <i class="fas fa-edit"></i>
                       <% end %>
-                      <%= link_to exam_enroll_path(enrollment),
-                          method: :delete,
-                          data: { turbo_method: :delete, turbo_confirm: "Are you sure?" },
-                          class: "btn btn-sm btn-danger" do %>
-                        <i class="fas fa-trash"></i>
+                      <% if current_user.role == "admin" %>
+                        <%= link_to exam_enroll_path(enrollment),
+                            method: :delete,
+                            data: { turbo_method: :delete, turbo_confirm: "Are you sure?" },
+                            class: "btn btn-sm btn-danger" do %>
+                          <i class="fas fa-trash"></i>
+                        <% end %>
                       <% end %>
                     </div>
                   </td>

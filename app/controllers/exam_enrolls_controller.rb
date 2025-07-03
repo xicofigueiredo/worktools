@@ -25,9 +25,9 @@ class ExamEnrollsController < ApplicationController
         .where('exam_enrolls.hub IN (?)', current_user.hubs.map(&:to_s))
         .order('moodle_timelines.start_date ASC')
     elsif current_user.role == 'admin'
-      @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
-        .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-        .order('moodle_timelines.start_date ASC')
+      # @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
+      #   .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+      #   .order('moodle_timelines.start_date ASC')
     elsif current_user.role == 'dc'
       @exam_enrolls = @exam_enrolls.includes(:moodle_timeline)
         .where('moodle_timelines.start_date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)

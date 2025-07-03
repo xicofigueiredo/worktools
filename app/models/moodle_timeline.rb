@@ -38,8 +38,6 @@ class MoodleTimeline < ApplicationRecord
       native_language_english = self.user.native_language == 'English' ? true : false
 
       exam_enroll = ExamEnroll.create!(
-        user_id: user_id,
-        subject_id: subject_id,
         hub: hub,
         learning_coach_ids: lc_ids,
         date_of_birth: self.user.birthday,
