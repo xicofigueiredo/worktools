@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_03_221322) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_03_222133) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -90,8 +90,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_03_221322) do
   create_table "exam_enroll_documents", force: :cascade do |t|
     t.bigint "exam_enroll_id", null: false
     t.string "file_name"
-    t.string "file_type"
-    t.string "file_path"
     t.text "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

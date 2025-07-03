@@ -104,15 +104,32 @@ class ExamEnrollsController < ApplicationController
     if @exam_enroll.save
       # Handle document uploads
       if params[:exam_enroll][:documents].present?
+        upload_errors = []
         params[:exam_enroll][:documents].each do |doc|
-          @exam_enroll.exam_enroll_documents.create!(
-            file_name: doc.original_filename,
-            file_type: doc.content_type,
-            file_path: doc.tempfile.path,
-            description: params[:exam_enroll][:document_description]
-          )
+          next if doc.blank? || doc.is_a?(String)
+
+          begin
+            document = @exam_enroll.exam_enroll_documents.create!(
+              file_name: doc.original_filename,
+              description: params[:exam_enroll][:document_description]
+            )
+            document.file.attach(doc)
+
+            # Check if the document is valid after attaching the file
+            unless document.valid?
+              document.destroy
+              upload_errors << "#{doc.original_filename}: #{document.errors.full_messages.join(', ')}"
+            end
+          rescue => e
+            upload_errors << "#{doc.original_filename}: #{e.message}"
+          end
+        end
+
+        if upload_errors.any?
+          flash[:alert] = "Some files could not be uploaded: #{upload_errors.join('; ')}"
         end
       end
+
       redirect_to @exam_enroll, notice: 'Exam enrollment was successfully created.'
     else
       @moodle_timelines = MoodleTimeline.all
@@ -125,29 +142,33 @@ class ExamEnrollsController < ApplicationController
       if @exam_enroll.update(exam_enroll_params)
         # Handle document uploads
         if params[:exam_enroll][:documents].present?
+          upload_errors = []
           params[:exam_enroll][:documents].each do |doc|
-            next if doc.blank? || doc.is_a?(String) # Skip empty strings
-            @exam_enroll.exam_enroll_documents.create!(
-              file_name: doc.original_filename,
-              file_type: doc.content_type,
-              file_path: doc.tempfile.path,
-              description: params[:exam_enroll][:document_description]
-            )
+            next if doc.blank? || doc.is_a?(String)
+
+            begin
+              document = @exam_enroll.exam_enroll_documents.create!(
+                file_name: doc.original_filename,
+                description: params[:exam_enroll][:document_description]
+              )
+              document.file.attach(doc)
+
+              # Check if the document is valid after attaching the file
+              unless document.valid?
+                document.destroy
+                upload_errors << "#{doc.original_filename}: #{document.errors.full_messages.join(', ')}"
+              end
+            rescue => e
+              upload_errors << "#{doc.original_filename}: #{e.message}"
+            end
+          end
+
+          if upload_errors.any?
+            flash[:alert] = "Some files could not be uploaded: #{upload_errors.join('; ')}"
           end
         end
 
-        message = case @exam_enroll.status
-                  when 'rejected'
-                    'Enrollment was rejected.'
-                  when 'approval_pending'
-                    'Pending EDU department approval.'
-                  when 'mock_pending'
-                    'Approved. Waiting for mock exam.'
-                  else
-                    'Exam enrollment was successfully updated.'
-                  end
-
-        format.html { redirect_to @exam_enroll, notice: message }
+        format.html { redirect_to @exam_enroll, notice: 'Exam enrollment was successfully updated.' }
         format.json { render :show, status: :ok, location: @exam_enroll }
       else
         format.html { render :edit }
@@ -178,10 +199,26 @@ class ExamEnrollsController < ApplicationController
     end
   end
 
+  def download_document
+    @exam_enroll = ExamEnroll.find(params[:id])
+    document = @exam_enroll.exam_enroll_documents.find(params[:document_id])
+
+    if document.file.attached?
+      disposition = params[:download] == 'true' ? 'attachment' : 'inline'
+      redirect_to rails_blob_path(document.file, disposition: disposition)
+    else
+      redirect_to @exam_enroll, alert: 'File not found.'
+    end
+  end
+
   def delete_document
     @exam_enroll = ExamEnroll.find(params[:id])
     document = @exam_enroll.exam_enroll_documents.find(params[:document_id])
-    document.purge
+
+    if document.file.attached?
+      document.file.purge
+    end
+    document.destroy
 
     respond_to do |format|
       format.html { redirect_to edit_exam_enroll_path(@exam_enroll), notice: 'Document was successfully deleted.' }

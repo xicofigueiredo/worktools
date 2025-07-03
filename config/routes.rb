@@ -166,7 +166,8 @@ Rails.application.routes.draw do
 
     resources :exam_enrolls, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
       member do
-        delete :delete_document
+        get 'delete_document/:document_id', to: 'exam_enrolls#delete_document', as: 'delete_document'
+        get 'download_document/:document_id', to: 'exam_enrolls#download_document', as: 'download_document'
       end
     end
 
