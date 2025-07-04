@@ -36,7 +36,7 @@ class Timeline < ApplicationRecord
     if exam_enroll.nil?
       if self.exam_date.present?
         hub = self.user.users_hubs.find_by(main: true).hub.name
-        lcs = self.user.users_hubs.includes(:hub).find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
+        lcs = self.user.users_hubs.includes(:hub).find_by(main: true)&.hub.users.where(role: 'lc', deactivate: false).reject do |lc|
           lc.hubs.count >= 3
         end
         lc_ids = lcs.present? ? lcs.map(&:id) : []
@@ -54,10 +54,6 @@ class Timeline < ApplicationRecord
           progress_cut_off: self.progress
         )
 
-      end
-    else
-      if self.progress > 80
-        exam_enroll.update(status: "Registered")
       end
     end
   end

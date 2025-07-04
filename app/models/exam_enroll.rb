@@ -14,26 +14,26 @@ class ExamEnroll < ApplicationRecord
     users_ids = self.learning_coach_ids + [self.timeline.user_id]
 
     if !self.progress_cut_off && self.failed_mock_exception_edu_approval != true
-      self.update_column(:status, "Rejected")
+      self.status = "Rejected"
       return
     elsif (self.mock_results == "U" || self.mock_results == "0") && self.failed_mock_exception_edu_approval != true
-      self.update_column(:status, "Failed Mock")
+      self.status = "Failed Mock"
     elsif self.mock_results.nil?
-      self.update_column(:status, "Mock Pending")
+      self.status = "Mock Pending"
     elsif self.progress_cut_off
-      self.update_column(:status, "Registered")
+      self.status = "Registered"
       return
     else
-      self.update_column(:status, "Registered")
+      self.status = "Registered"
     end
 
     # pre-registration
     if self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == nil
-      self.update_column(:status, "DC Approval Pending")
+      self.status = "DC Approval Pending"
     elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == nil
-      self.update_column(:status, "Edu Approval Pending")
+      self.status = "Edu Approval Pending"
     elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == false
-      self.update_column(:status, "Rejected")
+      self.status = "Rejected"
       #notify lc and learner to reset exam season
       users_ids.each do |user_id|
         Notification.create(
@@ -42,7 +42,7 @@ class ExamEnroll < ApplicationRecord
         )
       end
     elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_edu_approval == false
-      self.update_column(:status, "Rejected")
+      self.status = "Rejected"
       #notify lc and learner to reset exam season
       users_ids.each do |user_id|
         Notification.create(
@@ -52,7 +52,7 @@ class ExamEnroll < ApplicationRecord
       end
     elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == true
       if self.mock_results == "U" || self.mock_results == "0"
-        self.update_column(:status, "Failed Mock")
+        self.status = "Failed Mock"
         #notify lc and learner to request a failed mock exception
         users_ids.each do |user_id|
           Notification.create(
@@ -61,24 +61,24 @@ class ExamEnroll < ApplicationRecord
           )
         end
       elsif self.mock_results.nil?
-        self.update_column(:status, "Mock Pending")
+        self.status = "Mock Pending"
       else
-        self.update_column(:status, "Registered")
+        self.status = "Registered"
       end
     end
 
     # extension
     if self.extension_justification != "" && self.extension_dc_approval == nil
-      self.update_column(:status, "DC Approval Pending")
+      self.status = "DC Approval Pending"
     elsif self.extension_justification != "" && self.extension_dc_approval == true && self.extension_edu_approval == nil
-      self.update_column(:status, "Edu Approval Pending")
+      self.status = "Edu Approval Pending"
     elsif self.extension_justification != "" && self.extension_dc_approval == false
-      self.update_column(:status, "Rejected")
+      self.status = "Rejected"
     elsif self.extension_justification != "" && self.extension_edu_approval == false
-      self.update_column(:status, "Rejected")
+      self.status = "Rejected"
     elsif self.extension_justification != "" && self.extension_dc_approval == true && self.extension_edu_approval == true
       if self.mock_results == "U" || self.mock_results == "0"
-       self.update_column(:status, "Failed Mock (Registered)")
+       self.status = "Failed Mock (Registered)"
        # notify lc and learner to request a failed mock exceptionvv
        users_ids.each do |user_id|
         Notification.create(
@@ -87,19 +87,19 @@ class ExamEnroll < ApplicationRecord
         )
       end
       elsif self.mock_results.nil?
-        self.update_column(:status, "Mock Pending (Registered)")
+        self.status = "Mock Pending (Registered)"
       else
-        self.update_column(:status, "Registered")
+        self.status = "Registered"
       end
     end
 
     # failed mock
     if self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == nil
-      self.update_column(:status, "DC Approval Pending")
+      self.status = "DC Approval Pending"
     elsif self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == nil
-      self.update_column(:status, "Edu Approval Pending")
+      self.status = "Edu Approval Pending"
     elsif self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == false
-      self.update_column(:status, "Rejected")
+      self.status = "Rejected"
       #notify lc and learner to reset exam season
       users_ids.each do |user_id|
         Notification.create(
@@ -108,7 +108,7 @@ class ExamEnroll < ApplicationRecord
         )
       end
     elsif self.failed_mock_exception_justification == "" && self.failed_mock_exception_edu_approval == false
-      self.update_column(:status, "Rejected")
+      self.status = "Rejected"
       #notify lc and learner to reset exam season
       users_ids.each do |user_id|
         Notification.create(
@@ -117,7 +117,7 @@ class ExamEnroll < ApplicationRecord
         )
       end
     elsif self.failed_mock_exception_justification == "" && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == true
-      self.update_column(:status, "Registered")
+      self.status = "Registered"
     end
 
   end
