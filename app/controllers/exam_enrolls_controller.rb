@@ -21,20 +21,30 @@ class ExamEnrollsController < ApplicationController
     # Get all unique statuses for the filter dropdown
     @available_statuses = ExamEnroll.distinct.pluck(:status).compact.sort
 
-    # Set default status to "Edu Approval Pending" only for Marcela's email
-    if current_user.email == 'marcela@bravegenerationacademy.com' && params[:status].blank?
-      status_filter = params[:status].present? ? params[:status] : 'Edu Approval Pending'
-    elsif current_user.role == 'exams' && params[:status].blank?
-      status_filter = params[:status].present? ? params[:status] : 'Registered'
-    elsif current_user.users_hubs.count > 2 && params[:status].blank? && current_user.role != 'admin'
-      status_filter = params[:status].present? ? params[:status] : 'DC Approval Pending'
+    # Set default status filter based on user role when no status is provided
+    if params[:status].blank?
+      if current_user.email == 'marcela@bravegenerationacademy.com'
+        status_filter = 'Edu Approval Pending'
+      elsif current_user.role == 'exams'
+        status_filter = 'Registered'
+      elsif current_user.role == 'lc' && current_user.users_hubs.count > 2
+        status_filter = 'DC Approval Pending'
+      else
+        status_filter = 'all'
+      end
     else
-      status_filter = params[:status].present? ? params[:status] : 'all'
+      status_filter = params[:status]
     end
 
     # Apply status filter
     if status_filter != 'all'
-      @exam_enrolls = @exam_enrolls.where(status: status_filter)
+      filtered_enrolls = @exam_enrolls.where(status: status_filter)
+      # If no records found with the default filter, fall back to 'all'
+      if filtered_enrolls.empty? && params[:status].blank?
+        status_filter = 'all'
+      else
+        @exam_enrolls = filtered_enrolls
+      end
     end
 
     # Store the current status for the view
