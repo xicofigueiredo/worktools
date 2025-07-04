@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_04_014154) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_04_014656) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -535,6 +535,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_04_014154) do
     t.integer "moodle_id"
     t.integer "topics_count", default: 0, null: false
     t.string "code"
+    t.string "board"
   end
 
   create_table "thursday_slots", force: :cascade do |t|
