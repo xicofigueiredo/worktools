@@ -29,7 +29,7 @@ class Timeline < ApplicationRecord
   #   end
   # end
 
-  after_update :create_exam_enroll
+  # after_update :create_exam_enroll
 
   def create_exam_enroll
     exam_enroll = ExamEnroll.find_by(timeline_id: self.id)
@@ -44,14 +44,14 @@ class Timeline < ApplicationRecord
 
         exam_enroll = ExamEnroll.create!(
           timeline_id: self.id,
-          status: "In Progress",
           learner_name: self.user.full_name,
           hub: hub,
           learning_coach_ids: lc_ids,
           date_of_birth: self.user.birthday,
           native_language_english: native_language_english,
           subject_name: self.subject.name,
-          progress_cut_off: self.progress
+          progress_cut_off: self.progress,
+
         )
 
       end
