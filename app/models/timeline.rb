@@ -54,7 +54,6 @@ class Timeline < ApplicationRecord
           native_language_english: user.native_language_english,
           code: self.code,
           exam_board: self.subject.board
-
         )
 
       end

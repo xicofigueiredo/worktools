@@ -96,3 +96,6 @@ send_journey_emails:
 
 set_report_parent:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake db:set_report_parent"
+
+update_users:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake db:update_users_from_csv"
