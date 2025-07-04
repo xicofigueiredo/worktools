@@ -40,17 +40,20 @@ class Timeline < ApplicationRecord
           lc.hubs.count >= 3
         end
         lc_ids = lcs.present? ? lcs.map(&:id) : []
-        native_language_english = self.user.native_language == 'English' ? true : false
-
+        user = self.user
         exam_enroll = ExamEnroll.create!(
           timeline_id: self.id,
-          learner_name: self.user.full_name,
+          learner_name: user.full_name,
           hub: hub,
           learning_coach_ids: lc_ids,
-          date_of_birth: self.user.birthday,
-          native_language_english: native_language_english,
+          date_of_birth: user.birthday,
           subject_name: self.subject.name,
           progress_cut_off: self.progress,
+          learner_id_number: user.id_number,
+          gender: user.gender,
+          native_language_english: user.native_language_english,
+          code: self.code,
+          exam_board: self.subject.board
 
         )
 
