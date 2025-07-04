@@ -15,14 +15,12 @@ class ExamEnroll < ApplicationRecord
 
     if !self.progress_cut_off && self.failed_mock_exception_edu_approval != true
       self.status = "Rejected"
-      return
     elsif (self.mock_results == "U" || self.mock_results == "0") && self.failed_mock_exception_edu_approval != true
       self.status = "Failed Mock"
     elsif self.mock_results.nil?
       self.status = "Mock Pending"
     elsif self.progress_cut_off
       self.status = "Registered"
-      return
     else
       self.status = "Registered"
     end
