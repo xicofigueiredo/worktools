@@ -77,13 +77,24 @@
       <h5>Learning Coach Information</h5>
     </div>
     <div class="card-body">
-      <div class="row">
+      <div class="row" id="learning-coaches-container">
         <% @exam_enroll.learning_coach_ids.each do |lc_id| %>
-          <div class="col-md-6 mb-3">
-            <%= User.find(lc_id).full_name %>
+          <div class="col-12 mb-3 d-flex justify-content-between align-items-center border-bottom pb-2" id="lc-<%= lc_id %>">
+            <div>
+              <strong><%= User.find(lc_id).full_name %></strong><br>
+              <small class="text-muted"><%= User.find(lc_id).email %></small>
+            </div>
+            <% if current_user.role == 'admin' || current_user.role == 'lc' %>
+              <button type="button" class="btn btn-sm btn-danger" onclick="removeLearningCoach(<%= lc_id %>)">
+                <i class="fas fa-times"></i> Remove
+              </button>
+            <% end %>
           </div>
-          <div class="col-md-6 mb-3">
-            <%= User.find(lc_id).email %>
+        <% end %>
+
+        <% if @exam_enroll.learning_coach_ids.empty? %>
+          <div class="col-12 text-center text-muted">
+            <p>No learning coaches assigned</p>
           </div>
         <% end %>
       </div>
@@ -604,4 +615,53 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+function removeLearningCoach(lcId) {
+  if (confirm('Are you sure you want to remove this Learning Coach?')) {
+    fetch(`/exam_enrolls/<%= @exam_enroll.id %>/remove_lc`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      },
+      body: JSON.stringify({ lc_id: lcId })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Remove the LC from the DOM
+        document.getElementById(`lc-${lcId}`).remove();
+
+        // Show success message
+        showFlashMessage('Learning Coach removed successfully', 'success');
+
+        // Check if container is empty
+        const container = document.getElementById('learning-coaches-container');
+        if (container.children.length === 0) {
+          container.innerHTML = '<div class="col-12 text-center text-muted"><p>No learning coaches assigned</p></div>';
+        }
+      } else {
+        showFlashMessage(data.error || 'Failed to remove Learning Coach', 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showFlashMessage('An error occurred while removing the Learning Coach', 'error');
+    });
+  }
+}
+
+function showFlashMessage(message, type) {
+  const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+  const alertHtml = `
+    <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  `;
+
+  // Add to top of the form
+  const form = document.querySelector('form');
+  form.insertAdjacentHTML('afterbegin', alertHtml);
+}
 </script>
