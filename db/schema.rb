@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_04_014656) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_04_092654) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -646,7 +646,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_04_014656) do
     t.string "level"
     t.date "birthday"
     t.string "nationality"
-    t.string "native_language"
     t.string "profile_pic"
     t.datetime "last_login_at"
     t.string "confirmation_token"
@@ -659,6 +658,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_04_014656) do
     t.boolean "changed_password", default: false
     t.integer "subjects", default: [], array: true
     t.datetime "graduated_at"
+    t.string "id_number"
+    t.string "gender"
+    t.boolean "native_language_english"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
