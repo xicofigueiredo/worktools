@@ -16,14 +16,23 @@ class ExamEnroll < ApplicationRecord
     if !self.progress_cut_off && self.failed_mock_exception_edu_approval != true
       self.update_column(:status, "Rejected")
       return
+    elsif (self.mock_results == "U" || self.mock_results == "0") && self.failed_mock_exception_edu_approval != true
+      self.update_column(:status, "Failed Mock")
+    elsif self.mock_results.nil?
+      self.update_column(:status, "Mock Pending")
+    elsif self.progress_cut_off
+      self.update_column(:status, "Registered")
+      return
+    else
+      self.update_column(:status, "Registered")
     end
 
     # pre-registration
-    if self.pre_registration_exception_justification == "" && self.pre_registration_exception_dc_approval == nil
+    if self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == nil
       self.update_column(:status, "DC Approval Pending")
-    elsif self.pre_registration_exception_justification == "" && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == nil
-      self.update_column(:status, "EDU Approval Pending")
-    elsif self.pre_registration_exception_justification == "" && self.pre_registration_exception_dc_approval == false
+    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == nil
+      self.update_column(:status, "Edu Approval Pending")
+    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == false
       self.update_column(:status, "Rejected")
       #notify lc and learner to reset exam season
       users_ids.each do |user_id|
@@ -32,7 +41,7 @@ class ExamEnroll < ApplicationRecord
           message: "A pre-registration exception has been rejected. A new exam season for #{self.subject_name}(#{self.learner_name}) is needed. Please update it! "
         )
       end
-    elsif self.pre_registration_exception_justification == "" && self.pre_registration_exception_edu_approval == false
+    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_edu_approval == false
       self.update_column(:status, "Rejected")
       #notify lc and learner to reset exam season
       users_ids.each do |user_id|
@@ -41,8 +50,8 @@ class ExamEnroll < ApplicationRecord
           message: "A pre-registration exception has been rejected. A new exam season for #{self.subject_name}(#{self.learner_name}) is needed. Please update it! "
         )
       end
-    elsif self.pre_registration_exception_justification == "" && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == true
-      if self.result == "U" || self.result == "0"
+    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == true
+      if self.mock_results == "U" || self.mock_results == "0"
         self.update_column(:status, "Failed Mock")
         #notify lc and learner to request a failed mock exception
         users_ids.each do |user_id|
@@ -51,7 +60,7 @@ class ExamEnroll < ApplicationRecord
             message: "A pre-registration exception has been rejected. Please request a failed mock exception for #{self.subject_name}(#{self.learner_name})"
           )
         end
-      elsif self.result.nil?
+      elsif self.mock_results.nil?
         self.update_column(:status, "Mock Pending")
       else
         self.update_column(:status, "Registered")
@@ -59,16 +68,16 @@ class ExamEnroll < ApplicationRecord
     end
 
     # extension
-    if self.extension_justification == "" && self.extension_dc_approval == nil
+    if self.extension_justification != "" && self.extension_dc_approval == nil
       self.update_column(:status, "DC Approval Pending")
-    elsif self.extension_justification == "" && self.extension_dc_approval == true && self.extension_edu_approval == nil
-      self.update_column(:status, "EDU Approval Pending")
-    elsif self.extension_justification == "" && self.extension_dc_approval == false
+    elsif self.extension_justification != "" && self.extension_dc_approval == true && self.extension_edu_approval == nil
+      self.update_column(:status, "Edu Approval Pending")
+    elsif self.extension_justification != "" && self.extension_dc_approval == false
       self.update_column(:status, "Rejected")
-    elsif self.extension_justification == "" && self.extension_edu_approval == false
+    elsif self.extension_justification != "" && self.extension_edu_approval == false
       self.update_column(:status, "Rejected")
-    elsif self.extension_justification == "" && self.extension_dc_approval == true && self.extension_edu_approval == true
-      if self.result == "U" || self.result == "0"
+    elsif self.extension_justification != "" && self.extension_dc_approval == true && self.extension_edu_approval == true
+      if self.mock_results == "U" || self.mock_results == "0"
        self.update_column(:status, "Failed Mock (Registered)")
        # notify lc and learner to request a failed mock exceptionvv
        users_ids.each do |user_id|
@@ -77,7 +86,7 @@ class ExamEnroll < ApplicationRecord
           message: "An extension has been rejected. Please request a new failed mock exception for #{self.subject_name}(#{self.learner_name})"
         )
       end
-      elsif self.result.nil?
+      elsif self.mock_results.nil?
         self.update_column(:status, "Mock Pending (Registered)")
       else
         self.update_column(:status, "Registered")
@@ -85,11 +94,11 @@ class ExamEnroll < ApplicationRecord
     end
 
     # failed mock
-    if self.failed_mock_exception_justification == "" && self.failed_mock_exception_dc_approval == nil
+    if self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == nil
       self.update_column(:status, "DC Approval Pending")
-    elsif self.failed_mock_exception_justification == "" && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == nil
-      self.update_column(:status, "EDU Approval Pending")
-    elsif self.failed_mock_exception_justification == "" && self.failed_mock_exception_dc_approval == false
+    elsif self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == nil
+      self.update_column(:status, "Edu Approval Pending")
+    elsif self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == false
       self.update_column(:status, "Rejected")
       #notify lc and learner to reset exam season
       users_ids.each do |user_id|
@@ -171,7 +180,7 @@ class ExamEnroll < ApplicationRecord
     elsif pre_registration_exception_dc_approval == true ||
           failed_mock_exception_dc_approval == true ||
           extension_dc_approval == true
-      # If DC approved, move to EDU approval pending
+      # If DC approved, move to Edu approval pending
       update_column(:status, 'approval_pending')
     end
   end

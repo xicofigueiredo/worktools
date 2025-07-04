@@ -8,30 +8,33 @@
 
 
     <div class="d-flex gap-2">
-      <%= link_to exam_enrolls_path(date: @previous_sprint&.start_date),
+      <%= link_to exam_enrolls_path(date: @previous_sprint&.start_date, status: params[:status]),
           class: "btn btn-outline-secondary rounded d-flex align-items-center #{@previous_sprint ? '' : 'disabled'}" do %>
         <i class="fa-solid fa-chevron-left"></i>
       <% end %>
 
       <%= link_to 'This Sprint',
-          exam_enrolls_path,
+          exam_enrolls_path(status: params[:status]),
           class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
 
-      <%= link_to exam_enrolls_path(date: @next_sprint&.start_date),
+      <%= link_to exam_enrolls_path(date: @next_sprint&.start_date, status: params[:status]),
           class: "btn btn-outline-secondary rounded d-flex align-items-center #{@next_sprint ? '' : 'disabled'}" do %>
         <i class="fa-solid fa-chevron-right"></i>
       <% end %>
     </div>
     <div class=" d-flex align-items-end gap-2 justify-content-end">
-      <%= form_with url: exam_enrolls_path, method: :get, local: true, class: "d-flex align-items-end gap-2" do |form| %>
+      <%= form_with url: exam_enrolls_path, method: :get, local: true, class: "d-flex align-items-end gap-2", id: "filter-form" do |form| %>
         <div class="flex-grow-1">
           <%= form.select :status,
               options_for_select([['All Statuses', 'all']] + @available_statuses.map { |status| [status, status] }, @current_status),
               {},
-              { class: "form-select" } %>
+              {
+                class: "form-select",
+                id: "status-filter",
+                onchange: "this.form.submit();"
+              } %>
         </div>
         <%= form.hidden_field :date, value: params[:date] if params[:date].present? %>
-        <%= form.submit "Filter", class: "btn btn-primary" %>
       <% end %>
       <%# <%= link_to "New Exam", new_exam_enroll_path, class: "btn btn-primary" %>
     </div>

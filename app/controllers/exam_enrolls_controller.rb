@@ -23,7 +23,11 @@ class ExamEnrollsController < ApplicationController
 
     # Set default status to "Edu Approval Pending" only for Marcela's email
     if current_user.email == 'marcela@bravegenerationacademy.com' && params[:status].blank?
-      status_filter = 'Edu Approval Pending'
+      status_filter = params[:status].present? ? params[:status] : 'Edu Approval Pending'
+    elsif current_user.role == 'exams' && params[:status].blank?
+      status_filter = params[:status].present? ? params[:status] : 'Registered'
+    elsif current_user.users_hubs.count > 2 && params[:status].blank? && current_user.role != 'admin'
+      status_filter = params[:status].present? ? params[:status] : 'DC Approval Pending'
     else
       status_filter = params[:status].present? ? params[:status] : 'all'
     end
@@ -153,7 +157,7 @@ class ExamEnrollsController < ApplicationController
 
   def update
     # Check for progress cut-off warning BEFORE updating
-    show_warning = current_user.role == 'admin' && exam_enroll_params[:progress_cut_off] == '0'
+    show_warning = current_user.role == 'admin' && (exam_enroll_params[:progress_cut_off] == '0' || exam_enroll_params[:mock_results] == 'U' || exam_enroll_params[:mock_results] == '0')
 
     respond_to do |format|
       if @exam_enroll.update(exam_enroll_params)
@@ -188,7 +192,11 @@ class ExamEnrollsController < ApplicationController
 
         # Add warning message if needed
         if show_warning
-          flash[:warning] = "⚠️ WARNING: Progress cut-off is not met! Please verify the learner's progress or consider submitting an exception request."
+          if !exam_enroll_params[:progress_cut_off]
+            flash[:warning] = "⚠️ WARNING: Progress cut-off is not met! Please verify the learner's progress or consider submitting an exception request."
+          elsif (exam_enroll_params[:mock_results] == 'U' || exam_enroll_params[:mock_results] == '0') && exam_enroll_params[:failed_mock_exception_justification] == ""
+            flash[:warning] = "⚠️ WARNING: Mock results are not met! Please verify the learner's mock results or consider submitting an failed mock exception request."
+          end
         end
 
         format.html { redirect_to @exam_enroll }
