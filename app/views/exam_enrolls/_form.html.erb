@@ -154,8 +154,7 @@
                   ["U", "U"]
                 ]
               }, @exam_enroll.mock_results),
-              { prompt: "Select a grade" },
-              { include_blank: true },
+              { prompt: "Select a grade", include_blank: true },
               { class: "form-select", disabled: field_disabled?(:mock_results, current_user) } %>
         </div>
         <div class="col-12 mb-3">
@@ -305,7 +304,7 @@
             </div>
 
             <div class="col-md-4 mb-3">
-              <label class="form-label">Development Coach Approval</label>
+              <label class="form-label">Regional Manager Approval</label>
               <div class="btn-group" role="group" aria-label="DC Approval buttons">
                 <%= f.radio_button :pre_registration_exception_dc_approval, true,
                     class: 'btn-check',
@@ -320,7 +319,7 @@
                     class: "btn btn-outline-danger" %>
               </div>
               <div class="mt-3">
-                <%= f.label :pre_registration_exception_dc_comment, "DC Comment", class: "form-label" %>
+                <%= f.label :pre_registration_exception_dc_comment, "RM Comment", class: "form-label" %>
                 <%= f.text_area :pre_registration_exception_dc_comment,
                     class: "form-control",
                     rows: 2,
@@ -396,7 +395,7 @@
             </div>
 
             <div class="col-md-4 mb-3">
-              <label class="form-label">DC Approval</label>
+              <label class="form-label">Regional Manager Approval</label>
               <div class="btn-group" role="group" aria-label="DC Approval buttons">
                 <%= f.radio_button :failed_mock_exception_dc_approval, true,
                     class: 'btn-check',
@@ -411,7 +410,7 @@
                     class: "btn btn-outline-danger" %>
               </div>
               <div class="mt-3">
-                <%= f.label :failed_mock_exception_dc_comment, "DC Comment", class: "form-label" %>
+                <%= f.label :failed_mock_exception_dc_comment, "RM Comment", class: "form-label" %>
                 <%= f.text_area :failed_mock_exception_dc_comment,
                     class: "form-control",
                     rows: 2,
@@ -487,7 +486,7 @@
             </div>
 
             <div class="col-md-4 mb-3">
-              <label class="form-label">DC Approval</label>
+              <label class="form-label">Regional Manager Approval</label>
               <div class="btn-group" role="group" aria-label="DC Approval buttons">
                 <%= f.radio_button :extension_dc_approval, "true",
                     class: 'btn-check',
@@ -502,7 +501,7 @@
                     class: "btn btn-outline-danger" %>
               </div>
               <div class="mt-3">
-                <%= f.label :extension_dc_comment, "DC Comment", class: "form-label" %>
+                <%= f.label :extension_dc_comment, "RM Comment", class: "form-label" %>
                 <%= f.text_area :extension_dc_comment,
                     class: "form-control",
                     rows: 2,

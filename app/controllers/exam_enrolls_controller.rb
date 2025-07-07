@@ -28,7 +28,7 @@ class ExamEnrollsController < ApplicationController
       elsif current_user.role == 'exams'
         status_filter = 'Registered'
       elsif current_user.role == 'lc' && current_user.users_hubs.count > 2
-        status_filter = 'DC Approval Pending'
+        status_filter = 'RM Approval Pending'
       else
         status_filter = 'all'
       end

@@ -27,7 +27,7 @@ class ExamEnroll < ApplicationRecord
 
     # pre-registration
     if self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == nil
-      self.status = "DC Approval Pending"
+      self.status = "RM Approval Pending"
     elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == nil
       self.status = "Edu Approval Pending"
     elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == false
@@ -67,7 +67,7 @@ class ExamEnroll < ApplicationRecord
 
     # extension
     if self.extension_justification != "" && self.extension_dc_approval == nil
-      self.status = "DC Approval Pending"
+      self.status = "RM Approval Pending"
     elsif self.extension_justification != "" && self.extension_dc_approval == true && self.extension_edu_approval == nil
       self.status = "Edu Approval Pending"
     elsif self.extension_justification != "" && self.extension_dc_approval == false
@@ -93,7 +93,7 @@ class ExamEnroll < ApplicationRecord
 
     # failed mock
     if self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == nil
-      self.status = "DC Approval Pending"
+      self.status = "RM Approval Pending"
     elsif self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == nil
       self.status = "Edu Approval Pending"
     elsif self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == false
