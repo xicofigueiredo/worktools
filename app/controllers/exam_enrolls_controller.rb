@@ -81,6 +81,7 @@ class ExamEnrollsController < ApplicationController
 
       # Get users who belong to any of the DC's hubs (with main = true)
       dc_hub_user_ids = User.joins(:users_hubs)
+      .where("users.deactivate IS NULL OR users.deactivate = ?", false)
       .where(users_hubs: {
         hub_id: dc_hub_ids,
         main: true
@@ -92,13 +93,15 @@ class ExamEnrollsController < ApplicationController
 
       @exam_enrolls = @exam_enrolls.includes(timeline: [:exam_date, :user])
       .joins(timeline: [:exam_date, :user])
+      .where.not(users: { deactivate: true })
       .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
       .where('exam_enrolls.hub IN (?)', dc_hub_names)
       .where('timelines.user_id IN (?)', dc_hub_user_ids)
       .order('exam_dates.date ASC')
     else
       @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
-        .joins(timeline: :exam_date)
+        .joins(timeline: [:exam_date, :user])
+        .where.not(users: { deactivate: true })
         .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
         .order('exam_dates.date ASC')
     end
