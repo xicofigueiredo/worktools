@@ -108,6 +108,10 @@
     <div class="card-body">
       <div class="row">
         <div class="col-md-4 mb-3">
+          <%= f.label :qualification, class: "form-label" %>
+          <%= f.text_field :qualification, class: "form-control", disabled: field_disabled?(:qualification, current_user) %>
+        </div>
+        <div class="col-md-4 mb-3">
           <%= f.label :subject_name, class: "form-label" %>
           <%= f.text_field :subject_name, class: "form-control", disabled: field_disabled?(:subject_name, current_user) %>
         </div>
@@ -115,14 +119,11 @@
           <%= f.label :code, class: "form-label" %>
           <%= f.text_field :code, class: "form-control", disabled: field_disabled?(:code, current_user) %>
         </div>
-        <div class="col-md-4 mb-3">
-          <%= f.label :qualification, class: "form-label" %>
-          <%= f.text_field :qualification, class: "form-control", disabled: field_disabled?(:qualification, current_user) %>
-        </div>
         <div class="col-md-6 mb-3">
           <div class="form-check mt-4">
             <%= f.check_box :progress_cut_off, class: "form-check-input", disabled: field_disabled?(:progress_cut_off, current_user) %>
             <%= f.label :progress_cut_off, "Progress Cut-off Met", class: "form-check-label" %>
+            <i class="fa-solid fa-circle-info" style="color:rgb(108 117 126);" title="In case your learner has not achieved 80% of progress by the established deadline, but still wants to be enrolled in the respective exam, an exception requirement must be submitted for the educational department to review"></i>
           </div>
         </div>
         <div class="col-md-6 mb-3">
@@ -144,6 +145,10 @@
     </div>
     <div class="card-body">
       <div class="row">
+        <div class="col-md-6 mb-3">
+          <%= f.label :exam_board, class: "form-label" %>
+          <%= f.text_field :exam_board, class: "form-control", disabled: field_disabled?(:exam_board, current_user) %>
+        </div>
         <div class="col-md-6 mb-3">
           <%= f.label :bga_exam_centre, "BGA Exam Centre", class: "form-label" %>
           <%= f.select :bga_exam_centre,
@@ -170,15 +175,11 @@
                   ["The British School of Málaga – Marbella", "Pearson & Cambridge - The British School of Málaga – Marbella"]
                 ],
                 "Other" => [
-                  ["Remote Invigilation Service – Gaza", "Other - Remote Invigilation Service – Gaza"]
+                  ["Remote Invigilation Service", "Other - Remote Invigilation Service"]
                 ]
               }, @exam_enroll.bga_exam_centre),
               { prompt: "Select an exam centre" },
               { class: "form-control", disabled: field_disabled?(:bga_exam_centre, current_user) } %>
-        </div>
-        <div class="col-md-6 mb-3">
-          <%= f.label :exam_board, class: "form-label" %>
-          <%= f.text_field :exam_board, class: "form-control", disabled: field_disabled?(:exam_board, current_user) %>
         </div>
         <div class="col-12 mb-3 mt-3">
           <div class="form-check mb-3">
@@ -512,7 +513,7 @@
   </div>
 
   <div class="form-actions mt-4 d-flex justify-content-center mb-3 gap-2">
-    <%= f.submit class: "btn btn-primary" %>
+    <%= f.submit "Update Exam Register", class: "btn btn-primary" %>
     <%= link_to "Back", exam_enrolls_path, class: "btn btn-secondary" %>
   </div>
 <% end %>
