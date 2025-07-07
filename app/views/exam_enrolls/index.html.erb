@@ -36,7 +36,6 @@
         </div>
         <%= form.hidden_field :date, value: params[:date] if params[:date].present? %>
       <% end %>
-      <%= link_to "New Exam Registration", new_exam_enroll_path, class: "btn btn-primary" %>
     </div>
   </div>
 
@@ -94,6 +93,8 @@
             <% end %>
           </tbody>
         </table>
+              <%= link_to "New Exam Registration", new_exam_enroll_path, class: "btn btn-primary" %>
+
       </div>
     </div>
   </div>

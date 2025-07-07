@@ -112,7 +112,7 @@ class Admin::UsersController < ApplicationController
     params.require(:user).permit(
       :email, :full_name, :role, :topics_balance, :level,
       :birthday, :nationality, :native_language, :profile_pic,
-      :deactivate, :moodle_id, :changed_password, :graduated_at, kids: [], subjects: []
+      :deactivate, :moodle_id, :changed_password, :graduated_at, :id_number, :gender, :native_language_english,  kids: [], subjects: []
     )
   end
 end

@@ -52,7 +52,7 @@ class Timeline < ApplicationRecord
           learner_id_number: user.id_number,
           gender: user.gender,
           native_language_english: user.native_language_english,
-          code: self.code,
+          code: self.subject.code,
           exam_board: self.subject.board
         )
 
