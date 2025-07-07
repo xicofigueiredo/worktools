@@ -13,6 +13,7 @@ namespace :exam_enrolls do
     puts "Found #{timelines.count} timelines that need exam enrolls"
 
     timelines.each do |timeline|
+      return if timeline.user.deactivate == true
       puts "\nProcessing timeline for #{timeline.user.full_name} - #{timeline.subject.name}"
 
       # Get the user's main hub and available learning coaches

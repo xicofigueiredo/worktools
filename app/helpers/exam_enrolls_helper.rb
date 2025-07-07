@@ -10,7 +10,7 @@ module ExamEnrollsHelper
        'failed_mock_exception_cm_comment',
        'extension_cm_approval',
        'extension_cm_comment']
-    when 'dc'
+    when 'rm'
       ['pre_registration_exception_dc_approval',
        'pre_registration_exception_dc_comment',
        'failed_mock_exception_dc_approval',

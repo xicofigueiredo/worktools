@@ -155,6 +155,7 @@
                 ]
               }, @exam_enroll.mock_results),
               { prompt: "Select a grade" },
+              { include_blank: true },
               { class: "form-select", disabled: field_disabled?(:mock_results, current_user) } %>
         </div>
         <div class="col-12 mb-3">

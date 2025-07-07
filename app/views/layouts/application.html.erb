@@ -48,6 +48,8 @@
         <%= render "shared/admin_navbar" %>
       <% elsif current_user.role == "guardian" %>
         <%= render "shared/parent_navbar" %>
+      <% elsif current_user.role == "exams" %>
+        <%= render "shared/exams_navbar" %>
       <% else %>
         <%= render "shared/navbar" %>
       <% end %>
