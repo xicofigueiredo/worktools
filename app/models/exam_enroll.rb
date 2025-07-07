@@ -118,6 +118,10 @@ class ExamEnroll < ApplicationRecord
       self.status = "Registered"
     end
 
+    if self.timeline.user.deactivate == true
+      self.status = "Left BGA"
+    end
+
   end
 
   # Optional: Add helper methods to check status

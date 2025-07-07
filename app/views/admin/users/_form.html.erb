@@ -15,7 +15,7 @@
 
     <div style="display: flex; flex-direction: column;">
       <%= form.label :role, style: "font-weight: bold; margin-bottom: 4px;" %>
-      <%= form.select :role, %w[learner lc cm guardian admin], { include_blank: true }, class: "form-input" %>
+      <%= form.select :role, %w[learner lc cm guardian exams admin], { include_blank: true }, class: "form-input" %>
     </div>
 
     <% if @is_learner || @is_admin %>

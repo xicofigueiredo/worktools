@@ -29,6 +29,8 @@ class ExamEnrollsController < ApplicationController
         status_filter = 'Registered'
       elsif current_user.role == 'lc' && current_user.users_hubs.count > 2
         status_filter = 'RM Approval Pending'
+      elsif current_user.role == 'cm'
+        status_filter = 'RM Approval Pending'
       else
         status_filter = 'all'
       end
@@ -98,6 +100,14 @@ class ExamEnrollsController < ApplicationController
       .where('exam_enrolls.hub IN (?)', dc_hub_names)
       .where('timelines.user_id IN (?)', dc_hub_user_ids)
       .order('exam_dates.date ASC')
+
+    elsif current_user.role == 'cm'
+      @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
+        .joins(timeline: [:exam_date, :user])
+        .where.not(users: { deactivate: true })
+        .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
+        .where('timelines.subject_id IN (?)', current_user.subjects)
+        .order('exam_dates.date ASC')
     else
       @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
         .joins(timeline: [:exam_date, :user])
