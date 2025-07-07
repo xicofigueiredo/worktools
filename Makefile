@@ -99,3 +99,6 @@ set_report_parent:
 
 update_users:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake update_users_from_csv"
+
+create_exam_enrolls:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake exam_enrolls:create"

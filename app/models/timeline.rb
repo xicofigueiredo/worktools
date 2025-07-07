@@ -29,7 +29,7 @@ class Timeline < ApplicationRecord
   #   end
   # end
 
-  # after_update :create_exam_enroll
+  after_update :create_exam_enroll
 
   def create_exam_enroll
     exam_enroll = ExamEnroll.find_by(timeline_id: self.id)

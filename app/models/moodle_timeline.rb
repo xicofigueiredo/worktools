@@ -24,7 +24,7 @@ class MoodleTimeline < ApplicationRecord
 
   after_create :check_if_math_al_timeline
   after_update :check_if_math_al_timeline
-  after_update :update_exam_enroll_status
+  # after_update :update_exam_enroll_status
 
   def update_exam_enroll_status
     exam_enroll = ExamEnroll.find_by(user_id: user_id, subject_id: subject_id)
