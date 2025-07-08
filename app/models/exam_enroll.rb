@@ -21,8 +21,6 @@ class ExamEnroll < ApplicationRecord
       self.status = "Failed Mock"
     elsif self.mock_results.nil?
       self.status = "Mock Pending"
-    elsif self.progress_cut_off
-      self.status = "Registered"
     else
       self.status = "Registered"
     end
