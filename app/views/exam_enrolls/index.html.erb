@@ -8,33 +8,22 @@
 
 
     <div class="d-flex gap-2">
-      <%= link_to exam_enrolls_path(date: @previous_sprint&.start_date, status: params[:status], hub: params[:hub]),
+      <%= link_to exam_enrolls_path(date: @previous_sprint&.start_date, status: params[:status], hub: params[:hub], subject: params[:subject]),
           class: "btn btn-outline-secondary rounded d-flex align-items-center #{@previous_sprint ? '' : 'disabled'}" do %>
         <i class="fa-solid fa-chevron-left"></i>
       <% end %>
 
       <%= link_to 'This Sprint',
-          exam_enrolls_path(status: params[:status], hub: params[:hub]),
+          exam_enrolls_path(status: params[:status], hub: params[:hub], subject: params[:subject]),
           class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
 
-      <%= link_to exam_enrolls_path(date: @next_sprint&.start_date, status: params[:status], hub: params[:hub]),
+      <%= link_to exam_enrolls_path(date: @next_sprint&.start_date, status: params[:status], hub: params[:hub], subject: params[:subject]),
           class: "btn btn-outline-secondary rounded d-flex align-items-center #{@next_sprint ? '' : 'disabled'}" do %>
         <i class="fa-solid fa-chevron-right"></i>
       <% end %>
     </div>
     <div class=" d-flex align-items-end gap-2 justify-content-end">
       <%= form_with url: exam_enrolls_path, method: :get, local: true, class: "d-flex align-items-end gap-2", id: "filter-form" do |form| %>
-        <!-- Status Filter -->
-        <div class="flex-grow-1">
-          <%= form.select :status,
-              options_for_select([['All Status', 'all']] + @available_statuses.map { |status| [status, status] }, @current_status),
-              {},
-              {
-                class: "form-select",
-                id: "status-filter",
-                onchange: "this.form.submit();"
-              } %>
-        </div>
 
         <!-- Hub Filter -->
         <div class="flex-grow-1">
@@ -44,6 +33,30 @@
               {
                 class: "form-select",
                 id: "hub-filter",
+                onchange: "this.form.submit();"
+              } %>
+        </div>
+
+        <!-- Subject Filter -->
+        <div class="flex-grow-1">
+          <%= form.select :subject,
+              options_for_select([['All Subjects', 'all']] + @available_subjects.map { |subject| [subject, subject] }, @current_subject),
+              {},
+              {
+                class: "form-select",
+                id: "subject-filter",
+                onchange: "this.form.submit();"
+              } %>
+        </div>
+        
+        <!-- Status Filter -->
+        <div class="flex-grow-1">
+          <%= form.select :status,
+              options_for_select([['All Status', 'all']] + @available_statuses.map { |status| [status, status] }, @current_status),
+              {},
+              {
+                class: "form-select",
+                id: "status-filter",
                 onchange: "this.form.submit();"
               } %>
         </div>

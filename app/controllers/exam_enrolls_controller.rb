@@ -18,13 +18,15 @@ class ExamEnrollsController < ApplicationController
 
     @exam_enrolls = ExamEnroll.all
 
-    # Get all unique statuses and hubs for the filter dropdowns
+    # Get all unique statuses, hubs, and subjects for the filter dropdowns
     @available_statuses = ExamEnroll.distinct.pluck(:status).compact.sort
     @available_hubs = ExamEnroll.distinct.pluck(:hub).compact.sort
+    @available_subjects = ExamEnroll.distinct.pluck(:subject_name).compact.sort
 
     # Add these lines for filtering (before the role-based logic)
     status_filter = params[:status] || 'all'
     hub_filter = params[:hub] || 'all'
+    subject_filter = params[:subject] || 'all'
 
     # Apply status filter
     if status_filter != 'all'
@@ -36,9 +38,15 @@ class ExamEnrollsController < ApplicationController
       @exam_enrolls = @exam_enrolls.where(hub: hub_filter)
     end
 
+    # Apply subject filter
+    if subject_filter != 'all'
+      @exam_enrolls = @exam_enrolls.where(subject_name: subject_filter)
+    end
+
     # Store current filters
     @current_status = status_filter
     @current_hub = hub_filter
+    @current_subject = subject_filter
 
     # Role-based filtering (existing logic)
     if current_user.role == 'real lc' #future lc logic
