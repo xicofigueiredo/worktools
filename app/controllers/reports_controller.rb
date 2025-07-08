@@ -175,7 +175,7 @@ class ReportsController < ApplicationController
       @lcs << lc if lc
     end
 
-    if sprint_goal && sprint_goal.sprint.end_date >= Date.today
+    if sprint_goal && sprint_goal.sprint.end_date + 3.weeks >= Date.today
 
       knowledges = timelines.left_outer_joins(:subject, :exam_date)
                     .where('subjects.name IN (:sprint_knowledges) OR personalized_name IN (:sprint_knowledges)', sprint_knowledges: sprint_goal_knowledges)
