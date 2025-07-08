@@ -18,40 +18,29 @@ class ExamEnrollsController < ApplicationController
 
     @exam_enrolls = ExamEnroll.all
 
-    # Get all unique statuses for the filter dropdown
+    # Get all unique statuses and hubs for the filter dropdowns
     @available_statuses = ExamEnroll.distinct.pluck(:status).compact.sort
+    @available_hubs = ExamEnroll.distinct.pluck(:hub).compact.sort
 
-    # Set default status filter based on user role when no status is provided
-    if params[:status].blank?
-      if current_user.email == 'marcela@bravegenerationacademy.com'
-        status_filter = 'Edu Approval Pending'
-      elsif current_user.role == 'exams'
-        status_filter = 'Registered'
-      elsif current_user.role == 'lc' && current_user.users_hubs.count > 2
-        status_filter = 'RM Approval Pending'
-      elsif current_user.role == 'cm'
-        status_filter = 'RM Approval Pending'
-      else
-        status_filter = 'all'
-      end
-    else
-      status_filter = params[:status]
-    end
+    # Add these lines for filtering (before the role-based logic)
+    status_filter = params[:status] || 'all'
+    hub_filter = params[:hub] || 'all'
 
     # Apply status filter
     if status_filter != 'all'
-      filtered_enrolls = @exam_enrolls.where(status: status_filter)
-      # If no records found with the default filter, fall back to 'all'
-      if filtered_enrolls.empty? && params[:status].blank?
-        status_filter = 'all'
-      else
-        @exam_enrolls = filtered_enrolls
-      end
+      @exam_enrolls = @exam_enrolls.where(status: status_filter)
     end
 
-    # Store the current status for the view
-    @current_status = status_filter
+    # Apply hub filter
+    if hub_filter != 'all'
+      @exam_enrolls = @exam_enrolls.where(hub: hub_filter)
+    end
 
+    # Store current filters
+    @current_status = status_filter
+    @current_hub = hub_filter
+
+    # Role-based filtering (existing logic)
     if current_user.role == 'real lc' #future lc logic
       # Debug: Check current user's main hub
       main_hub = current_user.users_hubs.find_by(main: true)
@@ -72,7 +61,6 @@ class ExamEnrollsController < ApplicationController
         .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
 
       @exam_enrolls = @exam_enrolls.where('exam_enrolls.hub IN (?)', current_user_hub_names)  # Use hub names
-
 
       @exam_enrolls = @exam_enrolls.where('timelines.user_id IN (?)', main_hub_user_ids)
         .order('exam_dates.date ASC')
