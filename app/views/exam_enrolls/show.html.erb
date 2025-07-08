@@ -150,13 +150,6 @@
                       <%= link_to "Open", download_document_exam_enroll_path(@exam_enroll, doc.id),
                           class: "btn btn-primary btn-sm",
                           target: "_blank" %>
-                      <%= link_to "Delete", delete_document_exam_enroll_path(@exam_enroll, doc.id),
-                          method: :delete,
-                          data: {
-                            confirm: "Are you sure you want to delete this document?",
-                            turbo_method: :delete
-                          },
-                          class: "btn btn-danger btn-sm" %>
                     <% else %>
                       <span class="text-muted">File not available</span>
                     <% end %>
