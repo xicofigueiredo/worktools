@@ -71,7 +71,7 @@ class ExamEnrollsController < ApplicationController
       @exam_enrolls = @exam_enrolls.where('exam_enrolls.hub IN (?)', current_user_hub_names)  # Use hub names
 
       @exam_enrolls = @exam_enrolls.where('timelines.user_id IN (?)', main_hub_user_ids)
-        .order('exam_dates.date ASC')
+      .order('users.full_name ASC')
 
     elsif current_user.role == 'lc' #dc logic
       # Get all hub IDs where the DC is assigned
@@ -95,7 +95,7 @@ class ExamEnrollsController < ApplicationController
       .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
       .where('exam_enrolls.hub IN (?)', dc_hub_names)
       .where('timelines.user_id IN (?)', dc_hub_user_ids)
-      .order('exam_dates.date ASC')
+      .order('users.full_name ASC')
 
     elsif current_user.role == 'cm'
       @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
@@ -103,13 +103,13 @@ class ExamEnrollsController < ApplicationController
         .where.not(users: { deactivate: true })
         .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
         .where('timelines.subject_id IN (?)', current_user.subjects)
-        .order('exam_dates.date ASC')
+        .order('users.full_name ASC')
     else
       @exam_enrolls = @exam_enrolls.includes(timeline: :exam_date)
         .joins(timeline: [:exam_date, :user])
         .where.not(users: { deactivate: true })
         .where('exam_dates.date BETWEEN ? AND ?', @sprint.start_date, @sprint.end_date)
-        .order('exam_dates.date ASC')
+        .order('users.full_name ASC')
     end
   end
 
