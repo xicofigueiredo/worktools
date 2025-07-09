@@ -503,6 +503,8 @@ class PagesController < ApplicationController
                           .find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
 
     get_kda_averages(@learner.kdas, @current_sprint)
+
+    @yearly_presence = calc_yearly_presence(@learner)
   end
 
 

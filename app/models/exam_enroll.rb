@@ -11,7 +11,16 @@ class ExamEnroll < ApplicationRecord
 
 
   def set_status
-    users_ids = self.learning_coach_ids + [self.timeline.user_id]
+    users_ids = []
+    users_ids = [self.timeline.user_id] if self.timeline.present?
+    if self.learning_coach_ids.present?
+      users_ids += self.learning_coach_ids
+    else
+      if self.hub != "" && self.hub != nil
+        hub = Hub.where(name: self.hub).first
+        users_ids += User.joins(:users_hubs).where(role: "lc", users_hubs: {hub: hub}).pluck(:id)
+      end
+    end
 
     if !self.progress_cut_off && (self.extension_justification == "" || self.extension_justification == nil ) && (self.failed_mock_exception_justification == "" || self.failed_mock_exception_justification == nil ) && (self.pre_registration_exception_justification == "" || self.pre_registration_exception_justification == nil )
       self.status = "No Status"
@@ -118,7 +127,7 @@ class ExamEnroll < ApplicationRecord
       self.status = "Registered"
     end
 
-    if self.timeline.user.deactivate == true
+    if self.timeline && self.timeline.user.deactivate == true
       self.status = "Left BGA"
     end
 
