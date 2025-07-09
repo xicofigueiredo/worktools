@@ -158,7 +158,7 @@
               { class: "form-select", disabled: field_disabled?(:mock_results, current_user) } %>
         </div>
         <div class="col-12 mb-3">
-          <%= f.label :specific_papers, "If your learner is sitting specific papers, please indicate which ones:", class: "form-label" %>
+          <%= f.label :specific_papers, "If your learner is ONLY sitting specific papers, please indicate which ones:", class: "form-label" %>
           <%= f.text_field :specific_papers, class: "form-control", disabled: field_disabled?(:specific_papers, current_user) %>
         </div>
       </div>

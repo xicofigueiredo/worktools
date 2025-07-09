@@ -36,8 +36,9 @@ module ExamEnrollsHelper
     return false if permitted_fields == :all
 
     if permitted_fields == :lc_access
-      # For LCs: disable only if it's an approval/comment field
+      # For LCs: disable approval/comment fields and specific course fields
       return true if field_name.to_s.match?(/(cm|dc|edu)_(approval|comment)/)
+      return true if ['qualification', 'subject_name', 'code'].include?(field_name.to_s)
       return false
     end
 
