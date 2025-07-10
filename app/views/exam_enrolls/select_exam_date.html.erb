@@ -1,0 +1,38 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="mb-0">Select Exam Date</h4>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6><strong>Learner:</strong> <%= @learner.full_name %></h6>
+            <h6><strong>Subject:</strong> <%= @timeline.subject.name %></h6>
+            <p class="text-muted">Progress: <%= @timeline.progress %>%</p>
+          </div>
+
+          <%= form_with url: new_exam_enroll_path, method: :get, local: true do |form| %>
+            <%= form.hidden_field :timeline_id, value: @timeline.id %>
+
+            <div class="mb-3">
+              <%= form.label :personalized_exam_date, "Select Exam Date", class: "form-label" %>
+              <%= form.date_field :personalized_exam_date,
+                  class: "form-control",
+                  required: true,
+                  min: Date.today.strftime("%Y-%m-%d") %>
+              <div class="form-text">Choose the exam date for this timeline.</div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <%= link_to "Back to Timeline Selection",
+                  select_timeline_exam_enrolls_path(learner_id: @learner.id),
+                  class: "btn btn-outline-secondary" %>
+              <%= form.submit "Continue to Exam Registration", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -88,7 +88,7 @@
             <% if @exam_enrolls.any? %>
               <% @exam_enrolls.each do |enrollment| %>
                 <tr>
-                  <td><%= enrollment.timeline.exam_date&.date&.strftime("%B %Y") %></td>
+                  <td><%= enrollment.display_exam_date %></td>
                   <td><%= enrollment.hub %></td>
                   <td><%= enrollment.learner_name %></td>
                   <td><%= enrollment.subject_name %></td>
@@ -124,7 +124,7 @@
             <% end %>
           </tbody>
         </table>
-              <%= link_to "New Exam Registration", new_exam_enroll_path, class: "btn btn-primary" %>
+        <%= link_to "New Exam Registration", select_learner_exam_enrolls_path, class: "btn btn-primary" %>
 
       </div>
     </div>

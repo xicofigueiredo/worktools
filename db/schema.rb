@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_09_165429) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_10_111459) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -144,6 +144,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_09_165429) do
     t.integer "timeline_id"
     t.string "specific_papers"
     t.boolean "progress_cut_off", default: false
+    t.date "personalized_exam_date"
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
     t.index ["timeline_id"], name: "index_exam_enrolls_on_timeline_id"
   end

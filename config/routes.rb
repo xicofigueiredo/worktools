@@ -165,6 +165,11 @@ Rails.application.routes.draw do
     get 'moodle_index', to: 'timelines#moodle_index', as: :moodle_index
 
     resources :exam_enrolls, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
+      collection do
+        get :select_learner
+        get :select_timeline
+        get :select_exam_date
+      end
       member do
         post :remove_lc
         get 'delete_document/:document_id', to: 'exam_enrolls#delete_document', as: 'delete_document'

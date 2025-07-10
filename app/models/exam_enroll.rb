@@ -9,6 +9,16 @@ class ExamEnroll < ApplicationRecord
 
   before_save :set_status
 
+  def display_exam_date
+    if personalized_exam_date.present?
+      personalized_exam_date.strftime("%B %Y")
+    elsif timeline&.exam_date&.date.present?
+      timeline.exam_date.date.strftime("%B %Y")
+    else
+      "No exam date set"
+    end
+  end
+
 
   def set_status
     users_ids = []
