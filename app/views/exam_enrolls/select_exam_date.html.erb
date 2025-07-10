@@ -8,7 +8,7 @@
         <div class="card-body">
           <div class="mb-3">
             <h6><strong>Learner:</strong> <%= @learner.full_name %></h6>
-            <h6><strong>Subject:</strong> <%= @timeline.subject.name %></h6>
+            <h6><strong>Subject:</strong> <%= @timeline.subject.name || @timeline.personalized_name %></h6>
             <p class="text-muted">Progress: <%= @timeline.progress %>%</p>
           </div>
 

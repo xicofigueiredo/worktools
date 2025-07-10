@@ -48,7 +48,16 @@ class ExamEnrollsController < ApplicationController
     @current_hub = hub_filter
     @current_subject = subject_filter
 
-    # Role-based filtering (updated logic to handle both exam_date and personalized_exam_date)
+    # First, filter by exam date (timeline exam date OR personalized exam date)
+    @exam_enrolls = @exam_enrolls.includes(timeline: [:exam_date, :user])
+      .left_joins(timeline: [:exam_date, :user])
+      .where(
+        '(exam_dates.date BETWEEN ? AND ?) OR (exam_enrolls.personalized_exam_date BETWEEN ? AND ?)',
+        @sprint.start_date, @sprint.end_date,
+        @sprint.start_date, @sprint.end_date
+      )
+
+    # Role-based filtering
     if current_user.role == 'real lc' #future lc logic
       # Debug: Check current user's main hub
       main_hub = current_user.users_hubs.find_by(main: true)
@@ -64,19 +73,14 @@ class ExamEnrollsController < ApplicationController
       # Get hub names instead of hub objects
       current_user_hub_names = current_user.users_hubs.map(&:hub).map(&:name)
 
-      # Filter by exam enrolls that have either:
-      # 1. A timeline with exam_date in the sprint range, OR
-      # 2. A personalized_exam_date in the sprint range
-      @exam_enrolls = @exam_enrolls.includes(timeline: [:exam_date, :user])
-        .left_joins(timeline: [:exam_date, :user])
-        .where(
-          '(exam_dates.date BETWEEN ? AND ?) OR (exam_enrolls.personalized_exam_date BETWEEN ? AND ?)',
-          @sprint.start_date, @sprint.end_date,
-          @sprint.start_date, @sprint.end_date
-        )
+      @exam_enrolls = @exam_enrolls
         .where('exam_enrolls.hub IN (?)', current_user_hub_names)
-        .where('timelines.user_id IN (?) OR timelines.user_id IS NULL', main_hub_user_ids)
-        .order('users.full_name ASC')
+        .where(
+          '(timelines.user_id IN (?)) OR (timelines.id IS NULL AND exam_enrolls.hub IN (?))',
+          main_hub_user_ids,
+          current_user_hub_names
+        )
+        .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
 
     elsif current_user.role == 'lc' #dc logic
       # Get all hub IDs where the DC is assigned
@@ -94,39 +98,28 @@ class ExamEnrollsController < ApplicationController
       # Get hub names for filtering exam enrolls
       dc_hub_names = Hub.where(id: dc_hub_ids).pluck(:name)
 
-      @exam_enrolls = @exam_enrolls.includes(timeline: [:exam_date, :user])
-      .left_joins(timeline: [:exam_date, :user])
-      .where.not(users: { deactivate: true })
-      .where(
-        '(exam_dates.date BETWEEN ? AND ?) OR (exam_enrolls.personalized_exam_date BETWEEN ? AND ?)',
-        @sprint.start_date, @sprint.end_date,
-        @sprint.start_date, @sprint.end_date
-      )
+      @exam_enrolls = @exam_enrolls
+      .where('users.deactivate IS NULL OR users.deactivate = ? OR users.id IS NULL', false)
       .where('exam_enrolls.hub IN (?)', dc_hub_names)
-      .where('timelines.user_id IN (?) OR timelines.user_id IS NULL', dc_hub_user_ids)
-      .order('users.full_name ASC')
+      .where(
+        '(timelines.user_id IN (?)) OR (timelines.id IS NULL AND exam_enrolls.hub IN (?))',
+        dc_hub_user_ids,
+        dc_hub_names
+      )
+      .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
 
     elsif current_user.role == 'cm'
-      @exam_enrolls = @exam_enrolls.includes(timeline: [:exam_date, :user])
-        .left_joins(timeline: [:exam_date, :user])
-        .where.not(users: { deactivate: true })
+      @exam_enrolls = @exam_enrolls
+        .where('users.deactivate IS NULL OR users.deactivate = ? OR users.id IS NULL', false)
         .where(
-          '(exam_dates.date BETWEEN ? AND ?) OR (exam_enrolls.personalized_exam_date BETWEEN ? AND ?)',
-          @sprint.start_date, @sprint.end_date,
-          @sprint.start_date, @sprint.end_date
+          '(timelines.subject_id IN (?)) OR (timelines.id IS NULL)',
+          current_user.subjects
         )
-        .where('timelines.subject_id IN (?) OR timelines.subject_id IS NULL', current_user.subjects)
-        .order('users.full_name ASC')
+        .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
     else
-      @exam_enrolls = @exam_enrolls.includes(timeline: [:exam_date, :user])
-        .left_joins(timeline: [:exam_date, :user])
-        .where.not(users: { deactivate: true })
-        .where(
-          '(exam_dates.date BETWEEN ? AND ?) OR (exam_enrolls.personalized_exam_date BETWEEN ? AND ?)',
-          @sprint.start_date, @sprint.end_date,
-          @sprint.start_date, @sprint.end_date
-        )
-        .order('users.full_name ASC')
+      @exam_enrolls = @exam_enrolls
+        .where('users.deactivate IS NULL OR users.deactivate = ? OR users.id IS NULL', false)
+        .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
     end
   end
 
