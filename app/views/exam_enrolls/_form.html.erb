@@ -109,7 +109,15 @@
       <div class="row">
         <div class="col-md-4 mb-3">
           <%= f.label :qualification, class: "form-label" %>
-          <%= f.text_field :qualification, class: "form-control", disabled: field_disabled?(:qualification, current_user) %>
+          <%= f.select :qualification,
+              options_for_select([
+                ["IGCSE", "IGCSE"],
+                ["AS", "AS"],
+                ["A2", "A2"],
+                ["A Level", "A Level"]
+              ], @exam_enroll.qualification),
+              { prompt: "Select qualification" },
+              { class: "form-select", disabled: field_disabled?(:qualification, current_user, @exam_enroll) } %>
         </div>
         <div class="col-md-4 mb-3">
           <%= f.label :subject_name, class: "form-label" %>
