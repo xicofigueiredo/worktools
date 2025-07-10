@@ -13,26 +13,26 @@ namespace :notifications do
     #      notifications_count += 1
     #  end
 
-    hub_ids = [174, 191, 153, 168]
+    # hub_ids = [174, 191, 153, 168]
 
-    User.where(role: "lc").or(User.where(role: "admin")).find_each do |user|
-      next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
-      if user.deactivate != true
-        Notification.find_or_create_by!(
-          user: user,
-          link: "",
-          message: "Dear LC, we have edited back some of the subject's names of your exams' registrations. There is no extra step required from your side."
-        )
-        notifications_count += 1
-      end
-    end
+    # User.where(role: "lc").or(User.where(role: "admin")).find_each do |user|
+    #   next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
+    #   if user.deactivate != true
+    #     Notification.find_or_create_by!(
+    #       user: user,
+    #       link: "",
+    #       message: "Dear LC, we have edited back some of the subject's names of your exams' registrations. There is no extra step required from your side."
+    #     )
+    #     notifications_count += 1
+    #   end
+    # end
 
     User.where(role: "lc").or(User.where(role: "lc")).find_each do |user|
       if user.deactivate != true
         Notification.find_or_create_by!(
           user: user,
           link: "",
-          message: "Exams Registrations: Please indicate if your learner is doing IGCSE foundation or higher-level. Please indicate which papers is your learner doing in iALs Maths."
+          message: "Dear LC's, the new exam registration form is now available for external exams. Sorry for the inconvenience."
         )
         notifications_count += 1
       end
