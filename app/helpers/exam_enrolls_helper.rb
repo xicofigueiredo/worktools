@@ -39,12 +39,15 @@ module ExamEnrollsHelper
       # For LCs: disable approval/comment fields
       return true if field_name.to_s.match?(/(cm|dc|edu)_(approval|comment)/)
 
-      # For new exam enrollments, allow editing of subject fields and personalized_exam_date
+      # ALWAYS disable subject_name for LCs
+      return true if field_name.to_s == 'subject_name'
+
+      # For new exam enrollments, allow editing of qualification, code, and personalized_exam_date
       if exam_enroll&.new_record? || exam_enroll.nil?
-        return false if ['qualification', 'subject_name', 'code', 'personalized_exam_date'].include?(field_name.to_s)
+        return false if ['qualification', 'code', 'personalized_exam_date'].include?(field_name.to_s)
       else
-        # For existing exam enrollments, disable these fields except personalized_exam_date
-        return true if ['qualification', 'subject_name', 'code'].include?(field_name.to_s)
+        # For existing exam enrollments, disable qualification and code, but allow personalized_exam_date
+        return true if ['qualification', 'code'].include?(field_name.to_s)
         return false if field_name.to_s == 'personalized_exam_date'
       end
 
