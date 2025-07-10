@@ -12,7 +12,7 @@
                 <div class="col-md-6 mb-3">
                   <div class="card h-100">
                     <div class="card-body">
-                      <h6 class="card-title"><%= timeline.subject.name || timeline.personalized_name %></h6>
+                      <h6 class="card-title"><%= timeline.personalized_name.presence || timeline.subject.name %></h6>
                       <p class="card-text text-muted">
                         <small>
                           <strong>Progress:</strong> <%= timeline.progress %>%<br>

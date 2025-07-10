@@ -149,15 +149,10 @@ class ExamEnrollsController < ApplicationController
       @exam_enroll.gender = timeline.user.gender
       @exam_enroll.native_language_english = timeline.user.native_language_english
       @exam_enroll.progress_cut_off = timeline.progress
-
-      # Only pre-populate subject fields for non-LC users
-      # LCs should be able to edit these fields for new registrations
-      unless current_user.role == 'lc'
-        @exam_enroll.subject_name = timeline.subject.name
-        @exam_enroll.code = timeline.subject.code
-        @exam_enroll.qualification = timeline.subject.qualification
-        @exam_enroll.exam_board = timeline.subject.board
-      end
+      @exam_enroll.subject_name = timeline.subject.name.presence || timeline.personalized_name
+      @exam_enroll.code = timeline.subject.code
+      @exam_enroll.qualification = timeline.subject.qualification
+      @exam_enroll.exam_board = timeline.subject.board
 
       # Set personalized exam date if provided
       if params[:personalized_exam_date].present?
