@@ -38,7 +38,7 @@ class ExamEnroll < ApplicationRecord
       self.status = "Rejected"
     elsif (self.mock_results == "U" || self.mock_results == "0") && self.failed_mock_exception_edu_approval != true
       self.status = "Failed Mock"
-    elsif self.mock_results.nil?
+    elsif self.progress_cut_off && (self.mock_results == nil || self.mock_results == "")
       self.status = "Mock Pending"
     else
       self.status = "Registered"
@@ -77,7 +77,7 @@ class ExamEnroll < ApplicationRecord
             message: "A pre-registration exception has been rejected. Please request a failed mock exception for #{self.subject_name}(#{self.learner_name})"
           )
         end
-      elsif self.mock_results.nil?
+      elsif self.mock_results == nil || self.mock_results == ""
         self.status = "Mock Pending"
       else
         self.status = "Registered"
@@ -103,7 +103,7 @@ class ExamEnroll < ApplicationRecord
           message: "An extension has been rejected. Please request a new failed mock exception for #{self.subject_name}(#{self.learner_name})"
         )
       end
-      elsif self.mock_results.nil?
+      elsif self.mock_results == nil || self.mock_results == ""
         self.status = "Mock Pending (Registered)"
       else
         self.status = "Registered"

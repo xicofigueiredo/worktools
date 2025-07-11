@@ -5,7 +5,6 @@ namespace :exam_enrolls do
 
     # Find all exam enrolls that have a timeline associated
     exam_enrolls = ExamEnroll.includes(timeline: :subject)
-                            .where.not(timeline_id: nil)
                             .joins(timeline: :subject)
 
     puts "Found #{exam_enrolls.count} exam enrolls with associated timelines"
@@ -14,22 +13,6 @@ namespace :exam_enrolls do
     errors_count = 0
 
     exam_enrolls.find_each do |exam_enroll|
-      timeline = exam_enroll.timeline
-      subject = timeline.subject
-
-      puts "\nProcessing exam enroll ID: #{exam_enroll.id}"
-      puts "  Timeline: #{timeline.id} - Subject: #{subject.name}"
-
-      # Store the original values for comparison
-      original_qualification = exam_enroll.qualification
-      original_board = exam_enroll.exam_board
-      original_code = exam_enroll.code
-
-      # Update with subject data
-      exam_enroll.qualification = subject.qualification
-      exam_enroll.exam_board = subject.board
-      exam_enroll.code = subject.code
-
       begin
         if exam_enroll.save
           updated_count += 1
