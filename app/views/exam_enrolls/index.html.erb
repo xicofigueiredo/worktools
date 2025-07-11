@@ -29,7 +29,7 @@
       <%= form_with url: exam_enrolls_path, method: :get, local: true, class: "d-flex align-items-end gap-2", id: "filter-form" do |form| %>
 
         <!-- Hub Filter -->
-        <div class="flex-grow-1">
+        <div style="width: 150px;">
           <%= form.select :hub,
               options_for_select([['All Hubs', 'all']] + @available_hubs.map { |hub| [hub, hub] }, @current_hub),
               {},
@@ -41,7 +41,7 @@
         </div>
 
         <!-- Subject Filter -->
-        <div class="flex-grow-1">
+        <div style="width: 150px;">
           <%= form.select :subject,
               options_for_select([['All Subjects', 'all']] + @available_subjects.map { |subject| [subject, subject] }, @current_subject),
               {},
@@ -54,7 +54,7 @@
 
         <!-- Exam Centre Filter (Admin only) -->
         <% if current_user.role == 'admin' || current_user.role == 'exams' %>
-          <div class="flex-grow-1">
+          <div style="width: 150px;">
             <%= form.select :exam_centre,
                 options_for_select([['All Centres', 'all']] + @available_exam_centres.map { |centre| [centre, centre] }, @current_exam_centre),
                 {},
@@ -67,7 +67,7 @@
         <% end %>
 
         <!-- Status Filter -->
-        <div class="flex-grow-1">
+        <div style="width: 150px;">
           <%= form.select :status,
               options_for_select([['All Status', 'all']] + @available_statuses.map { |status| [status, status] }, @current_status),
               {},
