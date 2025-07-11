@@ -31,6 +31,18 @@ class ExamEnrollsController < ApplicationController
     subject_filter = params[:subject] || 'all'
     exam_centre_filter = params[:exam_centre] || 'all'
 
+    # Apply role-based default filters
+    if current_user.role == 'lc' && current_user.hubs.count > 5 && params[:status].blank?
+      status_filter = "RM Approval Pending"
+    elsif current_user.role == 'exams' && params[:status].blank?
+      status_filter = "Registered"
+    elsif current_user.email == "marcela@bravegenerationacademy.com" && params[:status].blank?
+      status_filter = "Edu Approval Pending"
+    elsif current_user.role == 'cm' && params[:status].blank?
+      status_filter = "RM Approval Pending"
+    end
+
+
     # Apply status filter
     if status_filter != 'all'
       @exam_enrolls = @exam_enrolls.where(status: status_filter)
