@@ -164,7 +164,6 @@ class ReportsController < ApplicationController
     sprint_goal_knowledges = sprint_goal.knowledges.pluck(:subject_name) if sprint_goal
 
     timelines = @learner.timelines
-    .where(hidden: false)
     .joins(:subject) # Ensure we join the subjects table
     .where('subjects.name IN (:sprint_knowledges) OR timelines.personalized_name IN (:sprint_knowledges)',
            sprint_knowledges: sprint_goal_knowledges)
