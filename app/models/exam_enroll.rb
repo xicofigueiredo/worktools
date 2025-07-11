@@ -11,7 +11,11 @@ class ExamEnroll < ApplicationRecord
 
   def display_exam_date
     if personalized_exam_date.present?
-      personalized_exam_date.strftime("%B %Y")
+      begin
+        Date.parse(personalized_exam_date).strftime("%B %Y")
+      rescue ArgumentError
+        personalized_exam_date
+      end
     elsif timeline&.exam_date&.date.present?
       timeline.exam_date.date.strftime("%B %Y")
     else

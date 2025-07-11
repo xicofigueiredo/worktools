@@ -128,6 +128,7 @@ class ExamEnrollsController < ApplicationController
   end
 
   def new
+    @edit = false
     @exam_enroll = ExamEnroll.new
 
     # If timeline_id is provided, pre-populate the exam enroll
@@ -241,6 +242,7 @@ class ExamEnrollsController < ApplicationController
   end
 
   def edit
+    @edit = true
     @moodle_timelines = current_user.moodle_timelines.all.map { |mt| [mt.subject.name, mt.id] }
   end
 

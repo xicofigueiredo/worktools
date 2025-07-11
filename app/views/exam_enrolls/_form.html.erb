@@ -184,19 +184,16 @@
           <%= f.label :exam_board, class: "form-label" %>
           <%= f.text_field :exam_board, class: "form-control", disabled: field_disabled?(:exam_board, current_user) %>
         </div>
-        <div class="col-md-6 mb-3">
-          <%= f.label :personalized_exam_date, "Exam Date", class: "form-label" %>
-          <%= f.date_field :personalized_exam_date,
-              class: "form-control",
-              disabled: field_disabled?(:personalized_exam_date, current_user) %>
-          <div class="form-text">
-            <% if @exam_enroll.timeline&.exam_date&.date.present? %>
-              Timeline exam date: <%= @exam_enroll.timeline.exam_date.date.strftime("%B %d, %Y") %>
-            <% else %>
-              No timeline exam date set - using personalized date
-            <% end %>
+          <div class="col-md-6 mb-3" style="display: none;">
+            <%= f.hidden_field :personalized_exam_date %>
+            <div class="form-text">
+              <% if @exam_enroll.timeline&.exam_date&.date.present? %>
+                Timeline exam date: <%= @exam_enroll.timeline.exam_date.date.strftime("%B %d, %Y") %>
+              <% else %>
+                No timeline exam date set - using personalized date
+              <% end %>
+            </div>
           </div>
-        </div>
         <div class="col-md-6 mb-3">
           <%= f.label :bga_exam_centre, "BGA Exam Centre", class: "form-label" %>
           <%= f.select :bga_exam_centre,

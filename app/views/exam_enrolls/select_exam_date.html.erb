@@ -17,11 +17,13 @@
 
             <div class="mb-3">
               <%= form.label :personalized_exam_date, "Select Exam Date", class: "form-label" %>
-              <%= form.date_field :personalized_exam_date,
-                  class: "form-control",
-                  required: true,
-                  min: Date.today.strftime("%Y-%m-%d") %>
-              <div class="form-text">Choose the exam date for this timeline.</div>
+              <%= form.select :personalized_exam_date,
+                  options_for_select([
+                    ["November 2025", "2025-11-03"]
+                  ]),
+                  { prompt: "Choose an exam session..." },
+                  { class: "form-select", required: true } %>
+              <div class="form-text">Choose the exam session for this timeline.</div>
             </div>
 
             <div class="d-flex justify-content-between">
