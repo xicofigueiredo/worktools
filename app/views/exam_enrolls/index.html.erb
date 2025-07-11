@@ -9,16 +9,16 @@
 
     <!-- Center: Sprint navigation -->
     <div class="d-flex gap-2 justify-content-center" style="flex: 1;">
-      <%= link_to exam_enrolls_path(date: @previous_sprint&.start_date, status: params[:status], hub: params[:hub], subject: params[:subject]),
+      <%= link_to exam_enrolls_path(date: @previous_sprint&.start_date, status: params[:status], hub: params[:hub], subject: params[:subject], exam_centre: params[:exam_centre]),
           class: "btn btn-outline-secondary rounded d-flex align-items-center #{@previous_sprint ? '' : 'disabled'}" do %>
         <i class="fa-solid fa-chevron-left"></i>
       <% end %>
 
       <%= link_to 'This Sprint',
-          exam_enrolls_path(status: params[:status], hub: params[:hub], subject: params[:subject]),
+          exam_enrolls_path(status: params[:status], hub: params[:hub], subject: params[:subject], exam_centre: params[:exam_centre]),
           class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
 
-      <%= link_to exam_enrolls_path(date: @next_sprint&.start_date, status: params[:status], hub: params[:hub], subject: params[:subject]),
+      <%= link_to exam_enrolls_path(date: @next_sprint&.start_date, status: params[:status], hub: params[:hub], subject: params[:subject], exam_centre: params[:exam_centre]),
           class: "btn btn-outline-secondary rounded d-flex align-items-center #{@next_sprint ? '' : 'disabled'}" do %>
         <i class="fa-solid fa-chevron-right"></i>
       <% end %>
@@ -51,6 +51,20 @@
                 onchange: "this.form.submit();"
               } %>
         </div>
+
+        <!-- Exam Centre Filter (Admin only) -->
+        <% if current_user.role == 'admin' || current_user.role == 'exams' %>
+          <div class="flex-grow-1">
+            <%= form.select :exam_centre,
+                options_for_select([['All Centres', 'all']] + @available_exam_centres.map { |centre| [centre, centre] }, @current_exam_centre),
+                {},
+                {
+                  class: "form-select",
+                  id: "exam-centre-filter",
+                  onchange: "this.form.submit();"
+                } %>
+          </div>
+        <% end %>
 
         <!-- Status Filter -->
         <div class="flex-grow-1">

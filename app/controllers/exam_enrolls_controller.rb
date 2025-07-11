@@ -22,11 +22,14 @@ class ExamEnrollsController < ApplicationController
     @available_statuses = ExamEnroll.distinct.pluck(:status).compact.sort
     @available_hubs = ExamEnroll.distinct.pluck(:hub).compact.sort
     @available_subjects = ExamEnroll.distinct.pluck(:subject_name).compact.sort
+    @available_exam_centres = ExamEnroll.distinct.pluck(:bga_exam_centre).compact.reject(&:blank?).sort
+
 
     # Add these lines for filtering (before the role-based logic)
     status_filter = params[:status] || 'all'
     hub_filter = params[:hub] || 'all'
     subject_filter = params[:subject] || 'all'
+    exam_centre_filter = params[:exam_centre] || 'all'
 
     # Apply status filter
     if status_filter != 'all'
@@ -43,10 +46,14 @@ class ExamEnrollsController < ApplicationController
       @exam_enrolls = @exam_enrolls.where(subject_name: subject_filter)
     end
 
+    if exam_centre_filter != 'all'
+      @exam_enrolls = @exam_enrolls.where(bga_exam_centre: exam_centre_filter)
+    end
     # Store current filters
     @current_status = status_filter
     @current_hub = hub_filter
     @current_subject = subject_filter
+    @current_exam_centre = exam_centre_filter
 
     # First, filter by exam date (timeline exam date OR personalized exam date)
     @exam_enrolls = @exam_enrolls.includes(timeline: [:exam_date, :user])
