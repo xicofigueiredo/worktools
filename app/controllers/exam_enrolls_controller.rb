@@ -32,7 +32,7 @@ class ExamEnrollsController < ApplicationController
     exam_centre_filter = params[:exam_centre] || 'all'
 
     # Apply role-based default filters
-    if current_user.role == 'lc' && current_user.hubs.count > 5 && params[:status].blank?
+    if current_user.role == 'lc' && (current_user.hubs.count > 5 || current_user.id == 247) && params[:status].blank?
       status_filter = "RM Approval Pending"
     elsif current_user.role == 'exams' && params[:status].blank?
       status_filter = "Registered"
