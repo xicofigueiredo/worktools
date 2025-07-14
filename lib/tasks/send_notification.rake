@@ -32,7 +32,7 @@ namespace :notifications do
         Notification.find_or_create_by!(
           user: user,
           link: "",
-          message: "Dear LC's, the new exam registration form is now available for external exams. Sorry for the inconvenience."
+          message: "Please note that BGA is not responsible for registering remote learners for their respective exams. This responsibility lies with the learners' guardians."
         )
         notifications_count += 1
       end
