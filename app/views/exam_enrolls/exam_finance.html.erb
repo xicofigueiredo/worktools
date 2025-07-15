@@ -1,0 +1,94 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>Exam Finance - Registered Learners</h4>
+    <%= link_to "Back to Exam Enrolls", exam_enrolls_path, class: "btn btn-secondary" %>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Learner Name</th>
+              <th>Hub</th>
+              <th>Registered Exams</th>
+              <th>Total Exams</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @learners.any? %>
+              <% @learners.each do |learner| %>
+                <% learner_exam_enrolls = @exam_enrolls_by_learner[learner.id] || [] %>
+                <tr>
+                  <td>
+                    <strong><%= learner.full_name %></strong>
+                    <br>
+                    <small class="text-muted">ID: <%= learner.id_number %></small>
+                  </td>
+                  <td><%= learner.main_hub&.name %></td>
+                  <td>
+                    <% learner_exam_enrolls.each do |exam_enroll| %>
+                      <div class="mb-1">
+                        <span class="badge bg-success me-1"><%= exam_enroll.subject_name %></span>
+                        <small class="text-muted"><%= exam_enroll.display_exam_date %></small>
+                      </div>
+                    <% end %>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary"><%= learner_exam_enrolls.count %></span>
+                  </td>
+                  <td>
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Actions
+                      </button>
+                      <ul class="dropdown-menu">
+                        <% learner_exam_enrolls.each do |exam_enroll| %>
+                          <li>
+                            <%= link_to "View #{exam_enroll.subject_name}", exam_enroll_path(exam_enroll), class: "dropdown-item" %>
+                          </li>
+                          <li>
+                            <%= link_to "Edit #{exam_enroll.subject_name}", edit_exam_enroll_path(exam_enroll), class: "dropdown-item" %>
+                          </li>
+                        <% end %>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="5" class="text-center">
+                  <p class="my-3 text-muted">No learners with registered exam enrollments found.</p>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-3">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card bg-light">
+              <div class="card-body">
+                <h6>Summary</h6>
+                <p class="mb-1"><strong>Total Learners:</strong> <%= @learners.count %></p>
+                <p class="mb-0"><strong>Total Registered Exams:</strong> <%= @exam_enrolls_by_learner.values.flatten.count %></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.badge {
+  font-size: 0.8em;
+  padding: 0.4em 0.6em;
+}
+</style>

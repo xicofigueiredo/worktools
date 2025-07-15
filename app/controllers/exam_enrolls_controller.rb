@@ -416,6 +416,22 @@ class ExamEnrollsController < ApplicationController
     end
   end
 
+  def exam_finance
+    # Get all registered exam enrolls with their users
+    registered_exam_enrolls = ExamEnroll.joins(:timeline)
+                                        .where(status: 'Registered')
+                                        .includes(timeline: :user)
+
+    # Group by user and get unique learners
+    @exam_enrolls_by_learner = registered_exam_enrolls.group_by { |ee| ee.timeline.user }
+
+    # Get the unique learners sorted by name
+    @learners = @exam_enrolls_by_learner.keys.sort_by(&:full_name)
+
+    # Reformat the hash to use user_id as key for easier lookup in the view
+    @exam_enrolls_by_learner = @exam_enrolls_by_learner.transform_keys(&:id)
+  end
+
   private
 
   def set_exam_enroll

@@ -169,6 +169,7 @@ Rails.application.routes.draw do
         get :select_learner
         get :select_timeline
         get :select_exam_date
+        get :exam_finance
       end
       member do
         post :remove_lc
