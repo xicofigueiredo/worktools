@@ -96,8 +96,10 @@ class PagesController < ApplicationController
 
     @selected_subject = if params[:subject_id].present?
                           Subject.find(params[:subject_id])
+                        elsif current_user.subjects.any?
+                          Subject.find(current_user.subjects.first)
                         else
-                          current_user.subjects.first
+                          nil
                         end
 
     # If still no subject found, redirect with error
