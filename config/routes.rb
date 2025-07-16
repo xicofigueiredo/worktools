@@ -178,4 +178,10 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :exam_finances do
+      member do
+        get :generate_statement
+      end
+    end
+
 end

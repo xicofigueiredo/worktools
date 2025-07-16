@@ -1,0 +1,65 @@
+<div class="container mt-4">
+  <div class="card mb-4">
+    <div class="card-header">
+      <h2>Exam Finance Details</h2>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-3 fw-bold">Learner:</div>
+        <div class="col-md-9"><%= @exam_finance.user.full_name %></div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-3 fw-bold">Hub:</div>
+        <div class="col-md-9"><%= @exam_finance.user.hubs.first.name %></div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-3 fw-bold">Total Cost:</div>
+        <div class="col-md-9"><%= number_to_currency(@exam_finance.total_cost, unit: "€") %></div>
+      </div>
+    </div>
+    <div class="card-footer d-flex gap-2">
+      <%= link_to 'Generate Statement', generate_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary', target: '_blank' %>
+      <%= link_to 'Edit', edit_exam_finance_path(@exam_finance), class: 'btn btn-warning' %>
+      <%= link_to 'Back to List', exam_finances_path, class: 'btn btn-secondary' %>
+    </div>
+  </div>
+
+  <h3 class="mb-4">Exam Enrollments</h3>
+
+  <% @exam_enrolls.each do |exam_enroll| %>
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><%= exam_enroll.subject_name %></h5>
+        <%= link_to 'View Exam Enroll', exam_enroll_path(exam_enroll), class: 'btn btn-info btn-sm' %>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <p><strong>Code:</strong> <%= exam_enroll.code %></p>
+          </div>
+          <div class="col-md-3">
+            <p><strong>Qualification:</strong> <%= exam_enroll.qualification %></p>
+          </div>
+          <div class="col-md-3">
+            <% if exam_enroll.specific_papers.present? %>
+              <p><strong>Specific Papers:</strong> <%= exam_enroll.specific_papers %></p>
+            <% else %>
+              <p><strong>Specific Papers:</strong> N/A</p>
+            <% end %>
+          </div>
+          <div class="col-md-3">
+            <p><strong>Status:</strong> <%= exam_enroll.status %></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @exam_enrolls.empty? %>
+    <div class="alert alert-info">
+      No exam enrollments found for this learner.
+    </div>
+  <% end %>
+</div>

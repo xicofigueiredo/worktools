@@ -2,6 +2,7 @@ class ExamEnroll < ApplicationRecord
   belongs_to :moodle_timeline, optional: true
   belongs_to :timeline, optional: true
   has_many :exam_enroll_documents, dependent: :destroy
+  has_many :specific_papers, dependent: :destroy
 
   # Validations for DC approval
   # validates :dc_approval_justification, presence: true, if: :dc_approval_present?
