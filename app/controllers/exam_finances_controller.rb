@@ -13,7 +13,6 @@ class ExamFinancesController < ApplicationController
                              .includes(:timeline)
                              .where(timelines: { user_id: @exam_finance.user_id })
                              .order(:subject_name)
-    calculate_total_cost(@exam_enrolls, @exam_finance)
   end
 
   def new
@@ -59,6 +58,9 @@ class ExamFinancesController < ApplicationController
                              .includes(:timeline)
                              .where(timelines: { user_id: @exam_finance.user_id })
                              .order(:subject_name)
+
+    # Calculate total cost before generating PDF
+    calculate_total_cost(@exam_enrolls, @exam_finance)
 
     pdf = Prawn::Document.new
 
@@ -160,8 +162,18 @@ class ExamFinancesController < ApplicationController
     exam_enrolls.each do |enroll|
       if enroll.qualification == "IGCSE"
           total_cost += 200
-      elsif enroll.qualification == "A-Level" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
+      elsif enroll.qualification == "A Level" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
         total_cost += 300
+      elsif enroll.qualification == "AS" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
+        total_cost += 150
+      elsif enroll.qualification == "A2" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
+        total_cost += 150
+      elsif enroll.specific_papers != nil && enroll.specific_papers != ""
+        total_cost += enroll.paper1_cost if enroll.paper1 != nil && enroll.paper1 != ""
+        total_cost += enroll.paper2_cost if enroll.paper2 != nil && enroll.paper2 != ""
+        total_cost += enroll.paper3_cost if enroll.paper3 != nil && enroll.paper3 != ""
+        total_cost += enroll.paper4_cost if enroll.paper4 != nil && enroll.paper4 != ""
+        total_cost += enroll.paper5_cost if enroll.paper5 != nil && enroll.paper5 != ""
       end
     end
     exam_finance.total_cost = total_cost

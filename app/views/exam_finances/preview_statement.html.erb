@@ -6,7 +6,7 @@
       <h5 class="mb-0">Exam Enrollments Preview</h5>
       <div>
         <%= link_to "Back", exam_finance_path(@exam_finance), class: 'btn btn-secondary btn-sm' %>
-        <%= link_to "Generate PDF", generate_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary btn-sm' %>
+        <%= link_to "Generate PDF", generate_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary btn-sm', target: "_blank" %>
       </div>
     </div>
 
@@ -17,8 +17,8 @@
             <tr>
               <th>Subject</th>
               <th>Code</th>
-              <th>Qualification</th>
               <th>Papers</th>
+              <th>Cost</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -27,8 +27,40 @@
               <tr>
                 <td><%= enroll.subject_name %></td>
                 <td><%= enroll.code %></td>
-                <td><%= enroll.qualification %></td>
-                <td><%= enroll.specific_papers.presence || "N/A" %></td>
+                <td>
+                  <% if enroll.specific_papers.present? %>
+                    <div class="mt-2">
+                      <% (1..5).each do |i| %>
+                        <% if enroll.send("paper#{i}").present? %>
+                          <div class="small">
+                            <%= enroll.send("paper#{i}") %>
+                          </div>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    N/A
+                  <% end %>
+                </td>
+                <td>
+                  <% if enroll.qualification == "IGCSE" %>
+                    200
+                  <% elsif enroll.qualification == "A Level" && (enroll.specific_papers == nil || enroll.specific_papers == "") %>
+                    300
+                  <% elsif enroll.qualification == "AS" && (enroll.specific_papers == nil || enroll.specific_papers == "") %>
+                    150
+                  <% elsif enroll.qualification == "A2" && (enroll.specific_papers == nil || enroll.specific_papers == "") %>
+                    150
+                  <% elsif enroll.specific_papers != nil && enroll.specific_papers != "" %>
+                    <% (1..5).each do |i| %>
+                      <% if enroll.send("paper#{i}_cost").present? %>
+                        <div class="small">
+                          <%= enroll.send("paper#{i}_cost").to_i %>
+                        </div>
+                      <% end %>
+                    <% end %>
+                  <% end %>
+                </td>
                 <td><%= enroll.status %></td>
               </tr>
             <% end %>
