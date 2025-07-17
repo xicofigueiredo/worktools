@@ -167,6 +167,14 @@ Rails.application.routes.draw do
     resources :exam_enrolls do
       member do
         patch :update_paper_costs
+        post :remove_lc
+        get :download_document
+        delete :delete_document
+      end
+      collection do
+        get :select_learner
+        get :select_timeline
+        get :select_exam_date
       end
     end
 
