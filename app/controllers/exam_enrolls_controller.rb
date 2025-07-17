@@ -383,7 +383,7 @@ class ExamEnrollsController < ApplicationController
       format.turbo_stream {
         render turbo_stream: [
           turbo_stream.remove("exam_enroll_#{@exam_enroll.id}"),
-          turbo_stream.append("flash", partial: "shared/flash", locals: { notice: "Exam enrollment was successfully deleted." })
+          turbo_stream.append("flash", partial: "shared/flash", locals: { notice: "#{@exam_enroll.subject_name} - Exam enrollment for #{@exam_enroll.learner_name} was successfully deleted." })
         ]
       }
     end
