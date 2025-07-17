@@ -1,4 +1,8 @@
 <div class="container mt-4">
+  <div id="flash">
+    <%= render "shared/flash" %>
+  </div>
+
   <div class="d-flex justify-content-between align-items-center mb-4">
     <!-- Left side: Sprint name -->
     <div class="text-start" style="flex: 1;">
@@ -101,7 +105,7 @@
           <tbody>
             <% if @exam_enrolls.any? %>
               <% @exam_enrolls.each do |enrollment| %>
-                <tr>
+                <tr id="exam_enroll_<%= enrollment.id %>" data-exam-enroll-id="<%= enrollment.id %>">
                   <td><%= enrollment.display_exam_date %></td>
                   <td><%= enrollment.hub %></td>
                   <td><%= enrollment.learner_name %></td>
@@ -118,9 +122,14 @@
                         <i class="fas fa-edit"></i>
                       <% end %>
                       <% if current_user.role == "admin" %>
-                        <%= link_to exam_enroll_path(enrollment),
+                        <%= button_to exam_enroll_path(enrollment),
                             method: :delete,
-                            data: { turbo_method: :delete, turbo_confirm: "Are you sure?" },
+                            form: {
+                              data: {
+                                turbo_confirm: "Are you sure?",
+                                turbo_frame: "_top"
+                              }
+                            },
                             class: "btn btn-sm btn-danger" do %>
                           <i class="fas fa-trash"></i>
                         <% end %>

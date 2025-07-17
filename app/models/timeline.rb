@@ -55,7 +55,6 @@ class Timeline < ApplicationRecord
           code: self.subject.code,
           exam_board: self.subject.board
         )
-
       end
     end
   end

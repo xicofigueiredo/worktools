@@ -369,7 +369,24 @@ class ExamEnrollsController < ApplicationController
 
   def destroy
     @exam_enroll.destroy
-    redirect_to exam_enrolls_path, notice: 'Exam enrollment was successfully deleted.'
+
+    redirect_params = {
+      status: params[:status],
+      hub: params[:hub],
+      subject: params[:subject],
+      exam_centre: params[:exam_centre],
+      date: params[:date]
+    }.compact
+
+    respond_to do |format|
+      format.html { redirect_to exam_enrolls_path(redirect_params), notice: 'Exam enrollment was successfully deleted.' }
+      format.turbo_stream {
+        render turbo_stream: [
+          turbo_stream.remove("exam_enroll_#{@exam_enroll.id}"),
+          turbo_stream.append("flash", partial: "shared/flash", locals: { notice: "Exam enrollment was successfully deleted." })
+        ]
+      }
+    end
   end
 
   def remove_lc
