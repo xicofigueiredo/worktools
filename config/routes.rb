@@ -164,17 +164,9 @@ Rails.application.routes.draw do
     end
     get 'moodle_index', to: 'timelines#moodle_index', as: :moodle_index
 
-    resources :exam_enrolls, only: [:index, :show, :new, :create, :edit, :update, :destroy] do
-      collection do
-        get :select_learner
-        get :select_timeline
-        get :select_exam_date
-        get :exam_finance
-      end
+    resources :exam_enrolls do
       member do
-        post :remove_lc
-        get 'delete_document/:document_id', to: 'exam_enrolls#delete_document', as: 'delete_document'
-        get 'download_document/:document_id', to: 'exam_enrolls#download_document', as: 'download_document'
+        patch :update_paper_costs
       end
     end
 

@@ -433,6 +433,34 @@ class ExamEnrollsController < ApplicationController
     end
   end
 
+  def update_paper_costs
+    @exam_enroll = ExamEnroll.find(params[:id])
+    success = true
+    error_messages = []
+
+    params[:papers].each_with_index do |paper, index|
+      paper_num = index + 1
+      paper_field = "paper#{paper_num}"
+      cost_field = "paper#{paper_num}_cost"
+
+      begin
+        @exam_enroll.update!(
+          paper_field => paper,
+          cost_field => params[:costs][index]
+        )
+      rescue => e
+        success = false
+        error_messages << "Failed to update paper #{paper_num}: #{e.message}"
+      end
+    end
+
+    if success
+      render json: { success: true, message: 'Papers updated successfully' }
+    else
+      render json: { success: false, errors: error_messages }, status: :unprocessable_entity
+    end
+  end
+
   # def exam_finance
   #   # Get all registered exam enrolls with their users
   #   registered_exam_enrolls = ExamEnroll.joins(:timeline)
@@ -507,7 +535,8 @@ class ExamEnrollsController < ApplicationController
       :failed_mock_exception_edu_comment,
       :repeating,
       :graduating,
-      learning_coach_ids: []
+      learning_coach_ids: [],
+      paper_details: []
     )
   end
 end

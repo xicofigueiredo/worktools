@@ -14,10 +14,6 @@
         <div class="col-md-9"><%= @exam_finance.user.hubs.first.name %></div>
       </div>
 
-      <div class="row mb-3">
-        <div class="col-md-3 fw-bold">Total Cost:</div>
-        <div class="col-md-9"><%= @exam_finance.total_cost %> €</div>
-      </div>
     </div>
     <div class="card-footer d-flex gap-2">
       <%= link_to 'Preview Statement', preview_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary' %>
@@ -48,6 +44,32 @@
           <div class="col-md-3">
             <% if exam_enroll.specific_papers.present? %>
               <p><strong>Specific Papers:</strong> <%= exam_enroll.specific_papers %></p>
+
+              <div data-controller="paper-costs" data-paper-costs-enroll-id-value="<%= exam_enroll.id %>">
+                <form data-paper-costs-target="form" data-action="submit->paper-costs#save" class="mt-3">
+                  <% 5.times do |i| %>
+                    <div class="mb-2">
+                      <div class="input-group input-group-sm">
+                        <input type="text"
+                               name="papers[]"
+                               class="form-control"
+                               placeholder="Paper <%= i + 1 %>"
+                               value="<%= exam_enroll.send("paper#{i + 1}") %>"
+                        >
+                        <input type="number"
+                               name="costs[]"
+                               class="form-control"
+                               placeholder="Cost"
+                               step="0.01"
+                               value="<%= exam_enroll.send("paper#{i + 1}_cost") %>"
+                        >
+                        <span class="input-group-text">€</span>
+                      </div>
+                    </div>
+                  <% end %>
+                  <button type="submit" class="btn btn-primary btn-sm">Save Papers</button>
+                </form>
+              </div>
             <% else %>
               <p><strong>Specific Papers:</strong> N/A</p>
             <% end %>
