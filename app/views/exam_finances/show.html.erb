@@ -16,7 +16,7 @@
 
       <div class="row mb-3">
         <div class="col-md-3 fw-bold">Total Cost:</div>
-        <div class="col-md-9"><%= number_to_currency(@exam_finance.total_cost, unit: "€") %></div>
+        <div class="col-md-9"><%= @exam_finance.total_cost %> €</div>
       </div>
     </div>
     <div class="card-footer d-flex gap-2">
@@ -35,12 +35,15 @@
         <%= link_to 'View Exam Enroll', exam_enroll_path(exam_enroll), class: 'btn btn-info btn-sm' %>
       </div>
       <div class="card-body">
-        <div class="row">
-          <div class="col-md-3">
+        <div class="row mb-3">
+          <div class="col-md-4">
             <p><strong>Code:</strong> <%= exam_enroll.code %></p>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
             <p><strong>Qualification:</strong> <%= exam_enroll.qualification %></p>
+          </div>
+          <div class="col-md-3">
+            <p><strong>Status:</strong> <%= exam_enroll.status %></p>
           </div>
           <div class="col-md-3">
             <% if exam_enroll.specific_papers.present? %>
@@ -49,10 +52,8 @@
               <p><strong>Specific Papers:</strong> N/A</p>
             <% end %>
           </div>
-          <div class="col-md-3">
-            <p><strong>Status:</strong> <%= exam_enroll.status %></p>
-          </div>
         </div>
+
       </div>
     </div>
   <% end %>

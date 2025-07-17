@@ -2,7 +2,19 @@ class ExamEnroll < ApplicationRecord
   belongs_to :moodle_timeline, optional: true
   belongs_to :timeline, optional: true
   has_many :exam_enroll_documents, dependent: :destroy
-  has_many :specific_papers, dependent: :destroy
+  # Paper cost validations
+  validates :paper1_cost, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :paper2_cost, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :paper3_cost, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :paper4_cost, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :paper5_cost, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+
+  # Ensure paper cost is present if paper is present
+  validates :paper1_cost, presence: true, if: -> { paper1.present? }
+  validates :paper2_cost, presence: true, if: -> { paper2.present? }
+  validates :paper3_cost, presence: true, if: -> { paper3.present? }
+  validates :paper4_cost, presence: true, if: -> { paper4.present? }
+  validates :paper5_cost, presence: true, if: -> { paper5.present? }
 
   # Validations for DC approval
   # validates :dc_approval_justification, presence: true, if: :dc_approval_present?

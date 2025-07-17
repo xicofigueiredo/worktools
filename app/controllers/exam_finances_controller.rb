@@ -66,7 +66,7 @@ class ExamFinancesController < ApplicationController
 
     # Center Section (Statement Info)
     pdf.bounding_box([pdf.bounds.width / 3, cursor], width: pdf.bounds.width / 3) do
-      pdf.text "Exam Finance Statement", size: 12, style: :bold, align: :center
+      pdf.text "Internal Statement of Entry", size: 12, style: :bold, align: :center
       pdf.text "Generated on #{Date.today.strftime("%d %B %Y")}", size: 12, align: :center
     end
 
@@ -81,8 +81,12 @@ class ExamFinancesController < ApplicationController
     pdf.stroke_line([0, pdf.cursor], [pdf.bounds.width, pdf.cursor])
     pdf.move_down 20
 
-    # Total Cost Section
-    pdf.text "Total Cost: #{(@exam_finance.total_cost)}€", size: 14, style: :bold
+    # Parent Notice Section
+    pdf.text "Dear Parents and Guardians,", size: 12
+    pdf.move_down 10
+    pdf.text "Please review your child's exam entries carefully to ensure all information is correct. If you notice any errors or have questions, do not hesitate to contact Princess Taut at exams@bravegenerationacademy.com.", size: 12
+    pdf.move_down 10
+    pdf.text "When reaching out, kindly include the student's full name and hub. This will help us respond more efficiently.", size: 12, align: :justify
     pdf.move_down 20
 
     # Exam Enrollments Table
@@ -107,6 +111,17 @@ class ExamFinancesController < ApplicationController
         table.cells.padding = [5, 5, 5, 5]
       end
     end
+
+    pdf.move_down 20
+
+    # Total Cost Section
+    pdf.text "Total Cost: #{(@exam_finance.total_cost)}€", size: 14, style: :bold
+    pdf.move_down 20
+
+    pdf.text "Kind regards,", size: 12
+    pdf.text "Princess Carmela Taut", size: 12
+    pdf.text "Exams Officer", size: 12
+    pdf.text "Brave Generation", size: 12
 
     # Footer
     pdf.go_to_page(pdf.page_count)
