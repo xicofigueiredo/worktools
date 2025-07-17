@@ -1,5 +1,5 @@
 class ExamFinancesController < ApplicationController
-  before_action :set_exam_finance, only: [:show, :edit, :update, :destroy, :generate_statement]
+  before_action :set_exam_finance, only: [:show, :edit, :update, :destroy, :generate_statement, :preview_statement]
 
   def index
     # Load all exam finances with their users, ordered by user's name
@@ -46,6 +46,14 @@ class ExamFinancesController < ApplicationController
     redirect_to exam_finances_url, notice: 'Exam finance was successfully destroyed.'
   end
 
+  def preview_statement
+    @exam_enrolls = ExamEnroll.joins(:timeline)
+                             .includes(:timeline)
+                             .where(timelines: { user_id: @exam_finance.user_id })
+                             .order(:subject_name)
+    calculate_total_cost(@exam_enrolls, @exam_finance)
+  end
+
   def generate_statement
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
@@ -60,7 +68,6 @@ class ExamFinancesController < ApplicationController
     # Left Section (Learner and Hub Info)
     pdf.bounding_box([0, cursor], width: pdf.bounds.width / 3) do
       pdf.text "#{@exam_finance.user.full_name}", size: 20, style: :bold
-      pdf.text "#{@exam_finance.user.birthday}", size: 12
       pdf.text "#{@exam_finance.user.hubs.first.name} Hub", size: 12
     end
 
@@ -94,14 +101,13 @@ class ExamFinancesController < ApplicationController
       pdf.text "Exam Enrollments", size: 16, style: :bold
       pdf.move_down 10
 
-      table_data = [["Subject", "Code", "Qualification", "Papers", "Status"]]
+      table_data = [["Subject", "Code", "Papers", "Exam Center"]]
       table_data += @exam_enrolls.map do |enroll|
         [
           enroll.subject_name,
           enroll.code,
-          enroll.qualification,
           enroll.specific_papers.presence || "N/A",
-          enroll.status
+          enroll.bga_exam_centre
         ]
       end
 

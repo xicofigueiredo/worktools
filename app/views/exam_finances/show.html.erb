@@ -20,7 +20,7 @@
       </div>
     </div>
     <div class="card-footer d-flex gap-2">
-      <%= link_to 'Generate Statement', generate_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary', target: '_blank' %>
+      <%= link_to 'Preview Statement', preview_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary' %>
       <%= link_to 'Edit', edit_exam_finance_path(@exam_finance), class: 'btn btn-warning' %>
       <%= link_to 'Back to List', exam_finances_path, class: 'btn btn-secondary' %>
     </div>

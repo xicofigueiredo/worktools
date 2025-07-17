@@ -181,6 +181,7 @@ Rails.application.routes.draw do
     resources :exam_finances do
       member do
         get :generate_statement
+        get :preview_statement
       end
     end
 
