@@ -54,9 +54,17 @@ class ExamFinancesController < ApplicationController
   end
 
   def generate_statement
+    # Get selected enrollment IDs from params
+    selected_ids = if params[:selected_enrolls].is_a?(Array)
+                    params[:selected_enrolls].map(&:to_i).reject(&:zero?)
+                  else
+                    params[:selected_enrolls].to_s.split(',').map(&:to_i).reject(&:zero?)
+                  end
+
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
                              .where(timelines: { user_id: @exam_finance.user_id })
+                             .where(id: selected_ids)
                              .order(:subject_name)
 
     # Calculate total cost before generating PDF
@@ -105,10 +113,22 @@ class ExamFinancesController < ApplicationController
 
       table_data = [["Subject", "Code", "Papers", "Exam Center"]]
       table_data += @exam_enrolls.map do |enroll|
+        papers_text = if enroll.specific_papers.present?
+          papers = []
+          (1..5).each do |i|
+            if enroll.send("paper#{i}").present?
+              papers << enroll.send("paper#{i}")
+            end
+          end
+          papers.join("\n")
+        else
+          "N/A"
+        end
+
         [
           enroll.subject_name,
           enroll.code,
-          enroll.specific_papers.presence || "N/A",
+          papers_text,
           enroll.bga_exam_centre
         ]
       end
@@ -117,6 +137,15 @@ class ExamFinancesController < ApplicationController
         table.row(0).background_color = 'D5F000'
         table.row(0).font_style = :bold
         table.cells.padding = [5, 5, 5, 5]
+        table.cells.inline_format = true
+
+        # Set specific column widths
+        table.column_widths = {
+          0 => pdf.bounds.width * 0.3,  # Subject
+          1 => pdf.bounds.width * 0.2,  # Code
+          2 => pdf.bounds.width * 0.3,  # Papers
+          3 => pdf.bounds.width * 0.2   # Cost
+        }
       end
     end
 

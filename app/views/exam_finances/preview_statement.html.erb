@@ -6,7 +6,15 @@
       <h5 class="mb-0">Exam Enrollments Preview</h5>
       <div>
         <%= link_to "Back", exam_finance_path(@exam_finance), class: 'btn btn-secondary btn-sm' %>
-        <%= link_to "Generate PDF", generate_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary btn-sm', target: "_blank" %>
+        <%= form_tag generate_statement_exam_finance_path(@exam_finance),
+            method: :get,
+            target: '_blank',
+            class: 'd-inline-block',
+            data: { turbo: false },
+            id: 'generate-pdf-form' do %>
+          <%= hidden_field_tag 'selected_enrolls', '', id: 'selected-enrolls-input' %>
+          <%= submit_tag "Generate PDF", class: 'btn btn-primary btn-sm' %>
+        <% end %>
       </div>
     </div>
 
@@ -20,6 +28,9 @@
               <th>Papers</th>
               <th>Cost</th>
               <th>Status</th>
+              <th>
+                <input type="checkbox" id="select-all" class="form-check-input">
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -62,16 +73,63 @@
                   <% end %>
                 </td>
                 <td><%= enroll.status %></td>
+                <td>
+                  <input type="checkbox"
+                         class="form-check-input exam-enroll-checkbox"
+                         value="<%= enroll.id %>">
+                </td>
               </tr>
             <% end %>
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="4" class="text-end fw-bold">Total Cost:</td>
+              <td colspan="5" class="text-end fw-bold">Total Cost:</td>
               <td class="fw-bold"><%= @exam_finance.total_cost %>€</td>
             </tr>
           </tfoot>
         </table>
+
+        <%# Add JavaScript to handle checkbox selection %>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const examEnrollCheckboxes = document.querySelectorAll('.exam-enroll-checkbox');
+            const selectedEnrollsInput = document.getElementById('selected-enrolls-input');
+            const generatePdfForm = document.getElementById('generate-pdf-form');
+
+            // Function to update hidden input with selected enrolls
+            function updateSelectedEnrolls() {
+              const selectedEnrolls = Array.from(examEnrollCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+              selectedEnrollsInput.value = selectedEnrolls.join(',');
+            }
+
+            // Initialize with empty selection
+            updateSelectedEnrolls();
+
+            // Handle select all checkbox
+            selectAllCheckbox.addEventListener('change', function() {
+              examEnrollCheckboxes.forEach(cb => {
+                cb.checked = this.checked;
+              });
+              updateSelectedEnrolls();
+            });
+
+            // Handle individual checkboxes
+            examEnrollCheckboxes.forEach(cb => {
+              cb.addEventListener('change', function() {
+                updateSelectedEnrolls();
+                // Update select all checkbox state
+                selectAllCheckbox.checked = Array.from(examEnrollCheckboxes)
+                  .every(checkbox => checkbox.checked);
+              });
+            });
+
+            // Set initial state of select all checkbox (unchecked)
+            selectAllCheckbox.checked = false;
+          });
+        </script>
       <% else %>
         <div class="p-3">
           <p class="text-muted mb-0">No exam enrollments found.</p>
