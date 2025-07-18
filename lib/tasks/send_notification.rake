@@ -32,7 +32,7 @@ namespace :notifications do
         Notification.find_or_create_by!(
           user: user,
           link: "",
-          message: "Important Message: You can remove cancel learner's registrations. Please proceed accordingly so that Princess knows which learners to enroll in the exams. For any queries, reach out to Luís."
+          message: "If you need to change the exam enrollment from an iAL to an AS, please inform Princess accordingly in the Additional Comments."
         )
         notifications_count += 1
       end

@@ -14,6 +14,39 @@
         <div class="col-md-9"><%= @exam_finance.user.hubs.first.name %></div>
       </div>
 
+      <div class="row mb-3">
+        <div class="col-md-3 fw-bold">Finance Status:</div>
+        <div class="col-md-9">
+          <%= form_with(model: @exam_finance, local: false, class: 'd-flex gap-2 align-items-center') do |f| %>
+            <%= f.select :status,
+                options_for_select([
+                  ['No Status', 'No Status'],
+                  ['Sent to Finance', 'Sent to Finance']
+                ], @exam_finance.status),
+                {},
+                { class: 'form-select', style: 'width: auto', onchange: 'this.form.requestSubmit()' }
+            %>
+            <div id="status-update-message" class="text-success" style="display: none;">
+              Status updated successfully!
+            </div>
+          <% end %>
+
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const form = document.querySelector('form');
+              const message = document.getElementById('status-update-message');
+
+              form.addEventListener('ajax:success', function() {
+                message.style.display = 'block';
+                setTimeout(() => {
+                  message.style.display = 'none';
+                }, 3000);
+              });
+            });
+          </script>
+        </div>
+      </div>
+
     </div>
     <div class="card-footer d-flex gap-2">
       <%= link_to 'Preview Statement', preview_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary' %>

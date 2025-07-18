@@ -33,10 +33,14 @@ class ExamFinancesController < ApplicationController
   end
 
   def update
-    if @exam_finance.update(exam_finance_params)
-      redirect_to @exam_finance, notice: 'Exam finance was successfully updated.'
-    else
-      render :edit
+    respond_to do |format|
+      if @exam_finance.update(exam_finance_params)
+        format.html { redirect_to @exam_finance, notice: 'Exam finance was successfully updated.' }
+        format.json { render json: { status: 'success' } }
+      else
+        format.html { render :edit }
+        format.json { render json: @exam_finance.errors, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -182,7 +186,7 @@ class ExamFinancesController < ApplicationController
   end
 
   def exam_finance_params
-    params.require(:exam_finance).permit(:user_id, :total_cost)
+    params.require(:exam_finance).permit(:user_id, :total_cost, :status)
   end
 
   def calculate_total_cost(exam_enrolls, exam_finance)
