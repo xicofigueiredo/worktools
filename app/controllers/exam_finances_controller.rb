@@ -2,10 +2,18 @@ class ExamFinancesController < ApplicationController
   before_action :set_exam_finance, only: [:show, :edit, :update, :destroy, :generate_statement, :preview_statement]
 
   def index
-    # Load all exam finances with their users, ordered by user's name
-    @exam_finances = ExamFinance.includes(user: { users_hubs: :hub })
-                               .joins(:user)
-                               .order('users.full_name ASC')
+    # Load exam finances for learners with Nov 2025 enrollments
+    exam_finances = ExamFinance.includes(user: { users_hubs: :hub })
+                              .joins(:user)
+                              .where(exam_season: "November 2025")
+                              .order('users.full_name ASC')
+
+    # Filter to only those with matching exam enrollments
+    @exam_finances = exam_finances.select do |finance|
+      ExamEnroll.joins(:timeline)
+                .where(timelines: { user_id: finance.user_id })
+                .any? { |enroll| enroll.display_exam_date == finance.exam_season }
+    end
   end
 
   def show
