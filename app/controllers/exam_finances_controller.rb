@@ -3,7 +3,7 @@ class ExamFinancesController < ApplicationController
 
   def index
     # Load all exam finances with their users, ordered by user's name
-    @exam_finances = ExamFinance.includes(:user)
+    @exam_finances = ExamFinance.includes(user: { users_hubs: :hub })
                                .joins(:user)
                                .order('users.full_name ASC')
   end
