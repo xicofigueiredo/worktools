@@ -53,7 +53,13 @@ class Timeline < ApplicationRecord
           gender: user.gender,
           native_language_english: user.native_language_english,
           code: self.subject.code,
-          exam_board: self.subject.board
+          exam_board: self.subject.board,
+          qualification: case self.subject.category
+                       when 'igcse' then 'IGCSE'
+                       when 'as' then 'AS'
+                       when 'al' then 'A Level'
+                       else nil
+                       end
         )
       end
     end
