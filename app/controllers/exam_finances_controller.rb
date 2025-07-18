@@ -62,7 +62,8 @@ class ExamFinancesController < ApplicationController
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
                              .where(timelines: { user_id: @exam_finance.user_id })
-                             .order(:subject_name)
+                             .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
+                             .sort_by(&:subject_name)
     calculate_total_cost(@exam_enrolls, @exam_finance)
   end
 
@@ -79,6 +80,8 @@ class ExamFinancesController < ApplicationController
                              .where(timelines: { user_id: @exam_finance.user_id })
                              .where(id: selected_ids)
                              .order(:subject_name)
+
+    
 
     # Calculate total cost before generating PDF
     calculate_total_cost(@exam_enrolls, @exam_finance)
