@@ -91,7 +91,7 @@
 
         <%# Add JavaScript to handle checkbox selection %>
         <script>
-          document.addEventListener('DOMContentLoaded', function() {
+          function initializeCheckboxes() {
             const selectAllCheckbox = document.getElementById('select-all');
             const examEnrollCheckboxes = document.querySelectorAll('.exam-enroll-checkbox');
             const selectedEnrollsInput = document.getElementById('selected-enrolls-input');
@@ -128,7 +128,12 @@
 
             // Set initial state of select all checkbox (unchecked)
             selectAllCheckbox.checked = false;
-          });
+          }
+
+          // Initialize on both DOMContentLoaded and turbo:load
+          document.addEventListener('DOMContentLoaded', initializeCheckboxes);
+          document.addEventListener('turbo:load', initializeCheckboxes);
+          document.addEventListener('turbo:render', initializeCheckboxes);
         </script>
       <% else %>
         <div class="p-3">
