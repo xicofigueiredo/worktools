@@ -15,6 +15,11 @@
       </div>
 
       <div class="row mb-3">
+        <div class="col-md-3 fw-bold">Exam Season:</div>
+        <div class="col-md-9"><%= @exam_finance.exam_season %></div>
+      </div>
+
+      <div class="row mb-3">
         <div class="col-md-3 fw-bold">Finance Status:</div>
         <div class="col-md-9">
           <%= form_with(model: @exam_finance, local: false, class: 'd-flex gap-2 align-items-center') do |f| %>

@@ -12,7 +12,8 @@ class ExamFinancesController < ApplicationController
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
                              .where(timelines: { user_id: @exam_finance.user_id })
-                             .order(:subject_name)
+                             .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
+                             .sort_by(&:subject_name)
   end
 
   def new
