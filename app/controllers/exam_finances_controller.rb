@@ -44,7 +44,7 @@ class ExamFinancesController < ApplicationController
   def update
     respond_to do |format|
       if @exam_finance.update(exam_finance_params)
-        format.html { redirect_to @exam_finance, notice: 'Exam finance was successfully updated.' }
+        format.html { redirect_to preview_statement_exam_finance_path(@exam_finance), notice: 'Exam finance was successfully updated.' }
         format.json { render json: { status: 'success' } }
       else
         format.html { render :edit }
@@ -64,7 +64,6 @@ class ExamFinancesController < ApplicationController
                              .where(timelines: { user_id: @exam_finance.user_id })
                              .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
                              .sort_by(&:subject_name)
-    calculate_total_cost(@exam_enrolls, @exam_finance)
   end
 
   def generate_statement
@@ -81,10 +80,8 @@ class ExamFinancesController < ApplicationController
                              .where(id: selected_ids)
                              .order(:subject_name)
 
-    
-
-    # Calculate total cost before generating PDF
-    calculate_total_cost(@exam_enrolls, @exam_finance)
+    # Calculate total cost for display only, don't save it
+    @calculated_total = view_context.calculate_total_cost(@exam_enrolls)
 
     pdf = Prawn::Document.new
 
@@ -171,6 +168,14 @@ class ExamFinancesController < ApplicationController
     pdf.text "Total Cost: #{(@exam_finance.total_cost)}€", size: 14, style: :bold
     pdf.move_down 20
 
+    # Comments Section (if present)
+    if @exam_finance.comments.present?
+      pdf.text "Additional Comments:", size: 12, style: :bold
+      pdf.move_down 5
+      pdf.text @exam_finance.comments, size: 12
+      pdf.move_down 20
+    end
+
     pdf.text "Kind regards,", size: 12
     pdf.text "Princess Carmela Taut", size: 12
     pdf.text "Exams Officer", size: 12
@@ -198,30 +203,6 @@ class ExamFinancesController < ApplicationController
   end
 
   def exam_finance_params
-    params.require(:exam_finance).permit(:user_id, :total_cost, :status)
-  end
-
-  def calculate_total_cost(exam_enrolls, exam_finance)
-
-    total_cost = 0
-    exam_enrolls.each do |enroll|
-      if enroll.qualification == "IGCSE"
-          total_cost += 200
-      elsif enroll.qualification == "A Level" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
-        total_cost += 300
-      elsif enroll.qualification == "AS" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
-        total_cost += 150
-      elsif enroll.qualification == "A2" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
-        total_cost += 150
-      elsif enroll.specific_papers != nil && enroll.specific_papers != ""
-        total_cost += enroll.paper1_cost if enroll.paper1 != nil && enroll.paper1 != ""
-        total_cost += enroll.paper2_cost if enroll.paper2 != nil && enroll.paper2 != ""
-        total_cost += enroll.paper3_cost if enroll.paper3 != nil && enroll.paper3 != ""
-        total_cost += enroll.paper4_cost if enroll.paper4 != nil && enroll.paper4 != ""
-        total_cost += enroll.paper5_cost if enroll.paper5 != nil && enroll.paper5 != ""
-      end
-    end
-    exam_finance.total_cost = total_cost
-    exam_finance.save
+    params.require(:exam_finance).permit(:user_id, :total_cost, :status, :comments)
   end
 end

@@ -83,11 +83,57 @@
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="5" class="text-end fw-bold">Total Cost:</td>
-              <td class="fw-bold"><%= @exam_finance.total_cost %>€</td>
+              <td colspan="5" class="text-end fw-bold">Manual Total Cost:</td>
+              <td class="fw-bold">
+                <%= form_with(model: @exam_finance,
+                            local: false,
+                            class: 'd-flex gap-2 align-items-center',
+                            data: {
+                              turbo: false,
+                              controller: 'cost-update'
+                            }) do |f| %>
+                  <div class="input-group input-group-sm">
+                    <%= f.number_field :total_cost,
+                        class: 'form-control text-end',
+                        style: 'width: 80px;',
+                        onchange: 'this.form.requestSubmit()'
+                    %>
+                    <span class="input-group-text">€</span>
+                  </div>
+                  <div id="cost-update-message" class="text-success" style="display: none;">
+                    Updated!
+                  </div>
+                <% end %>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="5" class="text-end text-muted">Calculated Total:</td>
+              <td class="text-muted"><%= calculate_total_cost(@exam_enrolls) %>€</td>
             </tr>
           </tfoot>
         </table>
+
+        <div class="mt-4">
+          <%= form_with(model: @exam_finance,
+                      local: false,
+                      class: 'comments-form',
+                      data: {
+                        turbo: false
+                      }) do |f| %>
+            <div class="mb-3">
+              <%= f.label :comments, "Additional Comments", class: "form-label fw-bold" %>
+              <%= f.text_area :comments,
+                  class: 'form-control',
+                  rows: 4,
+                  placeholder: "Enter any additional comments to be included in the Statement of Entry...",
+                  onchange: 'this.form.requestSubmit()'
+              %>
+            </div>
+            <div id="comments-update-message" class="text-success" style="display: none;">
+              Comments updated!
+            </div>
+          <% end %>
+        </div>
 
         <%# Add JavaScript to handle checkbox selection %>
         <script>
@@ -143,3 +189,41 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('turbo:load', function() {
+    // Handle cost form
+    const costForm = document.querySelector('form:not(.comments-form)');
+    const costMessage = document.getElementById('cost-update-message');
+
+    if (costForm && costMessage) {
+      costForm.addEventListener('ajax:success', function(event) {
+        costMessage.style.display = 'inline';
+        setTimeout(() => {
+          costMessage.style.display = 'none';
+        }, 2000);
+      });
+
+      costForm.addEventListener('ajax:error', function() {
+        alert('Error updating total cost');
+      });
+    }
+
+    // Handle comments form
+    const commentsForm = document.querySelector('.comments-form');
+    const commentsMessage = document.getElementById('comments-update-message');
+
+    if (commentsForm && commentsMessage) {
+      commentsForm.addEventListener('ajax:success', function() {
+        commentsMessage.style.display = 'inline';
+        setTimeout(() => {
+          commentsMessage.style.display = 'none';
+        }, 2000);
+      });
+
+      commentsForm.addEventListener('ajax:error', function() {
+        alert('Error updating comments');
+      });
+    }
+  });
+</script>
