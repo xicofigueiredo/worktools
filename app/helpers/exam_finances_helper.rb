@@ -3,30 +3,21 @@ module ExamFinancesHelper
     total_cost = 0
     exam_enrolls.each do |enroll|
       portugal = enroll.timeline.user.users_hubs.where(main: true).first.hub.country == "Portugal"
-      sa = enroll.timeline.user.users_hubs.where(main: true).first.hub.country == "South Africa"
       if enroll.qualification == "IGCSE"
         if portugal
           total_cost += 200
-        elsif sa
-          total_cost += 4000
         end
       elsif enroll.qualification == "A Level" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
         if portugal
           total_cost += 300
-        elsif sa
-          total_cost += 6000
         end
       elsif enroll.qualification == "AS" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
         if portugal
           total_cost += 200
-        elsif sa
-          total_cost += 4000
         end
       elsif enroll.qualification == "A2" && (enroll.specific_papers == "" || enroll.specific_papers == nil)
         if portugal
           total_cost += 200
-        elsif sa
-          total_cost += 4000
         end
       elsif enroll.specific_papers != nil && enroll.specific_papers != ""
         total_cost += enroll.paper1_cost if enroll.paper1 != nil && enroll.paper1 != ""

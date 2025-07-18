@@ -54,23 +54,7 @@
                   <% end %>
                 </td>
                 <td>
-                  <% if enroll.qualification == "IGCSE" %>
-                    200
-                  <% elsif enroll.qualification == "A Level" && (enroll.specific_papers == nil || enroll.specific_papers == "") %>
-                    300
-                  <% elsif enroll.qualification == "AS" && (enroll.specific_papers == nil || enroll.specific_papers == "") %>
-                    150
-                  <% elsif enroll.qualification == "A2" && (enroll.specific_papers == nil || enroll.specific_papers == "") %>
-                    150
-                  <% elsif enroll.specific_papers != nil && enroll.specific_papers != "" %>
-                    <% (1..5).each do |i| %>
-                      <% if enroll.send("paper#{i}_cost").present? %>
-                        <div class="small">
-                          <%= enroll.send("paper#{i}_cost").to_i %>
-                        </div>
-                      <% end %>
-                    <% end %>
-                  <% end %>
+                  <%= calculate_total_cost([enroll]) %>€
                 </td>
                 <td><%= enroll.status %></td>
                 <td>
@@ -107,7 +91,7 @@
               </td>
             </tr>
             <tr>
-              <td colspan="5" class="text-end text-muted">Calculated Total:</td>
+              <td colspan="5" class="text-end text-muted">Total Cost:</td>
               <td class="text-muted"><%= calculate_total_cost(@exam_enrolls) %>€</td>
             </tr>
           </tfoot>

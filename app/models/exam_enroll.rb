@@ -21,7 +21,7 @@ class ExamEnroll < ApplicationRecord
   # validates :dc_approval_comment, presence: true, if: :dc_approval_present?
 
   before_save :set_status
-  before_save :update_exam_finance_status
+  # before_save :update_exam_finance_status
   after_create :create_exam_finance
 
   def create_exam_finance
@@ -31,14 +31,14 @@ class ExamEnroll < ApplicationRecord
     end
   end
 
-  def update_exam_finance_status
-    exam_finance = ExamFinance.find_by(user_id: self.timeline.user_id, exam_season: self.display_exam_date)
-    if exam_finance.present?
-      exam_finance.update(exam_season: self.display_exam_date)
-    else
-      ExamFinance.create(user_id: self.timeline.user_id, status: "No Status", exam_season: self.display_exam_date)
-    end
-  end
+  # def update_exam_finance_status
+  #   exam_finance = ExamFinance.find_by(user_id: self.timeline.user_id, exam_season: self.display_exam_date)
+  #   if exam_finance.present?
+  #     exam_finance.update(exam_season: self.display_exam_date)
+  #   else
+  #     ExamFinance.create(user_id: self.timeline.user_id, status: "No Status", exam_season: self.display_exam_date)
+  #   end
+  # end
 
   def display_exam_date
     if personalized_exam_date.present?

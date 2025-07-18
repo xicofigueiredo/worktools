@@ -19,7 +19,7 @@ class ExamFinancesController < ApplicationController
   def show
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
-                             .where(timelines: { user_id: @exam_finance.user_id })
+                             .where(timelines: { user_id: @exam_finance.user_id, hidden: false })
                              .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
                              .sort_by(&:subject_name)
   end
@@ -44,7 +44,7 @@ class ExamFinancesController < ApplicationController
   def update
     respond_to do |format|
       if @exam_finance.update(exam_finance_params)
-        format.html { redirect_to preview_statement_exam_finance_path(@exam_finance), notice: 'Exam finance was successfully updated.' }
+        format.html { redirect_to @exam_finance, notice: 'Exam finance was successfully updated.' }
         format.json { render json: { status: 'success' } }
       else
         format.html { render :edit }
@@ -61,7 +61,7 @@ class ExamFinancesController < ApplicationController
   def preview_statement
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
-                             .where(timelines: { user_id: @exam_finance.user_id })
+                             .where(timelines: { user_id: @exam_finance.user_id, hidden: false })
                              .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
                              .sort_by(&:subject_name)
   end
@@ -76,7 +76,7 @@ class ExamFinancesController < ApplicationController
 
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
-                             .where(timelines: { user_id: @exam_finance.user_id })
+                             .where(timelines: { user_id: @exam_finance.user_id, hidden: false })
                              .where(id: selected_ids)
                              .order(:subject_name)
 
@@ -168,14 +168,6 @@ class ExamFinancesController < ApplicationController
     pdf.text "Total Cost: #{(@exam_finance.total_cost)}€", size: 14, style: :bold
     pdf.move_down 20
 
-    # Comments Section (if present)
-    if @exam_finance.comments.present?
-      pdf.text "Additional Comments:", size: 12, style: :bold
-      pdf.move_down 5
-      pdf.text @exam_finance.comments, size: 12
-      pdf.move_down 20
-    end
-
     pdf.text "Kind regards,", size: 12
     pdf.text "Princess Carmela Taut", size: 12
     pdf.text "Exams Officer", size: 12
@@ -203,6 +195,7 @@ class ExamFinancesController < ApplicationController
   end
 
   def exam_finance_params
-    params.require(:exam_finance).permit(:user_id, :total_cost, :status, :comments)
+    params.require(:exam_finance).permit(:user_id, :total_cost, :status)
   end
+
 end
