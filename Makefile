@@ -105,3 +105,6 @@ create_exam_enrolls:
 
 update_exam_enroll_data:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake exam_enrolls:update_exam_enroll_data"
+
+create_exam_finances:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake exam_finances:create"
