@@ -44,10 +44,26 @@ class ExamFinancesController < ApplicationController
   def update
     respond_to do |format|
       if @exam_finance.update(exam_finance_params)
-        format.html { redirect_to @exam_finance, notice: 'Exam finance was successfully updated.' }
+        format.html {
+          if request.xhr?
+            head :ok
+          else
+            if request.referer&.include?('preview_statement')
+              redirect_to preview_statement_exam_finance_path(@exam_finance), notice: 'Exam finance was successfully updated.'
+            else
+              redirect_to @exam_finance, notice: 'Exam finance was successfully updated.'
+            end
+          end
+        }
         format.json { render json: { status: 'success' } }
       else
-        format.html { render :edit }
+        format.html {
+          if request.xhr?
+            render json: @exam_finance.errors, status: :unprocessable_entity
+          else
+            render :edit
+          end
+        }
         format.json { render json: @exam_finance.errors, status: :unprocessable_entity }
       end
     end
@@ -165,7 +181,7 @@ class ExamFinancesController < ApplicationController
     pdf.move_down 20
 
     # Total Cost Section
-    pdf.text "Total Cost: #{(@exam_finance.total_cost)}€", size: 14, style: :bold
+    pdf.text "Total Cost: #{(@exam_finance.total_cost)} #{@exam_finance.currency}", size: 14, style: :bold
     pdf.move_down 20
 
     pdf.text "Kind regards,", size: 12
@@ -195,7 +211,7 @@ class ExamFinancesController < ApplicationController
   end
 
   def exam_finance_params
-    params.require(:exam_finance).permit(:user_id, :total_cost, :status)
+    params.require(:exam_finance).permit(:user_id, :total_cost, :status, :currency)
   end
 
 end

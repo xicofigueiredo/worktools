@@ -54,7 +54,7 @@
                   <% end %>
                 </td>
                 <td>
-                  <%= calculate_total_cost([enroll]) %>€
+                  <%= calculate_total_cost([enroll]) %> <%= @exam_finance.currency %>
                 </td>
                 <td><%= enroll.status %></td>
                 <td>
@@ -74,7 +74,7 @@
                             class: 'd-flex gap-2 align-items-center',
                             data: {
                               turbo: false,
-                              controller: 'cost-update'
+                              remote: true
                             }) do |f| %>
                   <div class="input-group input-group-sm">
                     <%= f.number_field :total_cost,
@@ -82,7 +82,20 @@
                         style: 'width: 80px;',
                         onchange: 'this.form.requestSubmit()'
                     %>
-                    <span class="input-group-text">€</span>
+                    <%= f.select :currency,
+                        options_for_select([
+                          ['EUR', 'EUR'],
+                          ['ZAR', 'ZAR'],
+                          ['NAD', 'NAD'],
+                          ['MZN', 'MZN']
+                        ], @exam_finance.currency || 'EUR'),
+                        {},
+                        {
+                          class: 'form-select',
+                          style: 'width: auto; max-width: 80px;',
+                          onchange: 'this.form.requestSubmit()'
+                        }
+                    %>
                   </div>
                   <div id="cost-update-message" class="text-success" style="display: none;">
                     Updated!
@@ -92,7 +105,7 @@
             </tr>
             <tr>
               <td colspan="5" class="text-end text-muted">Total Cost:</td>
-              <td class="text-muted"><%= calculate_total_cost(@exam_enrolls) %>€</td>
+              <td class="text-muted"><%= calculate_total_cost(@exam_enrolls) %> <%= @exam_finance.currency || 'EUR' %></td>
             </tr>
           </tfoot>
         </table>
