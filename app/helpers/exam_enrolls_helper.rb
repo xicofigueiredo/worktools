@@ -3,6 +3,8 @@ module ExamEnrollsHelper
     case current_user.role
     when 'admin'
       :all
+    when 'exams'
+      :all
     when 'cm'
       ['pre_registration_exception_cm_approval',
        'pre_registration_exception_cm_comment',
