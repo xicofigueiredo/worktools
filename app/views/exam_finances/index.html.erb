@@ -19,7 +19,7 @@
           <tr onclick="window.location='<%= exam_finance_path(exam_finance) %>'" style="cursor: pointer;">
             <td><%= exam_finance.user.full_name %></td>
             <td><%= exam_finance.user.users_hubs.where(main: true).first.hub.name %></td>
-            <td><%= exam_finance.user.timelines.count %></td>
+            <td><%= exam_finance.number_of_subjects %></td>
             <td><%= exam_finance.status %></td>
           </tr>
         <% end %>

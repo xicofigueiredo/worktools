@@ -42,7 +42,8 @@ namespace :exam_finance do
           exam_season: exam_season,
           total_cost: total_cost,
           currency: 'EUR', # Default to EUR
-          status: 'No Status'
+          status: 'No Status',
+          number_of_subjects: enrolls.count
         )
         created_count += 1
         puts "Created exam finance for User ID: #{user_id}, Season: #{exam_season}"

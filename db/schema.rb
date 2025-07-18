@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_18_163006) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_18_163731) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -168,6 +168,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_18_163006) do
     t.string "exam_season"
     t.text "comments"
     t.string "currency"
+    t.integer "number_of_subjects", default: 0, null: false
     t.index ["user_id"], name: "index_exam_finances_on_user_id"
   end
 

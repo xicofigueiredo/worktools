@@ -22,6 +22,9 @@ class ExamFinancesController < ApplicationController
                              .where(timelines: { user_id: @exam_finance.user_id, hidden: false })
                              .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
                              .sort_by(&:subject_name)
+
+    @exam_finance.update_number_of_subjects(@exam_enrolls.count)
+
   end
 
   def new
