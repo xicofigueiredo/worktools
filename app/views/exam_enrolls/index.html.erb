@@ -121,7 +121,7 @@
                       <%= link_to edit_exam_enroll_path(enrollment), class: "btn btn-sm btn-warning me-1" do %>
                         <i class="fas fa-edit"></i>
                       <% end %>
-                      <% if current_user.role == "admin" %>
+                      <% if current_user.role == "admin" || current_user.role == "lc" %>
                         <%= button_to exam_enroll_path(enrollment),
                             method: :delete,
                             form: {

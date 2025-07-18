@@ -32,7 +32,7 @@ namespace :notifications do
         Notification.find_or_create_by!(
           user: user,
           link: "",
-          message: "Please note that BGA is not responsible for registering remote learners for their respective exams. This responsibility lies with the learners' guardians."
+          message: "Important Message: You can remove cancel learner's registrations. Please proceed accordingly so that Princess knows which learners to enroll in the exams. For any queries, reach out to Luís."
         )
         notifications_count += 1
       end
