@@ -25,18 +25,28 @@ class ExamEnroll < ApplicationRecord
   after_create :create_exam_finance
 
   def create_exam_finance
-    exam_finance = ExamFinance.find_by(user_id: self.timeline.user_id, exam_season: self.display_exam_date)
+    if self.display_exam_date.present?
+      exam_date = self.display_exam_date
+    else
+      exam_date = ""
+    end
+    exam_finance = ExamFinance.find_by(user_id: self.timeline.user_id, exam_season: exam_date)
     if exam_finance.nil?
-      ExamFinance.create(user_id: self.timeline.user_id, status: "No Status", exam_season: self.display_exam_date)
+      ExamFinance.create(user_id: self.timeline.user_id, status: "No Status", exam_season: exam_date)
     end
   end
 
   def update_exam_finance_status
-    exam_finance = ExamFinance.find_by(user_id: self.timeline.user_id, exam_season: self.display_exam_date)
-    if exam_finance.present?
-      exam_finance.update(exam_season: self.display_exam_date)
+    if self.display_exam_date.present?
+      exam_date = self.display_exam_date
     else
-      ExamFinance.create(user_id: self.timeline.user_id, status: "No Status", exam_season: self.display_exam_date)
+      exam_date = ""
+    end
+    exam_finance = ExamFinance.find_by(user_id: self.timeline.user_id, exam_season: exam_date)
+    if exam_finance.present?
+      exam_finance.update(exam_season: exam_date)
+    else
+      ExamFinance.create(user_id: self.timeline.user_id, status: "No Status", exam_season: exam_date)
     end
   end
 
