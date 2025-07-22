@@ -108,3 +108,6 @@ update_exam_enroll_data:
 
 create_exam_finances:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake exam_finance:create_for_all"
+
+update_timelines:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake timelines:simulate_update"

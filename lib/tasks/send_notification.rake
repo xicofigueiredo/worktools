@@ -27,15 +27,31 @@ namespace :notifications do
     #   end
     # end
 
-    User.where(role: "lc").or(User.where(role: "lc")).find_each do |user|
-      if user.deactivate != true
-        Notification.find_or_create_by!(
-          user: user,
-          link: "",
-          message: "If you need to change the exam enrollment from an iAL to an AS, please inform Princess accordingly in the Additional Comments."
-        )
-        notifications_count += 1
-      end
+    # User.where(role: "learner").or(User.where(role: "lc")).find_each do |user|
+    #   if user.deactivate != true
+    #     Notification.find_or_create_by!(
+    #       user: user,
+    #       link: "",
+    #       message: "If you need to change the exam enrollment from an iAL to an AS, please inform Princess accordingly in the Additional Comments."
+    #     )
+    #     notifications_count += 1
+    #   end
+    # end
+    #
+    #
+    include Rails.application.routes.url_helpers
+
+    timelines_ids = Timeline.where(exam_date: nil, hidden: false, end_date: Date.today..Date.today + 3.year)
+    timelines_ids.each do |timeline|
+      user = timeline.user
+      next if timeline.user.deactivate == true
+      next if timeline.subject.category.in?(['lws7', 'lws8', 'lws9', 'up', 'other'])
+      Notification.find_or_create_by!(
+        user: user,
+        link: edit_timeline_path(timeline),
+        message: "Please update your #{timeline.subject.name || timeline.personalized_name} timeline exam season, if it doesn't save check if the end date is set to a valid date."
+      )
+      notifications_count += 1
     end
 
     puts "Completed: #{notifications_count} notifications sent."
