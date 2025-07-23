@@ -54,6 +54,7 @@ class Timeline < ApplicationRecord
           native_language_english: user.native_language_english,
           code: self.subject.code,
           exam_board: self.subject.board,
+          status: "No Status",
           qualification: case self.subject.category
                        when 'igcse' then 'IGCSE'
                        when 'as' then 'AS'

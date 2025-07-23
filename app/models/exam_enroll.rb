@@ -22,19 +22,6 @@ class ExamEnroll < ApplicationRecord
 
   before_save :set_status
   before_save :update_exam_finance_status
-  after_create :create_exam_finance
-
-  def create_exam_finance
-    if self.display_exam_date.present?
-      exam_date = self.display_exam_date
-    else
-      exam_date = ""
-    end
-    exam_finance = ExamFinance.find_by(user_id: self.timeline.user_id, exam_season: exam_date)
-    if exam_finance.nil?
-      ExamFinance.create(user_id: self.timeline.user_id, status: "No Status", exam_season: exam_date)
-    end
-  end
 
   def update_exam_finance_status
     if self.display_exam_date.present?
@@ -44,9 +31,21 @@ class ExamEnroll < ApplicationRecord
     end
     exam_finance = ExamFinance.find_by(user_id: self.timeline.user_id, exam_season: exam_date)
     if exam_finance.present?
-      exam_finance.update(exam_season: exam_date)
+      exam_enrolls = ExamEnroll.joins(:timeline)
+          .includes(:timeline)
+          .where(timelines: { user_id: exam_finance.user_id, hidden: false })
+          .select { |enroll| enroll.display_exam_date == exam_finance.exam_season }
+          .count
+
+      exam_finance.update(exam_season: exam_date, number_of_subjects: exam_enrolls)
     else
-      ExamFinance.create(user_id: self.timeline.user_id, status: "No Status", exam_season: exam_date)
+      ExamFinance.create!(
+        user_id: self.timeline.user_id,
+        status: "No Status",
+        exam_season: exam_date,
+        total_cost: 0,           # Required field
+        number_of_subjects: 1      # Required field
+      )
     end
   end
 
@@ -92,11 +91,11 @@ class ExamEnroll < ApplicationRecord
     end
 
     # pre-registration
-    if self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == nil
+    if self.pre_registration_exception_justification != "" && self.pre_registration_exception_justification != nil && self.pre_registration_exception_dc_approval == nil
       self.status = "RM Approval Pending"
-    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == nil
+    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_justification != nil && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == nil
       self.status = "Edu Approval Pending"
-    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == false
+    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_justification != nil && self.pre_registration_exception_dc_approval == false
       self.status = "Rejected"
       #notify lc and learner to reset exam season
       users_ids.each do |user_id|
@@ -105,7 +104,7 @@ class ExamEnroll < ApplicationRecord
           message: "A pre-registration exception has been rejected. A new exam season for #{self.subject_name}(#{self.learner_name}) is needed. Please update it! "
         )
       end
-    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_edu_approval == false
+    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_justification != nil && self.pre_registration_exception_edu_approval == false
       self.status = "Rejected"
       #notify lc and learner to reset exam season
       users_ids.each do |user_id|
@@ -114,7 +113,7 @@ class ExamEnroll < ApplicationRecord
           message: "A pre-registration exception has been rejected. A new exam season for #{self.subject_name}(#{self.learner_name}) is needed. Please update it! "
         )
       end
-    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == true
+    elsif self.pre_registration_exception_justification != "" && self.pre_registration_exception_justification != nil && self.pre_registration_exception_dc_approval == true && self.pre_registration_exception_edu_approval == true
       if self.mock_results == "U" || self.mock_results == "0"
         self.status = "Failed Mock"
         #notify lc and learner to request a failed mock exception
@@ -132,15 +131,15 @@ class ExamEnroll < ApplicationRecord
     end
 
     # extension
-    if self.extension_justification != "" && self.extension_dc_approval == nil
+    if self.extension_justification != "" && self.extension_justification != nil && self.extension_dc_approval == nil
       self.status = "RM Approval Pending"
-    elsif self.extension_justification != "" && self.extension_dc_approval == true && self.extension_edu_approval == nil
+    elsif self.extension_justification != "" && self.extension_justification != nil && self.extension_dc_approval == true && self.extension_edu_approval == nil
       self.status = "Edu Approval Pending"
-    elsif self.extension_justification != "" && self.extension_dc_approval == false
+    elsif self.extension_justification != "" && self.extension_justification != nil && self.extension_dc_approval == false
       self.status = "Rejected"
-    elsif self.extension_justification != "" && self.extension_edu_approval == false
+    elsif self.extension_justification != "" && self.extension_justification != nil && self.extension_edu_approval == false
       self.status = "Rejected"
-    elsif self.extension_justification != "" && self.extension_dc_approval == true && self.extension_edu_approval == true
+    elsif self.extension_justification != "" && self.extension_justification != nil && self.extension_dc_approval == true && self.extension_edu_approval == true
       if self.mock_results == "U" || self.mock_results == "0"
        self.status = "Failed Mock (Registered)"
        # notify lc and learner to request a failed mock exceptionvv
@@ -158,9 +157,9 @@ class ExamEnroll < ApplicationRecord
     end
 
     # failed mock
-    if self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == nil
+    if self.failed_mock_exception_justification != "" && self.failed_mock_exception_justification != nil && self.failed_mock_exception_dc_approval == nil
       self.status = "RM Approval Pending"
-    elsif self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == nil
+    elsif self.failed_mock_exception_justification != "" && self.failed_mock_exception_justification != nil && self.failed_mock_exception_dc_approval == true && self.failed_mock_exception_edu_approval == nil
       self.status = "Edu Approval Pending"
     elsif self.failed_mock_exception_justification != "" && self.failed_mock_exception_dc_approval == false
       self.status = "Rejected"
