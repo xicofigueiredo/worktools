@@ -182,6 +182,8 @@ class ExamFinancesController < ApplicationController
     end
 
     pdf.move_down 20
+    pdf.text @exam_finance.comments, size: 12, align: :justify
+    pdf.move_down 20
 
     # Total Cost Section
     pdf.text "Total Cost: #{(@exam_finance.total_cost)} #{@exam_finance.currency}", size: 14, style: :bold
