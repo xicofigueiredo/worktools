@@ -109,7 +109,7 @@ class PagesController < ApplicationController
     end
 
     @users = User.joins(:timelines)
-      .where(timelines: { subject_id: @selected_subject.id })
+      .where(timelines: { subject_id: @selected_subject.id, hidden: false })
       .where(deactivate: false)
 
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
