@@ -185,4 +185,11 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :assignments, only: [:index] do
+      collection do
+        get :show_detailed
+        get :assignment_statistics
+      end
+    end
+
 end

@@ -1,0 +1,118 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">📋 Assignment Management</h3>
+        </div>
+        <div class="card-body">
+
+          <!-- Subject Selection -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <%= form_with url: assignments_path, method: :get, local: true, class: "d-flex" do |form| %>
+                <%= form.select :moodle_id,
+                    options_from_collection_for_select(@subjects, :moodle_id, :name, params[:moodle_id]),
+                    { prompt: "Select a Subject..." },
+                    { class: "form-control me-2", onchange: "this.form.submit();" } %>
+                <%= form.submit "Load Assignments", class: "btn btn-primary" %>
+              <% end %>
+            </div>
+
+            <% if @selected_subject %>
+              <div class="col-md-6">
+                <div class="btn-group">
+                  <%= link_to "Detailed View",
+                      show_detailed_assignments_path(moodle_id: @selected_subject.moodle_id),
+                      class: "btn btn-info" %>
+                  <%= link_to "Statistics",
+                      assignment_statistics_assignments_path(moodle_id: @selected_subject.moodle_id),
+                      class: "btn btn-secondary" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <% if @selected_subject %>
+            <div class="alert alert-info">
+              <strong>Selected Subject:</strong> <%= @selected_subject.name %>
+              <small>(Moodle Course ID: <%= @course_id %>)</small>
+            </div>
+
+            <% if @assignments_grouped&.any? %>
+              <!-- Assignments List -->
+              <div class="row">
+                <% @assignments_grouped.each do |assignment_name, submissions| %>
+                  <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card">
+                      <div class="card-header">
+                        <h5 class="card-title">📝 <%= assignment_name %></h5>
+                        <small class="text-muted"><%= submissions.size %> submissions</small>
+                      </div>
+                      <div class="card-body">
+                        <div class="table-responsive">
+                          <table class="table table-sm">
+                            <thead>
+                              <tr>
+                                <th>Learner</th>
+                                <th>Submission</th>
+                                <th>Grade</th>
+                                <th>Attempts</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <% submissions.each do |submission| %>
+                                <tr>
+                                  <td><%= submission[:learner_name] %></td>
+                                  <td>
+                                    <% if submission[:submission_date] != 'No submission' %>
+                                      <span class="badge bg-success">✅</span>
+                                      <small><%= Time.at(submission[:submission_date].to_i).strftime("%d/%m/%Y %H:%M") %></small>
+                                    <% else %>
+                                      <span class="badge bg-warning">❌</span>
+                                      <small>Not submitted</small>
+                                    <% end %>
+                                  </td>
+                                  <td>
+                                    <% if submission[:grade] > 0 %>
+                                      <span class="badge bg-primary"><%= submission[:grade] %></span>
+                                    <% else %>
+                                      <span class="text-muted">-</span>
+                                    <% end %>
+                                  </td>
+                                  <td>
+                                    <span class="badge bg-secondary"><%= submission[:attempts] %></span>
+                                  </td>
+                                </tr>
+                              <% end %>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <div class="alert alert-warning">
+                <h5>No Assignments Found</h5>
+                <p>No assignment data available for this subject. This could mean:</p>
+                <ul>
+                  <li>The course has no assignments</li>
+                  <li>No students are enrolled</li>
+                  <li>API access issues</li>
+                </ul>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="alert alert-secondary">
+              <h5>👆 Select a Subject</h5>
+              <p>Choose a subject from the dropdown above to view its assignments and submissions.</p>
+            </div>
+          <% end %>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

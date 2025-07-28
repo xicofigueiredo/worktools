@@ -1,0 +1,126 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title">📋 Detailed Assignment View - <%= @subject.name %></h3>
+          <%= link_to "← Back to Assignments", assignments_path, class: "btn btn-secondary" %>
+        </div>
+        <div class="card-body">
+
+          <div class="alert alert-info">
+            <strong>Subject:</strong> <%= @subject.name %>
+            <small>(Moodle Course ID: <%= @course_id %>)</small>
+          </div>
+
+          <% if @assignments_grouped&.any? %>
+            <% @assignments_grouped.each do |assignment_name, submissions| %>
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h4>📝 <%= assignment_name %></h4>
+                  <small class="text-muted">
+                    Due: <%= submissions.first[:due_date] %> |
+                    Max Grade: <%= submissions.first[:max_grade] %> |
+                    Max Attempts: <%= submissions.first[:max_attempts] %>
+                  </small>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Learner</th>
+                          <th>1st Submission</th>
+                          <th>1st Feedback</th>
+                          <th>1st Grade</th>
+                          <th>2nd Submission</th>
+                          <th>2nd Feedback</th>
+                          <th>2nd Grade</th>
+                          <th>Total Attempts</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% submissions.each do |submission| %>
+                          <tr>
+                            <td><strong><%= submission[:learner_name] %></strong></td>
+
+                            <!-- First Submission -->
+                            <td>
+                              <% if submission[:first_submission_date] != 'Not submitted' %>
+                                <span class="badge bg-success mb-1">✅</span><br>
+                                <small><%= submission[:first_submission_date] %></small>
+                              <% else %>
+                                <span class="badge bg-warning">❌ Not submitted</span>
+                              <% end %>
+                            </td>
+
+                            <!-- First Feedback -->
+                            <td>
+                              <% if submission[:first_feedback_date] != 'No feedback' %>
+                                <small><%= submission[:first_feedback_date] %></small>
+                              <% else %>
+                                <span class="text-muted">No feedback</span>
+                              <% end %>
+                            </td>
+
+                            <!-- First Grade -->
+                            <td>
+                              <% if submission[:first_grade] > 0 %>
+                                <span class="badge bg-primary"><%= submission[:first_grade] %></span>
+                              <% else %>
+                                <span class="text-muted">-</span>
+                              <% end %>
+                            </td>
+
+                            <!-- Second Submission -->
+                            <td>
+                              <% if submission[:second_submission_date] != 'No resubmission' %>
+                                <span class="badge bg-info mb-1">🔄</span><br>
+                                <small><%= submission[:second_submission_date] %></small>
+                              <% else %>
+                                <span class="text-muted">No resubmission</span>
+                              <% end %>
+                            </td>
+
+                            <!-- Second Feedback -->
+                            <td>
+                              <% if submission[:second_feedback_date] != 'No 2nd feedback' %>
+                                <small><%= submission[:second_feedback_date] %></small>
+                              <% else %>
+                                <span class="text-muted">No 2nd feedback</span>
+                              <% end %>
+                            </td>
+
+                            <!-- Second Grade -->
+                            <td>
+                              <% if submission[:second_grade] > 0 %>
+                                <span class="badge bg-success"><%= submission[:second_grade] %></span>
+                              <% else %>
+                                <span class="text-muted">-</span>
+                              <% end %>
+                            </td>
+
+                            <!-- Total Attempts -->
+                            <td>
+                              <span class="badge bg-secondary"><%= submission[:total_attempts] %></span>
+                            </td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="alert alert-warning">
+              <h5>No Assignment Data</h5>
+              <p>No detailed assignment data available for <%= @subject.name %>.</p>
+            </div>
+          <% end %>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
