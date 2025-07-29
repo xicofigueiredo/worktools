@@ -3,20 +3,33 @@ class AssignmentsController < ApplicationController
 
   def index
     # Get all subjects that have moodle_id (meaning they're connected to Moodle courses)
-    @subjects = Subject.where.not(moodle_id: nil).order(:name)
+    # Exclude subjects with "AS" in the name
+    @subjects = Subject.where.not(moodle_id: nil)
+                      .where.not("name ILIKE ?", "%AS%")
+                      .order(:name)
 
     if params[:moodle_id].present?
       @selected_subject = Subject.find_by(moodle_id: params[:moodle_id])
       @course_id = @selected_subject.moodle_id
 
-      # Get assignment data using our service
-      service = MoodleApiService.new
+      # Only fetch course data if explicitly requested OR if learner is being selected
+      if params[:load_course_data].present? || params[:learner_moodle_id].present?
+        service = MoodleApiService.new
 
-      # Use the safer method that handles errors better
-      @assignments_data = service.get_safe_assignments_from_activities(@course_id, max_users: 30)
+        # Get learners for the course
+        @course_learners = service.get_course_learners(@course_id)
+        @course_data_loaded = true
 
-      # Group by assignment for better display
-      @assignments_grouped = @assignments_data.group_by { |data| data[:assignment_name] }
+        # Only process assignment data if BOTH subject and learner are selected
+        if params[:learner_moodle_id].present?
+          @selected_learner = @course_learners.find { |l| l[:moodle_id].to_s == params[:learner_moodle_id].to_s }
+
+          if @selected_learner
+            # Get assignment data for ONLY this specific learner
+            @learner_assignment_data = service.get_learner_assignment_data(@course_id, params[:learner_moodle_id].to_i)
+          end
+        end
+      end
     end
   rescue => e
     flash[:alert] = "Error fetching assignments: #{e.message}"
@@ -29,15 +42,13 @@ class AssignmentsController < ApplicationController
 
     service = MoodleApiService.new
 
-    # Try to get organized data, but fall back to activities if needed
     begin
       @detailed_data = service.get_organized_assignment_data(@course_id)
     rescue => e
       puts "Organized data failed, trying activities fallback: #{e.message}"
-      @detailed_data = service.get_assignments_from_activities(@course_id, max_users: 50)
+      @detailed_data = service.get_assignments_from_activities(@course_id)
     end
 
-    # Group by assignment
     @assignments_grouped = @detailed_data.group_by { |data| data[:assignment_name] }
   rescue => e
     flash[:alert] = "Error fetching detailed assignments: #{e.message}"
@@ -50,7 +61,6 @@ class AssignmentsController < ApplicationController
 
     service = MoodleApiService.new
 
-    # Try standard API first, then fall back
     begin
       assignments = service.fetch_course_assignments(@course_id)
       @assignment_stats = assignments.map do |assignment|

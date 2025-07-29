@@ -1248,7 +1248,7 @@ def test_course_access(course_ids = [1, 2, 107, 128, 149])
 end
 
 # Get assignments only from courses that work
-def get_safe_assignments_from_activities(course_id, max_users: 20)
+def get_safe_assignments_from_activities(course_id, max_users: nil)
   puts "📋 Safely getting assignments from activities for course #{course_id}..."
 
   # First test if the course works with admin user
@@ -1264,9 +1264,13 @@ def get_safe_assignments_from_activities(course_id, max_users: 20)
   enrolled_users = get_enrolled_users(course_id)
   return [] unless enrolled_users.is_a?(Array) && enrolled_users.any?
 
-  # Limit users and filter out problematic users
+  # Filter out problematic users, but don't limit unless specified
   sample_users = enrolled_users.reject { |u| u['fullname'].include?('Guest') }
-                               .first(max_users)
+
+  # Only limit if max_users is specified
+  sample_users = sample_users.first(max_users) if max_users
+
+  puts "Processing #{sample_users.size} users (out of #{enrolled_users.size} total enrolled users)"
 
   all_results = []
 
@@ -1316,5 +1320,163 @@ def get_safe_assignments_from_activities(course_id, max_users: 20)
 
   puts "Found #{all_results.size} assignment records"
   all_results
+end
+
+# Add a batch processing method for large courses
+def get_all_assignments_from_activities_batched(course_id, batch_size: 100)
+  puts "📋 Getting ALL assignments from activities for course #{course_id} in batches..."
+
+  enrolled_users = get_enrolled_users(course_id)
+  return [] unless enrolled_users.is_a?(Array) && enrolled_users.any?
+
+  # Filter out problematic users
+  valid_users = enrolled_users.reject { |u| u['fullname'].include?('Guest') }
+
+  all_results = []
+
+  # Process in batches
+  valid_users.each_slice(batch_size) do |batch_users|
+    puts "Processing batch of #{batch_users.size} users..."
+
+    batch_users.each do |user|
+      user_id = user['id']
+      user_name = user['fullname']
+      user_email = user['email']
+
+      begin
+        activities = get_course_activities(course_id, user_id)
+
+        # Filter for assignment-like activities
+        assignments = activities.select do |activity|
+          activity[:submission_date].present? ||
+          activity[:evaluation_date].present? ||
+          activity[:name].downcase.include?('assignment') ||
+          activity[:name].downcase.include?('essay') ||
+          activity[:name].downcase.include?('project') ||
+          activity[:name].downcase.include?('mock') ||
+          (activity[:grade]&.to_f || 0) > 0 ||
+          (activity[:number_attempts]&.to_i || 0) > 0
+        end
+
+        assignments.each do |assignment|
+          all_results << {
+            assignment_name: assignment[:name],
+            learner_name: user_name,
+            learner_email: user_email,
+            submission_date: assignment[:submission_date].present? ? assignment[:submission_date] : 'No submission',
+            feedback_date: assignment[:evaluation_date].present? ? assignment[:evaluation_date] : 'No feedback',
+            grade: assignment[:grade]&.to_f || 0,
+            attempts: assignment[:number_attempts]&.to_i || 0,
+            section_name: assignment[:section_name],
+            ect: assignment[:ect]&.to_f || 0,
+            completion_status: assignment[:completiondata] == 1 ? "Completed" : "Not Completed"
+          }
+        end
+
+      rescue => e
+        puts "    ❌ Failed for user #{user_name}: #{e.message}"
+        next
+      end
+    end
+  end
+
+  puts "Found #{all_results.size} assignment records from #{valid_users.size} users"
+  all_results
+end
+
+# Get learners enrolled in a course (for dropdown)
+def get_course_learners(course_id)
+  puts "👥 Getting learners for course #{course_id}..."
+
+  enrolled_users = get_enrolled_users(course_id)
+  return [] unless enrolled_users.is_a?(Array) && enrolled_users.any?
+
+  # Filter out system users and format for dropdown
+  learners = enrolled_users.reject { |u| u['fullname'].include?('Guest') || u['fullname'].include?('Admin') }
+                          .map do |user|
+    {
+      moodle_id: user['id'],
+      name: user['fullname'],
+      email: user['email']
+    }
+  end.sort_by { |learner| learner[:name].downcase }  # Case-insensitive alphabetical sort
+
+  puts "Found #{learners.size} learners"
+  learners
+end
+
+# Get assignment summary for subject (fast version)
+def get_assignment_summary_for_subject(course_id, max_sample: 100)
+  puts "📊 Getting assignment summary for course #{course_id}..."
+
+  # Get a sample of assignment data (much faster)
+  sample_data = get_safe_assignments_from_activities(course_id, max_users: max_sample)
+  return {} if sample_data.empty?
+
+  # Group by assignment and calculate statistics
+  grouped = sample_data.group_by { |data| data[:assignment_name] }
+
+  summary = {}
+  grouped.each do |assignment_name, submissions|
+    total_participants = submissions.size
+    submitted_count = submissions.count { |s| s[:submission_date] != 'No submission' }
+    graded_count = submissions.count { |s| s[:grade] > 0 }
+    completed_count = submissions.count { |s| s[:completion_status] == 'Completed' }
+
+    grades = submissions.map { |s| s[:grade] }.select { |g| g > 0 }
+    average_grade = grades.any? ? (grades.sum / grades.size.to_f).round(2) : 0
+
+    summary[assignment_name] = {
+      total_participants: total_participants,
+      submitted_count: submitted_count,
+      graded_count: graded_count,
+      completed_count: completed_count,
+      average_grade: average_grade,
+      submissions: submissions,
+      section_name: submissions.first[:section_name]
+    }
+  end
+
+  summary
+end
+
+# Get specific learner's assignment data (only assignments with feedback)
+def get_learner_assignment_data(course_id, learner_moodle_id)
+  puts "👤 Getting assignment data for learner #{learner_moodle_id} in course #{course_id}..."
+
+  # Get activities for this specific learner
+  activities = get_course_activities(course_id, learner_moodle_id)
+
+  # Filter for assignment-like activities
+  assignments = activities.select do |activity|
+    activity[:submission_date].present? ||
+    activity[:evaluation_date].present? ||
+    activity[:name].downcase.include?('assignment') ||
+    activity[:name].downcase.include?('essay') ||
+    activity[:name].downcase.include?('project') ||
+    activity[:name].downcase.include?('mock') ||
+    (activity[:grade]&.to_f || 0) > 0 ||
+    (activity[:number_attempts]&.to_i || 0) > 0
+  end
+
+  # Convert to hash indexed by assignment name
+  learner_data = {}
+  assignments.each do |assignment|
+    feedback_date = assignment[:evaluation_date].present? ? assignment[:evaluation_date] : 'No feedback'
+
+    # Only include assignments that have feedback dates
+    if feedback_date != 'No feedback'
+      learner_data[assignment[:name]] = {
+        submission_date: assignment[:submission_date].present? ? assignment[:submission_date] : 'No submission',
+        feedback_date: feedback_date,
+        grade: assignment[:grade]&.to_f || 0,
+        attempts: assignment[:number_attempts]&.to_i || 0,
+        completion_status: assignment[:completiondata] == 1 ? "Completed" : "Not Completed"
+      }
+    end
+  end
+
+  puts "Found #{learner_data.size} assignments with feedback for learner"
+  learner_data
 end
 end
