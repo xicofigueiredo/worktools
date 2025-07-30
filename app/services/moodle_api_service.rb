@@ -32,33 +32,75 @@ class MoodleApiService
   end
 
   def get_course_activities(course_id, user_id)
-    response = call('local_wsbga_get_course', { courseid: course_id, userid: user_id })
+    response = call('core_course_get_contents', { courseid: course_id })
     total_ect = 0
+
     if response.is_a?(Array)
-      response.map do |activity|
-        total_ect += activity['ect'].to_f
-        {
-          id: activity['id'],
-          section_name: activity['section_name'],
-          section_visible: activity['section_visible'],
-          name: activity['name'],
-          modname: activity['modname'],
-          completion: activity['completion'],
-          completiondata: activity['completiondata'],
-          submission_date: activity['submission_date'],
-          evaluation_date: activity['evaluation_date'],
-          grade: activity['grade'],
-          number_attempts: activity['number_attempts'],
-          ect: activity['ect'],
-          mock50: activity['mock50'],
-          mock100: activity['mock100']
-        }
-        # puts "Total ECT: #{activity['ect']}"
-        # puts "name: #{activity['name']}"
+      activities = []
+
+      response.each do |section|
+        next unless section['modules'].is_a?(Array)
+
+        section['modules'].each do |module_item|
+          # Try to get ECT value from custom fields if they exist
+          ect_value = if module_item['customfields']
+            ect_field = module_item['customfields'].find { |f| f['shortname'] == 'ect' }
+            ect_field ? ect_field['value'].to_f : 0
+          else
+            0
+          end
+
+          total_ect += ect_value
+
+          # Get completion data for this user
+          completion_data = call('core_completion_get_activities_completion_status', {
+            courseid: course_id,
+            userid: user_id
+          })
+
+          # Find completion status for this module
+          completion_status = if completion_data && completion_data['statuses']
+            status = completion_data['statuses'].find { |s| s['cmid'] == module_item['id'] }
+            status ? status['state'] : 0
+          else
+            0
+          end
+
+          # Get grade if available
+          grade_data = call('gradereport_user_get_grade_items', {
+            courseid: course_id,
+            userid: user_id
+          })
+
+          grade = if grade_data && grade_data['usergrades']
+            grade_item = grade_data['usergrades'].first['gradeitems'].find { |g| g['cmid'] == module_item['id'] }
+            grade_item ? grade_item['graderaw'].to_f : 0
+          else
+            0
+          end
+
+          activities << {
+            id: module_item['id'],
+            section_name: section['name'],
+            section_visible: section['visible'],
+            name: module_item['name'],
+            modname: module_item['modname'],
+            completion: module_item['completion'],
+            completiondata: completion_status,
+            submission_date: nil, # We don't have this in the new API
+            evaluation_date: nil, # We don't have this in the new API
+            grade: grade,
+            number_attempts: 0, # We don't have this in the new API
+            ect: ect_value,
+            mock50: 0, # We don't have this in the new API
+            mock100: 0 # We don't have this in the new API
+          }
+        end
       end
-      # puts "Total ECT: #{total_ect}"
+
+      activities
     else
-      puts "Error fetching completed course activities: #{response}"
+      puts "Error fetching course contents: #{response}"
       []
     end
   end
