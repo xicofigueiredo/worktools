@@ -111,3 +111,6 @@ create_exam_finances:
 
 update_timelines:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake timelines:simulate_update"
+
+sync_moodle_users:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake moodle:sync_user_ids"
