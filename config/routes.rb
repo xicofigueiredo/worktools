@@ -192,4 +192,11 @@ Rails.application.routes.draw do
       end
     end
 
+    # Chat routes for AI tutor
+    resources :chats do
+      member do
+        post :send_message
+      end
+    end
+
 end

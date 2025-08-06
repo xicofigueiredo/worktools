@@ -12,7 +12,7 @@ development:
   encoding: unicode
   host: localhost
   port: 5434
-  database: worktoolsdb_production
+  database: worktoolsdb_production_copy
   username: <%= ENV["POSTGRES_USER"] %>
   password: <%= ENV["POSTGRES_PASSWORD"] %>
   # port: 5432

@@ -5,6 +5,7 @@ class Subject < ApplicationRecord
   has_many :user_topics
   has_many :timelines
   has_many :users, through: :timelines
+  has_many :chats, dependent: :destroy
 
   enum category: %i[lws7 lws8 lws9 igcse as al up lang other]
 

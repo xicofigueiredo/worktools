@@ -8,7 +8,7 @@ help: ## Show this help message.
 
 ##@ build
 deploy: ## Build and deploy the application.
-	docker compose	 up -d --remove-orphans --build
+	docker compose up -d --remove-orphans --build
 
 migrate: ## Run database migrations.
 	docker compose run server rails db:migrate
