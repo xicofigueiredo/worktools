@@ -253,6 +253,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const message = messageInput.value.trim();
     if (!message) return;
 
+    // Create FormData BEFORE clearing the input
+    const formData = new FormData(messageForm);
+
     // Disable form while processing
     messageInput.disabled = true;
     sendButton.disabled = true;
@@ -268,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Send AJAX request
     fetch(messageForm.action, {
       method: 'POST',
-      body: new FormData(messageForm),
+      body: formData,
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json'

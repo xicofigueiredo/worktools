@@ -182,7 +182,7 @@ If the student is struggling (negative progress balance), offer additional suppo
 ## API Configuration
 
 ### OpenAI Settings
-- Model: `gpt-3.5-turbo`
+- Model: `gpt-4o-mini`
 - Max tokens: 500
 - Temperature: 0.7
 - Message history: Last 10 messages (to stay within token limits)
