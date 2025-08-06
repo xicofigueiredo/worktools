@@ -1,7 +1,7 @@
-<div class="container-fluid h-100">
-  <div class="row h-100">
+<div class="container-fluid" style="height: 100vh; overflow: hidden;">
+  <div class="row" style="height: 100vh;">
     <!-- Sidebar for chat history -->
-    <div class="col-md-3 bg-light border-end h-100 d-flex flex-column">
+    <div class="col-md-3 bg-light border-end d-flex flex-column" style="height: 100vh;">
       <div class="p-3 border-bottom">
         <h5 class="mb-3">
           <%= link_to chats_path, class: "text-decoration-none" do %>
@@ -51,9 +51,9 @@
     </div>
 
     <!-- Main chat area -->
-    <div class="col-md-9 h-100 d-flex flex-column">
-      <!-- Chat header -->
-      <div class="border-bottom p-3">
+    <div class="col-md-9 d-flex flex-column" style="height: 100vh; position: relative;">
+      <!-- Chat header - Fixed height -->
+      <div class="border-bottom p-3" style="flex-shrink: 0;">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <h4 class="mb-1">
@@ -74,8 +74,8 @@
         </div>
       </div>
 
-      <!-- Messages area -->
-      <div id="chat-messages" class="flex-grow-1 overflow-auto p-3" style="height: calc(100vh - 200px);">
+      <!-- Messages area - Flexible height with bottom padding for fixed input -->
+      <div id="chat-messages" class="flex-grow-1 overflow-auto p-3" style="min-height: 0; padding-bottom: 100px !important;">
         <% if @messages.any? %>
           <% @messages.each do |message| %>
             <div class="message-container mb-3 <%= message.user_message? ? 'user-message' : 'assistant-message' %>">
@@ -111,27 +111,27 @@
           </div>
         <% end %>
       </div>
-
-      <!-- Message input -->
-      <div class="border-top p-3">
-        <%= form_with url: send_message_chat_path(@chat), method: :post,
-            local: false,
-            id: "message-form",
-            data: { turbo: false } do |form| %>
-          <div class="input-group">
-            <%= form.text_field :message,
-                placeholder: "Type your question about #{@chat.subject.name}...",
-                class: "form-control",
-                id: "message-input",
-                autocomplete: "off" %>
-            <%= form.submit "Send",
-                class: "btn btn-primary",
-                id: "send-button" %>
-          </div>
-        <% end %>
-      </div>
     </div>
   </div>
+</div>
+
+<!-- Message input - Fixed to bottom of screen -->
+<div id="message-input-container" style="position: fixed; bottom: 0; right: 0; width: 75%; background-color: white; border-top: 1px solid #dee2e6; padding: 15px; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
+  <%= form_with url: send_message_chat_path(@chat), method: :post,
+      local: false,
+      id: "message-form",
+      data: { turbo: false } do |form| %>
+    <div class="input-group">
+      <%= form.text_field :message,
+          placeholder: "Type your question about #{@chat.subject.name}...",
+          class: "form-control",
+          id: "message-input",
+          autocomplete: "off" %>
+      <%= form.submit "Send",
+          class: "btn btn-primary",
+          id: "send-button" %>
+    </div>
+  <% end %>
 </div>
 
 <!-- Custom CSS -->
@@ -180,6 +180,50 @@
 
   #chat-messages {
     scroll-behavior: smooth;
+  }
+
+  /* Fixed input container styles */
+  #message-input-container {
+    transition: all 0.3s ease;
+  }
+
+  #message-input-container:hover {
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    #message-input-container {
+      width: 100% !important;
+      left: 0 !important;
+      right: 0 !important;
+    }
+
+    #chat-messages {
+      padding-bottom: 120px !important;
+    }
+  }
+
+  @media (min-width: 769px) {
+    #message-input-container {
+      width: 75% !important;
+    }
+  }
+
+  /* Focus styles */
+  #message-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    border-color: #86b7fe;
+  }
+
+  /* Send button hover effect */
+  #send-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+  }
+
+  #send-button:active {
+    transform: translateY(0);
   }
 </style>
 
@@ -264,6 +308,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // Handle input focus when clicking anywhere in the input container
+  document.getElementById('message-input-container').addEventListener('click', function(e) {
+    if (e.target !== messageInput && e.target !== sendButton) {
+      messageInput.focus();
+    }
+  });
+
   function addMessageToChat(role, content) {
     const messageContainer = document.createElement('div');
     messageContainer.className = `message-container mb-3 ${role}-message`;
@@ -293,7 +344,11 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     chatMessages.appendChild(messageContainer);
-    scrollToBottom();
+
+    // Smooth scroll to bottom
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
   }
 
   function addTypingIndicator() {
@@ -317,7 +372,9 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     chatMessages.appendChild(typingIndicator);
-    scrollToBottom();
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
   }
 
   function removeTypingIndicator() {

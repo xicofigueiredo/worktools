@@ -1,9 +1,17 @@
 # OpenAI Configuration
-Rails.application.config.after_initialize do
-  # Set default OpenAI client configuration
-  OpenAI.configure do |config|
-    config.access_token = Rails.application.credentials.openai_api_key || ENV['OPENAI_API_KEY']
-    config.organization_id = Rails.application.credentials.openai_organization_id || ENV['OPENAI_ORGANIZATION_ID'] # Optional
-    config.log_errors = Rails.env.development? # Only log errors in development
+# The openai gem doesn't use a configure block in recent versions
+# Configuration is handled through environment variables or client initialization
+
+# Set OpenAI access token as environment variable if not already set
+unless ENV['OPENAI_ACCESS_TOKEN'] || ENV['OPENAI_API_KEY']
+  if Rails.application.credentials.openai_api_key
+    ENV['OPENAI_ACCESS_TOKEN'] = Rails.application.credentials.openai_api_key
+  end
+end
+
+# Set organization ID if available
+unless ENV['OPENAI_ORGANIZATION_ID']
+  if Rails.application.credentials.openai_organization_id
+    ENV['OPENAI_ORGANIZATION_ID'] = Rails.application.credentials.openai_organization_id
   end
 end

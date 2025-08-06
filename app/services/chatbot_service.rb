@@ -3,7 +3,10 @@ class ChatbotService
 
   def initialize(chat)
     @chat = chat
-    @openai_client = OpenAI::Client.new(access_token: Rails.application.credentials.openai_api_key)
+    @openai_client = OpenAI::Client.new(
+      access_token: Rails.application.credentials.openai_api_key || ENV['OPENAI_API_KEY'] || ENV['OPENAI_ACCESS_TOKEN'],
+      organization_id: Rails.application.credentials.openai_organization_id || ENV['OPENAI_ORGANIZATION_ID']
+    )
   end
 
   def generate_response(user_message)
