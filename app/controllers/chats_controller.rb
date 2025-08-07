@@ -6,21 +6,22 @@ class ChatsController < ApplicationController
   def index
     @chats = current_user.chats.includes(:subject, :chat_messages).order(updated_at: :desc)
     @current_chat = @chats.first
-    @subjects = Subject.all.order(:name)
   end
 
   def show
-    @subjects = Subject.all.order(:name)
     @messages = @chat.chat_messages.in_order.includes(:chat)
   end
 
   def create
     @subject = Subject.find(params[:subject_id])
 
-    # Always create a new chat session for subject changes
-    @chat = Chat.find_or_create_for_user_and_subject(current_user, @subject)
-
-    redirect_to @chat
+    begin
+      # Always create a new chat session for subject changes
+      @chat = Chat.find_or_create_for_user_and_subject(current_user, @subject)
+      redirect_to @chat
+    rescue ArgumentError => e
+      redirect_to chats_path, alert: e.message
+    end
   end
 
   def send_message
@@ -76,7 +77,21 @@ class ChatsController < ApplicationController
   end
 
   def set_subjects
-    @subjects = Subject.all.order(:name)
+    # Only show subjects where the user has active (non-hidden) timelines
+    timeline_subject_ids = current_user.timelines
+                                      .where(hidden: [false, nil])
+                                      .pluck(:subject_id)
+                                      .compact
+
+    moodle_timeline_subject_ids = current_user.moodle_timelines
+                                             .where(hidden: [false, nil])
+                                             .pluck(:subject_id)
+                                             .compact
+
+    # Combine both regular and moodle timeline subject IDs
+    active_subject_ids = (timeline_subject_ids)
+
+    @subjects = Subject.where(id: active_subject_ids).order(:name)
   end
 
   def authorize_chat_access!

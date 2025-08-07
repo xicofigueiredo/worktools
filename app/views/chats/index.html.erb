@@ -8,10 +8,17 @@
         <!-- Subject Selection -->
         <%= form_with url: chats_path, method: :post, local: true, class: "mb-3" do |form| %>
           <div class="mb-2">
-            <%= form.select :subject_id,
-                options_from_collection_for_select(@subjects, :id, :name),
-                { prompt: "Select a subject to start chatting..." },
-                { class: "form-select", onchange: "this.form.submit();" } %>
+            <% if @subjects.any? %>
+              <%= form.select :subject_id,
+                  options_from_collection_for_select(@subjects, :id, :name),
+                  {},
+                  { class: "form-select", onchange: "this.form.submit();" } %>
+            <% else %>
+              <select class="form-select" disabled>
+                <option>No active subjects available</option>
+              </select>
+              <small class="text-muted">You need an active timeline to access AI tutoring for a subject.</small>
+            <% end %>
           </div>
         <% end %>
       </div>

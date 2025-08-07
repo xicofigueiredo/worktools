@@ -8,6 +8,14 @@ class Chat < ApplicationRecord
   scope :for_user_and_subject, ->(user, subject) { where(user: user, subject: subject) }
 
   def self.find_or_create_for_user_and_subject(user, subject)
+    # Validate that user has an active timeline for this subject
+    has_active_timeline = user.timelines.where(subject: subject, hidden: [false, nil]).exists? ||
+                         user.moodle_timelines.where(subject_id: subject.id, hidden: [false, nil]).exists?
+
+    unless has_active_timeline
+      raise ArgumentError, "User does not have an active timeline for #{subject.name}"
+    end
+
     # Create a new chat session when subject changes
     system_prompt = generate_system_prompt(user, subject)
 
