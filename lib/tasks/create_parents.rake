@@ -3,7 +3,7 @@ require 'csv'
 namespace :db do
   desc "Create or update parent accounts in bulk from a CSV file"
   task create_parents: :environment do
-    file_path = 'lib/tasks/parents.csv' # Adjust the path as necessary
+    file_path = 'lib/tasks/parentss.csv' # Adjust the path as necessary
 
     # Method to create or update a parent account
     create_parent_method = lambda do |name, email, password, kid_email|
@@ -16,6 +16,9 @@ namespace :db do
 
       if kid && kid.deactivate?
         puts "Kid with email #{kid_email} is deactivated, skipping parent creation for #{email}."
+        return
+      elsif kid.nil?
+        puts "Kid with email #{kid_email} not found, skipping parent creation for #{email}."
         return
       end
 
@@ -56,20 +59,20 @@ namespace :db do
 
     # Process each row in the CSV
     CSV.foreach(file_path, headers: true) do |row|
-      next if row['Institutional Email'].blank? || row['Parent 1'].blank? || row['Email 1'].blank?
+      next if row['InstitutionalEmail'].blank? || row['Parent 1 - Full Name (Section 6)'].blank? || row['Parent 1 - Email (6)'].blank?
 
-      kid_email = row['Institutional Email'].strip.downcase
+      kid_email = row['InstitutionalEmail'].strip.downcase
 
       # Create or update the first parent
-      parent1_name = row['Parent 1'].strip
-      parent1_email = row['Email 1'].strip.downcase
+      parent1_name = row['Parent 1 - Full Name (Section 6)'].strip
+      parent1_email = row['Parent 1 - Email (6)'].strip.downcase
       parent1_password = SecureRandom.hex(8)
       create_parent_method.call(parent1_name, parent1_email, parent1_password, kid_email)
 
       # Create or update the second parent if present
-      if row['Parent 2'].present? && row['Email 2'].present?
-        parent2_name = row['Parent 2'].strip
-        parent2_email = row['Email 2'].strip.downcase
+      if row['Parent 2 - Full Name (Section 6)'].present? && row['Parent 2 - Email (6)'].present?
+        parent2_name = row['Parent 2 - Full Name (Section 6)'].strip
+        parent2_email = row['Parent 2 - Email (6)'].strip.downcase
         parent2_password = SecureRandom.hex(8)
         create_parent_method.call(parent2_name, parent2_email, parent2_password, kid_email)
       end
