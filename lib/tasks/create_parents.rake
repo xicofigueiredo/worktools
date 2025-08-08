@@ -5,6 +5,19 @@ namespace :db do
   task create_parents: :environment do
     file_path = 'lib/tasks/parentss.csv' # Adjust the path as necessary
 
+
+
+
+
+    #NEED TO FILTER THE KIDS THAT ARE NOT ACTIVE OR GRADUATED
+
+
+
+
+
+
+
+
     # Method to create or update a parent account
     create_parent_method = lambda do |name, email, password, kid_email|
       return if email.blank? || password.blank? || kid_email.blank?
