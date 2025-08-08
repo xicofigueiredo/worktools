@@ -2,6 +2,9 @@ class MoodleApiService
   def initialize
     @base_url = ENV['MOODLE_API_BASE_URL']
     @token    = ENV['MOODLE_API_TOKEN']
+    # Simple in-memory cache with 5-minute expiration
+    @cache = {}
+    @cache_duration = 0.minutes
   end
 
   def call(function_name, params = {})
@@ -32,75 +35,52 @@ class MoodleApiService
   end
 
   def get_course_activities(course_id, user_id)
-    response = call('core_course_get_contents', { courseid: course_id })
-    total_ect = 0
+    # Check cache first
+    cache_key = "course_activities_#{course_id}_#{user_id}"
+    cached_result = get_from_cache(cache_key)
+    return cached_result if cached_result
+
+    # Use the custom API that includes ECT values (when available)
+    response = call('local_wsbga_get_course', { courseid: course_id, userid: user_id })
 
     if response.is_a?(Array)
       activities = []
 
-      response.each do |section|
-        next unless section['modules'].is_a?(Array)
-
-        section['modules'].each do |module_item|
-          # Try to get ECT value from custom fields if they exist
-          ect_value = if module_item['customfields']
-            ect_field = module_item['customfields'].find { |f| f['shortname'] == 'ect' }
-            ect_field ? ect_field['value'].to_f : 0
-          else
-            0
-          end
-
-          total_ect += ect_value
-
-          # Get completion data for this user
-          completion_data = call('core_completion_get_activities_completion_status', {
-            courseid: course_id,
-            userid: user_id
-          })
-
-          # Find completion status for this module
-          completion_status = if completion_data && completion_data['statuses']
-            status = completion_data['statuses'].find { |s| s['cmid'] == module_item['id'] }
-            status ? status['state'] : 0
-          else
-            0
-          end
-
-          # Get grade if available
-          grade_data = call('gradereport_user_get_grade_items', {
-            courseid: course_id,
-            userid: user_id
-          })
-
-          grade = if grade_data && grade_data['usergrades']
-            grade_item = grade_data['usergrades'].first['gradeitems'].find { |g| g['cmid'] == module_item['id'] }
-            grade_item ? grade_item['graderaw'].to_f : 0
-          else
-            0
-          end
-
-          activities << {
-            id: module_item['id'],
-            section_name: section['name'],
-            section_visible: section['visible'],
-            name: module_item['name'],
-            modname: module_item['modname'],
-            completion: module_item['completion'],
-            completiondata: completion_status,
-            submission_date: nil, # We don't have this in the new API
-            evaluation_date: nil, # We don't have this in the new API
-            grade: grade,
-            number_attempts: 0, # We don't have this in the new API
-            ect: ect_value,
-            mock50: 0, # We don't have this in the new API
-            mock100: 0 # We don't have this in the new API
-          }
+      response.each do |activity|
+        # ECT might be provided by the custom API (optional field)
+        # Use provided ECT if available, otherwise estimate based on activity type
+        ect_value = if activity['ect'].present?
+          activity['ect'].to_f
+        else
+          estimate_ect_by_activity_type(activity['modname'], activity['name'])
         end
+
+        activities << {
+          id: activity['id'],
+          section_name: activity['section_name'],
+          section_visible: activity['section_visible'],
+          name: activity['name'],
+          modname: activity['modname'],
+          ect: ect_value,
+          visible: activity['visible'] == 1,
+          availabilityinfo: activity['availabilityinfo'] || "No restrictions",
+          description: activity['description'] || "",
+          url: activity['url'] || "",
+          completiondata: activity['completiondata'] || 0,
+          grade: activity['grade'] || 0,
+          mock50: activity['mock50'] || 0,
+          mock100: activity['mock100'] || 0,
+          number_attempts: activity['number_attempts'] || 0,
+          submission_date: activity['submission_date'] || "",
+          evaluation_date: activity['evaluation_date'] || ""
+        }
       end
 
+      # Store in cache
+      store_in_cache(cache_key, activities)
       activities
     else
-      puts "Error fetching course contents: #{response}"
+      Rails.logger.error "Error fetching course activities: #{response}"
       []
     end
   end
@@ -194,7 +174,7 @@ class MoodleApiService
 
 
           MoodleTopic.find_by(timeline: timeline, moodle_id: activity[:id]).update!(
-            time: activity[:ect].to_f || 1,
+            time: activity[:ect].to_f || 0.01,
             name: activity[:name],
             unit: activity[:section_name],
             order: index + 1,
@@ -1521,4 +1501,67 @@ def get_learner_assignment_data(course_id, learner_moodle_id)
   puts "Found #{learner_data.size} assignments with feedback for learner"
   learner_data
 end
+
+  private
+
+  def get_from_cache(key)
+    cached_data = @cache[key]
+    return nil unless cached_data
+
+    # Check if cache is expired
+    if Time.current > cached_data[:expires_at]
+      @cache.delete(key)
+      return nil
+    end
+
+    cached_data[:data]
+  end
+
+  def store_in_cache(key, data)
+    @cache[key] = {
+      data: data,
+      expires_at: Time.current + @cache_duration
+    }
+
+    # Clean up expired entries occasionally
+    cleanup_cache if @cache.size > 100
+  end
+
+  def cleanup_cache
+    @cache.delete_if { |_, cached_data| Time.current > cached_data[:expires_at] }
+  end
+
+  # Estimate ECT based on activity type since Moodle APIs don't provide it
+  def estimate_ect_by_activity_type(modname, activity_name)
+    case modname&.downcase
+    when 'assign', 'assignment'
+      2.0  # Assignments typically take 2 hours
+    when 'quiz'
+      1.5  # Quizzes typically take 1.5 hours
+    when 'forum'
+      0.5  # Forum posts typically take 30 minutes
+    when 'page', 'resource', 'url'
+      0.25 # Reading materials typically take 15 minutes
+    when 'book'
+      1.0  # Books typically take 1 hour
+    when 'lesson'
+      1.5  # Lessons typically take 1.5 hours
+    when 'workshop'
+      3.0  # Workshops typically take 3 hours
+    when 'wiki'
+      1.0  # Wiki activities typically take 1 hour
+    else
+      # Check activity name for clues
+      name_lower = activity_name&.downcase || ""
+      if name_lower.include?('mock') || name_lower.include?('exam')
+        2.5  # Mock exams typically take 2.5 hours
+      elsif name_lower.include?('essay') || name_lower.include?('coursework')
+        4.0  # Essays/coursework typically take 4 hours
+      elsif name_lower.include?('read') || name_lower.include?('video')
+        0.5  # Reading/video typically takes 30 minutes
+      else
+        1.0  # Default to 1 hour for unknown activity types
+      end
+    end
+  end
 end

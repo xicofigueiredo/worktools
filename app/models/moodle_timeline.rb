@@ -243,34 +243,48 @@ class MoodleTimeline < ApplicationRecord
     if self.subject_id != 80
       user_id = self.user.moodle_id
       course_id = self.moodle_id
+
+      # Get all activities in one API call (now optimized)
       completed_activities = MoodleApiService.new.get_course_activities(course_id, user_id)
+
+      # Get all moodle_topics for this timeline in one query to avoid N+1
+      existing_topics = self.moodle_topics.index_by(&:moodle_id)
+
+      # Prepare bulk updates
+      topics_to_update = []
 
       completed_activities.each do |activity|
         next if activity[:section_visible] == 0
 
-        moodle_topic = self.moodle_topics.find_by(moodle_id: activity[:id])
+        moodle_topic = existing_topics[activity[:id]]
         next unless moodle_topic
 
-        moodle_topic.update!(
+        # Prepare update attributes
+        update_attrs = {
           grade: activity[:grade],
           done: activity[:completiondata] == 1,
-          completion_date: begin
-            if activity[:evaluation_date].present?
-              DateTime.parse(activity[:evaluation_date])
-            else
-              nil
-            end
-          rescue Date::Error => e
-            puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
-            nil
-          end,
+          completion_date: parse_evaluation_date(activity[:evaluation_date]),
           number_attempts: activity[:number_attempts],
-          submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
-          evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
-          completion_data: Time.at(activity[:completiondata].to_i).strftime("%d/%m/%Y %H:%M")
-        )
+          submission_date: format_timestamp(activity[:submission_date]),
+          evaluation_date: format_timestamp(activity[:evaluation_date]),
+          completion_data: format_timestamp(activity[:completiondata]),
+          time: activity[:ect] || 1  # Add ECT/time field to updates
+        }
+
+        topics_to_update << { topic: moodle_topic, attrs: update_attrs }
       end
+
+      # Perform bulk updates with error handling
+      topics_to_update.each do |update_data|
+        begin
+          update_data[:topic].update!(update_data[:attrs])
+        rescue => e
+          Rails.logger.error "Failed to update moodle_topic #{update_data[:topic].id}: #{e.message}"
+        end
+      end
+
     else
+      # Handle subject_id == 80 case (unchanged)
       user_id = self.user.moodle_id
       course_id = self.moodle_id
 
@@ -401,5 +415,29 @@ class MoodleTimeline < ApplicationRecord
 
   def progress_and_expected_progress_present?
     progress.present? && expected_progress.present?
+  end
+
+  private
+
+  def parse_evaluation_date(date_value)
+    return nil unless date_value.present?
+
+    begin
+      DateTime.parse(date_value)
+    rescue Date::Error => e
+      Rails.logger.warn "Warning: Invalid date format: #{date_value}"
+      nil
+    end
+  end
+
+  def format_timestamp(timestamp)
+    return nil unless timestamp.present? && timestamp.to_i > 0
+
+    begin
+      Time.at(timestamp.to_i).strftime("%d/%m/%Y %H:%M")
+    rescue => e
+      Rails.logger.warn "Warning: Invalid timestamp: #{timestamp}"
+      nil
+    end
   end
 end
