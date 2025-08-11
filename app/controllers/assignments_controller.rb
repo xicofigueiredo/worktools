@@ -87,4 +87,89 @@ class AssignmentsController < ApplicationController
     flash[:alert] = "Error fetching assignment statistics: #{e.message}"
     redirect_to assignments_path
   end
+
+  def monthly_submissions
+    @subject = Subject.find_by(moodle_id: params[:moodle_id])
+    @course_id = @subject.moodle_id
+
+    service = MoodleApiService.new
+
+    begin
+      # Use the much faster method that makes fewer API calls
+      # This gets assignment data for ALL users now
+      all_submissions = service.get_safe_assignments_from_activities(@course_id)
+
+      # DEBUG: Let's see what we're getting
+      Rails.logger.info "=== MONTHLY SUBMISSIONS DEBUG ==="
+      Rails.logger.info "Course ID: #{@course_id}"
+      Rails.logger.info "Total submissions found: #{all_submissions.count}"
+      Rails.logger.info "Sample submissions: #{all_submissions.first(3).inspect}" if all_submissions.any?
+
+      # Check submission dates
+      submission_dates = all_submissions.map { |s| s[:submission_date] }.uniq
+      Rails.logger.info "Unique submission dates: #{submission_dates.first(10)}"
+
+      # Create monthly statistics from Jan 2022 to current month
+      @monthly_stats = []
+      start_date = Date.new(2022, 1, 1)
+      current_month = start_date.beginning_of_month
+      end_date = Date.current.end_of_month
+
+      while current_month <= end_date
+        # Count submissions for this month
+        month_submissions = all_submissions.select do |submission|
+          submission_date = parse_submission_date(submission[:submission_date])
+          submission_date &&
+          submission_date.year == current_month.year &&
+          submission_date.month == current_month.month
+        end
+
+        Rails.logger.info "#{current_month.strftime('%b %Y')}: #{month_submissions.count} submissions" if month_submissions.any?
+
+        @monthly_stats << {
+          month: current_month.strftime("%b %y"),
+          full_month: current_month.strftime("%B %Y"),
+          submissions_count: month_submissions.count
+        }
+
+        current_month = current_month.next_month
+      end
+
+      # DEBUG: Show total breakdown
+      Rails.logger.info "=== FINAL STATS ==="
+      Rails.logger.info "Total months: #{@monthly_stats.count}"
+      Rails.logger.info "Total submissions across all months: #{@monthly_stats.sum { |s| s[:submissions_count] }}"
+
+    rescue => e
+      Rails.logger.error "Error in monthly_submissions: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      flash[:alert] = "Error fetching monthly submissions: #{e.message}"
+      redirect_to assignments_path
+    end
+  end
+
+  private
+
+  def parse_submission_date(date_string)
+    return nil if date_string.blank? || date_string == 'No submission'
+
+    begin
+      # First, check if it's a Unix timestamp (most common case)
+      if date_string.match(/^\d+$/) && date_string.to_i > 0
+        return Time.at(date_string.to_i).to_datetime
+      end
+
+      # Handle formatted date strings
+      if date_string.match(/\d{2} \w+ \d{4}, \d{2}:\d{2}/)
+        DateTime.parse(date_string)
+      elsif date_string.match(/\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/)
+        DateTime.strptime(date_string, "%d/%m/%Y %H:%M")
+      else
+        DateTime.parse(date_string)
+      end
+    rescue => e
+      Rails.logger.warn "Failed to parse date: #{date_string} - #{e.message}"
+      nil
+    end
+  end
 end
