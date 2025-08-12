@@ -40,6 +40,19 @@
 
               <div class="col-md-3">
                 <% if params[:moodle_id].present? %>
+                  <%= link_to "Local Monthly Submissions",
+                      monthly_submissions_local_assignments_path(moodle_id: params[:moodle_id]),
+                      class: "btn btn-dark",
+                      target: "_blank" %>
+                <% else %>
+                  <button class="btn btn-dark" disabled>
+                    Local Monthly Submissions
+                  </button>
+                <% end %>
+              </div>
+
+              <div class="col-md-3">
+                <% if params[:moodle_id].present? %>
                   <%= link_to "Sync Assignments",
                       sync_assignments_path(moodle_id: params[:moodle_id]),
                       data: { turbo_method: :post },

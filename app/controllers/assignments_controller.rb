@@ -159,9 +159,13 @@ class AssignmentsController < ApplicationController
     current_month = start_date
     while current_month <= end_date
       next_month = current_month.next_month
+      # Base scope: this subject, submissions in this month, and never before Jan 2022
       month_scope = Assignment.where(subject_id: @subject.id)
                               .where.not(submission_date: nil)
+                              .where('submission_date >= ?', start_date)
                               .where(submission_date: current_month...next_month)
+      # Exclude auto-graded/instant corrections (< 5 minutes between submission and feedback)
+      month_scope = month_scope.where("evaluation_date IS NULL OR evaluation_date - submission_date >= interval '5 minutes'")
 
       submissions_count = month_scope.count
       unique_learners = month_scope.distinct.count(:user_id)
@@ -169,13 +173,25 @@ class AssignmentsController < ApplicationController
       grades_scope = month_scope.where.not(grade: nil)
       avg_grade = grades_scope.any? ? (grades_scope.average(:grade).to_f.round(2)) : 0
 
+      # SLA average in business days (only for records that have feedback)
+      sla_scope = month_scope.where.not(evaluation_date: nil)
+                             .where('evaluation_date >= ?', start_date)
+      total_sla_days = 0.0
+      sla_count = 0
+      sla_scope.find_each(batch_size: 1000) do |rec|
+        total_sla_days += business_days_between(rec.submission_date, rec.evaluation_date)
+        sla_count += 1
+      end
+      avg_sla_days = sla_count.positive? ? (total_sla_days / sla_count.to_f).round(2) : 0.0
+
       @monthly_stats << {
         month: current_month.strftime('%b %y'),
         full_month: current_month.strftime('%B %Y'),
         submissions_count: submissions_count,
         unique_learners: unique_learners,
         assignments_with_submissions: assignments_with_submissions,
-        average_grade: avg_grade
+        average_grade: avg_grade,
+        avg_sla_days: avg_sla_days
       }
 
       current_month = next_month
@@ -279,5 +295,29 @@ class AssignmentsController < ApplicationController
       Rails.logger.warn "Failed to parse date: #{date_string} - #{e.message}"
       nil
     end
+  end
+
+  # Exact business-day difference (Mon-Fri), expressed in days with decimals
+  def business_days_between(start_time, end_time)
+    return 0.0 if start_time.blank? || end_time.blank?
+    return 0.0 if end_time <= start_time
+
+    total_seconds = 0
+    day_cursor = start_time.beginning_of_day
+    last_day = end_time.beginning_of_day
+
+    while day_cursor <= last_day
+      # Only count Monday-Friday
+      unless day_cursor.saturday? || day_cursor.sunday?
+        day_start = [day_cursor, start_time].max
+        day_end = [day_cursor.end_of_day, end_time].min
+        if day_end > day_start
+          total_seconds += (day_end - day_start)
+        end
+      end
+      day_cursor = day_cursor + 1.day
+    end
+
+    (total_seconds.to_f / 86_400.0)
   end
 end
