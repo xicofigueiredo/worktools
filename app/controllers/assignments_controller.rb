@@ -209,7 +209,7 @@ class AssignmentsController < ApplicationController
       # Fetch course-level assignments once
       assignments = service.fetch_course_assignments(course_id)
       if assignments.blank?
-        return redirect_to assignments_path(moodle_id: @subject.moodle_id, load_course_data: 1), alert: "No assignments returned from Moodle for course ##{course_id}"
+        return redirect_to assignments_path(moodle_id: @subject.moodle_id, load_course_data: 1), alert: "No new assignments returned from Moodle for course ##{course_id}"
       end
 
       # Fetch all enrolled users in the course
@@ -301,6 +301,12 @@ class AssignmentsController < ApplicationController
   def business_days_between(start_time, end_time)
     return 0.0 if start_time.blank? || end_time.blank?
     return 0.0 if end_time <= start_time
+
+    # If evaluation is on weekend, count up to next Monday 00:00:01
+    if end_time.saturday? || end_time.sunday?
+      next_monday = end_time.to_date.next_week(:monday)
+      end_time = next_monday.beginning_of_day + 1.second
+    end
 
     total_seconds = 0
     day_cursor = start_time.beginning_of_day
