@@ -191,10 +191,21 @@ class AssignmentsController < ApplicationController
         unique_learners: unique_learners,
         assignments_with_submissions: assignments_with_submissions,
         average_grade: avg_grade,
-        avg_sla_days: avg_sla_days
+        avg_sla_days: avg_sla_days,
+        sla_count: sla_count
       }
 
       current_month = next_month
+    end
+
+    # Backend-computed totals/averages for the view
+    @total_submissions = @monthly_stats.sum { |s| s[:submissions_count].to_i }
+    @avg_submissions_per_month = (@monthly_stats.sum { |s| s[:submissions_count] } / @monthly_stats.count { |s| s[:submissions_count] > 0 }.to_f).round(1) rescue 0
+    sla_months = @monthly_stats.select { |s| s[:sla_count].to_i > 0 }
+    @avg_sla_per_month = if sla_months.any?
+      (sla_months.sum { |s| s[:avg_sla_days].to_f } / sla_months.size.to_f).round(2)
+    else
+      0.0
     end
   end
 

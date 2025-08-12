@@ -60,7 +60,7 @@
             <div class="col-md-4">
               <div class="card bg-gradient-info">
                 <div class="card-body text-dark text-center">
-                  <h4 class="text-dark"><%= @monthly_stats.sum { |s| s[:submissions_count] } %></h4>
+                  <h4 class="text-dark"><%= @total_submissions %></h4>
                   <p class="mb-0 text-dark">Total Submissions</p>
                 </div>
               </div>
@@ -68,16 +68,16 @@
             <div class="col-md-4">
               <div class="card bg-gradient-success">
                 <div class="card-body text-dark text-center">
-                  <h4 class="text-dark"><%= @monthly_stats.count { |s| s[:submissions_count] > 0 } %></h4>
-                  <p class="mb-0 text-dark">Active Months</p>
+                  <h4 class="text-dark"><%= @avg_submissions_per_month %></h4>
+                  <p class="mb-0 text-dark">Avg Submissions per Month</p>
                 </div>
               </div>
             </div>
             <div class="col-md-4">
               <div class="card bg-gradient-warning">
                 <div class="card-body text-dark text-center">
-                  <h4 class="text-dark"><%= (@monthly_stats.sum { |s| s[:submissions_count] } / @monthly_stats.count { |s| s[:submissions_count] > 0 }.to_f).round(1) rescue 0 %></h4>
-                  <p class="mb-0 text-dark">Avg per Active Month</p>
+                  <h4 class="text-dark"><%= @avg_sla_per_month %></h4>
+                  <p class="mb-0 text-dark">Avg SLA per Month</p>
                 </div>
               </div>
             </div>
