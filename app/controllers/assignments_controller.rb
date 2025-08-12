@@ -116,6 +116,11 @@ class AssignmentsController < ApplicationController
       end_date = Date.current.end_of_month
 
       while current_month <= end_date
+        # Skip July and August 2025
+        if current_month.year == 2025 && [7, 8].include?(current_month.month)
+          current_month = current_month.next_month
+          next
+        end
         # Count submissions for this month
         month_submissions = all_submissions.select do |submission|
           submission_date = parse_submission_date(submission[:submission_date])
@@ -159,6 +164,11 @@ class AssignmentsController < ApplicationController
     current_month = start_date
     while current_month <= end_date
       next_month = current_month.next_month
+      # Skip July and August 2025
+      if current_month.year == 2025 && [7, 8].include?(current_month.month)
+        current_month = next_month
+        next
+      end
       # Base scope: this subject, submissions in this month, and never before Jan 2022
       month_scope = Assignment.where(subject_id: @subject.id)
                               .where.not(submission_date: nil)
