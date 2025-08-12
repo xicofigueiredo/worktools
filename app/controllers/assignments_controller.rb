@@ -148,6 +148,114 @@ class AssignmentsController < ApplicationController
     end
   end
 
+  def monthly_submissions_local
+    @subject = Subject.find_by(moodle_id: params[:moodle_id]) || Subject.find_by(id: params[:subject_id])
+    return redirect_to assignments_path, alert: 'Subject not found' unless @subject
+
+    start_date = Date.new(2022, 1, 1).beginning_of_month
+    end_date = Date.current.end_of_month
+
+    @monthly_stats = []
+    current_month = start_date
+    while current_month <= end_date
+      next_month = current_month.next_month
+      month_scope = Assignment.where(subject_id: @subject.id)
+                              .where.not(submission_date: nil)
+                              .where(submission_date: current_month...next_month)
+
+      submissions_count = month_scope.count
+      unique_learners = month_scope.distinct.count(:user_id)
+      assignments_with_submissions = month_scope.distinct.count(:moodle_id)
+      grades_scope = month_scope.where.not(grade: nil)
+      avg_grade = grades_scope.any? ? (grades_scope.average(:grade).to_f.round(2)) : 0
+
+      @monthly_stats << {
+        month: current_month.strftime('%b %y'),
+        full_month: current_month.strftime('%B %Y'),
+        submissions_count: submissions_count,
+        unique_learners: unique_learners,
+        assignments_with_submissions: assignments_with_submissions,
+        average_grade: avg_grade
+      }
+
+      current_month = next_month
+    end
+  end
+
+  def sync
+    @subject = Subject.find_by(moodle_id: params[:moodle_id])
+    return redirect_to assignments_path, alert: 'Subject not found' unless @subject
+
+    course_id = @subject.moodle_id
+    service = MoodleApiService.new
+
+    begin
+      # Fetch course-level assignments once
+      assignments = service.fetch_course_assignments(course_id)
+      if assignments.blank?
+        return redirect_to assignments_path(moodle_id: @subject.moodle_id, load_course_data: 1), alert: "No assignments returned from Moodle for course ##{course_id}"
+      end
+
+      # Fetch all enrolled users in the course
+      users = service.get_enrolled_users(course_id)
+      return redirect_to assignments_path(moodle_id: @subject.moodle_id, load_course_data: 1), alert: "No enrolled users found for course ##{course_id}" if users.blank?
+
+      created = 0
+      updated = 0
+      errors = []
+
+      assignments.each do |a|
+        assignment_id = a['id']
+
+        users.each do |u|
+          user = User.find_by(email: u['email'])
+          next unless user # skip users not present in local DB
+
+          # Fetch submission status for this user and assignment
+          submission_data = service.fetch_submission_status(assignment_id, u['id'])
+          attempt = submission_data && submission_data['lastattempt']
+          submission = attempt && (attempt['submission'] || attempt['teamsubmission'])
+          feedback = submission_data && submission_data['feedback']
+
+          rec = Assignment.find_or_initialize_by(user_id: user.id, moodle_id: assignment_id)
+          was_new = rec.new_record?
+
+          rec.subject_id = @subject.id
+          rec.moodle_course_id = course_id
+          rec.cmid = a['cmid']
+          rec.name = a['name']
+          rec.intro = a['intro']
+          rec.allow_submissions_from = (a['allowsubmissionsfromdate'].to_i > 0 ? Time.at(a['allowsubmissionsfromdate'].to_i) : nil)
+          rec.due_date = (a['duedate'].to_i > 0 ? Time.at(a['duedate'].to_i) : nil)
+          rec.cutoff_date = (a['cutoffdate'].to_i > 0 ? Time.at(a['cutoffdate'].to_i) : nil)
+          rec.max_grade = a['grade']
+          rec.max_attempts = a['maxattempts']
+
+          # User-specific fields
+          rec.submission_date = submission ? (submission['timecreated'].to_i > 0 ? Time.at(submission['timecreated'].to_i) : nil) : nil
+          rec.evaluation_date = feedback && feedback['grade'] && feedback['grade']['timemodified'].to_i > 0 ? Time.at(feedback['grade']['timemodified'].to_i) : nil
+          rec.grade = feedback && feedback['grade'] ? feedback['grade']['grade'].to_f : nil
+          rec.number_attempts = submission ? submission['attemptnumber'].to_i + 1 : 0
+
+          if rec.save
+            was_new ? created += 1 : updated += 1
+          else
+            errors << { user: u['email'], moodle_id: assignment_id, errors: rec.errors.full_messages }
+          end
+        end
+      end
+
+      msg = "Synced per-user assignments: created #{created}, updated #{updated} (users: #{users.size}, assignments: #{assignments.size})"
+      msg += ". Errors: #{errors.size}" if errors.any?
+      flash_notice = errors.any? ? { alert: msg } : { notice: msg }
+
+      redirect_to assignments_path(moodle_id: @subject.moodle_id, load_course_data: 1), flash: flash_notice
+    rescue => e
+      Rails.logger.error("Assignments sync failed: #{e.class} - #{e.message}\n#{e.backtrace.join("\n")}")
+      redirect_to assignments_path, alert: "Sync failed: #{e.message}"
+    end
+  end
+
   private
 
   def parse_submission_date(date_string)
