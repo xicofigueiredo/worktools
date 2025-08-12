@@ -248,7 +248,13 @@ class AssignmentsController < ApplicationController
           rec.max_attempts = a['maxattempts']
 
           # User-specific fields
-          rec.submission_date = submission ? (submission['timecreated'].to_i > 0 ? Time.at(submission['timecreated'].to_i) : nil) : nil
+          if submission
+            ts = submission['timemodified'].to_i
+            ts = submission['timecreated'].to_i if ts <= 0
+            rec.submission_date = ts > 0 ? Time.at(ts) : nil
+          else
+            rec.submission_date = nil
+          end
           rec.evaluation_date = feedback && feedback['grade'] && feedback['grade']['timemodified'].to_i > 0 ? Time.at(feedback['grade']['timemodified'].to_i) : nil
           rec.grade = feedback && feedback['grade'] ? feedback['grade']['grade'].to_f : nil
           rec.number_attempts = submission ? submission['attemptnumber'].to_i + 1 : 0
