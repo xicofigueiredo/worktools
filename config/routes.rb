@@ -12,6 +12,9 @@ Rails.application.routes.draw do
   authenticate :user do
     root to: "pages#profile"
 
+    # Role switching for admins
+    post '/switch_role', to: 'application#switch_role', as: 'switch_role'
+
     get 'after_signup', to: 'users/registrations#after_signup', as: 'after_signup'
     get 'profile', to: 'pages#profile'
     get 'edit_profile', to: 'pages#edit_profile'

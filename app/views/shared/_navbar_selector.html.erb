@@ -1,0 +1,42 @@
+<!-- Navbar Selection Based on Role -->
+<% case @current_viewing_role %>
+<% when 'admin' %>
+  <%= render 'shared/admin_navbar' %>
+<% when 'lc' %>
+  <%= render 'shared/lc_navbar' %>
+<% when 'cm' %>
+  <%= render 'shared/cm_navbar' %>
+<% when 'exams' %>
+  <%= render 'shared/exams_navbar' %>
+<% when 'parent' %>
+  <%= render 'shared/parent_navbar' %>
+<% else %>
+  <%= render 'shared/navbar' %>
+<% end %>
+
+<!-- Role Switcher Dropdown (only for admins) - Now underneath navbar -->
+<% if @available_roles %>
+  <div class="container-fluid py-2" style="background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+    <div class="d-flex justify-content-end">
+      <div class="dropdown">
+        <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          <i class="fas fa-user-cog me-1"></i>
+          Viewing as: <%= @current_viewing_role.titleize %>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><h6 class="dropdown-header">Switch Role View</h6></li>
+          <% @available_roles.each do |role| %>
+            <li>
+              <%= button_to switch_role_path, params: { role: role }, method: :post,
+                  class: "dropdown-item border-0 bg-transparent text-start w-100 #{'active' if @current_viewing_role == role}",
+                  style: "outline: none;" do %>
+                <i class="<%= role_icon(role) %> me-2"></i>
+                <%= role.titleize %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </div>
+<% end %>
