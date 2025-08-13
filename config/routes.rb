@@ -194,6 +194,7 @@ Rails.application.routes.draw do
         get :assignment_statistics
         get :monthly_submissions
         get :monthly_submissions_local
+        get :monthly_submissions_local_overview
         post :sync
       end
     end

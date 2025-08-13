@@ -219,6 +219,54 @@ class AssignmentsController < ApplicationController
     end
   end
 
+  def monthly_submissions_local_overview
+    start_date = Date.new(2022, 1, 1).beginning_of_month
+    end_date = Date.current.end_of_month
+
+    @months = []
+    month_cursor = start_date
+    while month_cursor <= end_date
+      # Skip July and August 2025
+      unless month_cursor.year == 2025 && [7, 8].include?(month_cursor.month)
+        @months << month_cursor
+      end
+      month_cursor = month_cursor.next_month
+    end
+
+    # Gather assignments for the entire period, excluding autograded (<5 min)
+    base_scope = Assignment.where.not(submission_date: nil)
+                           .where('submission_date >= ?', start_date)
+                           .where('submission_date <= ?', end_date)
+                           .where("evaluation_date IS NULL OR evaluation_date - submission_date >= interval '5 minutes'")
+
+    # Build stats: { subject_id => { month_date => { submissions_count:, sla_sum:, sla_count: } } }
+    @stats_by_subject_and_month = Hash.new { |h, k| h[k] = {} }
+    subject_ids = Set.new
+
+    base_scope.find_each(batch_size: 2000) do |rec|
+      next if rec.subject_id.nil?
+      month_key = rec.submission_date.to_date.beginning_of_month
+      next if month_key.year == 2025 && [7, 8].include?(month_key.month)
+
+      bucket = (@stats_by_subject_and_month[rec.subject_id][month_key] ||= { submissions_count: 0, sla_sum: 0.0, sla_count: 0 })
+      bucket[:submissions_count] += 1
+
+      if rec.evaluation_date.present?
+        bucket[:sla_sum] += business_days_between(rec.submission_date, rec.evaluation_date)
+        bucket[:sla_count] += 1
+      end
+
+      subject_ids << rec.subject_id
+    end
+
+    # Prepare subjects list ordered by name
+    @subjects = Subject.where(id: subject_ids.to_a).order(:name)
+  rescue => e
+    Rails.logger.error "Error in monthly_submissions_local_overview: #{e.message}\n#{e.backtrace.join("\n")}"
+    flash[:alert] = "Error building overview: #{e.message}"
+    redirect_to assignments_path
+  end
+
   def sync
     @subject = Subject.find_by(moodle_id: params[:moodle_id])
     return redirect_to assignments_path, alert: 'Subject not found' unless @subject

@@ -1,0 +1,88 @@
+<% content_for :title, "Local Monthly Submissions Overview" %>
+
+<style>
+  .monthly-overview-scroll {
+    max-height: 70vh;
+    overflow: auto;
+  }
+  .monthly-overview-table thead th {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: #ffffff;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.05);
+  }
+  .monthly-overview-table thead th.sticky-col,
+  .monthly-overview-table tbody td.sticky-col {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+    background: #ffffff;
+    z-index: 2;
+  }
+  .monthly-overview-table thead th.sticky-col {
+    z-index: 5; /* top-left corner above the rest */
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+          <div>
+            <h6>Local Monthly Submissions Overview</h6>
+            <p class="text-sm mb-0">All subjects. Auto-graded (< 5min) excluded. July/Aug 2025 skipped.</p>
+          </div>
+          <div>
+            <%= link_to "Back to Assignments", assignments_path, class: "btn btn-secondary btn-sm" %>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive monthly-overview-scroll">
+            <table class="table table-sm monthly-overview-table">
+              <thead>
+                <tr>
+                  <th class="text-xs font-weight-bold sticky-col">Subject</th>
+                  <% @months.each do |m| %>
+                    <th class="text-center text-xs font-weight-bold" style="min-width: 90px;">
+                      <%= m.strftime('%b %y') %>
+                    </th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody>
+                <% @subjects.each do |subject| %>
+                  <tr>
+                    <td class="text-xs sticky-col"><%= subject.name %></td>
+                    <% @months.each do |m| %>
+                      <% cell = (@stats_by_subject_and_month.dig(subject.id, m) || { submissions_count: 0, sla_sum: 0.0, sla_count: 0 }) %>
+                      <% avg_sla = (cell[:sla_count].to_i > 0) ? (cell[:sla_sum].to_f / cell[:sla_count].to_f).round(2) : 0 %>
+                      <td class="text-center align-middle">
+                        <% if cell[:submissions_count].to_i > 0 %>
+                          <div>
+                            <span class="badge bg-primary text-white"><%= cell[:submissions_count] %></span>
+                          </div>
+                          <div class="mt-1">
+                            <% if avg_sla > 0 %>
+                              <span class="badge bg-warning text-dark" title="Average business days between submission and feedback"><%= avg_sla %></span>
+                            <% else %>
+                              <span class="text-muted">-</span>
+                            <% end %>
+                          </div>
+                        <% else %>
+                          <span class="text-muted">0</span>
+                        <% end %>
+                      </td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
