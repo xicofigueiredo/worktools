@@ -164,7 +164,7 @@ class MoodleTimeline < ApplicationRecord
     if self.subject_id != 80
       user_id = self.user.moodle_id
       course_id = self.moodle_id
-      completed_activities = MoodleApiService.new.get_course_activities(course_id, user_id)
+      completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
       ref_index = -1
       as1 = nil
       as2 = nil

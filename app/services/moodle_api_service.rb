@@ -34,57 +34,6 @@ class MoodleApiService
     { error: e.response }
   end
 
-  def get_course_activities(course_id, user_id)
-    # Check cache first
-    cache_key = "course_activities_#{course_id}_#{user_id}"
-    cached_result = get_from_cache(cache_key)
-    return cached_result if cached_result
-
-    # Use the custom API that includes ECT values (when available)
-    response = call('local_wsbga_get_course', { courseid: course_id, userid: user_id })
-
-    if response.is_a?(Array)
-      activities = []
-
-      response.each do |activity|
-        # ECT might be provided by the custom API (optional field)
-        # Use provided ECT if available, otherwise estimate based on activity type
-        ect_value = if activity['ect'].present?
-          activity['ect'].to_f
-        else
-          estimate_ect_by_activity_type(activity['modname'], activity['name'])
-        end
-
-        activities << {
-          id: activity['id'],
-          section_name: activity['section_name'],
-          section_visible: activity['section_visible'],
-          name: activity['name'],
-          modname: activity['modname'],
-          ect: ect_value,
-          visible: activity['visible'] == 1,
-          availabilityinfo: activity['availabilityinfo'] || "No restrictions",
-          description: activity['description'] || "",
-          url: activity['url'] || "",
-          completiondata: activity['completiondata'] || 0,
-          grade: activity['grade'] || 0,
-          mock50: activity['mock50'] || 0,
-          mock100: activity['mock100'] || 0,
-          number_attempts: activity['number_attempts'] || 0,
-          submission_date: activity['submission_date'] || "",
-          evaluation_date: activity['evaluation_date'] || ""
-        }
-      end
-
-      # Store in cache
-      store_in_cache(cache_key, activities)
-      activities
-    else
-      Rails.logger.error "Error fetching course activities: #{response}"
-      []
-    end
-  end
-
   def get_all_course_activities(course_id, user_id)
     # Use the custom API that includes ECT values (similar to get_course_activities)
     response = call('local_wsbga_get_course', { courseid: course_id, userid: user_id })
@@ -1529,39 +1478,5 @@ end
 
   def cleanup_cache
     @cache.delete_if { |_, cached_data| Time.current > cached_data[:expires_at] }
-  end
-
-  # Estimate ECT based on activity type since Moodle APIs don't provide it
-  def estimate_ect_by_activity_type(modname, activity_name)
-    case modname&.downcase
-    when 'assign', 'assignment'
-      2.0  # Assignments typically take 2 hours
-    when 'quiz'
-      1.5  # Quizzes typically take 1.5 hours
-    when 'forum'
-      0.5  # Forum posts typically take 30 minutes
-    when 'page', 'resource', 'url'
-      0.25 # Reading materials typically take 15 minutes
-    when 'book'
-      1.0  # Books typically take 1 hour
-    when 'lesson'
-      1.5  # Lessons typically take 1.5 hours
-    when 'workshop'
-      3.0  # Workshops typically take 3 hours
-    when 'wiki'
-      1.0  # Wiki activities typically take 1 hour
-    else
-      # Check activity name for clues
-      name_lower = activity_name&.downcase || ""
-      if name_lower.include?('mock') || name_lower.include?('exam')
-        2.5  # Mock exams typically take 2.5 hours
-      elsif name_lower.include?('essay') || name_lower.include?('coursework')
-        4.0  # Essays/coursework typically take 4 hours
-      elsif name_lower.include?('read') || name_lower.include?('video')
-        0.5  # Reading/video typically takes 30 minutes
-      else
-        1.0  # Default to 1 hour for unknown activity types
-      end
-    end
   end
 end
