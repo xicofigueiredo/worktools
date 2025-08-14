@@ -268,9 +268,9 @@ class AssignmentsController < ApplicationController
     # Prepare subjects list ordered by name
     if selected_subject_ids
       # Show all selected user's subjects, even if no submissions in period
-      @subjects = Subject.where(id: selected_subject_ids).order(:name)
+      @subjects = Subject.where(id: selected_subject_ids).where.not(moodle_id: nil).order(:name)
     else
-      @subjects = Subject.where(id: subject_ids.to_a).order(:name)
+      @subjects = Subject.where(id: subject_ids.to_a).where.not(moodle_id: nil).order(:name)
     end
 
     # Dropdown: users with at least one subject id
