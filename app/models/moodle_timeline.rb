@@ -245,7 +245,7 @@ class MoodleTimeline < ApplicationRecord
       course_id = self.moodle_id
 
       # Get all activities in one API call (now optimized)
-      completed_activities = MoodleApiService.new.get_course_activities(course_id, user_id)
+      completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
 
       # Get all moodle_topics for this timeline in one query to avoid N+1
       existing_topics = self.moodle_topics.index_by(&:moodle_id)

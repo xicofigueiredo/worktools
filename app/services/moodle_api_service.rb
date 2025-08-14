@@ -35,7 +35,7 @@ class MoodleApiService
   end
 
   def get_all_course_activities(course_id, user_id)
-    # Use the custom API that includes ECT values (similar to get_course_activities)
+    # Use the custom API that includes ECT values (similar to get_all_course_activities)
     response = call('local_wsbga_get_course', { courseid: course_id, userid: user_id })
     total_ect = 0
     activities_with_ect = 0
@@ -116,7 +116,7 @@ class MoodleApiService
         puts "Created #{timeline.subject.name} Timeline for #{course.split(':').last.strip}"
 
         # 🔹 Fetch and Create MoodleTopics for the Timeline using the new method 🔹
-        activities = get_course_activities(course_id, moodle_id)
+        activities = get_all_course_activities(course_id, moodle_id)
 
         activities.each_with_index do |activity, index|
           next if activity[:section_visible] == 0
@@ -242,7 +242,7 @@ class MoodleApiService
           course_name = course['shortname']
 
           # Get activities for this course using an admin or manager user ID
-          activities = get_course_activities(course_id, 2)
+          activities = get_all_course_activities(course_id, 2)
 
           if activities.is_a?(Array)
             with_ect = activities.count { |activity| activity[:ect].to_f > 0 }
@@ -272,7 +272,7 @@ class MoodleApiService
       puts "\n📊 Category Breakdown:"
       courses_by_category.each do |category_id, category_courses|
         category_total_activities = category_courses.sum do |course|
-          activities = get_course_activities(course['id'], 2)
+          activities = get_all_course_activities(course['id'], 2)
           activities.is_a?(Array) ? activities.length : 0
         end
 
@@ -506,7 +506,7 @@ class MoodleApiService
     course_id = timeline.subject.moodle_id
     return { error: "No Moodle ID for subject!" } if course_id.nil?
 
-    activities = get_course_activities(course_id, user.moodle_id)
+    activities = get_all_course_activities(course_id, user.moodle_id)
     return { error: "No activities found for course!" } if activities.empty?
 
     updated_topics = []
@@ -1123,7 +1123,7 @@ end
       puts "  Processing user: #{user_name}"
 
       # Use your working custom API
-      activities = get_course_activities(course_id, user_id)
+      activities = get_all_course_activities(course_id, user_id)
 
       # Filter for assignment-like activities
       assignments = activities.select do |activity|
@@ -1133,8 +1133,8 @@ end
         activity[:name].downcase.include?('essay') ||
         activity[:name].downcase.include?('project') ||
         activity[:name].downcase.include?('mock') ||
-        activity[:grade] > 0 ||
-        activity[:number_attempts] > 0
+        (activity[:grade]&.to_f || 0) > 0 ||
+        (activity[:number_attempts]&.to_i || 0) > 0
       end
 
       assignments.each do |assignment|
@@ -1144,8 +1144,8 @@ end
           learner_email: user_email,
           submission_date: assignment[:submission_date].present? ? assignment[:submission_date] : 'No submission',
           feedback_date: assignment[:evaluation_date].present? ? assignment[:evaluation_date] : 'No feedback',
-          grade: assignment[:grade] || 0,
-          attempts: assignment[:number_attempts] || 0,
+          grade: (assignment[:grade]&.to_f || 0),
+          attempts: (assignment[:number_attempts]&.to_i || 0),
           section_name: assignment[:section_name],
           ect: assignment[:ect],
           completion_status: assignment[:completiondata] == 1 ? "Completed" : "Not Completed"
@@ -1182,7 +1182,7 @@ def test_course_access(course_ids = [1, 2, 107, 128, 149])
 
       # Test 3: Check custom API with admin user (ID 2)
       begin
-        activities = get_course_activities(course_id, 2)
+        activities = get_all_course_activities(course_id, 2)
         puts "✅ Custom API (admin): #{activities.size} activities found"
 
         # Fixed nil handling
@@ -1224,7 +1224,7 @@ def get_safe_assignments_from_activities(course_id, max_users: nil)
 
   # First test if the course works with admin user
   begin
-    test_activities = get_course_activities(course_id, 2)
+    test_activities = get_all_course_activities(course_id, 2)
     puts "✅ Course #{course_id} is accessible, found #{test_activities.size} activities"
   rescue => e
     puts "❌ Course #{course_id} not accessible: #{e.message}"
@@ -1254,7 +1254,7 @@ def get_safe_assignments_from_activities(course_id, max_users: nil)
 
     begin
       # Use your working custom API
-      activities = get_course_activities(course_id, user_id)
+      activities = get_all_course_activities(course_id, user_id)
 
       # Filter for assignment-like activities with proper nil handling
       assignments = activities.select do |activity|
@@ -1315,7 +1315,7 @@ def get_all_assignments_from_activities_batched(course_id, batch_size: 100)
       user_email = user['email']
 
       begin
-        activities = get_course_activities(course_id, user_id)
+        activities = get_all_course_activities(course_id, user_id)
 
         # Filter for assignment-like activities
         assignments = activities.select do |activity|
@@ -1416,7 +1416,7 @@ def get_learner_assignment_data(course_id, learner_moodle_id)
   puts "👤 Getting assignment data for learner #{learner_moodle_id} in course #{course_id}..."
 
   # Get activities for this specific learner
-  activities = get_course_activities(course_id, learner_moodle_id)
+  activities = get_all_course_activities(course_id, learner_moodle_id)
 
   # Filter for assignment-like activities
   assignments = activities.select do |activity|
