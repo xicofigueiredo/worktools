@@ -33,13 +33,31 @@
         <div class="card-header pb-0 d-flex justify-content-between align-items-center">
           <div>
             <h6>Local Monthly Submissions Overview</h6>
-            <p class="text-sm mb-0">All subjects. Auto-graded (< 5min) excluded. July/Aug 2025 skipped.</p>
           </div>
-          <div>
+          <div class="d-flex align-items-center gap-2">
+            <%= form_with url: monthly_submissions_local_overview_assignments_path, method: :get, local: true, class: "d-flex align-items-center" do |f| %>
+              <div class="me-2">
+                <%= select_tag :user_id,
+                      options_for_select(
+                        [["All users", ""]] + @users_with_subjects.map { |u| [u.full_name.presence || u.email, u.id] },
+                        params[:user_id]
+                      ),
+                      class: "form-control form-control-sm" %>
+              </div>
+              <%= submit_tag "Filter", class: "btn btn-sm btn-primary me-2" %>
+              <% if params[:user_id].present? %>
+                <%= link_to "Clear", monthly_submissions_local_overview_assignments_path, class: "btn btn-sm btn-outline-secondary" %>
+              <% end %>
+            <% end %>
             <%= link_to "Back to Assignments", assignments_path, class: "btn btn-secondary btn-sm" %>
           </div>
         </div>
         <div class="card-body">
+          <% if @selected_user %>
+            <div class="mb-3">
+              <span class="badge bg-light text-dark">Filtered by: <strong><%= @selected_user.full_name.presence || @selected_user.email %></strong></span>
+            </div>
+          <% end %>
           <div class="table-responsive monthly-overview-scroll">
             <table class="table table-sm monthly-overview-table">
               <thead>

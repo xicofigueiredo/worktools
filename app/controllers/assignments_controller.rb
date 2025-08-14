@@ -1,3 +1,4 @@
+require 'set'
 class AssignmentsController < ApplicationController
   before_action :authenticate_user!
 
@@ -223,6 +224,10 @@ class AssignmentsController < ApplicationController
     start_date = Date.new(2022, 1, 1).beginning_of_month
     end_date = Date.current.end_of_month
 
+    # Optional: filter by selected user's subjects
+    @selected_user = params[:user_id].present? ? User.find_by(id: params[:user_id]) : nil
+    selected_subject_ids = @selected_user&.subjects.presence
+
     @months = []
     month_cursor = start_date
     while month_cursor <= end_date
@@ -238,6 +243,7 @@ class AssignmentsController < ApplicationController
                            .where('submission_date >= ?', start_date)
                            .where('submission_date <= ?', end_date)
                            .where("evaluation_date IS NULL OR evaluation_date - submission_date >= interval '5 minutes'")
+    base_scope = base_scope.where(subject_id: selected_subject_ids) if selected_subject_ids
 
     # Build stats: { subject_id => { month_date => { submissions_count:, sla_sum:, sla_count: } } }
     @stats_by_subject_and_month = Hash.new { |h, k| h[k] = {} }
@@ -260,7 +266,15 @@ class AssignmentsController < ApplicationController
     end
 
     # Prepare subjects list ordered by name
-    @subjects = Subject.where(id: subject_ids.to_a).order(:name)
+    if selected_subject_ids
+      # Show all selected user's subjects, even if no submissions in period
+      @subjects = Subject.where(id: selected_subject_ids).order(:name)
+    else
+      @subjects = Subject.where(id: subject_ids.to_a).order(:name)
+    end
+
+    # Dropdown: users with at least one subject id
+    @users_with_subjects = User.where("COALESCE(array_length(subjects, 1), 0) > 0").order(:full_name)
   rescue => e
     Rails.logger.error "Error in monthly_submissions_local_overview: #{e.message}\n#{e.backtrace.join("\n")}"
     flash[:alert] = "Error building overview: #{e.message}"
