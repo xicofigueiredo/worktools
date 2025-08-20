@@ -12,7 +12,6 @@
             <th>Submission</th>
             <th>Evaluation</th>
             <th>Grade</th>
-            <th>Completion</th>
             <% unless @timeline.subject.category.include?("lws") %>
               <th>Hours</th>
               <th width="120px">Deadline</th>
@@ -43,9 +42,8 @@
                 <% unless @timeline.subject.category.include?("lws") %>
                   <td style="background-color: <%= background_color %>;"><%= moodle_topic.number_attempts %></td>
                   <td style="background-color: <%= background_color %>;"><%= Time.at(moodle_topic.submission_date.to_i).strftime("%d/%m/%Y %H:%M") %></td>
-                  <td style="background-color: <%= background_color %>;"><%= Time.at(moodle_topic.evaluation_date_date.to_i).strftime("%d/%m/%Y %H:%M") %></td>
+                  <td style="background-color: <%= background_color %>;"><%= Time.at(moodle_topic.evaluation_date.to_i).strftime("%d/%m/%Y %H:%M") %></td>
                   <td style="background-color: <%= background_color %>;"><%= moodle_topic.grade %></td>
-                  <td style="background-color: <%= background_color %>;"><%= Time.at(moodle_topic.completion_date.to_i).strftime("%d/%m/%Y %H:%M") %></td>
                   <td style="background-color: <%= background_color %>;"><%= moodle_topic.time %></td>
                   <td style="background-color: <%= background_color %>;"><%= moodle_topic.deadline.strftime('%d-%m-%Y') %></td>
                 <% end %>
@@ -53,7 +51,7 @@
                 <td style="background-color: <%= background_color %>;">Update Dates</td>
               <% end %>
             </tr>
-          <% end %> 
+          <% end %>
         </tbody>
       </table>
     </div>

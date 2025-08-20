@@ -66,7 +66,6 @@ Rails.application.routes.draw do
         post :personalized_create
         patch :update_colors
         get :archived
-        post :sync_moodle
       end
       member do
         patch :toggle_archive
