@@ -35,9 +35,6 @@ class TimelinesController < ApplicationController
       @timelines = @learner.timelines_sorted_by_balance
                              .where(hidden: false)
 
-
-      #MoodleApiService.new.create_timelines_for_learner(current_user.email)
-
       moodle_calculate_progress_and_balance(@timelines)
 
       @holidays = @learner.holidays.where("end_date >= ?", 4.months.ago)
