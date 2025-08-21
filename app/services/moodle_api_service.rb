@@ -64,7 +64,15 @@ class MoodleApiService
           visible: activity['visible'] == 1,
           availabilityinfo: activity['availabilityinfo'] || "No restrictions",
           description: activity['description'] || "",
-          url: activity['url'] || ""
+          url: activity['url'] || "",
+          completiondata: activity['completiondata'],
+          mock50: activity['mock50'],
+          mock100: activity['mock100'],
+          number_attempts: activity['number_attempts'],
+          submission_date: activity['submission_date'],
+          evaluation_date: activity['evaluation_date'],
+          grade: activity['grade']
+
         }
       end
 
@@ -79,6 +87,90 @@ class MoodleApiService
       []
     end
   end
+
+    # get all the topics for a specific course and learner
+    def get_course_topics_for_learner(email, course_id)
+      user_id = get_user_id(email)
+      return puts "User not found!" if user_id.nil?
+
+      # Fetch course contents (topics & activities)
+      course_contents = call('core_course_get_contents', { courseid: course_id })
+
+      # Fetch completion status for activities
+      completion_status = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user_id })
+
+      # Fetch grades for activities in the course
+      grades_response = call('core_grades_get_gradeitems', { courseid: course_id })
+
+      # Convert completion status into a hash for quick lookup
+      completion_lookup = {}
+      if completion_status["statuses"]
+        completion_status["statuses"].each do |status|
+          completion_lookup[status["cmid"]] = {
+            completed: status["state"] == 1 ? "✅ Done" : "❌ Not Done",
+            completion_date: status["timecompleted"] ? Time.at(status["timecompleted"]).strftime("%d %B %Y, %H:%M") : "N/A"
+          }
+        end
+      end
+
+      # Convert grades into a hash using cmid
+      grades_lookup = {}
+      if grades_response["gradeitems"]
+        grades_response["gradeitems"].each do |grade|
+          grades_lookup[grade["cmid"]] = {
+            grade: grade["graderaw"] || "No Grade",
+            max_grade: grade["grademax"] || "N/A"
+          }
+        end
+      end
+
+      if course_contents.is_a?(Array) && course_contents.any?
+        course_topics = []
+
+        course_contents.each do |section|
+          next if section['name'].nil? || section['modules'].nil? # Skip empty sections
+
+          section_title = section['name']
+          section_visibility = section['visible'] == 1 ? " Visible" : "❌ Hidden"
+          section_availability = section['availabilityinfo'] || "No restrictions"
+
+          activities = section['modules'].map do |mod|
+            activity_id = mod["id"]  # Capture the activity ID
+            activity_visibility = mod['visible'] == 1 ? " Visible" : "❌ Hidden"
+            activity_availability = mod['availabilityinfo'] || "No restrictions"
+
+            # Get completion state and completion date
+            completion_info = completion_lookup[activity_id] || { completed: "❓ Unknown", completion_date: "N/A" }
+
+            # Check if the activity is completed and has a grade
+            grade_info = grades_lookup[activity_id]
+            grade_display = grade_info ? "#{grade_info[:grade]} / #{grade_info[:max_grade]}" : "No Grade"
+
+            {
+              id: activity_id,  # Added activity ID here
+              name: mod['name'],
+              visible: activity_visibility,
+              availabilityinfo: activity_availability,
+              completed: completion_info[:completed],
+              completion_date: completion_info[:completion_date],  # Added completion date
+              grade: completion_info[:completed] == "✅ Done" ? grade_display : "N/A",
+            }
+          end
+
+          course_topics << {
+            section: section_title,
+            visible: section_visibility,
+            availabilityinfo: section_availability,
+            activities: activities
+          }
+        end
+
+        return course_topics
+      else
+        puts "No topics or activities found for Course ID #{course_id}"
+        return []
+      end
+    end
 
   def create_timelines_for_learner(email)
     moodle_id = get_user_id(email)
@@ -128,19 +220,24 @@ class MoodleApiService
             unit: activity[:section_name],
             order: index + 1,
             grade: activity[:grade].round(2),
-            done: activity[:completiondata] == 1,
+            done: activity[:completiondata].to_i == 1,
             completion_date: begin
-              if activity[:evaluation_date].present?
-                DateTime.parse(activity[:evaluation_date])
+              ed = activity[:evaluation_date]
+              if ed.present?
+                if ed.is_a?(Numeric) || ed.to_s =~ /\A\d+\z/
+                  Time.at(ed.to_i).to_datetime
+                else
+                  DateTime.parse(ed)
+                end
               else
                 nil
               end
-            rescue Date::Error => e
-              puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
+            rescue => e
+              puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]} (#{e.message})"
               nil
             end,
-            mock50: activity[:mock50] == 1,
-            mock100: activity[:mock100] == 1,
+            mock50: activity[:mock50].to_i == 1,
+            mock100: activity[:mock100].to_i == 1,
             number_attempts: activity[:number_attempts],
             submission_date: activity[:submission_date],
             evaluation_date: activity[:evaluation_date],
@@ -416,98 +513,18 @@ class MoodleApiService
   # end
 
 
-  # get all the topics for a specific course and learner
-  def get_course_topics_for_learner(email, course_id)
-    user_id = get_user_id(email)
-    return puts "User not found!" if user_id.nil?
-
-    # Fetch course contents (topics & activities)
-    course_contents = call('core_course_get_contents', { courseid: course_id })
-
-    # Fetch completion status for activities
-    completion_status = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user_id })
-
-    # Fetch grades for activities in the course
-    grades_response = call('core_grades_get_gradeitems', { courseid: course_id })
-
-    # Convert completion status into a hash for quick lookup
-    completion_lookup = {}
-    if completion_status["statuses"]
-      completion_status["statuses"].each do |status|
-        completion_lookup[status["cmid"]] = {
-          completed: status["state"] == 1 ? "✅ Done" : "❌ Not Done",
-          completion_date: status["timecompleted"] ? Time.at(status["timecompleted"]).strftime("%d %B %Y, %H:%M") : "N/A"
-        }
-      end
-    end
-
-    # Convert grades into a hash using cmid
-    grades_lookup = {}
-    if grades_response["gradeitems"]
-      grades_response["gradeitems"].each do |grade|
-        grades_lookup[grade["cmid"]] = {
-          grade: grade["graderaw"] || "No Grade",
-          max_grade: grade["grademax"] || "N/A"
-        }
-      end
-    end
-
-    if course_contents.is_a?(Array) && course_contents.any?
-      course_topics = []
-
-      course_contents.each do |section|
-        next if section['name'].nil? || section['modules'].nil? # Skip empty sections
-
-        section_title = section['name']
-        section_visibility = section['visible'] == 1 ? " Visible" : "❌ Hidden"
-        section_availability = section['availabilityinfo'] || "No restrictions"
-
-        activities = section['modules'].map do |mod|
-          activity_id = mod["id"]  # Capture the activity ID
-          activity_visibility = mod['visible'] == 1 ? " Visible" : "❌ Hidden"
-          activity_availability = mod['availabilityinfo'] || "No restrictions"
-
-          # Get completion state and completion date
-          completion_info = completion_lookup[activity_id] || { completed: "❓ Unknown", completion_date: "N/A" }
-
-          # Check if the activity is completed and has a grade
-          grade_info = grades_lookup[activity_id]
-          grade_display = grade_info ? "#{grade_info[:grade]} / #{grade_info[:max_grade]}" : "No Grade"
-
-          {
-            id: activity_id,  # Added activity ID here
-            name: mod['name'],
-            visible: activity_visibility,
-            availabilityinfo: activity_availability,
-            completed: completion_info[:completed],
-            completion_date: completion_info[:completion_date],  # Added completion date
-            grade: completion_info[:completed] == "✅ Done" ? grade_display : "N/A",
-          }
-        end
-
-        course_topics << {
-          section: section_title,
-          visible: section_visibility,
-          availabilityinfo: section_availability,
-          activities: activities
-        }
-      end
-
-      return course_topics
-    else
-      puts "No topics or activities found for Course ID #{course_id}"
-      return []
-    end
-  end
-
 
   def update_course_topics_for_learner(user, timeline)
+    raise
     count = 0
     course_id = timeline.subject.moodle_id
     return { error: "No Moodle ID for subject!" } if course_id.nil?
 
-    activities = get_all_course_activities(course_id, user.moodle_id)
+    activities = get_course_topics_for_learner(user.email, course_id)
     return { error: "No activities found for course!" } if activities.empty?
+
+    # Build an index by moodle_id for fast exact matching
+    existing_topics_by_moodle_id = timeline.moodle_topics.index_by(&:moodle_id)
 
     updated_topics = []
     skipped_topics = []
@@ -515,37 +532,53 @@ class MoodleApiService
     activities.each do |activity|
       next if activity[:section_visible] == 0
 
-      mt = MoodleTopic.find_by(timeline: timeline, name: activity[:name])
+      # Prefer exact id match; fallback to name for both timeline types
+      mt = existing_topics_by_moodle_id[activity[:id]]
+      if mt.nil?
+        mt = if defined?(MoodleTimeline) && timeline.is_a?(MoodleTimeline)
+          MoodleTopic.find_by(moodle_timeline: timeline, name: activity[:name])
+        else
+          MoodleTopic.find_by(timeline: timeline, name: activity[:name])
+        end
+      end
 
       if mt
         begin
           updated_attributes = {
-            done: activity[:completiondata] == 1,
+            done: activity[:completiondata].to_i == 1,
             grade: activity[:grade],
             completion_date: begin
-              if activity[:evaluation_date].present?
-                DateTime.parse(activity[:evaluation_date])
+              ed = activity[:evaluation_date]
+              if ed.present?
+                if ed.is_a?(Numeric) || ed.to_s =~ /\A\d+\z/
+                  Time.at(ed.to_i).to_datetime
+                else
+                  DateTime.parse(ed)
+                end
               else
                 nil
               end
-            rescue Date::Error => e
+            rescue
               nil
             end,
             time: activity[:ect].to_f || 1,
             unit: activity[:section_name],
-            mock50: activity[:mock50] == 1,
-            mock100: activity[:mock100] == 1,
+            mock50: activity[:mock50].to_i == 1,
+            mock100: activity[:mock100].to_i == 1,
             number_attempts: activity[:number_attempts],
             submission_date: activity[:submission_date],
             evaluation_date: activity[:evaluation_date],
             completion_data: activity[:completiondata]
           }
 
+          # Backfill moodle_id if missing on the local record
+          updated_attributes[:moodle_id] = activity[:id] if mt.moodle_id.blank? && activity[:id].present?
+
           if mt.update(updated_attributes)
             count += 1
             updated_topics << {
               name: activity[:name],
-              done: activity[:completiondata] == 1,
+              done: activity[:completiondata].to_i == 1,
               ect: activity[:ect]
             }
           end

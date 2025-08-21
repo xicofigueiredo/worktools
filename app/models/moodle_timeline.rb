@@ -209,8 +209,8 @@ class MoodleTimeline < ApplicationRecord
           moodle_id: activity[:id],
           deadline: Date.today + 1.year,  # Set a default deadline
           percentage: index * 0.001,
-          mock50: activity[:mock50] == 1,
-          mock100: activity[:mock100] == 1,
+          mock50: activity[:mock50].to_i == 1,
+          mock100: activity[:mock100].to_i == 1,
           number_attempts: activity[:number_attempts],
           submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
           evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
@@ -262,13 +262,14 @@ class MoodleTimeline < ApplicationRecord
         # Prepare update attributes
         update_attrs = {
           grade: activity[:grade],
-          done: activity[:completiondata] == 1,
+          done: activity[:completiondata].to_i == 1,
           completion_date: parse_evaluation_date(activity[:evaluation_date]),
           number_attempts: activity[:number_attempts],
           submission_date: format_timestamp(activity[:submission_date]),
           evaluation_date: format_timestamp(activity[:evaluation_date]),
           completion_data: format_timestamp(activity[:completiondata]),
-          time: activity[:ect] || 1  # Add ECT/time field to updates
+          time: activity[:ect] || 0.001,  # Add ECT/time field to updates
+          ect: activity[:ect]
         }
 
         topics_to_update << { topic: moodle_topic, attrs: update_attrs }
