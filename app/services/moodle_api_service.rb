@@ -172,84 +172,6 @@ class MoodleApiService
       end
     end
 
-  def create_timelines_for_learner(email)
-    moodle_id = get_user_id(email)
-    user_id = User.find_by(email: email).id
-    return puts "User not found!" if user_id.nil?
-
-    courses = get_user_courses(email) # Get enrolled courses
-    return puts "No courses found!" if courses.empty?
-
-    created_timelines = []
-    courses.each do |course|
-      course_id = course.split(":").first.to_i
-      subject = Subject.find_by(moodle_id: course_id) # Extract Moodle ID and find the subject
-
-      if subject
-        timeline = Timeline.find_by(
-          user_id: user_id,
-          subject_id: subject.id,
-        )
-        if timeline.nil?
-          timeline = Timeline.create!(
-            user_id: user_id,
-            subject_id: subject.id,
-            start_date: Date.today,
-            end_date: Date.today + 1.year,
-            balance: 0,
-            expected_progress: 0,
-            progress: 0,
-            total_time: 0,
-            difference: 0
-          )
-        end
-
-        created_timelines << timeline
-        puts "Created #{timeline.subject.name} Timeline for #{course.split(':').last.strip}"
-
-        # 🔹 Fetch and Create MoodleTopics for the Timeline using the new method 🔹
-        activities = get_all_course_activities(course_id, moodle_id)
-
-        activities.each_with_index do |activity, index|
-          next if activity[:section_visible] == 0
-
-
-          MoodleTopic.find_by(timeline: timeline, moodle_id: activity[:id]).update!(
-            time: activity[:ect].to_f || 0.01,
-            name: activity[:name],
-            unit: activity[:section_name],
-            order: index + 1,
-            grade: activity[:grade].round(2),
-            done: activity[:completiondata].to_i == 1,
-            completion_date: begin
-              ed = activity[:evaluation_date]
-              if ed.present?
-                if ed.is_a?(Numeric) || ed.to_s =~ /\A\d+\z/
-                  Time.at(ed.to_i).to_datetime
-                else
-                  DateTime.parse(ed)
-                end
-              else
-                nil
-              end
-            rescue => e
-              puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]} (#{e.message})"
-              nil
-            end,
-            mock50: activity[:mock50].to_i == 1,
-            mock100: activity[:mock100].to_i == 1,
-            number_attempts: activity[:number_attempts],
-            submission_date: activity[:submission_date],
-            evaluation_date: activity[:evaluation_date],
-            completion_data: activity[:completiondata]
-          )
-        end
-      end
-    end
-
-    puts "✅ Created #{created_timelines.size} timelines for #{email}"
-  end
-
   #create moodle timelines
   def create_moodle_timelines_for_learner(email)
     moodle_user_id = get_user_id(email)
@@ -281,13 +203,27 @@ class MoodleApiService
           user_id: user_id,
           subject_id: subject.id,
         )
+        timeline = Timeline.find_by(
+          user_id: user_id,
+          subject_id: subject.id,
+        )
+        if timeline.nil?
+          start_date = Date.today
+          end_date = Date.today + 1.year
+          exam_date_id = nil
+        else
+          start_date = timeline.start_date
+          end_date = timeline.end_date
+          exam_date_id = timeline.exam_date_id
+        end
 
         if moodle_timeline.nil?
           moodle_timeline = MoodleTimeline.create!(
             user_id: user_id,
             subject_id: subject.id,
-            start_date: Date.today,
-            end_date: Date.today + 1.year,
+            start_date: start_date,
+            end_date: end_date,
+            exam_date_id: exam_date_id,
             balance: 0,
             expected_progress: 0,
             progress: 0,
