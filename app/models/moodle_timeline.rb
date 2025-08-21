@@ -203,7 +203,7 @@ class MoodleTimeline < ApplicationRecord
 
         MoodleTopic.create!(
           moodle_timeline_id: self.id,
-          time: activity[:ect] || 1,  # Default to 1 if ect is nil or 0
+          time: activity[:ect] || 0.001,  # Default to 1 if ect is nil or 0
           name: activity[:name],
           unit: activity[:section_name],  # Store section name as unit
           order: index + 1,  # Use index to maintain order
