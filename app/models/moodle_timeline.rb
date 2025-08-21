@@ -165,6 +165,19 @@ class MoodleTimeline < ApplicationRecord
       user_id = self.user.moodle_id
       course_id = self.moodle_id
       completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
+
+      # Enrich missing ids (cmid) by name using core_course_get_contents
+      if completed_activities.any? { |a| a[:id].nil? }
+        begin
+          contents = MoodleApiService.new.call('core_course_get_contents', { courseid: course_id })
+          modules  = Array(contents).flat_map { |s| s['modules'] || [] }
+          name_to_cmid = {}
+          modules.each { |m| n = m['name']; name_to_cmid[n] ||= m['id'] if n }
+          completed_activities.each { |a| a[:id] ||= name_to_cmid[a[:name]] }
+        rescue => e
+          Rails.logger.warn "Could not enrich moodle ids during create: #{e.message}"
+        end
+      end
       ref_index = -1
       as1 = nil
       as2 = nil
@@ -202,7 +215,7 @@ class MoodleTimeline < ApplicationRecord
             else
               nil
             end
-          rescue Date::Error => e
+          rescue Date::Error
             puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
             nil
           end,
@@ -256,20 +269,20 @@ class MoodleTimeline < ApplicationRecord
       completed_activities.each do |activity|
         next if activity[:section_visible] == 0
 
+        # Prefer id match, but fallback by name and backfill moodle_id like sync
         moodle_topic = existing_topics[activity[:id]]
+        if moodle_topic.nil?
+          moodle_topic = self.moodle_topics.find_by(name: activity[:name])
+          if moodle_topic && activity[:id].present? && moodle_topic.moodle_id.nil?
+            moodle_topic.update_column(:moodle_id, activity[:id])
+            existing_topics[activity[:id]] = moodle_topic
+          end
+        end
         next unless moodle_topic
 
-        # Prepare update attributes
+        # Only update the done flag to avoid touching other fields
         update_attrs = {
-          grade: activity[:grade],
-          done: activity[:completiondata].to_i == 1,
-          completion_date: parse_evaluation_date(activity[:evaluation_date]),
-          number_attempts: activity[:number_attempts],
-          submission_date: format_timestamp(activity[:submission_date]),
-          evaluation_date: format_timestamp(activity[:evaluation_date]),
-          completion_data: format_timestamp(activity[:completiondata]),
-          time: activity[:ect] || 0.001,  # Add ECT/time field to updates
-          ect: activity[:ect]
+          done: activity[:completiondata].to_i == 1
         }
 
         topics_to_update << { topic: moodle_topic, attrs: update_attrs }
@@ -425,7 +438,7 @@ class MoodleTimeline < ApplicationRecord
 
     begin
       DateTime.parse(date_value)
-    rescue Date::Error => e
+    rescue Date::Error
       Rails.logger.warn "Warning: Invalid date format: #{date_value}"
       nil
     end
@@ -436,7 +449,7 @@ class MoodleTimeline < ApplicationRecord
 
     begin
       Time.at(timestamp.to_i).strftime("%d/%m/%Y %H:%M")
-    rescue => e
+    rescue
       Rails.logger.warn "Warning: Invalid timestamp: #{timestamp}"
       nil
     end
