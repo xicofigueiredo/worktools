@@ -282,6 +282,10 @@ class MoodleTimeline < ApplicationRecord
 
         # Only update the done flag to avoid touching other fields
         update_attrs = {
+          submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
+          evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
+          number_attempts: activity[:number_attempts],
+          grade: activity[:grade].present? ? activity[:grade].round(2) : nil,
           done: activity[:completiondata].to_i == 1
         }
 
