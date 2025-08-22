@@ -286,7 +286,7 @@ class MoodleTimeline < ApplicationRecord
           evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
           number_attempts: activity[:number_attempts],
           grade: activity[:grade].present? ? activity[:grade].round(2) : nil,
-          done: activity[:completiondata].to_i == 1
+          done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2)
         }
 
         topics_to_update << { topic: moodle_topic, attrs: update_attrs }

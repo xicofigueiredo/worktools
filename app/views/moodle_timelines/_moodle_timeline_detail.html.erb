@@ -26,7 +26,7 @@
                                     '#ff193499'
                                   elsif moodle_topic && !moodle_topic.done && moodle_topic.deadline && Date.today.monday? && moodle_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(@moodle_timeline.subject.category)
                                     'lightgrey'
-                                  elsif moodle_topic && moodle_topic.done
+                                  elsif moodle_topic && (moodle_topic.done )
                                     '#00ce00a6'
                                   else
                                     'transparent'
