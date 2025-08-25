@@ -14,7 +14,7 @@ class MoodleTimelinesController < ApplicationController
       # Eager load the subject and its topics (avoid unnecessary eager loading)
       @moodle_timelines = @learner.moodle_timelines_sorted_by_balance
                              .where(hidden: false)
-      # moodle_calculate_progress_and_balance(@moodle_timelines)
+      moodle_calculate_progress_and_balance(@moodle_timelines)
 
       @holidays = @learner.holidays.where("end_date >= ?", 4.months.ago)
 
@@ -69,7 +69,14 @@ class MoodleTimelinesController < ApplicationController
   def update
     @moodle_timeline = MoodleTimeline.find(params[:id])
     if @moodle_timeline.update(moodle_timeline_params)
-      render json: { success: true }
+      moodle_generate_topic_deadlines(@moodle_timeline)
+      @moodle_timeline.save
+
+      if current_user.role != @moodle_timeline.user.role
+        redirect_to learner_profile_path(@moodle_timeline.user_id) and return
+      else
+        redirect_to moodle_timelines_path, notice: 'Moodle Timeline was successfully updated.' and return
+      end
     else
       render json: { success: false, error: @moodle_timeline.errors.full_messages }, status: :unprocessable_entity
     end
