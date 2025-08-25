@@ -317,16 +317,16 @@ class MoodleTimeline < ApplicationRecord
 
       topics = []
       if self.blocks.first
-        topics << { name: "Block 1", unit: "Block 1", order: 1, done: done_block_1 }
+        topics << { name: "Pure Maths AS", unit: "Pure Maths AS", order: 1, done: done_block_1 }
       end
       if self.blocks.second
-        topics << { name: "Block 2",unit: "Block 2",order: 2,done: done_block_2 }
+        topics << { name: "Statistics",unit: "Statistics",order: 2,done: done_block_2 }
       end
       if self.blocks.third
-        topics << { name: "Block 3",unit: "Block 3",order: 3,done: done_block_3 }
+        topics << { name: "Pure Maths AL",unit: "Pure Maths AL",order: 3,done: done_block_3 }
       end
       if self.blocks.fourth
-        topics << { name: "Block 4",unit: "Block 4",order: 4,done: done_block_4 }
+        topics << { name: "Mechanics",unit: "Mechanics",order: 4,done: done_block_4 }
       end
 
       topics.each do |topic|

@@ -18,8 +18,8 @@
           </li>
           <% if (current_user.hub_ids & [147,152, 154, 155, 156, 157, 158, 160, 170, 180, 185]).any? %>
             <li class="nav-item">
-              <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(moodle_index_path)%>">
-              <%= link_to "Moodle T.", moodle_index_path, class: "nav-link", data: { turbo: false }, onclick: "window.location.reload(true)" %>
+              <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(moodle_timelines_path)%>">
+              <%= link_to "Moodle T.", moodle_timelines_path, class: "nav-link" %>
               </div>
             </li>
           <% end %>
