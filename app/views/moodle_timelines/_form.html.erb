@@ -103,13 +103,14 @@
                 </div>
               <% elsif @moodle_timeline.subject_id == 80 %>
                 <div class="d-flex justify-content-center gap-4 mt-3">
+                  <% block_labels = ["Pure Maths AS", "Statistics", "Pure Maths AL", "Mechanics"] %>
                   <% 4.times do |i| %>
                     <div class="form-check">
                       <%= form.check_box "blocks[#{i}]",
                           { class: 'form-check-input', checked: @moodle_timeline.blocks&.[](i) || false },
                           true,
                           false %>
-                      <%= form.label "blocks[#{i}]", "Block #{i + 1}", class: 'form-check-label' %>
+                      <%= form.label "blocks[#{i}]", block_labels[i], class: 'form-check-label' %>
                     </div>
                   <% end %>
                 </div>
