@@ -1,4 +1,8 @@
+require 'utilities/timeframe'
 class MoodleTimeline < ApplicationRecord
+  include ProgressCalculations
+  include WorkingDaysAndHolidays
+  include GenerateTopicDeadlines
   belongs_to :user
   belongs_to :subject, optional: true
   has_one :exam_enroll, dependent: :destroy
@@ -59,14 +63,31 @@ class MoodleTimeline < ApplicationRecord
 
   def check_if_math_al_timeline
     return if self.subject_id != 80
-    if self.blocks.first
-      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
+
+    # Determine which blocks are selected (in order)
+    selected_subject_ids = []
+    selected_subject_ids << 1001 if self.blocks.first
+    selected_subject_ids << 1002 if self.blocks.second
+    selected_subject_ids << 1003 if self.blocks.third
+    selected_subject_ids << 1004 if self.blocks.fourth
+
+    # Destroy timelines for deselected blocks
+    [1001, 1002, 1003, 1004].each do |sid|
+      next if selected_subject_ids.include?(sid)
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: sid)
+      mt.destroy if mt.present?
+    end
+
+    # Ensure timelines exist for selected blocks, collect them preserving order
+    children = []
+    selected_subject_ids.each do |sid|
+      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: sid)
       if mt.nil?
-        MoodleTimeline.create!(
+        mt = MoodleTimeline.create!(
           user_id: user_id,
-          subject_id: 1001,
-          start_date: Date.today,
-          end_date: Date.today + 1.year,
+          subject_id: sid,
+          start_date: self.start_date,
+          end_date: self.end_date,
           balance: 0,
           expected_progress: 0,
           progress: 0,
@@ -79,82 +100,41 @@ class MoodleTimeline < ApplicationRecord
           as2: nil
         )
       end
-    else
-      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
-      mt.destroy if mt.present?
+      children << mt
     end
-    if self.blocks.second
-      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
-      if mt.nil?
-        MoodleTimeline.create!(
-          user_id: user_id,
-          subject_id: 1002,
-          start_date: Date.today,
-          end_date: Date.today + 1.year,
-          balance: 0,
-          expected_progress: 0,
-          progress: 0,
-          total_time: 0,
-          difference: 0,
-          category: category,
-          moodle_id: course_id,
-          hidden: false,
-          as1: nil,
-          as2: nil
-        )
+
+    # Evenly split the parent's date range across selected child timelines
+    if children.any? && self.start_date.present? && self.end_date.present?
+      total_days_inclusive = (self.end_date - self.start_date).to_i + 1
+      num_segments = children.size
+      base_length = total_days_inclusive / num_segments
+      remainder = total_days_inclusive % num_segments
+
+      segment_start = self.start_date
+      children.each_with_index do |mt, index|
+        segment_length = base_length + (index < remainder ? 1 : 0)
+        segment_end = segment_start + (segment_length - 1)
+        mt.update!(start_date: segment_start, end_date: segment_end)
+        segment_start = segment_end + 1
       end
-    else
-      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
-      mt.destroy if mt.present?
     end
-    if self.blocks.third
-      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
-      if mt.nil?
-        MoodleTimeline.create!(
-          user_id: user_id,
-          subject_id: 1003,
-          start_date: Date.today,
-          end_date: Date.today + 1.year,
-          balance: 0,
-          expected_progress: 0,
-          progress: 0,
-          total_time: 0,
-          difference: 0,
-          category: category,
-          moodle_id: course_id,
-          hidden: false,
-          as1: nil,
-          as2: nil
-        )
+
+    # Ensure topics are up to date for children (requires children to exist)
+    begin
+      self.update_blocks_topics
+    rescue => e
+      Rails.logger.warn "update_blocks_topics failed during AL blocks setup: #{e.message}"
+    end
+
+    # Regenerate deadlines for each child timeline
+    children.each do |mt|
+      begin
+        moodle_generate_topic_deadlines(mt)
+      rescue => e
+        Rails.logger.warn "Failed to generate deadlines for child moodle_timeline #{mt.id}: #{e.message}"
       end
-    else
-      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
-      mt.destroy if mt.present?
     end
-    if self.blocks.fourth
-      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
-      if mt.nil?
-        MoodleTimeline.create!(
-          user_id: user_id,
-          subject_id: 1004,
-          start_date: Date.today,
-          end_date: Date.today + 1.year,
-          balance: 0,
-          expected_progress: 0,
-          progress: 0,
-          total_time: 0,
-          difference: 0,
-          category: category,
-          moodle_id: course_id,
-          hidden: false,
-          as1: nil,
-          as2: nil
-        )
-      end
-    else
-      mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
-      mt.destroy if mt.present?
-    end
+
     self.moodle_topics.first&.destroy if self.moodle_topics.many?
   end
 
