@@ -161,7 +161,9 @@ class MoodleTimeline < ApplicationRecord
   end
 
   def create_moodle_topics
-    if self.subject_id != 80
+    if self.subject_id == 80
+      create_maths_al_topic
+    else
       user_id = self.user.moodle_id
       course_id = self.moodle_id
       completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
@@ -232,28 +234,15 @@ class MoodleTimeline < ApplicationRecord
           as2: as2
         )
       end
-    else
-      MoodleTopic.create!(
-        moodle_timeline_id: self.id,
-        name: "Edit this timeline and select which blocks you want to track",
-        unit: "Setup your timeline",
-        order: 1,
-        time: 0.1,
-        done: false
-      )
-    end
-  end
-
-  def update_as1_as2
-    if self.as1 == true && self.as2 == false
-      self.moodle_topics.where(as1: false).destroy_all
-    elsif self.as2 == true && self.as1 == false
-      self.moodle_topics.where(as2: false).destroy_all
     end
   end
 
   def update_moodle_topics
-    if self.subject_id != 80
+    if self.subject_id == 80
+      update_maths_al_topics
+    elsif self.subject_id == 1001 || self.subject_id == 1002 || self.subject_id == 1003 || self.subject_id == 1004
+      update_blocks_topics
+    else
       user_id = self.user.moodle_id
       course_id = self.moodle_id
 
@@ -283,7 +272,6 @@ class MoodleTimeline < ApplicationRecord
         # Only update the done flag to avoid touching other fields
         update_attrs = {
           submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
-          evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
           number_attempts: activity[:number_attempts],
           grade: activity[:grade].present? ? activity[:grade].round(2) : nil,
           done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2)
@@ -300,66 +288,140 @@ class MoodleTimeline < ApplicationRecord
           Rails.logger.error "Failed to update moodle_topic #{update_data[:topic].id}: #{e.message}"
         end
       end
+    end
+  end
 
-    else
-      # Handle subject_id == 80 case (unchanged)
-      user_id = self.user.moodle_id
-      course_id = self.moodle_id
+  def create_maths_al_topic
+    MoodleTopic.find_or_create_by!(
+      moodle_timeline_id: self.id,
+      name: "Edit this timeline and select which blocks you want to track",
+      unit: "Setup your timeline",
+      order: 1,
+      time: 0.1,
+      done: false
+    )
+  end
 
-      done_block_1 = false
-      done_block_2 = false
-      done_block_3 = false
-      done_block_4 = false
-      # done_block_1 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001).progress == 100
-      # done_block_2 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002).progress == 100
-      # done_block_3 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003).progress == 100
-      # done_block_4 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004).progress == 100
+  def update_maths_al_topics
+    # Handle subject_id == 80 case (unchanged)
 
-      topics = []
-      if self.blocks.first
-        topics << { name: "Pure Maths AS", unit: "Pure Maths AS", order: 1, done: done_block_1 }
-      end
-      if self.blocks.second
-        topics << { name: "Statistics",unit: "Statistics",order: 2,done: done_block_2 }
-      end
-      if self.blocks.third
-        topics << { name: "Pure Maths AL",unit: "Pure Maths AL",order: 3,done: done_block_3 }
-      end
-      if self.blocks.fourth
-        topics << { name: "Mechanics",unit: "Mechanics",order: 4,done: done_block_4 }
-      end
+    done_block_1 = false
+    done_block_2 = false
+    done_block_3 = false
+    done_block_4 = false
+    # done_block_1 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001).progress == 100
+    # done_block_2 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002).progress == 100
+    # done_block_3 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003).progress == 100
+    # done_block_4 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004).progress == 100
 
-      topics.each do |topic|
+    topics = []
+    if self.blocks.first
+      topics << { name: "Pure Maths AS", unit: "Pure Maths AS", order: 1, done: done_block_1 }
+    end
+    if self.blocks.second
+      topics << { name: "Statistics",unit: "Statistics",order: 2,done: done_block_2 }
+    end
+    if self.blocks.third
+      topics << { name: "Pure Maths AL",unit: "Pure Maths AL",order: 3,done: done_block_3 }
+    end
+    if self.blocks.fourth
+      topics << { name: "Mechanics",unit: "Mechanics",order: 4,done: done_block_4 }
+    end
 
-        mt = MoodleTopic.find_by(
+    topics.each do |topic|
+
+      mt = MoodleTopic.find_by(
+        moodle_timeline_id: self.id,
+        name: topic[:name],
+        unit: topic[:unit],
+        order: topic[:order],
+        time: 1,
+        done: topic[:done]
+      )
+      if mt.nil?
+        MoodleTopic.create!(
           moodle_timeline_id: self.id,
           name: topic[:name],
           unit: topic[:unit],
           order: topic[:order],
           time: 1,
-          done: topic[:done]
+          done: topic[:done],  # Mark as done if completed
+          deadline: Date.today + 1.year,  # Set a default deadline
+          percentage: 25,
+          mock50: false,
+          mock100: false,
+          number_attempts: nil,
+          submission_date: nil,
+          evaluation_date: nil,
+          completion_data: nil,
+          as1: nil,
+          as2: nil
         )
-        if mt.nil?
-          MoodleTopic.create!(
-            moodle_timeline_id: self.id,
-            name: topic[:name],
-            unit: topic[:unit],
-            order: topic[:order],
-            time: 1,
-            done: topic[:done],  # Mark as done if completed
-            deadline: Date.today + 1.year,  # Set a default deadline
-            percentage: 25,
-            mock50: false,
-            mock100: false,
-            number_attempts: nil,
-            submission_date: nil,
-            evaluation_date: nil,
-            completion_data: nil,
-            as1: nil,
-            as2: nil
-          )
-        end
       end
+    end
+    self.update_blocks_topics
+  end
+
+  def update_blocks_topics
+    app_user_id = self.user_id
+    moodle_user_id = self.user.moodle_id
+    course_id = self.moodle_id
+
+    completed_activities = MoodleApiService.new.get_all_course_activities(course_id, moodle_user_id)
+    pure_maths_as = MoodleTimeline.find_by(user_id: app_user_id, subject_id: 1001)
+    statistics = MoodleTimeline.find_by(user_id: app_user_id, subject_id: 1002)
+    pure_maths_al = MoodleTimeline.find_by(user_id: app_user_id, subject_id: 1003)
+    mechanics = MoodleTimeline.find_by(user_id: app_user_id, subject_id: 1004)
+
+    # sections_names
+    sections_pure_maths_as = ["Pure Mathematics (AS)", "Unit 2: Algebra and Functions (AS) - Part I", "Unit 2: Algebra and Functions (AS) - Part II", "Unit 2: Algebra and Functions (AS) - Part III", "Unit 2: Algebra and Functions (AS) - Part IV", "Cross Unit Assessment 1 (AS)", "Unit 3: Coordinate Geometry (AS)", "Unit 4: Sequences, Series and Binomial Expansion (AS) - Part I", "Unit 4: Sequences, Series and Binomial Expansion (AS) - Part II", "Cross Unit Assessment 2 (AS)", "Unit 5: Trigonometry (AS) - Part I", "Unit 5: Trigonometry (AS) - Part II", "Unit 6: Logarithms and Exponentials (AS)", "Cross Unit Assessment 3 (AS)", "Unit 7: Differentiation (AS)", "Unit 8: Integration (AS)", "Cross Unit Assessment 4 (AS)", "Pure Maths Mock Exam (AS)"]
+    sections_statistics = ["Probability and Statistics (AS)", "Unit 11: Representing and Summarising Data (AS)", "Unit 12: Probability (AS)", "Unit 13: Correlation and Regression (AS)", "Cross Unit Assessment 5 (AS)", "Unit 14: Discrete Random Variables (AS)", "Unit 15: Continuous Random Variables (AS)", "Cross Unit Assessment 6 (AS)", "Statistics 1 - Mock Exam (AS)", "P1 + P2 + S1 Exam Revision"]
+    sections_pure_maths_al = ["Pure Mathematics (AL)", "Unit 1: Proof (AL)", "Unit 2: Algebra and Functions (AL)", "Cross Unit Assessment 1 (AL)", "Unit 3: Coordinate Geometry (AL)", "Unit 4: Sequences, Series and Binomial Expansion (AL)", "Cross Unit Assessment 2 (AL)", "Unit 5: Trigonometry (AL)", "Unit 6: Exponential & Logarithmic Functions (AL)", "Cross Unit Assessment 3 (AL)", "Unit 7: Differentiation (AL)", "Unit 8: Integration (AL)", "Cross Unit Assessment 4 (AL)", "Unit 9: Numerical Methods (AL)", "Unit 10: Vectors (AL)", "Cross Unit Assessment 5 (AL)", "Paper 3 MOCK Exam (AL)", "Paper 4 MOCK Exam (AL)"]
+    sections_mechanics = ["Mechanics (AL)", "Unit 15: Topic 15.1. Quantities and Units in Mechanics", "Unit 16: Kinematics", "Unit 17: Forces and Newton’s Laws", "Unit 18: Topic 18.1. Moments", "Mechanics 1 - Mock Exam (AL)"]
+
+    # Per-block ordering counters
+    order_counters = { pure_as: 0, stats: 0, pure_al: 0, mech: 0 }
+
+    completed_activities.each do |activity|
+      section = activity[:section_name]
+      time_val = activity[:ect].to_f > 0 ? activity[:ect].to_f : 0.001
+      submission_str = activity[:submission_date].to_s
+      submission_date = submission_str.empty? ? nil : Time.at(submission_str.to_i).strftime("%d/%m/%Y %H:%M")
+
+      if sections_pure_maths_as.include?(section) && pure_maths_as
+        order_counters[:pure_as] += 1
+        topic = pure_maths_as.moodle_topics.find_or_initialize_by(name: activity[:name], unit: section)
+        topic.assign_attributes(order: order_counters[:pure_as], time: time_val, done: activity[:completiondata].to_i == 1, moodle_id: activity[:id], submission_date: submission_date, number_attempts: activity[:number_attempts], grade: activity[:grade].present? ? activity[:grade].round(2) : nil)
+        topic.save!
+      elsif sections_statistics.include?(section) && statistics
+        order_counters[:stats] += 1
+        topic = statistics.moodle_topics.find_or_initialize_by(name: activity[:name], unit: section)
+        topic.assign_attributes(order: order_counters[:stats], time: time_val, done: activity[:completiondata].to_i == 1, moodle_id: activity[:id], submission_date: submission_date, number_attempts: activity[:number_attempts], grade: activity[:grade].present? ? activity[:grade].round(2) : nil)
+        topic.save!
+      elsif sections_pure_maths_al.include?(section) && pure_maths_al
+        order_counters[:pure_al] += 1
+        topic = pure_maths_al.moodle_topics.find_or_initialize_by(name: activity[:name], unit: section)
+        topic.assign_attributes(order: order_counters[:pure_al], time: time_val, done: activity[:completiondata].to_i == 1, moodle_id: activity[:id], submission_date: submission_date, number_attempts: activity[:number_attempts], grade: activity[:grade].present? ? activity[:grade].round(2) : nil)
+        topic.save!
+      elsif sections_mechanics.include?(section) && mechanics
+        order_counters[:mech] += 1
+        topic = mechanics.moodle_topics.find_or_initialize_by(name: activity[:name], unit: section)
+        topic.assign_attributes(order: order_counters[:mech], time: time_val, done: activity[:completiondata].to_i == 1, moodle_id: activity[:id], submission_date: submission_date, number_attempts: activity[:number_attempts], grade: activity[:grade].present? ? activity[:grade].round(2) : nil)
+        topic.save!
+      end
+    end
+  end
+
+  # Backwards-compatible alias used in older code paths
+  def create_blocks_topics
+    update_blocks_topics
+  end
+
+  def update_as1_as2
+    if self.as1 == true && self.as2 == false
+      self.moodle_topics.where(as1: false).destroy_all
+    elsif self.as2 == true && self.as1 == false
+      self.moodle_topics.where(as2: false).destroy_all
     end
   end
 
