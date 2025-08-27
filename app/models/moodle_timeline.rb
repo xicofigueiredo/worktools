@@ -287,23 +287,27 @@ class MoodleTimeline < ApplicationRecord
     done_block_2 = false
     done_block_3 = false
     done_block_4 = false
-    done_block_1 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001).progress == 100 if MoodleTimeline.find_by(user_id: user_id, subject_id: 1001).present?
-    done_block_2 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002).progress == 100 if MoodleTimeline.find_by(user_id: user_id, subject_id: 1002).present?
-    done_block_3 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003).progress == 100 if MoodleTimeline.find_by(user_id: user_id, subject_id: 1003).present?
-    done_block_4 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004).progress == 100 if MoodleTimeline.find_by(user_id: user_id, subject_id: 1004).present?
+    mt_1001 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001)
+    mt_1002 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002)
+    mt_1003 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003)
+    mt_1004 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
+    done_block_1 = mt_1001.progress == 100 if mt_1001.present?
+    done_block_2 = mt_1002.progress == 100 if mt_1002.present?
+    done_block_3 = mt_1003.progress == 100 if mt_1003.present?
+    done_block_4 = mt_1004.progress == 100 if mt_1004.present?
 
     topics = []
     if self.blocks.first
-      topics << { name: "Pure Maths AS", unit: "Pure Maths AS", order: 1, done: done_block_1 }
+      topics << { name: "Pure Maths AS", unit: "Pure Maths AS", order: 1, done: done_block_1, deadline: mt_1001&.end_date }
     end
     if self.blocks.second
-      topics << { name: "Statistics",unit: "Statistics",order: 2,done: done_block_2 }
+      topics << { name: "Statistics", unit: "Statistics", order: 2, done: done_block_2, deadline: mt_1002&.end_date }
     end
     if self.blocks.third
-      topics << { name: "Pure Maths AL",unit: "Pure Maths AL",order: 3,done: done_block_3 }
+      topics << { name: "Pure Maths AL", unit: "Pure Maths AL", order: 3, done: done_block_3, deadline: mt_1003&.end_date }
     end
     if self.blocks.fourth
-      topics << { name: "Mechanics",unit: "Mechanics",order: 4,done: done_block_4 }
+      topics << { name: "Mechanics", unit: "Mechanics", order: 4, done: done_block_4, deadline: mt_1004&.end_date }
     end
 
     topics.each do |topic|
@@ -324,7 +328,7 @@ class MoodleTimeline < ApplicationRecord
           order: topic[:order],
           time: 1,
           done: topic[:done],  # Mark as done if completed
-          deadline: Date.today + 1.year,  # Set a default deadline
+          deadline: topic[:deadline],  # Set to child's end date
           percentage: 25,
           mock50: false,
           mock100: false,
@@ -335,6 +339,11 @@ class MoodleTimeline < ApplicationRecord
           as1: nil,
           as2: nil
         )
+      else
+        # Update deadline to reflect current child timeline end date
+        if mt.deadline != topic[:deadline]
+          mt.update(deadline: topic[:deadline])
+        end
       end
     end
     self.update_blocks_topics
