@@ -196,6 +196,120 @@ class MoodleApiService
       if category == 4
         as1 = true
         as2 = true
+      elsif category == 19 # Year 7
+        moodle_timeline = MoodleTimeline.find_or_create_by!(
+          user_id: user_id,
+          subject_id: 1007,
+          start_date: Date.today + 1.day,
+          end_date: Date.today + 1.year,
+          category: category,
+          hidden: false
+        )
+
+        # Create one MoodleTopic per relevant course section (LTR, English, Maths, Science)
+        desired_sections = ["Learning Through Research", "English", "Mathematics", "Science"]
+        sections = []
+        begin
+          sections = get_course_topics_for_learner(email, course_id)
+        rescue => e
+          Rails.logger.warn "Could not fetch sections for course #{course_id}: #{e.message}"
+        end
+
+        # Derive unit name from the course string: take the main course title and drop the leading "Year X - " prefix
+        main_title = course.split(":", 2)[1].to_s.strip
+        main_title = main_title.split("(").first.to_s.strip
+        unit_name = main_title.sub(/^Year\s*\d+\s*-\s*/, '').strip
+
+        order_counter = 0
+        sections.each do |section|
+          section_name = section[:section].to_s.strip
+          next if section_name.blank?
+          next unless desired_sections.include?(section_name)
+
+          order_counter += 1
+          topic = moodle_timeline.moodle_topics.find_or_initialize_by(name: section_name, unit: unit_name)
+          topic.order = order_counter
+          topic.done = false if topic.done.nil?
+          topic.deadline = moodle_timeline.end_date
+          topic.time = 1 if topic.time.blank?
+          topic.save!
+        end
+      elsif category == 18 # Year 8
+        moodle_timeline = MoodleTimeline.find_or_create_by!(
+          user_id: user_id,
+          subject_id: 1008,
+          start_date: Date.today + 1.day,
+          end_date: Date.today + 1.year,
+          category: category,
+          hidden: false
+        )
+
+        # Create one MoodleTopic per relevant course section (LTR, English, Maths, Science)
+        desired_sections = ["Learning Through Research", "English", "Mathematics", "Science"]
+        sections = []
+        begin
+          sections = get_course_topics_for_learner(email, course_id)
+        rescue => e
+          Rails.logger.warn "Could not fetch sections for course #{course_id}: #{e.message}"
+        end
+
+        # Derive unit name from the course string: take the main course title and drop the leading "Year X - " prefix
+        main_title = course.split(":", 2)[1].to_s.strip
+        main_title = main_title.split("(").first.to_s.strip
+        unit_name = main_title.sub(/^Year\s*\d+\s*-\s*/, '').strip
+
+        order_counter = 0
+        sections.each do |section|
+          section_name = section[:section].to_s.strip
+          next if section_name.blank?
+          next unless desired_sections.include?(section_name)
+
+          order_counter += 1
+          topic = moodle_timeline.moodle_topics.find_or_initialize_by(name: section_name, unit: unit_name)
+          topic.order = order_counter
+          topic.done = false if topic.done.nil?
+          topic.deadline = moodle_timeline.end_date
+          topic.time = 1 if topic.time.blank?
+          topic.save!
+        end
+      elsif category == 33 # Year 9
+        moodle_timeline = MoodleTimeline.find_or_create_by!(
+          user_id: user_id,
+          subject_id: 1009,
+          start_date: Date.today + 1.day,
+          end_date: Date.today + 1.year,
+          category: category,
+          hidden: false
+        )
+
+        # Create one MoodleTopic per relevant course section (LTR, English, Maths, Science)
+        desired_sections = ["Learning Through Research", "English", "Mathematics", "Science"]
+        sections = []
+        begin
+          sections = get_course_topics_for_learner(email, course_id)
+        rescue => e
+          Rails.logger.warn "Could not fetch sections for course #{course_id}: #{e.message}"
+        end
+
+        # Derive unit name from the course string: take the main course title and drop the leading "Year X - " prefix
+        main_title = course.split(":", 2)[1].to_s.strip
+        main_title = main_title.split("(").first.to_s.strip
+        unit_name = main_title.sub(/^Year\s*\d+\s*-\s*/, '').strip
+
+        order_counter = 0
+        sections.each do |section|
+          section_name = section[:section].to_s.strip
+          next if section_name.blank?
+          next unless desired_sections.include?(section_name)
+
+          order_counter += 1
+          topic = moodle_timeline.moodle_topics.find_or_initialize_by(name: section_name, unit: unit_name)
+          topic.order = order_counter
+          topic.done = false if topic.done.nil?
+          topic.deadline = moodle_timeline.end_date
+          topic.time = 1 if topic.time.blank?
+          topic.save!
+        end
       end
 
       if subject
