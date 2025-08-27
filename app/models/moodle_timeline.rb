@@ -155,9 +155,7 @@ class MoodleTimeline < ApplicationRecord
       mt = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004)
       mt.destroy if mt.present?
     end
-    if self.moodle_topics.count > 1
-      self.moodle_topics.first.destroy
-    end
+    self.moodle_topics.first&.destroy if self.moodle_topics.many?
   end
 
   def create_moodle_topics
@@ -309,10 +307,10 @@ class MoodleTimeline < ApplicationRecord
     done_block_2 = false
     done_block_3 = false
     done_block_4 = false
-    # done_block_1 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001).progress == 100
-    # done_block_2 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002).progress == 100
-    # done_block_3 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003).progress == 100
-    # done_block_4 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004).progress == 100
+    done_block_1 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1001).progress == 100 if MoodleTimeline.find_by(user_id: user_id, subject_id: 1001).present?
+    done_block_2 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1002).progress == 100 if MoodleTimeline.find_by(user_id: user_id, subject_id: 1002).present?
+    done_block_3 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1003).progress == 100 if MoodleTimeline.find_by(user_id: user_id, subject_id: 1003).present?
+    done_block_4 = MoodleTimeline.find_by(user_id: user_id, subject_id: 1004).progress == 100 if MoodleTimeline.find_by(user_id: user_id, subject_id: 1004).present?
 
     topics = []
     if self.blocks.first
