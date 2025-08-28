@@ -22,6 +22,12 @@ Rails.application.routes.draw do
     get '/get_topics', to: 'subjects#get_topics'
     patch '/timelines/:id/update_done_topics', to: 'timelines#update_done_topics', as: 'update_done_topics'
     get '/about', to: 'pages#about'
+    resources :consents, only: [] do
+      collection do
+        get :build_week
+        get :sprint
+      end
+    end
     get 'dashboard_admin', to: 'pages#dashboard_admin'
     get 'dashboard_lc', to: 'pages#dashboard_lc'
     get 'dashboard_cm', to: 'pages#dashboard_cm'
