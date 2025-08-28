@@ -5,6 +5,7 @@ class Week < ApplicationRecord
   has_many :kdas
   belongs_to :sprint
   has_many :timeline_progresses
+  has_many :consents, dependent: :nullify
 
   def week_name_abbr
     if (match = name.match(/\AWeek (\d+)(?: \/ Build Week)?\z/))

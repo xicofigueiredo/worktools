@@ -6,6 +6,7 @@ class Sprint < ApplicationRecord
   has_many :sprint_goals, dependent: :destroy
   has_many :weeks, dependent: :destroy
   has_many :reports, dependent: :destroy
+  has_many :consents, dependent: :nullify
 
   def count_absences(user)
     date_range = start_date..end_date

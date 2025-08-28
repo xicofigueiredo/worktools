@@ -37,6 +37,7 @@ class User < ApplicationRecord
   has_many :reports
   has_many :notifications, dependent: :destroy
   has_many :chats, dependent: :destroy
+  has_many :consents, dependent: :destroy
 
   enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', rm: 'Regional Manager', guardian: 'Parent', cm: 'Course Manager', exams: 'Exams', edu: 'Edu' }
   validate :email_domain_check, on: :create
