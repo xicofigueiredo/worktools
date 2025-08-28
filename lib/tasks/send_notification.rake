@@ -15,112 +15,117 @@ namespace :notifications do
 
     # hub_ids = [174, 191, 153, 168]
 
-    # User.where(role: "lc").or(User.where(role: "admin")).find_each do |user|
-    #   next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
-    #   if user.deactivate != true
-    #     Notification.find_or_create_by!(
-    #       user: user,
-    #       link: "",
-    #       message: "Dear LC, we have edited back some of the subject's names of your exams' registrations. There is no extra step required from your side."
-    #     )
-    #     notifications_count += 1
-    #   end
-    # end
-    #
-    users =  ["Manuel.Jordao@edubga.com",
-    "Hannah.Cataldo@edubga.com",
-    "Ilan.Flak@edubga.com",
-    "Sofia.Alonso@edubga.com",
-    "Naia.Lincoln@edubga.com",
-    "Jamie.Huber@edubga.com",
-    "Goncalo.Almeida@edubga.com",
-    "nohambagrace@gmail.com",
-    "Lucas.Wehle@edubga.com",
-    "Chimu.Yasuda@edubga.com",
-    "Declan.Lombardi@edubga.com",
-    "Finlay.Low@edubga.com",
-    "Gaspar.Bonacho@edubga.com",
-    "Mees.Rodenburg@edubga.com",
-    "Mia.Pires@edubga.com",
-    "Sara.Krnic@edubga.com",
-    "Zoey.Weaver@edubga.com",
-    "Ilay.Ziv@edubga.com",
-    "Marta.Frota@edubga.com",
-    "Joshua.Smith@edubga.com",
-    "Lilian.Smith@edubga.com",
-    "Noah.Sweeney@edubga.com",
-    "Kieran.Mercurio@edubga.com",
-    "Madeline.Mandarino@edubga.com",
-    "Hare.Natori@edubga.com",
-    "Maximilian.Hong@edubga.com",
-    "Guan.Liming@edubga.com",
-    "Ilay.Daniel@edubga.com",
-    "Caden.melvin@edubga.com",
-    "claire.cannon@edubga.com",
-    "Michael.Aviv@edubga.com",
-    "carter.pearce@edubga.com",
-    "jane.velychko@edubga.com",
-    "Kingsley.Pearson@edubga.com",
-    "Pablo.Gistau@edubga.com",
-    "Sophia.Lundin@edubga.com",
-    "or.dakon@edubga.com",
-    "curtis.ho@edubga.com",
-    "Caetana.Cardoso@edubga.com",
-    "nicole.ferreira@edubga.com",
-    "choying.pelmo@edubga.com",
-    "Elisa.Barre@edubga.com",
-    "Ella.Nachtergaele@edubga.com",
-    "yara.pinto@edubga.com",
-    "Ada.Schiller@edubga.com",
-    "michael.kochavi@edubga.com",
-    "keirnan.miller@edubga.com",
-    "Lila.Reynolds@edubga.com",
-    "sergiodearaujo2@outlook.com",
-    "maireadnmcg@gmail.com",
-    "halleacampbell@gmail.com",
-    "lincoln7p@gmail.com",
-    "catiaferreirapfacademy@gmail.com",
-    "dgautier23@icloud.com",
-    "diegosinathrya2009@gmail.com",
-    "julesg2009@outlook.com",
-    "yabaye40@gmail.com",
-    "amanda.rombaut@edubga.com",
-    "solaris.ewagrochowska@gmail.com",
-    "ninkagroszek@gmail.com",
-    "nir.erlich@gmail.com",
-    "liorzarchi2009@gmail.com",
-    "yesiam.maisey85@gmail.com",
-    "sarah.kassam@edubga.com",
-    "vascolopes2008@gmailcom",
-    "oeribenne@yahoo.com",
-    "gbasciu3@gmail.com",
-    "write2moris@icloud.com",
-    "sebsm2010@icloud.com",
-    "Somtoeribenne@gmail.com",
-    "caetanoguerraalves@gmail.com",
-    "dan@sorlander.com",
-    "meifonseca13@gmail.com",
-    "maximilian.sibony@edubga.com",
-    "uri.zekbach@gmail.com",
-    "alayalaubsch@gmail.com"]
-
-    users.each do |email|
-      #ignore capital letters
-      email = email.downcase
-      user = User.find_by(email: email)
-      if user.present?
+    User.where(role: "lc").or(User.where(role: "learner")).find_each do |user|
+      # next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
+      if user.deactivate != true
         Notification.find_or_create_by!(
           user: user,
-          message: "Hello #{user.full_name},
+          link: "",
+          message: "Worktools is now connected to Moodle (Moodle T. option on the navbar)
+Legacy timelines will remain active during the transition to allow each learner to switch at their own pace. They will only be removed once we confirm that all new timelines are working properly.
+A toggle will be added to the dashboard so learning coaches can choose which timelines to view.
 
-We’re excited to share that you’ll be transitioning from Ecampus to FIA!
-
-This change won’t affect your platform, credits, or progress, everything you’ve achieved so far from credits and progress will stay exactly the same.
-
-If you have any questions, feel free to reach out to your Learning Coach."
+Please note that Maths AL & LWS timelines are not yet fullyconnected to Moodle.
+ "
         )
+        notifications_count += 1
       end
     end
+    #
+#     users =  ["Manuel.Jordao@edubga.com",
+#     "Hannah.Cataldo@edubga.com",
+#     "Ilan.Flak@edubga.com",
+#     "Sofia.Alonso@edubga.com",
+#     "Naia.Lincoln@edubga.com",
+#     "Jamie.Huber@edubga.com",
+#     "Goncalo.Almeida@edubga.com",
+#     "nohambagrace@gmail.com",
+#     "Lucas.Wehle@edubga.com",
+#     "Chimu.Yasuda@edubga.com",
+#     "Declan.Lombardi@edubga.com",
+#     "Finlay.Low@edubga.com",
+#     "Gaspar.Bonacho@edubga.com",
+#     "Mees.Rodenburg@edubga.com",
+#     "Mia.Pires@edubga.com",
+#     "Sara.Krnic@edubga.com",
+#     "Zoey.Weaver@edubga.com",
+#     "Ilay.Ziv@edubga.com",
+#     "Marta.Frota@edubga.com",
+#     "Joshua.Smith@edubga.com",
+#     "Lilian.Smith@edubga.com",
+#     "Noah.Sweeney@edubga.com",
+#     "Kieran.Mercurio@edubga.com",
+#     "Madeline.Mandarino@edubga.com",
+#     "Hare.Natori@edubga.com",
+#     "Maximilian.Hong@edubga.com",
+#     "Guan.Liming@edubga.com",
+#     "Ilay.Daniel@edubga.com",
+#     "Caden.melvin@edubga.com",
+#     "claire.cannon@edubga.com",
+#     "Michael.Aviv@edubga.com",
+#     "carter.pearce@edubga.com",
+#     "jane.velychko@edubga.com",
+#     "Kingsley.Pearson@edubga.com",
+#     "Pablo.Gistau@edubga.com",
+#     "Sophia.Lundin@edubga.com",
+#     "or.dakon@edubga.com",
+#     "curtis.ho@edubga.com",
+#     "Caetana.Cardoso@edubga.com",
+#     "nicole.ferreira@edubga.com",
+#     "choying.pelmo@edubga.com",
+#     "Elisa.Barre@edubga.com",
+#     "Ella.Nachtergaele@edubga.com",
+#     "yara.pinto@edubga.com",
+#     "Ada.Schiller@edubga.com",
+#     "michael.kochavi@edubga.com",
+#     "keirnan.miller@edubga.com",
+#     "Lila.Reynolds@edubga.com",
+#     "sergiodearaujo2@outlook.com",
+#     "maireadnmcg@gmail.com",
+#     "halleacampbell@gmail.com",
+#     "lincoln7p@gmail.com",
+#     "catiaferreirapfacademy@gmail.com",
+#     "dgautier23@icloud.com",
+#     "diegosinathrya2009@gmail.com",
+#     "julesg2009@outlook.com",
+#     "yabaye40@gmail.com",
+#     "amanda.rombaut@edubga.com",
+#     "solaris.ewagrochowska@gmail.com",
+#     "ninkagroszek@gmail.com",
+#     "nir.erlich@gmail.com",
+#     "liorzarchi2009@gmail.com",
+#     "yesiam.maisey85@gmail.com",
+#     "sarah.kassam@edubga.com",
+#     "vascolopes2008@gmailcom",
+#     "oeribenne@yahoo.com",
+#     "gbasciu3@gmail.com",
+#     "write2moris@icloud.com",
+#     "sebsm2010@icloud.com",
+#     "Somtoeribenne@gmail.com",
+#     "caetanoguerraalves@gmail.com",
+#     "dan@sorlander.com",
+#     "meifonseca13@gmail.com",
+#     "maximilian.sibony@edubga.com",
+#     "uri.zekbach@gmail.com",
+#     "alayalaubsch@gmail.com"]
+
+#     users.each do |email|
+#       #ignore capital letters
+#       email = email.downcase
+#       user = User.find_by(email: email)
+#       if user.present?
+#         Notification.find_or_create_by!(
+#           user: user,
+#           message: "Hello #{user.full_name},
+
+# We’re excited to share that you’ll be transitioning from Ecampus to FIA!
+
+# This change won’t affect your platform, credits, or progress, everything you’ve achieved so far from credits and progress will stay exactly the same.
+
+# If you have any questions, feel free to reach out to your Learning Coach."
+#         )
+#       end
+#     end
 
 
     # User.where(role: "learner").or(User.where(role: "lc")).find_each do |user|
