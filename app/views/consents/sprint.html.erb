@@ -1,5 +1,5 @@
 <div class="container mt-4">
-  <%= form_with model: @consent, url: sprint_consents_path(learner_id: @learner&.id), method: :post, local: true do |f| %>
+  <%= form_with model: @consent, url: sprint_consents_path(learner_id: @learner&.id), method: :post, local: true, data: { controller: 'consent-form' } do |f| %>
     <h1 class="mb-3"><%= @current_sprint.name %> <%= @current_sprint.start_date.strftime('%Y') %> Consent Form</h1>
 
     <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
@@ -29,7 +29,7 @@
         <br> Confirmation: <%= f.check_box :confirmation_over_18 %></strong>
       </p>
       <p>
-        I, <%= f.text_field :consent_approved_by, class: 'form-control d-inline-block', style: 'width: 70%;' %>, hereby acknowledge and agree that I will be participating in ALL activities organized by <strong><%= @consent.hub || @hub %></strong> Hub, as described above. I also authorize the Learning Coaches to accompany and transport me in those activities.
+        I, <%= f.text_field :consent_approved_by_learner, class: 'form-control d-inline-block', style: 'width: 70%;' %>, hereby acknowledge and agree that I will be participating in ALL activities organized by <strong><%= @consent.hub || @hub %></strong> Hub, as described above. I also authorize the Learning Coaches to accompany and transport me in those activities.
       </p>
       <p>
         <strong> In case the learner is under 18 years old
@@ -37,7 +37,7 @@
         Confirmation: <%= f.check_box :confirmation_under_18 %></strong>
       </p>
       <p>
-        I, <%= f.text_field :consent_approved_by, class: 'form-control d-inline-block', style: 'width: 70%;' %>, hereby grant permission for my child, <%= @learner.full_name %>, to participate in ALL activities organized by <strong><%= @consent.hub || @hub %></strong> Hub, as described above. I also authorize the Learning Coaches to accompany and transport my child in those activities.
+        I, <%= f.text_field :consent_approved_by_guardian, class: 'form-control d-inline-block', style: 'width: 70%;' %>, hereby grant permission for my child, <%= @learner.full_name %>, to participate in ALL activities organized by <strong><%= @consent.hub || @hub %></strong> Hub, as described above. I also authorize the Learning Coaches to accompany and transport my child in those activities.
       </p>
     </div>
 
@@ -71,15 +71,15 @@
           <tbody>
             <tr>
               <th class="w-25">Name:</th>
-              <td><%= f.text_field :emergency_contact_name, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_name, class: 'form-control', required: true %></td>
               <th class="w-25">Relationship:</th>
-              <td><%= f.text_field :emergency_contact_relationship, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_relationship, class: 'form-control', required: true %></td>
             </tr>
             <tr>
               <th>Contact number:</th>
-              <td><%= f.text_field :emergency_contact_contact, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_contact, class: 'form-control', required: true %></td>
               <th>Email address:</th>
-              <td><%= f.email_field :emergency_contact_email, class: 'form-control' %></td>
+              <td><%= f.email_field :emergency_contact_email, class: 'form-control', required: true %></td>
             </tr>
           </tbody>
         </table>
@@ -91,21 +91,21 @@
           <tbody>
             <tr>
               <th class="w-25">Name:</th>
-              <td><%= f.text_field :family_doctor_name, class: 'form-control' %></td>
+              <td><%= f.text_field :family_doctor_name, class: 'form-control', required: true %></td>
               <th class="w-25">Contact number:</th>
-              <td><%= f.text_field :family_doctor_contact, class: 'form-control' %></td>
+              <td><%= f.text_field :family_doctor_contact, class: 'form-control', required: true %></td>
             </tr>
             <tr>
               <th>Work Address:</th>
-              <td><%= f.text_field :work_adress, class: 'form-control' %></td>
+              <td><%= f.text_field :work_adress, class: 'form-control', required: true %></td>
               <th>Utente number:</th>
-              <td><%= f.text_field :utente_number, class: 'form-control' %></td>
+              <td><%= f.text_field :utente_number, class: 'form-control', required: true %></td>
             </tr>
             <tr>
               <th>Health Insurance Plan:</th>
-              <td><%= f.text_field :health_insurance_plan, class: 'form-control' %></td>
+              <td><%= f.text_field :health_insurance_plan, class: 'form-control', required: true %></td>
               <th>Health Insurance Contact:</th>
-              <td><%= f.text_field :health_insurance_contact, class: 'form-control' %></td>
+              <td><%= f.text_field :health_insurance_contact, class: 'form-control', required: true %></td>
             </tr>
           </tbody>
         </table>
@@ -117,27 +117,27 @@
           <tbody>
             <tr>
               <th class="w-25">Name:</th>
-              <td><%= f.text_field :emergency_contact_name_1, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_name_1, class: 'form-control', required: true %></td>
               <th class="w-25">Contact number:</th>
-              <td><%= f.text_field :emergency_contact_contact_1, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_contact_1, class: 'form-control', required: true %></td>
             </tr>
             <tr>
               <th>Name:</th>
-              <td><%= f.text_field :emergency_contact_name_2, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_name_2, class: 'form-control', required: true %></td>
               <th>Contact number:</th>
-              <td><%= f.text_field :emergency_contact_contact_2, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_contact_2, class: 'form-control', required: true %></td>
             </tr>
             <tr>
               <th>Name:</th>
-              <td><%= f.text_field :emergency_contact_name_3, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_name_3, class: 'form-control', required: true %></td>
               <th>Contact number:</th>
-              <td><%= f.text_field :emergency_contact_contact_3, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_contact_3, class: 'form-control', required: true %></td>
             </tr>
             <tr>
               <th>Name:</th>
-              <td><%= f.text_field :emergency_contact_name_4, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_name_4, class: 'form-control', required: true %></td>
               <th>Contact number:</th>
-              <td><%= f.text_field :emergency_contact_contact_4, class: 'form-control' %></td>
+              <td><%= f.text_field :emergency_contact_contact_4, class: 'form-control', required: true %></td>
             </tr>
           </tbody>
         </table>
@@ -147,29 +147,33 @@
       <div class="row g-3 mt-1">
         <div class="col-md-6">
           <%= f.label :allergies, 'Do you have any specific allergies?' %>
-          <%= f.text_area :allergies, class: 'form-control' %>
+          <%= f.text_area :allergies, class: 'form-control', required: true %>
         </div>
         <div class="col-md-6">
           <%= f.label :diet, 'Have you been provided a medically prescribed diet?' %>
-          <%= f.text_area :diet, class: 'form-control' %>
+          <%= f.text_area :diet, class: 'form-control', required: true %>
         </div>
         <div class="col-md-6">
           <%= f.label :limitations, 'Do you have any known physical limitations?' %>
-          <%= f.text_area :limitations, class: 'form-control' %>
+          <%= f.text_area :limitations, class: 'form-control', required: true %>
         </div>
         <div class="col-md-6">
           <%= f.label :medication, 'Are you presently on chronic medication and are you comfortable with self-administering this?' %>
-          <%= f.text_area :medication, class: 'form-control' %>
+          <%= f.text_area :medication, class: 'form-control', required: true %>
         </div>
         <div class="col-12">
           <%= f.label :additional_info, 'Any additional Information that you deem important?' %>
-          <%= f.text_area :additional_info, class: 'form-control' %>
+          <%= f.text_area :additional_info, class: 'form-control', required: true %>
         </div>
       </div>
     </div>
 
     <div class="mt-4 d-flex justify-content-center">
-      <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+      <% if current_user.role == "lc" %>
+        <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;', disabled: true %>
+      <% else %>
+        <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+      <% end %>
       <%= link_to 'Back', build_week_consents_path, class: 'btn btn-secondary ms-2', style: 'border-radius: 10px;' %>
     </div>
   <% end %>

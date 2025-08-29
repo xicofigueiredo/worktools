@@ -14,10 +14,10 @@ class ConsentsController < ApplicationController
 
     existing = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
     if existing
-      redirect_to edit_sprint_consents_path(@learner)
+      @consent = existing
+    else
+      @consent = Consent.new(hub: @learner.main_hub&.name, date: Date.today)
     end
-
-    @consent = Consent.new(hub: @learner.main_hub&.name, date: Date.today)
   end
 
   def create_sprint
@@ -25,14 +25,10 @@ class ConsentsController < ApplicationController
       redirect_back fallback_location: root_path, alert: "Learner not found" and return
     end
 
-    if Consent.exists?(user_id: @learner.id, sprint_id: @current_sprint&.id)
-      redirect_to  edit_sprint_consents_path(@learner)
-    end
-
     # Require at least one confirmation or an approver name
     over_confirmed = params.dig(:consent, :confirmation_over_18) == '1'
     under_confirmed = params.dig(:consent, :confirmation_under_18) == '1'
-    approver_present = params.dig(:consent, :consent_approved_by).present?
+    approver_present = params.dig(:consent, :approved_by_learner).present? || params.dig(:consent, :approved_by_guardian).present?
 
     unless over_confirmed || under_confirmed || approver_present
       @consent = Consent.new
@@ -40,11 +36,17 @@ class ConsentsController < ApplicationController
       render :sprint and return
     end
 
-    approver = params.dig(:consent, :consent_approved_by).presence
 
-    filtered_params = consent_params.merge(consent_approved_by: approver)
+    existing = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
 
-    @consent = Consent.new(filtered_params.merge(user: @learner, sprint: @current_sprint))
+    consent_attrs = consent_params.merge(user: @learner, sprint: @current_sprint)
+
+    if existing
+      @consent = existing
+      @consent.assign_attributes(consent_attrs)
+    else
+      @consent = Consent.new(consent_attrs)
+    end
 
     if @consent.save
       redirect_to learner_profile_path(@learner), notice: "Consent saved."
@@ -85,7 +87,8 @@ class ConsentsController < ApplicationController
       :limitations,
       :medication,
       :additional_info,
-      :consent_approved_by
+      :consent_approved_by_learner,
+      :consent_approved_by_guardian
     )
   end
 

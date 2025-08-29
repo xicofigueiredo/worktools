@@ -7,6 +7,15 @@
       <% @hub_lcs.each do |lc| %>
         <p>LC: <%= lc.full_name %> <br> <i class="fa-regular fa-envelope"></i> <%= lc.email %></p>
       <% end %>
+      <% if @consent.present? && (@consent.consent_approved_by_learner.present? || @consent.consent_approved_by_guardian.present?) %>
+        <%= link_to sprint_consents_path(learner_id: @learner.id), class: "btn btn-success", style: "border-radius: 10px;" do %>
+          Sprint Consent <i class="fa-solid fa-check"></i>
+        <% end %>
+      <% else %>
+        <%= link_to sprint_consents_path(learner_id: @learner.id), class: "btn btn-danger", style: "border-radius: 10px;" do %>
+          Sprint Consent <i class="fa-solid fa-xmark"></i>
+        <% end %>
+      <% end %>
     </div>
   </div>
   <div class="card p-3 shadow-sm bg-body-tertiary col" style="border-radius: 10px">
