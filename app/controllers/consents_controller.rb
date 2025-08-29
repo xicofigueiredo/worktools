@@ -29,20 +29,18 @@ class ConsentsController < ApplicationController
       redirect_to  edit_sprint_consents_path(@learner)
     end
 
-    # Require at least one confirmation or an approver name (over 18)
+    # Require at least one confirmation or an approver name
     over_confirmed = params.dig(:consent, :confirmation_over_18) == '1'
     under_confirmed = params.dig(:consent, :confirmation_under_18) == '1'
-    approver_over_present = params.dig(:consent, :consent_approved_by_over).present?
+    approver_present = params.dig(:consent, :consent_approved_by).present?
 
-    unless over_confirmed || under_confirmed || approver_over_present
+    unless over_confirmed || under_confirmed || approver_present
       @consent = Consent.new
       flash.now[:alert] = "Please tick one of the confirmations or fill the name field."
       render :sprint and return
     end
 
-    approver = params.dig(:consent, :consent_approved_by_over).presence ||
-               params.dig(:consent, :consent_approved_by_under).presence ||
-               params.dig(:consent, :consent_approved_by)
+    approver = params.dig(:consent, :consent_approved_by).presence
 
     filtered_params = consent_params.merge(consent_approved_by: approver)
 

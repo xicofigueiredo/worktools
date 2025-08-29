@@ -27,6 +27,7 @@ Rails.application.routes.draw do
       collection do
         get :build_week
         get :sprint
+        post :sprint, action: :create_sprint
       end
     end
 
