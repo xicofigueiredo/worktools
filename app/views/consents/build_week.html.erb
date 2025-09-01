@@ -1,12 +1,202 @@
+
 <div class="container mt-4">
-  <h1>Consents - Build Week</h1>
-  <p class="text-muted">Collect and manage consents specific to Build Week.</p>
+  <%= form_with model: @bw_consent, url: build_week_consents_path(learner_id: @learner&.id), method: :post, local: true, data: { controller: 'consent-form' } do |f| %>
+    <h1 class="mb-3"><%= @current_sprint.name %> <%= @nearest_build_week.name %> Consent Form</h1>
 
-  <div class="card p-3 shadow-sm bg-body-tertiary" style="border-radius: 10px;">
-    <p>Coming soon...</p>
-  </div>
+    <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
+      <p>
+        Dear BRAVE parents,
+      </p>
+      <p>
+        The <strong><%= @bw_consent.hub || @hub %></strong> Hub will be partaking in the <%= @current_sprint.name %> Build Week which is scheduled to take place during the week of <%= @nearest_build_week.start_date.strftime('%B %d, %Y') %> to <%= @nearest_build_week.end_date.strftime('%B %d, %Y') %>.
+      </p>
+      <p>
+        Brave Generation Academy aims to keep its three pillars – Knowledge, Skills, and Community - at the forefront when planning the activities for every Build Week. Learners are encouraged to attend all the activities of the Hub during this week since the cohesion of the group within a Hub is fundamental to the success of both the group and the individuals. The goal of each Build Week is to grow the Hub closer together – it places the group above the individual. It is thus a great opportunity to reinforce comradeship and a sense of belonging.
+      </p>
+      <p>
+        Please take note that no learners will be granted a “Home Day” or “Justified Absence” unless this is explicitly granted by Brave Generation Academy in advance. Should a learner be unable to partake in an activity, for particular reasons, it would be appreciated if this information could be communicated to the respective Learning Coaches to avoid any potential confusion regarding the planning of activities as well as the reservation of transport.
+      </p>
+      <p>
+        The <strong><%= @bw_consent.hub || @hub %></strong> Hub have decided to partake in the following activities during Build Week:
+      </p>
 
-  <div class="mt-3 d-flex gap-2">
-    <%= link_to 'Sprint Consents', sprint_consents_path, class: 'btn btn-outline-primary', style: 'border-radius: 10px;' %>
-  </div>
+      <%# table with consent activities %>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Activity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @bw_consent.consent_activities.each do |activity| %>
+            <tr>
+              <td><%= activity.name %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+
+      <p>
+        We believe that a Build Week is essential to every learner’s development, but we also understand that it is not always possible to attend all the various activities due to explicit circumstances. It is for this reason that the <strong> <%= @bw_consent.hub || @hub %></strong> Hub will be open during the week of <%= @nearest_build_week.start_date.strftime('%B %d, %Y') %> to <%= @nearest_build_week.end_date.strftime('%B %d, %Y') %> as the dedicated study hub for that day from 9:00 – 17:00.
+      </p>
+    </div>
+
+    <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
+      <h3 class="mb-3">Confirmation of Attendance</h3>
+      <p>
+        <strong>In case the learner is 18 years old or above
+        <br> Confirmation: <%= f.check_box :confirmation_over_18 %></strong>
+      </p>
+      <p>
+        I, <%= f.text_field :consent_approved_by_learner, class: 'form-control d-inline-block', style: 'width: 70%;' %>, confirm that I (or my child, if under 18) will attend the Build Week activities organized by the <strong><%= @bw_consent.hub || @hub %></strong> Hub from <%= @nearest_build_week.start_date.strftime('%B %d, %Y') %> to <%= @nearest_build_week.end_date.strftime('%B %d, %Y') %>.
+      </p>
+      <p>
+        <strong> In case the learner is under 18 years old
+        <br>
+        Confirmation: <%= f.check_box :confirmation_under_18 %></strong>
+      </p>
+      <p>
+        I, <%= f.text_field :consent_approved_by_guardian, class: 'form-control d-inline-block', style: 'width: 70%;' %>, confirm that I (or my child, if under 18) will attend the Build Week activities organized by the <strong><%= @bw_consent.hub || @hub %></strong> Hub from <%= @nearest_build_week.start_date.strftime('%B %d, %Y') %> to <%= @nearest_build_week.end_date.strftime('%B %d, %Y') %>.
+      </p>
+      <p>I have read and understood all information regarding the activities, including the conditions outlined in this document.</p>
+      <strong><p>By ticking this box, I acknowledge that this serves as my formal consent and replaces the need for a physical signature.</p></strong>
+      <p>I have carefully read, understand, and voluntarily checked this document and acknowledge that it shall be effective and binding upon me.</p>
+    </div>
+
+    <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
+      <h5 class="mb-3"><strong>I have read this document and acknowledge that:</strong></h5>
+      <ol>
+        <li>I have reviewed and understood all the information provided by the Learning Coaches, in this document, or by any other means of communication., describing the particulars of the activities, including their time, location, duration, method of transportation, inherent risks associated, cost, required material, as well as the voluntary nature of the activities.</li> <br>
+        <li>I understand that this consent form gives permission for myself/my child to participate in ALL activities hosted by the <%= @bw_consent.hub || @hub %> Hub and Brave Generation Academy. I acknowledge that if I do NOT wish myself/ my child to participate in any specific activities, I may inform the Learning Coaches to revoke consent for that activity only.</li> <br>
+        <li>All the participants partaking in the planned activities shall observe all safety rules and use care in the performance of all activities.</li> <br>
+        <li>Without prejudice to the duty of supervision and custody that falls upon the responsibilities of the Learning Coaches in any activity, families shall be jointly responsible for any damages caused by students during the activity that are not covered by insurance.</li> <br>
+        <li>There are inherent risks associated with each activity, and I willingly accept and assume all such risks that may be reasonably foreseeable to result from participating in these activities, including those specifically described by the Learning Coaches in this document or through any other means of communication.</li> <br>
+        <li>I agree to inform the Learning Coaches, as appropriate, of any health issues or changes in health status that may affect or limit my participation in these activities, including, but not limited to, medications being taken, any illnesses, and any other special health-related issues.</li> <br>
+        <li>In the event of an emergency where immediate medical treatment is necessary and cannot be postponed, I hereby authorize the Learning Coaches to use their judgement to seek medical services for me. This includes granting permission to be transported to a hospital for emergency medical or surgical treatment. The Learning Coaches will make every effort to contact my emergency contacts immediately or as soon as possible to inform them of the situation.</li> <br>
+        <li>Certain activities may involve the engagement of third-party companies or service providers. In this case, BGA shall not be held liable for any damages, injuries, or losses arising from the actions, omissions, or negligence of these third-party companies or their representatives, as BGA acts solely as an intermediary in facilitating the arrangement of these activities and does not have direct control over the operations, safety measures, or quality of services provided by these third-party companies.</li> <br>
+        <li>BGA reserves the right to cancel or reschedule the activities in the event of unforeseen circumstances or emergencies, including, but not limited to, inclement weather, natural disasters, or staff or Learner illness. BGA will make every effort to provide reasonable notice to the affected parties in the event of such cancellation or rescheduling. In the event of cancellation, the school will endeavor to offer a suitable alternative activity</li> <br>
+        <li>Cancellations by the Learner must be communicated to the Learning Coach, providing the reason, prior to its scheduled date. In the event of a cancellation, no refunds will be provided as reservations and commitments have already been made with the visited locations and/or transportation providers.</li> <br>
+        <li>Learner conduct is expected to be courteous and appropriate at all times. The Learning Coaches will have full authority to enforce discipline and handle any situations that may arise during the trip.</li> <br>
+        <li>Any disciplinary matters, especially regarding the consumption or possession of alcoholic beverages or any controlled substances, are strictly prohibited. Learners who violate this condition will be required to return home, and all costs incurred for their return will be their responsibility. It is imperative to maintain a safe and responsible environment for all participants, and adherence to this policy is of utmost importance.</li> <br>
+        <li>All learners are required to always stay with the group. Learners will not be granted permission to attend unscheduled activities, or events, or visit places without the presence of a Learning Coach. It is important for the safety and well-being of all participants that learners remain under supervision and guidance throughout the entire activity.</li> <br>
+        <li>BGA has taken reasonable measures to ensure the safety and well-being of the participants during Build Week. In consideration agreeing to participate in the activity, I hereby release, indemnify, and hold harmless BGA, its officers, employees, and agents from any and all claims, demands, actions, or causes of action arising out of or resulting from my participation in the activity, including, without limitation, personal injury or property damage, except to the extent caused by the gross negligence or intentional misconduct of BGA, its officers, employees, and agents.</li> <br>
+        <li>In the event of any matter or situation not explicitly addressed in this consent form, I understood and agreed that the applicable provisions of Portuguese legislation will govern and provide guidance.</li> <br>
+      </ol>
+    </div>
+
+    <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
+      <h3 class="mb-3">Emergency Contacts</h3>
+
+      <h5 class="mt-2">Preferred Contact Person</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <tbody>
+            <tr>
+              <th class="w-25">Name:</th>
+              <td><%= f.text_field :emergency_contact_name, class: 'form-control', required: true %></td>
+              <th class="w-25">Relationship:</th>
+              <td><%= f.text_field :emergency_contact_relationship, class: 'form-control', required: true %></td>
+            </tr>
+            <tr>
+              <th>Contact number:</th>
+              <td><%= f.text_field :emergency_contact_contact, class: 'form-control', required: true %></td>
+              <th>Email address:</th>
+              <td><%= f.email_field :emergency_contact_email, class: 'form-control', required: true %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 class="mt-3">Family Doctor & Insurance Information</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <tbody>
+            <tr>
+              <th class="w-25">Name:</th>
+              <td><%= f.text_field :family_doctor_name, class: 'form-control', required: true %></td>
+              <th class="w-25">Contact number:</th>
+              <td><%= f.text_field :family_doctor_contact, class: 'form-control', required: true %></td>
+            </tr>
+            <tr>
+              <th>Work Address:</th>
+              <td><%= f.text_field :work_adress, class: 'form-control', required: true %></td>
+              <th>Utente number:</th>
+              <td><%= f.text_field :utente_number, class: 'form-control', required: true %></td>
+            </tr>
+            <tr>
+              <th>Health Insurance Plan:</th>
+              <td><%= f.text_field :health_insurance_plan, class: 'form-control', required: true %></td>
+              <th>Health Insurance Contact:</th>
+              <td><%= f.text_field :health_insurance_contact, class: 'form-control', required: true %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 class="mt-3">Other Emergency Contacts</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <tbody>
+            <tr>
+              <th class="w-25">Name:</th>
+              <td><%= f.text_field :emergency_contact_name_1, class: 'form-control', required: true %></td>
+              <th class="w-25">Contact number:</th>
+              <td><%= f.text_field :emergency_contact_contact_1, class: 'form-control', required: true %></td>
+            </tr>
+            <tr>
+              <th>Name:</th>
+              <td><%= f.text_field :emergency_contact_name_2, class: 'form-control', required: true %></td>
+              <th>Contact number:</th>
+              <td><%= f.text_field :emergency_contact_contact_2, class: 'form-control', required: true %></td>
+            </tr>
+            <tr>
+              <th>Name:</th>
+              <td><%= f.text_field :emergency_contact_name_3, class: 'form-control', required: true %></td>
+              <th>Contact number:</th>
+              <td><%= f.text_field :emergency_contact_contact_3, class: 'form-control', required: true %></td>
+            </tr>
+            <tr>
+              <th>Name:</th>
+              <td><%= f.text_field :emergency_contact_name_4, class: 'form-control', required: true %></td>
+              <th>Contact number:</th>
+              <td><%= f.text_field :emergency_contact_contact_4, class: 'form-control', required: true %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="mt-4 mb-3">Specific Medical Information</h3>
+      <div class="row g-3 mt-1">
+        <div class="col-md-6">
+          <%= f.label :allergies, 'Do you have any specific allergies?' %>
+          <%= f.text_area :allergies, class: 'form-control', required: true %>
+        </div>
+        <div class="col-md-6">
+          <%= f.label :diet, 'Have you been provided a medically prescribed diet?' %>
+          <%= f.text_area :diet, class: 'form-control', required: true %>
+        </div>
+        <div class="col-md-6">
+          <%= f.label :limitations, 'Do you have any known physical limitations?' %>
+          <%= f.text_area :limitations, class: 'form-control', required: true %>
+        </div>
+        <div class="col-md-6">
+          <%= f.label :medication, 'Are you presently on chronic medication and are you comfortable with self-administering this?' %>
+          <%= f.text_area :medication, class: 'form-control', required: true %>
+        </div>
+        <div class="col-12">
+          <%= f.label :additional_info, 'Any additional Information that you deem important?' %>
+          <%= f.text_area :additional_info, class: 'form-control', required: true %>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 d-flex justify-content-center">
+      <% if current_user.role == "lc" %>
+        <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;', disabled: true %>
+      <% else %>
+        <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
+      <% end %>
+      <%= link_to 'Back', learner_profile_path(@learner), class: 'btn btn-secondary ms-2', style: 'border-radius: 10px;' %>
+    </div>
+  <% end %>
 </div>

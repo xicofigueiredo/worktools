@@ -4,6 +4,47 @@ class ConsentsController < ApplicationController
   before_action :set_learner
 
   def build_week
+    if @learner.nil?
+      redirect_back fallback_location: root_path, alert: "Learner not found" and return
+    end
+
+    # Find the nearest build week week.name.include?("Build") and start_date is before or equal to Date.today
+    @nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+    bw_existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
+    if bw_existing
+      @bw_consent = bw_existing
+    else
+      @bw_consent = Consent.new(user_id: @learner.id, week_id: @nearest_build_week&.id, hub: @learner.main_hub&.name)
+    end
+  end
+
+  def create_build_week
+    if @learner.nil?
+      redirect_back fallback_location: root_path, alert: "Learner not found" and return
+    end
+
+    over_confirmed = params.dig(:consent, :confirmation_over_18) == '1'
+    under_confirmed = params.dig(:consent, :confirmation_under_18) == '1'
+    approver_present = params.dig(:consent, :approved_by_learner).present? || params.dig(:consent, :approved_by_guardian).present?
+
+    unless over_confirmed || under_confirmed || approver_present
+      @bw_consent = Consent.new
+    end
+    
+    @nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+    existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
+    if existing
+      @bw_consent = existing
+    else
+      @bw_consent = Consent.new(user_id: @learner.id, week_id: @nearest_build_week&.id, hub: @learner.main_hub&.name)
+    end
+
+    if @bw_consent.save
+      redirect_to learner_profile_path(@learner), notice: "Consent saved."
+    else
+      flash.now[:alert] = @bw_consent.errors.full_messages.to_sentence
+      render :build_week
+    end
   end
 
   def sprint
@@ -12,11 +53,11 @@ class ConsentsController < ApplicationController
     end
     @hub = @learner.main_hub&.name
 
-    existing = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
-    if existing
-      @consent = existing
+    sprint_existing = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
+    if sprint_existing
+      @sprint_consent = sprint_existing
     else
-      @consent = Consent.new(hub: @learner.main_hub&.name, date: Date.today)
+      @sprint_consent = Consent.new(user_id: @learner.id, sprint_id: @current_sprint&.id, hub: @learner.main_hub&.name, date: Date.today)
     end
   end
 
@@ -31,7 +72,7 @@ class ConsentsController < ApplicationController
     approver_present = params.dig(:consent, :approved_by_learner).present? || params.dig(:consent, :approved_by_guardian).present?
 
     unless over_confirmed || under_confirmed || approver_present
-      @consent = Consent.new
+      @sprint_consent = Consent.new
       flash.now[:alert] = "Please tick one of the confirmations or fill the name field."
       render :sprint and return
     end
@@ -42,16 +83,16 @@ class ConsentsController < ApplicationController
     consent_attrs = consent_params.merge(user: @learner, sprint: @current_sprint)
 
     if existing
-      @consent = existing
-      @consent.assign_attributes(consent_attrs)
+      @sprint_consent = existing
+      @sprint_consent.assign_attributes(consent_attrs)
     else
-      @consent = Consent.new(consent_attrs)
+      @sprint_consent = Consent.new(consent_attrs)
     end
 
-    if @consent.save
+    if @sprint_consent.save
       redirect_to learner_profile_path(@learner), notice: "Consent saved."
     else
-      flash.now[:alert] = @consent.errors.full_messages.to_sentence
+      flash.now[:alert] = @sprint_consent.errors.full_messages.to_sentence
       render :sprint
     end
   end

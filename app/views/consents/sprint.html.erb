@@ -1,5 +1,5 @@
 <div class="container mt-4">
-  <%= form_with model: @consent, url: sprint_consents_path(learner_id: @learner&.id), method: :post, local: true, data: { controller: 'consent-form' } do |f| %>
+  <%= form_with model: @sprint_consent, url: sprint_consents_path(learner_id: @learner&.id), method: :post, local: true, data: { controller: 'consent-form' } do |f| %>
     <h1 class="mb-3"><%= @current_sprint.name %> <%= @current_sprint.start_date.strftime('%Y') %> Consent Form</h1>
 
     <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
@@ -7,16 +7,16 @@
         Dear BRAVE parents,
       </p>
       <p>
-        The <strong><%= @consent.hub || @hub %></strong> Hub and its learners engage in numerous activities throughout this sprint, including the community project during Build Week, as well as various park and beach activities.
+        The <strong><%= @sprint_consent.hub || @hub %></strong> Hub and its learners engage in numerous activities throughout this sprint, including the community project during Build Week, as well as various park and beach activities.
       </p>
       <p>
-        This consent form grants permission for your child to participate in <strong>all activities</strong> organised by the <strong><%= @consent.hub || @hub %></strong> Hub and its Learning Coaches. All activities will be communicated via email and WhatsApp with advance notice, allowing parents to make informed decisions without the need to continuously sign new consent forms.
+        This consent form grants permission for your child to participate in <strong>all activities</strong> organised by the <strong><%= @sprint_consent.hub || @hub %></strong> Hub and its Learning Coaches. All activities will be communicated via email and WhatsApp with advance notice, allowing parents to make informed decisions without the need to continuously sign new consent forms.
       </p>
       <p>
         Please note that no learners will be granted a “Home Day” or “Justified Absence” unless explicitly approved by the Regional Manager.
       </p>
       <p>
-        If you do not wish your child to participate in a specific activity, please send an email to the <strong><%= @consent.hub || @hub %></strong> Hub Learning Coach after being informed of the activity. This will revoke consent for that particular activity only.
+        If you do not wish your child to participate in a specific activity, please send an email to the <strong><%= @sprint_consent.hub || @hub %></strong> Hub Learning Coach after being informed of the activity. This will revoke consent for that particular activity only.
       </p>
       <p>
         Additionally, if your child is unable to partake in an activity for any reason, please inform the respective Learning Coaches to prevent any confusion regarding activity planning and transport arrangements.
@@ -29,7 +29,7 @@
         <br> Confirmation: <%= f.check_box :confirmation_over_18 %></strong>
       </p>
       <p>
-        I, <%= f.text_field :consent_approved_by_learner, class: 'form-control d-inline-block', style: 'width: 70%;' %>, hereby acknowledge and agree that I will be participating in ALL activities organized by <strong><%= @consent.hub || @hub %></strong> Hub, as described above. I also authorize the Learning Coaches to accompany and transport me in those activities.
+        I, <%= f.text_field :consent_approved_by_learner, class: 'form-control d-inline-block', style: 'width: 70%;' %>, hereby acknowledge and agree that I will be participating in ALL activities organized by <strong><%= @sprint_consent.hub || @hub %></strong> Hub, as described above. I also authorize the Learning Coaches to accompany and transport me in those activities.
       </p>
       <p>
         <strong> In case the learner is under 18 years old
@@ -37,7 +37,7 @@
         Confirmation: <%= f.check_box :confirmation_under_18 %></strong>
       </p>
       <p>
-        I, <%= f.text_field :consent_approved_by_guardian, class: 'form-control d-inline-block', style: 'width: 70%;' %>, hereby grant permission for my child, <%= @learner.full_name %>, to participate in ALL activities organized by <strong><%= @consent.hub || @hub %></strong> Hub, as described above. I also authorize the Learning Coaches to accompany and transport my child in those activities.
+        I, <%= f.text_field :consent_approved_by_guardian, class: 'form-control d-inline-block', style: 'width: 70%;' %>, hereby grant permission for my child, <%= @learner.full_name %>, to participate in ALL activities organized by <strong><%= @sprint_consent.hub || @hub %></strong> Hub, as described above. I also authorize the Learning Coaches to accompany and transport my child in those activities.
       </p>
     </div>
 
@@ -45,7 +45,7 @@
       <h5 class="mb-3"><strong>I have read this document and acknowledge that:</strong></h5>
       <ol>
         <li>I have reviewed and understood all the information provided by the Learning Coaches, in this document, or by any other means of communication., describing the particulars of the activities, including their time, location, duration, method of transportation, inherent risks associated, cost, required material, as well as the voluntary nature of the activities.</li> <br>
-        <li>I understand that this consent form gives permission for myself/my child to participate in ALL activities hosted by the <%= @consent.hub || @hub %> Hub and Brave Generation Academy. I acknowledge that if I do NOT wish myself/ my child to participate in any specific activities, I may inform the Learning Coaches to revoke consent for that activity only.</li> <br>
+        <li>I understand that this consent form gives permission for myself/my child to participate in ALL activities hosted by the <%= @sprint_consent.hub || @hub %> Hub and Brave Generation Academy. I acknowledge that if I do NOT wish myself/ my child to participate in any specific activities, I may inform the Learning Coaches to revoke consent for that activity only.</li> <br>
         <li>All the participants partaking in the planned activities shall observe all safety rules and use care in the performance of all activities.</li> <br>
         <li>Without prejudice to the duty of supervision and custody that falls upon the responsibilities of the Learning Coaches in any activity, families shall be jointly responsible for any damages caused by students during the activity that are not covered by insurance.</li> <br>
         <li>There are inherent risks associated with each activity, and I willingly accept and assume all such risks that may be reasonably foreseeable to result from participating in these activities, including those specifically described by the Learning Coaches in this document or through any other means of communication.</li> <br>
