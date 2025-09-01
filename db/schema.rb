@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_07_18_163731) do
+ActiveRecord::Schema[7.0].define(version: 2025_08_29_123500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -52,6 +52,37 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_18_163731) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "assignments", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "subject_id", null: false
+    t.bigint "moodle_id", null: false
+    t.bigint "moodle_course_id", null: false
+    t.bigint "cmid"
+    t.string "name", null: false
+    t.text "intro"
+    t.datetime "allow_submissions_from"
+    t.datetime "due_date"
+    t.datetime "cutoff_date"
+    t.decimal "max_grade", precision: 10, scale: 2
+    t.integer "max_attempts"
+    t.datetime "submission_date"
+    t.datetime "evaluation_date"
+    t.decimal "grade", precision: 10, scale: 2
+    t.integer "number_attempts"
+    t.integer "number_submissions"
+    t.integer "number_submissions_late"
+    t.integer "number_submissions_late_late"
+    t.integer "number_submissions_late_late_late"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["moodle_course_id"], name: "index_assignments_on_moodle_course_id"
+    t.index ["moodle_id"], name: "index_assignments_on_moodle_id"
+    t.index ["subject_id", "moodle_id"], name: "index_assignments_on_subject_id_and_moodle_id"
+    t.index ["subject_id"], name: "index_assignments_on_subject_id"
+    t.index ["user_id", "subject_id", "moodle_id"], name: "index_assignments_on_user_subject_moodle", unique: true
+    t.index ["user_id"], name: "index_assignments_on_user_id"
+  end
+
   create_table "attendances", force: :cascade do |t|
     t.bigint "user_id"
     t.date "attendance_date"
@@ -66,6 +97,25 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_18_163731) do
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
+  create_table "chat_messages", force: :cascade do |t|
+    t.bigint "chat_id", null: false
+    t.string "role"
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chat_id"], name: "index_chat_messages_on_chat_id"
+  end
+
+  create_table "chats", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "subject_id", null: false
+    t.text "system_prompt"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subject_id"], name: "index_chats_on_subject_id"
+    t.index ["user_id"], name: "index_chats_on_user_id"
+  end
+
   create_table "communities", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
     t.string "involved"
@@ -77,6 +127,63 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_18_163731) do
     t.string "category"
     t.string "categories", default: [], array: true
     t.index ["sprint_goal_id"], name: "index_communities_on_sprint_goal_id"
+  end
+
+  create_table "consent_activities", force: :cascade do |t|
+    t.bigint "consent_id", null: false
+    t.string "day"
+    t.string "activity_location"
+    t.string "meeting"
+    t.string "pick_up"
+    t.string "location"
+    t.string "transport"
+    t.string "bring_along"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["consent_id"], name: "index_consent_activities_on_consent_id"
+    t.index ["day"], name: "index_consent_activities_on_day"
+  end
+
+  create_table "consents", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "sprint_id"
+    t.bigint "week_id"
+    t.string "hub"
+    t.date "date"
+    t.boolean "confirmation_under_18"
+    t.boolean "confirmation_over_18"
+    t.string "emergency_contact_name"
+    t.string "emergency_contact_relationship"
+    t.string "emergency_contact_contact"
+    t.string "emergency_contact_email"
+    t.string "family_doctor_name"
+    t.string "family_doctor_contact"
+    t.string "work_adress"
+    t.string "utente_number"
+    t.string "health_insurance_plan"
+    t.string "health_insurance_contact"
+    t.string "emergency_contact_name_1"
+    t.string "emergency_contact_contact_1"
+    t.string "emergency_contact_name_2"
+    t.string "emergency_contact_contact_2"
+    t.string "emergency_contact_name_3"
+    t.string "emergency_contact_contact_3"
+    t.string "emergency_contact_name_4"
+    t.string "emergency_contact_contact_4"
+    t.string "allergies"
+    t.string "diet"
+    t.string "limitations"
+    t.string "medication"
+    t.string "additional_info"
+    t.string "consent_approved_by_learner"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "consent_approved_by_guardian"
+    t.index ["sprint_id"], name: "index_consents_on_sprint_id"
+    t.index ["user_id", "sprint_id"], name: "index_consents_on_user_id_and_sprint_id"
+    t.index ["user_id", "week_id"], name: "index_consents_on_user_id_and_week_id"
+    t.index ["user_id"], name: "index_consents_on_user_id"
+    t.index ["week_id"], name: "index_consents_on_week_id"
   end
 
   create_table "exam_dates", force: :cascade do |t|
@@ -773,8 +880,17 @@ ActiveRecord::Schema[7.0].define(version: 2025_07_18_163731) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "assignments", "subjects"
+  add_foreign_key "assignments", "users"
   add_foreign_key "attendances", "users"
+  add_foreign_key "chat_messages", "chats"
+  add_foreign_key "chats", "subjects"
+  add_foreign_key "chats", "users"
   add_foreign_key "communities", "sprint_goals"
+  add_foreign_key "consent_activities", "consents"
+  add_foreign_key "consents", "sprints"
+  add_foreign_key "consents", "users"
+  add_foreign_key "consents", "weeks"
   add_foreign_key "exam_dates", "subjects"
   add_foreign_key "exam_enroll_documents", "exam_enrolls"
   add_foreign_key "exam_enrolls", "moodle_timelines"
