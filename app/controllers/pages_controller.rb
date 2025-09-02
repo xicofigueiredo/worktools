@@ -83,6 +83,7 @@ class PagesController < ApplicationController
     # Count users per subject
     @subject_user_counts = User.joins(:timelines)
                                .where(deactivate: [false, nil])
+                               .where(timelines: { hidden: [false, nil] })
                                .group("timelines.subject_id")
                                .count
   end
