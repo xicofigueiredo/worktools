@@ -14,7 +14,13 @@ class ConsentsController < ApplicationController
     if bw_existing
       @bw_consent = bw_existing
     else
-      @bw_consent = Consent.new(user_id: @learner.id, week_id: @nearest_build_week&.id, hub: @learner.main_hub&.name)
+      @bw_consent = Consent.new(
+        user_id: @learner.id,
+        week_id: @nearest_build_week&.id,
+        hub: @learner.main_hub&.name,
+        start_date: @nearest_build_week&.start_date,
+        end_date: @nearest_build_week&.end_date
+      )
     end
   end
 
@@ -109,6 +115,8 @@ class ConsentsController < ApplicationController
     params.require(:consent).permit(
       :hub,
       :date,
+      :start_date,
+      :end_date,
       :confirmation_under_18,
       :confirmation_over_18,
       :emergency_contact_name,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_08_29_123500) do
+ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -179,6 +179,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_29_123500) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "consent_approved_by_guardian"
+    t.date "start_date"
+    t.date "end_date"
     t.index ["sprint_id"], name: "index_consents_on_sprint_id"
     t.index ["user_id", "sprint_id"], name: "index_consents_on_user_id_and_sprint_id"
     t.index ["user_id", "week_id"], name: "index_consents_on_user_id_and_week_id"
