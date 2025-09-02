@@ -204,6 +204,7 @@ class PagesController < ApplicationController
     nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
     @bw_consent = Consent.find_by(user_id: @learner.id, week_id: nearest_build_week&.id)
+    @activities = @bw_consent.consent_activities.any? if @bw_consent
     # The bulk of the setup is already handled in prepare_dashboard_data.
   end
 
