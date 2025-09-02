@@ -26,6 +26,7 @@ Rails.application.routes.draw do
     resources :consents, only: [] do
       collection do
         get :build_week
+        post :build_week, action: :create_build_week
         get :sprint
         post :sprint, action: :create_sprint
       end

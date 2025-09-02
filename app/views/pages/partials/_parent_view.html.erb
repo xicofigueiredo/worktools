@@ -17,7 +17,7 @@
             <% end %>
           </div>
           <div class="d-flex gap-3">
-            <% if @bw_consent.present? && (@bw_consent.consent_approved_by_learner.present? || @bw_consent.consent_approved_by_guardian.present?) %>
+            <% if @bw_consent.present? && (@bw_consent.confirmation_over_18 || @bw_consent.confirmation_under_18) %>
               <%= link_to build_week_consents_path(learner_id: @learner.id), class: "btn btn-success", style: "border-radius: 10px;" do %>
                 Build Week Consent <i class="fa-solid fa-check"></i>
               <% end %>
@@ -26,7 +26,7 @@
                 Build Week Consent <i class="fa-solid fa-xmark"></i>
               <% end %>
             <% end %>
-            <% if @sprint_consent.present? && (@sprint_consent.consent_approved_by_learner.present? || @sprint_consent.consent_approved_by_guardian.present?) %>
+            <% if @sprint_consent.present? && (@sprint_consent.confirmation_over_18 || @sprint_consent.confirmation_under_18) %>
               <%= link_to sprint_consents_path(learner_id: @learner.id), class: "btn btn-success", style: "border-radius: 10px;" do %>
                 Sprint Consent <i class="fa-solid fa-check"></i>
               <% end %>

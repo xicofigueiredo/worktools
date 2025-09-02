@@ -25,18 +25,24 @@ class ConsentsController < ApplicationController
 
     over_confirmed = params.dig(:consent, :confirmation_over_18) == '1'
     under_confirmed = params.dig(:consent, :confirmation_under_18) == '1'
-    approver_present = params.dig(:consent, :approved_by_learner).present? || params.dig(:consent, :approved_by_guardian).present?
+    approver_present = params.dig(:consent, :consent_approved_by_learner).present? || params.dig(:consent, :consent_approved_by_guardian).present?
 
     unless over_confirmed || under_confirmed || approver_present
       @bw_consent = Consent.new
+      flash.now[:alert] = "Please tick one of the confirmations or fill the name field."
+      render :build_week and return
     end
-    
+
     @nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
+
+    consent_attrs = consent_params.merge(user: @learner, week: @nearest_build_week, hub: @learner.main_hub&.name)
+
     if existing
       @bw_consent = existing
+      @bw_consent.assign_attributes(consent_attrs)
     else
-      @bw_consent = Consent.new(user_id: @learner.id, week_id: @nearest_build_week&.id, hub: @learner.main_hub&.name)
+      @bw_consent = Consent.new(consent_attrs)
     end
 
     if @bw_consent.save

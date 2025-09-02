@@ -201,7 +201,9 @@ class PagesController < ApplicationController
       @report = @learner.reports.order(updated_at: :asc).where(parent: true).last
       @last_report_sprint = @report&.sprint&.name || ""
     end
-    @consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
+    nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+    @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
+    @bw_consent = Consent.find_by(user_id: @learner.id, week_id: nearest_build_week&.id)
     # The bulk of the setup is already handled in prepare_dashboard_data.
   end
 
