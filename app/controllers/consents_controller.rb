@@ -9,11 +9,19 @@ class ConsentsController < ApplicationController
     end
 
     # Find the nearest build week week.name.include?("Build") and start_date is before or equal to Date.today
-    @nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+    @nearest_build_week = Week.where("start_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     bw_existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
+
     if bw_existing
       @bw_consent = bw_existing
     else
+      # Get the most recent consent for this user to pre-populate fields
+      last_consent = Consent.where(user_id: @learner.id).order(created_at: :desc).first
+
+      Rails.logger.debug "Found last consent: #{last_consent.present?}" if Rails.env.development?
+      Rails.logger.debug "Last consent ID: #{last_consent&.id}, emergency_contact_name: #{last_consent&.emergency_contact_name}" if Rails.env.development?
+
+      # Create new consent with week dates
       @bw_consent = Consent.new(
         user_id: @learner.id,
         week_id: @nearest_build_week&.id,
@@ -21,6 +29,13 @@ class ConsentsController < ApplicationController
         start_date: @nearest_build_week&.start_date,
         end_date: @nearest_build_week&.end_date
       )
+
+      # Populate common fields from the last consent
+      if last_consent
+        Rails.logger.debug "Populating fields from consent ID: #{last_consent.id}" if Rails.env.development?
+        populate_common_fields(@bw_consent, last_consent)
+        Rails.logger.debug "After populate - emergency contact name: #{@bw_consent.emergency_contact_name}" if Rails.env.development?
+      end
     end
   end
 
@@ -66,10 +81,32 @@ class ConsentsController < ApplicationController
     @hub = @learner.main_hub&.name
 
     sprint_existing = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
+
     if sprint_existing
       @sprint_consent = sprint_existing
     else
-      @sprint_consent = Consent.new(user_id: @learner.id, sprint_id: @current_sprint&.id, hub: @learner.main_hub&.name, date: Date.today)
+      # Get the most recent consent for this user to pre-populate fields
+      last_consent = Consent.where(user_id: @learner.id).order(created_at: :desc).first
+
+      Rails.logger.debug "Found last consent: #{last_consent.present?}" if Rails.env.development?
+      Rails.logger.debug "Last consent ID: #{last_consent&.id}, emergency_contact_name: #{last_consent&.emergency_contact_name}" if Rails.env.development?
+
+      # Create new consent with sprint dates
+      @sprint_consent = Consent.new(
+        user_id: @learner.id,
+        sprint_id: @current_sprint&.id,
+        hub: @learner.main_hub&.name,
+        date: Date.today,
+        start_date: @current_sprint&.start_date,
+        end_date: @current_sprint&.end_date
+      )
+
+      # Populate common fields from the last consent
+      if last_consent
+        Rails.logger.debug "Populating fields from consent ID: #{last_consent.id}" if Rails.env.development?
+        populate_common_fields(@sprint_consent, last_consent)
+        Rails.logger.debug "After populate - emergency contact name: #{@sprint_consent.emergency_contact_name}" if Rails.env.development?
+      end
     end
   end
 
@@ -92,7 +129,7 @@ class ConsentsController < ApplicationController
 
     existing = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
 
-    consent_attrs = consent_params.merge(user: @learner, sprint: @current_sprint)
+    consent_attrs = consent_params.merge(user: @learner, sprint: @current_sprint, hub: @learner.main_hub&.name)
 
     if existing
       @sprint_consent = existing
@@ -110,6 +147,42 @@ class ConsentsController < ApplicationController
   end
 
   private
+
+  def populate_common_fields(target_consent, source_consent)
+    # Hub information
+    target_consent.hub = source_consent.hub
+
+    # Emergency contact information
+    target_consent.emergency_contact_name = source_consent.emergency_contact_name
+    target_consent.emergency_contact_relationship = source_consent.emergency_contact_relationship
+    target_consent.emergency_contact_contact = source_consent.emergency_contact_contact
+    target_consent.emergency_contact_email = source_consent.emergency_contact_email
+
+    # Family doctor and insurance information
+    target_consent.family_doctor_name = source_consent.family_doctor_name
+    target_consent.family_doctor_contact = source_consent.family_doctor_contact
+    target_consent.work_adress = source_consent.work_adress
+    target_consent.utente_number = source_consent.utente_number
+    target_consent.health_insurance_plan = source_consent.health_insurance_plan
+    target_consent.health_insurance_contact = source_consent.health_insurance_contact
+
+    # Other emergency contacts
+    target_consent.emergency_contact_name_1 = source_consent.emergency_contact_name_1
+    target_consent.emergency_contact_contact_1 = source_consent.emergency_contact_contact_1
+    target_consent.emergency_contact_name_2 = source_consent.emergency_contact_name_2
+    target_consent.emergency_contact_contact_2 = source_consent.emergency_contact_contact_2
+    target_consent.emergency_contact_name_3 = source_consent.emergency_contact_name_3
+    target_consent.emergency_contact_contact_3 = source_consent.emergency_contact_contact_3
+    target_consent.emergency_contact_name_4 = source_consent.emergency_contact_name_4
+    target_consent.emergency_contact_contact_4 = source_consent.emergency_contact_contact_4
+
+    # Medical information
+    target_consent.allergies = source_consent.allergies
+    target_consent.diet = source_consent.diet
+    target_consent.limitations = source_consent.limitations
+    target_consent.medication = source_consent.medication
+    target_consent.additional_info = source_consent.additional_info
+  end
 
   def consent_params
     params.require(:consent).permit(
