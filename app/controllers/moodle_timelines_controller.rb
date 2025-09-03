@@ -28,13 +28,6 @@ class MoodleTimelinesController < ApplicationController
     render partial: "moodle_timeline_detail", locals: { moodle_timeline: @moodle_timeline }, layout: false
   end
 
-  def moodle_show
-    @moodle_timeline = MoodleTimeline.find(params[:id])
-    @learner = User.find(params[:learner_id]) if params[:learner_id].present?
-    render partial: "moodle_timeline_detail", locals: { moodle_timeline: @moodle_timeline }, layout: false
-  end
-
-
   def create
     @moodle_timeline = current_user.moodle_timelines.new(moodle_timeline_params)
 
