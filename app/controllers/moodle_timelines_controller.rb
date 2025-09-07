@@ -32,12 +32,7 @@ class MoodleTimelinesController < ApplicationController
     @moodle_timeline = current_user.moodle_timelines.new(moodle_timeline_params)
 
     if @moodle_timeline.save
-      # if current_user.hub_ids.include?(147)
-      if false
-        moodle_generate_topic_deadlines(@moodle_timeline)
-      else
-        generate_topic_deadlines(@moodle_timeline)
-      end
+      moodle_generate_topic_deadlines(@moodle_timeline)
       @moodle_timeline.save
       redirect_to moodle_timelines_path, notice: 'Moodle Timeline was successfully created.'
     else

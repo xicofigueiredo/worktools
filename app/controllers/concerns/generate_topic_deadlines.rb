@@ -25,7 +25,7 @@ module GenerateTopicDeadlines
 
     working_days = calculate_working_days(timeline)
     moodle_distribute_deadlines(moodle_topics, working_days)
-    # moodle_assign_mock_deadlines(timeline)
+    moodle_assign_mock_deadlines(timeline)
   end
 
   def moodle_distribute_deadlines(moodle_topics, working_days)
@@ -78,13 +78,13 @@ module GenerateTopicDeadlines
 
   def moodle_assign_mock_deadlines(timeline)
     # Assign mock50 deadline
-    if (mock50_topic = timeline.moodle_topics.find_by(Mock50: true))
-      timeline.mock50 = timeline.moodle_topics.find_by(topic: mock50_topic)&.deadline
+    if (mock50_topic = timeline.moodle_topics.find_by(mock50: true))
+      timeline.mock50 = mock50_topic
     end
 
     # Assign mock100 deadline
-    if (mock100_topic = timeline.moodle_topics.find_by(Mock100: true))
-      timeline.mock100 = timeline.moodle_topics.find_by(topic: mock100_topic)&.deadline
+    if (mock100_topic = timeline.moodle_topics.find_by(mock100: true))
+      timeline.mock100 = mock100_topic
     end
 
     timeline.save
