@@ -326,8 +326,8 @@ class MoodleApiService
           end_date = Date.today + 1.year
           exam_date_id = nil
         else
-          start_date = timeline.start_date
-          end_date = timeline.end_date
+          start_date = timeline.start_date.present? ? timeline.start_date : Date.today
+          end_date = timeline.end_date.present? ? timeline.end_date : Date.today + 1.year
           exam_date_id = timeline.exam_date_id
         end
 

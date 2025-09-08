@@ -21,12 +21,7 @@ namespace :notifications do
         Notification.find_or_create_by!(
           user: user,
           link: "",
-          message: "Worktools is now connected to Moodle (Moodle T. option on the navbar)
-Legacy timelines will remain active during the transition to allow each learner to switch at their own pace. They will only be removed once we confirm that all new timelines are working properly.
-A toggle will be added to the dashboard so learning coaches can choose which timelines to view.
-
-Please note that Maths AL & LWS timelines are not yet fullyconnected to Moodle.
- "
+          message: "Moodle Timelines: The timelines are now pulling data from Moodle correctly. We are still in the process of fixing the calculation of the progress, which we expect to resolve soon. For any queries, please reach out to Luís Faro."
         )
         notifications_count += 1
       end
