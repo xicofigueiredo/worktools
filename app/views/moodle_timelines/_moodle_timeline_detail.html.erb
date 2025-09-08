@@ -6,7 +6,15 @@
       <table class="table">
         <thead>
           <tr>
-            <th><%= @moodle_timeline.subject.category.include?("lws") ? 'Project' : 'Unit' %></th>
+            <% if @moodle_timeline.subject.category.include?("lws") && @moodle_timeline.subject.name.include?("Year") %>
+              <th>Project</th>
+            <% elsif @moodle_timeline.subject.category.include?("lws") && !@moodle_timeline.subject.name.include?("Year") %>
+              <th>Subject</th>
+            <% elsif @moodle_timeline.subject.id == 80 %>
+              <th>Block</th>
+            <% else %>
+              <th>Unit</th>
+            <% end %>
             <th>Topic</th>
             <th>Attempts</th>
             <th>Submission</th>
