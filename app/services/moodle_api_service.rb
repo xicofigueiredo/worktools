@@ -580,7 +580,7 @@ class MoodleApiService
     skipped_topics = []
 
     activities.each do |activity|
-      next if activity[:section_visible] == 0
+      next if activity[:section_visible] == 0 || activity[:ect] ==  0
 
       # Prefer exact id match; fallback to name for both timeline types
       mt = existing_topics_by_moodle_id[activity[:id]]

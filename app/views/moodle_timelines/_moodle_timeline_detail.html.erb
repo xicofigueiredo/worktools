@@ -20,12 +20,16 @@
         <tbody>
           <% previous_unit = nil %>
           <% @moodle_timeline.moodle_topics.order(:id).each do |moodle_topic| %>
-            <% background_color = if moodle_topic && !moodle_topic.done && moodle_topic.deadline && moodle_topic.deadline < Date.today && !['lws7', 'lws8', 'lws9'].include?(@moodle_timeline.subject.category)
+            <% background_color = if moodle_topic && !moodle_topic.done && moodle_topic.deadline && moodle_topic.deadline < Date.today && ![0, 1, 2].include?(@moodle_timeline.subject.category)
                                     '#ff193499'
-                                  elsif moodle_topic && !moodle_topic.done && moodle_topic.deadline && Date.today.monday? && moodle_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(@moodle_timeline.subject.category)
+                                  elsif moodle_topic && !moodle_topic.done && moodle_topic.deadline && moodle_topic.deadline < Date.today && ![0, 1, 2].include?(@moodle_timeline.subject.category)
+                                    '#ff193499'
+                                  elsif moodle_topic && !moodle_topic.done && moodle_topic.deadline && Date.today.monday? && moodle_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && ![0, 1, 2].include?(@moodle_timeline.subject.category)
                                     'lightgrey'
-                                  elsif moodle_topic && (moodle_topic.done )
+                                  elsif moodle_topic && (moodle_topic.done && moodle_topic.number_attempts.present?) # lessons done
                                     '#00ce00a6'
+                                  elsif moodle_topic && (moodle_topic.done && !moodle_topic.number_attempts.present?)
+                                    '#78e01b7d'
                                   else
                                     'transparent'
                                   end %>
@@ -39,8 +43,16 @@
               <td style="background-color: <%= background_color %>;"><%= moodle_topic.name %></td>
               <% if moodle_topic && moodle_topic.deadline.present? %>
                 <% unless @moodle_timeline.subject.category.include?("lws") %>
-                  <td style="background-color: <%= background_color %>;"><%= moodle_topic.number_attempts %></td>
-                  <td style="background-color: <%= background_color %>;"><%= moodle_topic.submission_date %></td>
+                  <% if moodle_topic.number_attempts != 0 && moodle_topic.number_attempts.present? && moodle_topic.grade.present? %>
+                    <td style="background-color: <%= background_color %>;"><%= moodle_topic.number_attempts %></td>
+                  <% else %>
+                    <td style="background-color: <%= background_color %>;"></td>
+                  <% end %>
+                  <% if moodle_topic.submission_date == "01/01/1970 01:00" || (moodle_topic.submission_date && moodle_topic.grade.nil?) %>
+                    <td style="background-color: <%= background_color %>;"></td>
+                  <% else %>
+                      <td style="background-color: <%= background_color %>;"><%= moodle_topic.submission_date %></td>
+                  <% end %>
                   <td style="background-color: <%= background_color %>;"><%= moodle_topic.grade %></td>
                   <td style="background-color: <%= background_color %>;"><%= moodle_topic.time %></td>
                   <td style="background-color: <%= background_color %>;"><%= moodle_topic.deadline.strftime('%d-%m-%Y') %></td>

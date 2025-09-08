@@ -15,11 +15,11 @@ class HolidaysController < ApplicationController
     @holiday = current_user.holidays.new(holiday_params)
 
     if @holiday.save
-      current_user.timelines.where(hidden: false).each do |timeline|
-        generate_topic_deadlines(timeline)
+      current_user.moodle_timelines.where(hidden: false).each do |timeline|
+        moodle_generate_topic_deadlines(timeline)
         timeline.save
       end
-      redirect_to timelines_path, notice: 'Holiday was successfully created.'
+      redirect_to moodle_timelines_path, notice: 'Holiday was successfully created.'
     else
       render :new, status: :unprocessable_entity
     end
@@ -27,11 +27,11 @@ class HolidaysController < ApplicationController
 
   def update
     if @holiday.update(holiday_params)
-      current_user.timelines.where(hidden: false).each do |timeline|
-        generate_topic_deadlines(timeline)
+      current_user.moodle_timelines.where(hidden: false).each do |timeline|
+        moodle_generate_topic_deadlines(timeline)
         timeline.save
       end
-      redirect_to timelines_path, notice: 'Holiday was successfully updated.'
+      redirect_to moodle_timelines_path, notice: 'Holiday was successfully updated.'
     else
       render :edit, status: :unprocessable_entity
     end
@@ -39,11 +39,11 @@ class HolidaysController < ApplicationController
 
   def destroy
     @holiday.destroy
-    current_user.timelines.where(hidden: false).each do |timeline|
-      generate_topic_deadlines(timeline)
+    current_user.moodle_timelines.where(hidden: false).each do |timeline|
+      moodle_generate_topic_deadlines(timeline)
       timeline.save
     end
-    redirect_to timelines_path, notice: 'Holiday was successfully destroyed.'
+    redirect_to moodle_timelines_path, notice: 'Holiday was successfully destroyed.'
   end
 
   private

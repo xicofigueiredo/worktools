@@ -82,9 +82,9 @@ module ProgressCalculations
         percentage = topic.time / total_time if topic.time.positive? && total_time.positive?
 
         # Sum progress if topic is done
-        progress += percentage if topic.done
+        progress += percentage if topic.done && !percentage.nil?
         # Sum expected progress if deadline has passed
-        expected_progress += percentage if topic.deadline && topic.deadline < Date.today
+        expected_progress += percentage if topic.deadline && topic.deadline < Date.today && !percentage.nil?
       end
 
 
