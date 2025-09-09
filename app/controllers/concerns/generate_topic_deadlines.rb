@@ -57,6 +57,10 @@ module GenerateTopicDeadlines
   end
 
   def calculate_deadline_date(index, time_per_topic, working_days)
+    # Handle NaN or invalid values
+    return working_days.first if working_days.empty?
+    return working_days.last if !time_per_topic.finite? || !index.finite?
+    
     # Calculate the final index (convert to integer for array indexing)
     final_index = (index + time_per_topic).to_i
     working_days[final_index] || working_days.last
