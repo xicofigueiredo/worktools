@@ -49,7 +49,7 @@
                       <% count += 1 %>
                     <% end %>
                     <td class="custom-font-size" data-subject-cell>
-                      <p><%= knowledge_form.object.subject_name %></p>
+                      <p><%= knowledge_form.object.subject_name || knowledge_form.object.moodle_timeline.subject.name %></p>
                       <%# <%= knowledge_form.text_field :subject_name, class: 'form-control', value: knowledge_form.object.subject_name, readonly: true  %>
                     </td>
                     <td class="custom-font-size">
@@ -107,7 +107,7 @@
                     <div data-subject-cell>
                       <select name="Timeline Select" id="Timeline Select" class="form-select" data-action="change->nested-form#createKnowledge">
                         <option value="" disabled selected>Select timeline</option>
-                        <% current_user.timelines.where(hidden: false).each do |timeline| %>
+                        <% @dropdown_options.each do |timeline| %>
                           <% exam_date = timeline.exam_date&.date %>
 
                           <% matched_sprint_goal = @sprint_deadlines.find do |sprint_goal|

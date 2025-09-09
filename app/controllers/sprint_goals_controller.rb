@@ -27,7 +27,7 @@ class SprintGoalsController < ApplicationController
   def new
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
-    @number_of_timelines = current_user.timelines.where(hidden: false).count
+    @number_of_timelines = current_user.timelines.where(hidden: false).count + current_user.moodle_timelines.count
 
     @sprint_goal = current_user.sprint_goals.find_or_create_by(sprint: @sprint) do |sg|
       sg.sprint = @sprint
@@ -41,15 +41,15 @@ class SprintGoalsController < ApplicationController
     #   return # Ensure that the action is halted here
     # end
 
-    # Build associated knowledges for each timeline
-    # current_user.timelines.each do |timeline|
-    #   subject = ''
-    #   timeline.subject.name != '' ? subject = timeline.subject.name : subject = timeline.personalized_name
+    # Build associated knowledges for each moodle timeline
+    # current_user.moodle_timelines.each do |moodle_timeline|
+    #   subject = moodle_timeline.subject&.name.present? ? moodle_timeline.subject.name : moodle_timeline.personalized_name
     #   @sprint_goal.knowledges.build(
+    #     moodle_timeline: moodle_timeline,
     #     subject_name: subject,
-    #     exam_season: timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A',
-    #     mock50: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A',
-    #     mock100: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'
+    #     exam_season: moodle_timeline.exam_date ? moodle_timeline.exam_date.strftime("%B %Y") : 'N/A',
+    #     mock50: moodle_timeline.mock50 ? moodle_timeline.mock50.strftime("%d/%m/%Y") : 'N/A',
+    #     mock100: moodle_timeline.mock100 ? moodle_timeline.mock100.strftime("%d/%m/%Y") : 'N/A'
     #   )
     # end
   end
@@ -58,22 +58,35 @@ class SprintGoalsController < ApplicationController
   def edit
     @sprint_goal = current_user.sprint_goals.includes(:knowledges, :skills, :communities).find(params[:id])
     @knowledges_subject_names = @sprint_goal.knowledges.pluck(:subject_name)
-    @number_of_timelines = current_user.timelines.count
+    @number_of_timelines = current_user.timelines.where(hidden: false).count + current_user.moodle_timelines.where(hidden: false).count
     assign_sprint_deadlines(@sprint_goal.sprint)
+    @dropdown_options = current_user.timelines.where(hidden: false) + current_user.moodle_timelines.where(hidden: false)
 
-    Rails.logger.debug @sprint_goal.knowledges.inspect # Add this line to check what's loaded
+    Rails.logger.debug @sprint_goal.knowledges.inspect
 
-    # If the @sprint_goal doesn't have associated knowledges for each timeline, you need to build them here
-    # current_user.timelines.each do |timeline|
-    #   @sprint_goal.knowledges.find_or_initialize_by(subject_name: timeline.subject.name)
-    # end
+    # If the @sprint_goal doesn't have associated knowledges, build them for both timeline types
     # if @sprint_goal.knowledges.empty?
-    #   current_user.timelines.each do |timeline|
+    #   # Build for regular timelines
+    #   current_user.timelines.where(hidden: false).each do |timeline|
+    #     subject = timeline.subject.name.present? ? timeline.subject.name : timeline.personalized_name
     #     @sprint_goal.knowledges.build(
-    #       subject_name: timeline.subject.name,
+    #       timeline: timeline,
+    #       subject_name: subject,
     #       exam_season: timeline.exam_date ? timeline.exam_date.date.strftime("%B %Y") : 'N/A',
     #       mock50: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock50: true))&.deadline || 'N/A',
     #       mock100: current_user.user_topics.find_by(topic: timeline.subject.topics.find_by(Mock100: true))&.deadline || 'N/A'
+    #     )
+    #   end
+
+    #   # Build for moodle timelines
+    #   current_user.moodle_timelines.each do |moodle_timeline|
+    #     subject = moodle_timeline.subject&.name.present? ? moodle_timeline.subject.name : moodle_timeline.personalized_name
+    #     @sprint_goal.knowledges.build(
+    #       moodle_timeline: moodle_timeline,
+    #       subject_name: subject,
+    #       exam_season: moodle_timeline.exam_date ? moodle_timeline.exam_date.strftime("%B %Y") : 'N/A',
+    #       mock50: moodle_timeline.mock50 ? moodle_timeline.mock50.strftime("%d/%m/%Y") : 'N/A',
+    #       mock100: moodle_timeline.mock100 ? moodle_timeline.mock100.strftime("%d/%m/%Y") : 'N/A'
     #     )
     #   end
     # end
@@ -189,7 +202,7 @@ class SprintGoalsController < ApplicationController
 
   def sprint_goal_params
     params.require(:sprint_goal).permit(:name, :start_date, :end_date, :sprint_id,
-                                        knowledges_attributes: %i[id difficulties plan _destroy subject_name mock50 mock100 exam_season],
+                                        knowledges_attributes: %i[id difficulties plan _destroy subject_name mock50 mock100 exam_season timeline_id moodle_timeline_id],
                                         skills_attributes: [
                                           :id, :extracurricular, :smartgoals, :difficulties, :plan, :_destroy,
                                           { categories: [] }
