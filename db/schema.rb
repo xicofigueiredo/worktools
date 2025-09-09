@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
+ActiveRecord::Schema[7.0].define(version: 2025_09_09_160202) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -386,6 +386,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.string "mock50"
     t.string "mock100"
     t.string "exam_season"
+    t.bigint "moodle_timeline_id"
+    t.index ["moodle_timeline_id"], name: "index_knowledges_on_moodle_timeline_id"
     t.index ["sprint_goal_id"], name: "index_knowledges_on_sprint_goal_id"
     t.index ["timeline_id"], name: "index_knowledges_on_timeline_id"
   end
@@ -908,6 +910,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
   add_foreign_key "inis", "kdas"
   add_foreign_key "kdas", "users"
   add_foreign_key "kdas", "weeks"
+  add_foreign_key "knowledges", "moodle_timelines"
   add_foreign_key "knowledges", "sprint_goals"
   add_foreign_key "learner_flags", "users"
   add_foreign_key "lws_timelines", "users"

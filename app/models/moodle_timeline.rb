@@ -18,6 +18,7 @@ class MoodleTimeline < ApplicationRecord
   # has_many :timeline_progresses, dependent: :destroy
   # has_many :weeks, through: :timeline_progresses
   has_many :moodle_topics, dependent: :destroy
+  has_many :knowledges, dependent: :destroy
 
   validate :start_date_before_end_date
   validates :start_date, presence: true
