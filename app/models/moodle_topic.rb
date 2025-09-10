@@ -7,7 +7,7 @@ class MoodleTopic < ApplicationRecord
 
   def moodle_calculate_percentage
     total_time = self.moodle_timeline.moodle_topics.sum(:time).to_f
-    
+
     # Handle division by zero case
     if total_time == 0
       self.percentage = 0.0
