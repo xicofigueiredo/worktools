@@ -14,19 +14,16 @@ namespace :notifications do
     #  end
 
     # hub_ids = [174, 191, 153, 168]
-    hubs_ids = Hub.where(country: "Portugal").pluck(:id)
-    User.where(role: "admin").or(User.where(role: "learner")).find_each do |user|
+    # hubs_ids = Hub.where(country: "Portugal").pluck(:id)
+    User.where(role: "lc").or(User.where(role: "learner")).find_each do |user|
       # next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
-      main_hub = user.users_hubs.where(main: true).first
-      if user.deactivate != true && main_hub&.hub_id.in?(hubs_ids)
+      if user.deactivate != true #&& main_hub&.hub_id.in?(hubs_ids)
         Notification.find_or_create_by!(
           user: user,
-          link: "https://bravegenerationacademy.com/merchandise",
-          message: "Cold weather is on the way – stay warm with a BGA hoodie!
-
-Our comfy BGA hoodies are now available for a special price of €19.90 including shipping. Perfect for layering up this season and showing your BGA spirit.
-
-Grab yours today through our site. Link bellow!"
+          link: "https://tinyurl.com/2tw5v2ze",
+          message: "Don't miss tomorrow's workshop on USA University Essentials!
+Date: 11 September
+Time: 11:00 (Portugal Time)"
         )
         notifications_count += 1
       end
