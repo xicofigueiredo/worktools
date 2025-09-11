@@ -165,7 +165,7 @@ class MoodleTimeline < ApplicationRecord
 
       completed_activities.each_with_index do |activity, index|
 
-        next if activity[:ect] == 0 && [0, 1, 2].include?(self.subject.category)
+        next if [0, 1, 2].include?(self.subject.category)
         if self.category == 4
           if index > ref_index
             as1 = true

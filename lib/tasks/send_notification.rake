@@ -20,10 +20,10 @@ namespace :notifications do
       if user.deactivate != true #&& main_hub&.hub_id.in?(hubs_ids)
         Notification.find_or_create_by!(
           user: user,
-          link: "https://tinyurl.com/2tw5v2ze",
-          message: "Don't miss tomorrow's workshop on USA University Essentials!
-Date: 11 September
-Time: 11:00 (Portugal Time)"
+          link: "https://tinyurl.com/2s4x65nb",
+          message: "Reminder! UP Learners Meeting
+12/09
+10am (PT time)"
         )
         notifications_count += 1
       end
