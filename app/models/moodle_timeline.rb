@@ -25,12 +25,14 @@ class MoodleTimeline < ApplicationRecord
   validates :end_date, presence: true
   validate :dates_cannot_be_holidays
   validate :end_date_before_expected
+  validates :user_id, uniqueness: { scope: :subject_id, message: "can only have one timeline per subject" }
   belongs_to :exam_date, optional: true
 
   after_create :check_if_math_al_timeline
   after_update :check_if_math_al_timeline
   after_save :update_parent_math_al_timeline, if: :math_al_block_timeline?
   # after_update :update_exam_enroll_status
+
 
   def update_exam_enroll_status
     exam_enroll = ExamEnroll.find_by(user_id: user_id, subject_id: subject_id)

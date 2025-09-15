@@ -197,14 +197,20 @@ class MoodleApiService
         as1 = true
         as2 = true
       elsif category == 19 # Year 7
-        moodle_timeline = MoodleTimeline.find_or_create_by!(
+        moodle_timeline = MoodleTimeline.find_or_create_by(
           user_id: user_id,
-          subject_id: 1007,
-          start_date: Date.today + 1.day,
-          end_date: Date.today + 1.year,
-          category: category,
-          hidden: false
-        )
+          subject_id: 1007
+        ) do |mt|
+          mt.start_date = Date.today + 1.day
+          mt.end_date = Date.today + 1.year
+          mt.category = category
+          mt.hidden = false
+          mt.balance = 0
+          mt.expected_progress = 0
+          mt.progress = 0
+          mt.total_time = 0
+          mt.difference = 0
+        end
 
         # Create one MoodleTopic per relevant course section (LTR, English, Maths, Science)
         desired_sections = ["Learning Through Research", "English", "Mathematics", "Science"]
@@ -235,14 +241,20 @@ class MoodleApiService
           topic.save!
         end
       elsif category == 18 # Year 8
-        moodle_timeline = MoodleTimeline.find_or_create_by!(
+        moodle_timeline = MoodleTimeline.find_or_create_by(
           user_id: user_id,
-          subject_id: 1008,
-          start_date: Date.today + 1.day,
-          end_date: Date.today + 1.year,
-          category: category,
-          hidden: false
-        )
+          subject_id: 1008
+        ) do |mt|
+          mt.start_date = Date.today + 1.day
+          mt.end_date = Date.today + 1.year
+          mt.category = category
+          mt.hidden = false
+          mt.balance = 0
+          mt.expected_progress = 0
+          mt.progress = 0
+          mt.total_time = 0
+          mt.difference = 0
+        end
 
         # Create one MoodleTopic per relevant course section (LTR, English, Maths, Science)
         desired_sections = ["Learning Through Research", "English", "Mathematics", "Science"]
@@ -273,14 +285,20 @@ class MoodleApiService
           topic.save!
         end
       elsif category == 33 # Year 9
-        moodle_timeline = MoodleTimeline.find_or_create_by!(
+        moodle_timeline = MoodleTimeline.find_or_create_by(
           user_id: user_id,
-          subject_id: 1009,
-          start_date: Date.today + 1.day,
-          end_date: Date.today + 1.year,
-          category: category,
-          hidden: false
-        )
+          subject_id: 1009
+        ) do |mt|
+          mt.start_date = Date.today + 1.day
+          mt.end_date = Date.today + 1.year
+          mt.category = category
+          mt.hidden = false
+          mt.balance = 0
+          mt.expected_progress = 0
+          mt.progress = 0
+          mt.total_time = 0
+          mt.difference = 0
+        end
 
         # Create one MoodleTopic per relevant course section (LTR, English, Maths, Science)
         desired_sections = ["Learning Through Research", "English", "Mathematics", "Science"]
@@ -332,23 +350,34 @@ class MoodleApiService
         end
 
         if moodle_timeline.nil?
-          moodle_timeline = MoodleTimeline.create!(
-            user_id: user_id,
-            subject_id: subject.id,
-            start_date: start_date,
-            end_date: end_date,
-            exam_date_id: exam_date_id,
-            balance: 0,
-            expected_progress: 0,
-            progress: 0,
-            total_time: 0,
-            difference: 0,
-            category: category,
-            moodle_id: course_id,
-            hidden: false,
-            as1: as1,
-            as2: as2
-          )
+          begin
+            moodle_timeline = MoodleTimeline.create!(
+              user_id: user_id,
+              subject_id: subject.id,
+              start_date: start_date,
+              end_date: end_date,
+              exam_date_id: exam_date_id,
+              balance: 0,
+              expected_progress: 0,
+              progress: 0,
+              total_time: 0,
+              difference: 0,
+              category: category,
+              moodle_id: course_id,
+              hidden: false,
+              as1: as1,
+              as2: as2
+            )
+          rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
+            # If a duplicate was created by a race condition, find the existing one
+            moodle_timeline = MoodleTimeline.find_by(user_id: user_id, subject_id: subject.id)
+            if moodle_timeline.nil?
+              # If it still doesn't exist, re-raise the original error
+              raise e
+            else
+              puts "Found existing timeline for user #{user_id} and subject #{subject.id}"
+            end
+          end
         end
 
         created_timelines << moodle_timeline
