@@ -29,6 +29,7 @@ class MoodleTimeline < ApplicationRecord
 
   after_create :check_if_math_al_timeline
   after_update :check_if_math_al_timeline
+  after_save :update_parent_math_al_timeline, if: :math_al_block_timeline?
   # after_update :update_exam_enroll_status
 
   def update_exam_enroll_status
@@ -104,19 +105,51 @@ class MoodleTimeline < ApplicationRecord
       children << mt
     end
 
-    # Evenly split the parent's date range across selected child timelines
+    # Proportionally split the parent's date range based on ECT/time values of each block's topics
     if children.any? && self.start_date.present? && self.end_date.present?
       total_days_inclusive = (self.end_date - self.start_date).to_i + 1
-      num_segments = children.size
-      base_length = total_days_inclusive / num_segments
-      remainder = total_days_inclusive % num_segments
 
-      segment_start = self.start_date
-      children.each_with_index do |mt, index|
-        segment_length = base_length + (index < remainder ? 1 : 0)
-        segment_end = segment_start + (segment_length - 1)
-        mt.update!(start_date: segment_start, end_date: segment_end)
-        segment_start = segment_end + 1
+      # Calculate total ECT time for each child block and the sum of all blocks
+      block_ect_times = children.map do |child|
+        child.moodle_topics.sum(:time).to_f
+      end
+
+      total_ect_time = block_ect_times.sum
+
+      # If no ECT data available, fall back to even distribution
+      if total_ect_time == 0
+        num_segments = children.size
+        base_length = total_days_inclusive / num_segments
+        remainder = total_days_inclusive % num_segments
+
+        segment_start = self.start_date
+        children.each_with_index do |mt, index|
+          segment_length = base_length + (index < remainder ? 1 : 0)
+          segment_end = segment_start + (segment_length - 1)
+          mt.update!(start_date: segment_start, end_date: segment_end)
+          segment_start = segment_end + 1
+        end
+      else
+        # Distribute days proportionally based on ECT time
+        segment_start = self.start_date
+
+        children.each_with_index do |mt, index|
+          # Calculate percentage of total time for this block
+          block_percentage = block_ect_times[index] / total_ect_time
+
+          # Calculate days for this block (round to ensure we use all days)
+          if index == children.size - 1
+            # Last block gets remaining days to ensure exact total
+            segment_end = self.end_date
+          else
+            segment_days = (total_days_inclusive * block_percentage).round
+            segment_days = [segment_days, 1].max  # Ensure at least 1 day
+            segment_end = segment_start + (segment_days - 1)
+          end
+
+          mt.update!(start_date: segment_start, end_date: segment_end)
+          segment_start = segment_end + 1
+        end
       end
     end
 
@@ -476,6 +509,68 @@ class MoodleTimeline < ApplicationRecord
     # Validate if end_date is before or on the expected end date
     if expected_end_date && end_date > expected_end_date
       errors.add(:end_date, "must be on or before #{expected_end_date.strftime('%d %B %Y')} for the selected exam session.")
+    end
+  end
+
+  # Check if this is a Math A Level block timeline (subject_id: 1001, 1002, 1003, 1004)
+  def math_al_block_timeline?
+    [1001, 1002, 1003, 1004].include?(subject_id)
+  end
+
+  # Update the parent Math A Level timeline (subject_id: 80) by aggregating block progress
+  def update_parent_math_al_timeline
+    return unless math_al_block_timeline?
+
+    # Find the parent Math A Level timeline for this user
+    parent_timeline = MoodleTimeline.find_by(user_id: user_id, subject_id: 80)
+    return unless parent_timeline
+
+    # Get all active Math A Level block timelines for this user
+    block_timelines = MoodleTimeline.where(
+      user_id: user_id,
+      subject_id: [1001, 1002, 1003, 1004]
+    )
+
+    return if block_timelines.empty?
+
+    # Calculate aggregated progress and expected progress
+    total_progress = block_timelines.sum(:progress)
+    total_expected_progress = block_timelines.sum(:expected_progress)
+    num_blocks = block_timelines.count
+
+    # Calculate averages
+    avg_progress = num_blocks > 0 ? (total_progress.to_f / num_blocks).round : 0
+    avg_expected_progress = num_blocks > 0 ? (total_expected_progress.to_f / num_blocks).round : 0
+
+    # Calculate balance (average of block balances)
+    total_balance = block_timelines.sum(:balance)
+    avg_balance = num_blocks > 0 ? (total_balance.to_f / num_blocks).round : 0
+
+    # Update parent timeline (skip callbacks to avoid infinite recursion)
+    parent_timeline.update_columns(
+      progress: avg_progress,
+      expected_progress: avg_expected_progress,
+      balance: avg_balance,
+      difference: avg_progress - avg_expected_progress
+    )
+
+    Rails.logger.info "Updated Math A Level timeline #{parent_timeline.id}: progress=#{avg_progress}%, expected=#{avg_expected_progress}%, balance=#{avg_balance}"
+  end
+
+  # Class method to manually update all Math A Level parent timelines
+  def self.update_all_math_al_parent_timelines
+    # Find all Math A Level parent timelines (subject_id: 80)
+    parent_timelines = MoodleTimeline.where(subject_id: 80)
+
+    parent_timelines.each do |parent_timeline|
+      # Find any block timeline for this user to trigger the update
+      block_timeline = MoodleTimeline.find_by(
+        user_id: parent_timeline.user_id,
+        subject_id: [1001, 1002, 1003, 1004]
+      )
+
+      # Trigger the update if a block exists
+      block_timeline&.send(:update_parent_math_al_timeline)
     end
   end
 
