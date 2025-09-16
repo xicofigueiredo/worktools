@@ -22,6 +22,12 @@
         <h2>Timelines</h2>
       </button>
     </li>
+    <!-- Moodle Timelines Tab -->
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="moodle-timelines-tab" data-bs-toggle="tab" data-bs-target="#moodle-timelines" type="button" role="tab" aria-controls="moodle-timelines" aria-selected="false">
+        <h2>Moodle Timelines</h2>
+      </button>
+    </li>
     <!-- Weekly goals Tab -->
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="weekly-tab" data-bs-toggle="tab" data-bs-target="#weekly" type="button" role="tab" aria-controls="weekly" aria-selected="false">
@@ -77,6 +83,14 @@
         <%= render partial: 'timelines/timelines_table', learner: @learner %>
       </div>
       <br>
+    </div>
+
+    <!-- Moodle Timelines Content -->
+    <div class="tab-pane fade" id="moodle-timelines" role="tabpanel" aria-labelledby="moodle-timelines-tab">
+      <br>
+      <div class="mb-3">
+        <%= render '/moodle_timelines/moodle_timelines_table', timelines: @moodle_timelines %>
+      </div>
     </div>
 
     <!-- Weekly Goals tab -->
