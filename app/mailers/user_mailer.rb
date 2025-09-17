@@ -58,13 +58,13 @@ class UserMailer < Devise::Mailer
 
     # Get the kids and their associated LCs
     kids = User.where(id: parent.kids)
-    lcs = kids.map { |kid|
-      kid.users_hubs.find_by(main: true)&.hub&.users&.where(role: 'lc', deactivate: false)
-    }.compact.flatten.select { |lc| lc.hubs.count < 5 }
+    # lcs = kids.map { |kid|
+    #   kid.users_hubs.find_by(main: true)&.hub&.users&.where(role: 'lc', deactivate: false)
+    # }.compact.flatten.select { |lc| lc.hubs.count < 5 }
 
     mail(
       to: @email,
-      cc: lcs.map(&:email),
+      # cc: lcs.map(&:email),
       from: 'worktools@bravegenerationacademy.com',
       subject: "Don’t Miss Out – Follow Your Child’s Journey on Worktools"
     )
