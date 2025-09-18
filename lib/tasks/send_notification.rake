@@ -20,10 +20,15 @@ namespace :notifications do
       if user.deactivate != true #&& main_hub&.hub_id.in?(hubs_ids)
         Notification.find_or_create_by!(
           user: user,
-          link: "https://tinyurl.com/2s4x65nb",
-          message: "Reminder! UP Learners Meeting
-12/09
-10am (PT time)"
+          link: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_ZmI0Y2JhZTEtZjg4Yi00NmRiLTkzMmYtZGMwMTI2YjQ3MzQ4%40thread.v2/0?context=%7b%22Tid%22%3a%221ac2d08d-bbbe-4e3c-9622-88fbe8ac9830%22%2c%22Oid%22%3a%22b2f38093-aa8e-4086-b774-338ec8512012%22%7d",
+          message: "🚀 UP Talks: Exploring IT & Software Careers
+
+Are you interested in IT and Software?
+Don’t miss this exclusive session with industry professional Laura Bower, who will be sharing her insights, experience, and tips on navigating a career in tech.
+
+📅 Date: 18/09
+🕒 Time: 14h
+📍 Online: link below"
         )
         notifications_count += 1
       end
