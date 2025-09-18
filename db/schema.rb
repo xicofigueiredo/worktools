@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
+ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -97,6 +97,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
+  create_table "blocked_periods", force: :cascade do |t|
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.bigint "user_id"
+    t.string "user_type"
+    t.bigint "hub_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "department_id"
+    t.index ["department_id"], name: "index_blocked_periods_on_department_id"
+    t.index ["hub_id"], name: "index_blocked_periods_on_hub_id"
+    t.index ["user_id"], name: "index_blocked_periods_on_user_id"
+  end
+
   create_table "chat_messages", force: :cascade do |t|
     t.bigint "chat_id", null: false
     t.string "role"
@@ -127,6 +141,22 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.string "category"
     t.string "categories", default: [], array: true
     t.index ["sprint_goal_id"], name: "index_communities_on_sprint_goal_id"
+  end
+
+  create_table "confirmations", force: :cascade do |t|
+    t.string "type", null: false
+    t.bigint "staff_leave_id", null: false
+    t.bigint "approver_id", null: false
+    t.datetime "validated_at"
+    t.string "status", default: "pending", null: false
+    t.datetime "reminder_3_sent_at"
+    t.datetime "reminder_5_sent_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "rejection_reason"
+    t.index ["approver_id"], name: "index_confirmations_on_approver_id"
+    t.index ["staff_leave_id", "approver_id"], name: "index_confirmations_on_staff_leave_id_and_approver_id"
+    t.index ["staff_leave_id"], name: "index_confirmations_on_staff_leave_id"
   end
 
   create_table "consent_activities", force: :cascade do |t|
@@ -188,6 +218,16 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.index ["week_id"], name: "index_consents_on_week_id"
   end
 
+  create_table "departments", force: :cascade do |t|
+    t.string "name", null: false
+    t.bigint "manager_id"
+    t.bigint "superior_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["manager_id"], name: "index_departments_on_manager_id"
+    t.index ["superior_id"], name: "index_departments_on_superior_id"
+  end
+
   create_table "exam_dates", force: :cascade do |t|
     t.bigint "subject_id", null: false
     t.date "date"
@@ -216,6 +256,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.string "subject_name"
     t.string "code"
     t.string "qualification"
+    t.boolean "progress_cut_off", default: false
     t.string "mock_results"
     t.string "bga_exam_centre"
     t.string "exam_board"
@@ -252,7 +293,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.integer "learning_coach_ids", default: [], array: true
     t.integer "timeline_id"
     t.string "specific_papers"
-    t.boolean "progress_cut_off", default: false
     t.string "personalized_exam_date"
     t.string "paper1"
     t.string "paper2"
@@ -279,11 +319,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.string "currency", default: "EUR"
     t.integer "number_of_subjects", default: 0, null: false
     t.index ["user_id"], name: "index_exam_finances_on_user_id"
-  end
-
-  create_table "excel_imports", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
   end
 
   create_table "form_interrogation_joins", force: :cascade do |t|
@@ -542,6 +577,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.index ["kda_id"], name: "index_p2ps_on_kda_id"
   end
 
+  create_table "public_holidays", force: :cascade do |t|
+    t.string "country"
+    t.bigint "hub_id"
+    t.date "date", null: false
+    t.string "name", null: false
+    t.boolean "recurring", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["country", "date"], name: "index_public_holidays_on_country_and_date"
+    t.index ["date"], name: "index_public_holidays_on_date"
+    t.index ["hub_id", "date"], name: "index_public_holidays_on_hub_id_and_date"
+    t.index ["hub_id"], name: "index_public_holidays_on_hub_id"
+  end
+
   create_table "report_activities", force: :cascade do |t|
     t.bigint "report_id", null: false
     t.string "activity"
@@ -671,6 +720,52 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "staff_leave_documents", force: :cascade do |t|
+    t.bigint "staff_leave_id", null: false
+    t.string "file_name"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["staff_leave_id"], name: "index_staff_leave_documents_on_staff_leave_id"
+  end
+
+  create_table "staff_leave_entitlements", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.integer "year", null: false
+    t.integer "holidays_left", default: 25, null: false
+    t.integer "sick_leaves_left", default: 5, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "carry_over_days"
+    t.integer "days_from_previous_year_used", default: 0, null: false
+    t.index ["user_id", "year"], name: "index_staff_leave_entitlements_on_user_id_and_year", unique: true
+    t.index ["user_id"], name: "index_staff_leave_entitlements_on_user_id"
+  end
+
+  create_table "staff_leaves", force: :cascade do |t|
+    t.string "leave_type", null: false
+    t.bigint "user_id", null: false
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.integer "total_days", null: false
+    t.bigint "approver_user_id"
+    t.datetime "approved_at"
+    t.boolean "exception_requested", default: false, null: false
+    t.text "exception_reason"
+    t.text "notes"
+    t.string "status", default: "pending", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "exception_errors"
+    t.integer "days_from_previous_year", default: 0, null: false
+    t.index ["approver_user_id"], name: "index_staff_leaves_on_approver_user_id"
+    t.index ["days_from_previous_year"], name: "index_staff_leaves_on_days_from_previous_year"
+    t.index ["start_date"], name: "index_staff_leaves_on_start_date"
+    t.index ["status"], name: "index_staff_leaves_on_status"
+    t.index ["user_id", "start_date"], name: "index_staff_leaves_on_user_id_and_start_date"
+    t.index ["user_id"], name: "index_staff_leaves_on_user_id"
+  end
+
   create_table "subjects", force: :cascade do |t|
     t.string "name"
     t.integer "category"
@@ -720,7 +815,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.integer "progress"
     t.bigint "exam_date_id"
     t.boolean "anulado"
-    t.bigint "lws_timeline_id"
     t.datetime "mock50"
     t.datetime "mock100"
     t.string "personalized_name"
@@ -728,7 +822,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.boolean "hidden", default: false
     t.integer "difference"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
-    t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
   end
@@ -783,6 +876,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.string "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
+    t.string "confirmation_token"
+    t.datetime "confirmed_at"
+    t.datetime "confirmation_sent_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "full_name"
@@ -792,10 +888,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.date "birthday"
     t.string "nationality"
     t.string "profile_pic"
-    t.datetime "last_login_at"
-    t.string "confirmation_token"
-    t.datetime "confirmed_at"
-    t.datetime "confirmation_sent_at"
     t.string "unconfirmed_email"
     t.boolean "deactivate", default: false
     t.bigint "moodle_id"
@@ -809,6 +901,16 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+  end
+
+  create_table "users_departments", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "department_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["department_id"], name: "index_users_departments_on_department_id"
+    t.index ["user_id", "department_id"], name: "index_users_departments_on_user_id_and_department_id", unique: true
+    t.index ["user_id"], name: "index_users_departments_on_user_id"
   end
 
   create_table "users_hubs", force: :cascade do |t|
@@ -885,14 +987,21 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
   add_foreign_key "assignments", "subjects"
   add_foreign_key "assignments", "users"
   add_foreign_key "attendances", "users"
+  add_foreign_key "blocked_periods", "departments"
+  add_foreign_key "blocked_periods", "hubs"
+  add_foreign_key "blocked_periods", "users"
   add_foreign_key "chat_messages", "chats"
   add_foreign_key "chats", "subjects"
   add_foreign_key "chats", "users"
   add_foreign_key "communities", "sprint_goals"
+  add_foreign_key "confirmations", "staff_leaves", column: "staff_leave_id"
+  add_foreign_key "confirmations", "users", column: "approver_id"
   add_foreign_key "consent_activities", "consents"
   add_foreign_key "consents", "sprints"
   add_foreign_key "consents", "users"
   add_foreign_key "consents", "weeks"
+  add_foreign_key "departments", "departments", column: "superior_id"
+  add_foreign_key "departments", "users", column: "manager_id"
   add_foreign_key "exam_dates", "subjects"
   add_foreign_key "exam_enroll_documents", "exam_enrolls"
   add_foreign_key "exam_enrolls", "moodle_timelines"
@@ -909,6 +1018,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
   add_foreign_key "kdas", "users"
   add_foreign_key "kdas", "weeks"
   add_foreign_key "knowledges", "sprint_goals"
+  add_foreign_key "knowledges", "timelines", on_delete: :cascade
   add_foreign_key "learner_flags", "users"
   add_foreign_key "lws_timelines", "users"
   add_foreign_key "monday_slots", "users", column: "lc_id"
@@ -923,6 +1033,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
   add_foreign_key "notes", "users"
   add_foreign_key "notifications", "users"
   add_foreign_key "p2ps", "kdas"
+  add_foreign_key "public_holidays", "hubs"
   add_foreign_key "report_activities", "communities"
   add_foreign_key "report_activities", "reports"
   add_foreign_key "report_activities", "skills"
@@ -938,12 +1049,17 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
   add_foreign_key "specific_papers", "exam_finances"
   add_foreign_key "sprint_goals", "sprints"
   add_foreign_key "sprint_goals", "users"
+  add_foreign_key "staff_leave_documents", "staff_leaves", column: "staff_leave_id"
+  add_foreign_key "staff_leave_entitlements", "users"
+  add_foreign_key "staff_leaves", "users"
+  add_foreign_key "staff_leaves", "users", column: "approver_user_id"
   add_foreign_key "thursday_slots", "users", column: "lc_id"
   add_foreign_key "thursday_slots", "users", column: "learner_id"
   add_foreign_key "thursday_slots", "weekly_meetings"
   add_foreign_key "timeline_progresses", "timelines"
   add_foreign_key "timeline_progresses", "weeks"
   add_foreign_key "timelines", "exam_dates"
+  add_foreign_key "timelines", "subjects"
   add_foreign_key "timelines", "users"
   add_foreign_key "topics", "subjects"
   add_foreign_key "tuesday_slots", "users", column: "lc_id"
@@ -952,6 +1068,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_110227) do
   add_foreign_key "user_topics", "timelines"
   add_foreign_key "user_topics", "topics"
   add_foreign_key "user_topics", "users"
+  add_foreign_key "users_departments", "departments"
+  add_foreign_key "users_departments", "users"
   add_foreign_key "users_hubs", "hubs"
   add_foreign_key "users_hubs", "users"
   add_foreign_key "wednesday_slots", "users", column: "lc_id"

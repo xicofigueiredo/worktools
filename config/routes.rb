@@ -68,6 +68,21 @@ Rails.application.routes.draw do
       resources :topics, except: [:show, :index]
     end
 
+    resources :leaves, only: [:index, :new, :create, :show] do
+      collection do
+        post :preview
+      end
+
+      member do
+        post :cancel
+        delete 'documents/:doc_id', to: 'leaves#delete_document', as: 'delete_document'
+        get 'documents/:doc_id/download', to: 'leaves#download_document', as: 'download_document'
+      end
+    end
+
+    post 'leaves/approve_confirmation/:id', to: 'leaves#approve_confirmation', as: 'approve_confirmation'
+    post 'leaves/reject_confirmation/:id', to: 'leaves#reject_confirmation', as: 'reject_confirmation'
+
     resources :holidays, except: [:show, :index]
 
     resources :timelines do

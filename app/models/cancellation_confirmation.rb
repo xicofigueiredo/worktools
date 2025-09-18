@@ -1,0 +1,2 @@
+class CancellationConfirmation < Confirmation
+end

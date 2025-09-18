@@ -1,0 +1,2 @@
+class BlockedPeriod < ApplicationRecord
+end
