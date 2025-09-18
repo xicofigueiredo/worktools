@@ -3,43 +3,67 @@ require 'csv'
 namespace :db do
   desc "Collect all emails from a CSV file and output sorted IDs and emails"
   task collect_sorted_ids_and_emails: :environment do
-    file_path = 'lib/tasks/checkemails.csv' # Update this path if necessary
+    file_path = 'lib/tasks/admissions_list.csv'
+    missing_parents = []
+    missing_kids = []
+    # Simple approach: try CSV.foreach with different encodings directly
+    encodings_to_try = ['UTF-8', 'ISO-8859-1', 'Windows-1252']
 
-    found_users = []
-    missing_emails = []
+    successful = false
 
-    # Process each row in the CSV
-    CSV.foreach(file_path, headers: false) do |row|
-      next if row[0].blank? # Ensure the email exists in the row
+    encodings_to_try.each do |encoding|
+      begin
+        puts "Trying CSV.foreach with encoding: #{encoding}"
 
-      email = row[0].strip.downcase # Strip whitespace and normalize case
+        CSV.foreach(file_path, headers: true, encoding: "#{encoding}:UTF-8") do |row|
+          next if row.nil? || row['Status'] != 'Active'
 
-      # Check if the email exists in the database
-      user = User.find_by(email: email)
-      if user
-        found_users << { id: user.id, email: user.email } # Collect user details
-      else
-        missing_emails << email
+          # Get email columns (handle nil values)
+          kid_email = row['InstitutionalEmail']&.strip&.downcase
+          parent1_email = row['Parent 1 - Email (6)']&.strip&.downcase
+          parent2_email = row['Parent 2 - Email (6)']&.strip&.downcase
+
+          # Skip if emails are missing or invalid
+          next if kid_email.nil? || kid_email.empty? || kid_email == 'n/a'
+
+          # Check if users exist in database
+          kid = User.find_by(email: kid_email) if kid_email.present?
+          parent1 = User.find_by(email: parent1_email) if parent1_email.present? && parent1_email != 'n/a'
+          parent2 = User.find_by(email: parent2_email) if parent2_email.present? && parent2_email != 'n/a'
+
+          # Report missing users
+          if parent1_email.present? && parent1_email != 'n/a' && !parent1
+            missing_parents << [parent1_email, kid_email]
+          end
+
+          if parent2_email.present? && parent2_email != 'n/a' && !parent2
+            missing_parents << [parent2_email, kid_email]
+          end
+
+          unless kid
+            missing_kids << kid_email
+          end
+
+        end
+
+        missing_parents.each do |parent|
+          puts "Parent email #{parent[0]} not found, kid email #{parent[1]}"
+        end
+
+        missing_kids.each do |kid|
+          puts "Kid email #{kid} not found"
+        end
+        successful = true
+        break
+
+      rescue => e
+        puts "❌ Failed with #{encoding}: #{e.message}"
+        next
       end
     end
 
-    # Sort found users by ID size (number of digits) and then email alphabetically
-    sorted_users = found_users.sort_by { |user| [user[:id].to_s.length, user[:email]] }
-
-    # Output the sorted IDs and emails
-    if sorted_users.any?
-      puts "The following user IDs and emails were found in the database (sorted by ID size and email):"
-      sorted_users.each do |user|
-        puts "ID: #{user[:id]}, Email: #{user[:email]}"
-      end
-    else
-      puts "No emails from the CSV were found in the database."
-    end
-
-    # Output the missing emails
-    if missing_emails.any?
-      puts "The following emails do not exist in the database:"
-      missing_emails.each { |email| puts email }
+    unless successful
+      puts "❌ Could not process CSV with any encoding"
     end
   end
 end

@@ -19,7 +19,7 @@ task update_users_from_csv: :environment do
     # Only use institutional email
     institutional_email = row['Institutional Email']
 
-    next if institutional_email.blank?
+    next if institutional_email.blank? || row['Status'] != 'Active'
 
     # Find user by institutional email only
     user = User.find_by(email: institutional_email.strip.downcase)

@@ -3,12 +3,12 @@ require 'csv'
 namespace :db do
   desc "Create or update parent accounts in bulk from a CSV file"
   task create_parents: :environment do
-    file_path = 'lib/tasks/parentss.csv' # Adjust the path as necessary
+    file_path = 'lib/tasks/admissions_list.csv' # Adjust the path as necessary
     kid_nil_counter = 0
+
     # Method to create or update a parent account
     create_parent_method = lambda do |name, email, password, kid_email|
       return if email.blank? || password.blank? || kid_email.blank?
-
 
       # Find or create the parent
       parent = User.find_or_initialize_by(email: email.strip.downcase)
@@ -31,7 +31,8 @@ namespace :db do
             password_confirmation: password,
             confirmed_at: Time.now,
             role: 'Parent',
-            kids: [kid.id]
+            kids: [kid.id],
+            skip_domain_validation: true
           )
 
           # Find LC with less than 3 hubs linked to the kid's hub
@@ -60,25 +61,50 @@ namespace :db do
 
     puts "Kid nil counter: #{kid_nil_counter}"
 
-    # Process each row in the CSV
-    CSV.foreach(file_path, headers: true) do |row|
-      next if row['InstitutionalEmail'].blank? || row['Parent 1 - Full Name (Section 6)'].blank? || row['Parent 1 - Email (6)'].blank?
+    # Try different encodings for CSV processing
+    encodings_to_try = ['UTF-8', 'ISO-8859-1', 'Windows-1252']
+    successful = false
 
-      kid_email = row['InstitutionalEmail'].strip.downcase
+    encodings_to_try.each do |encoding|
+      begin
+        puts "Trying CSV.foreach with encoding: #{encoding}"
 
-      # Create or update the first parent
-      parent1_name = row['Parent 1 - Full Name (Section 6)'].strip
-      parent1_email = row['Parent 1 - Email (6)'].strip.downcase
-      parent1_password = SecureRandom.hex(8)
-      create_parent_method.call(parent1_name, parent1_email, parent1_password, kid_email)
+        # Process each row in the CSV with encoding handling
+        CSV.foreach(file_path, headers: true, encoding: "#{encoding}:UTF-8") do |row|
+          next if row['InstitutionalEmail'].blank? || row['Parent 1 - Full Name (Section 6)'].blank? || row['Parent 1 - Email (6)'].blank? || row['Status'] != 'Active'
 
-      # Create or update the second parent if present
-      if row['Parent 2 - Full Name (Section 6)'].present? && row['Parent 2 - Email (6)'].present?
-        parent2_name = row['Parent 2 - Full Name (Section 6)'].strip
-        parent2_email = row['Parent 2 - Email (6)'].strip.downcase
-        parent2_password = SecureRandom.hex(8)
-        create_parent_method.call(parent2_name, parent2_email, parent2_password, kid_email)
+          kid_email = row['InstitutionalEmail'].strip.downcase
+
+          # Create or update the first parent
+          parent1_name = row['Parent 1 - Full Name (Section 6)'].strip
+          parent1_email = row['Parent 1 - Email (6)'].strip.downcase
+          parent1_password = SecureRandom.hex(8)
+          create_parent_method.call(parent1_name, parent1_email, parent1_password, kid_email)
+
+          # Create or update the second parent if present
+          if row['Parent 2 - Full Name (Section 6)'].present? && row['Parent 2 - Email (6)'].present?
+            parent2_name = row['Parent 2 - Full Name (Section 6)'].strip
+            parent2_email = row['Parent 2 - Email (6)'].strip.downcase
+            parent2_password = SecureRandom.hex(8)
+            create_parent_method.call(parent2_name, parent2_email, parent2_password, kid_email)
+          end
+        end
+
+        puts "✅ Successfully processed CSV with #{encoding} encoding"
+        successful = true
+        break
+
+      rescue => e
+        puts "❌ Failed with #{encoding}: #{e.message}"
+        next
       end
     end
+
+    unless successful
+      puts "❌ Could not process CSV with any encoding"
+      exit 1
+    end
+
+    puts "Final kid nil counter: #{kid_nil_counter}"
   end
 end
