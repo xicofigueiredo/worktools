@@ -40,3 +40,17 @@ production:
   database: <%= ENV["POSTGRES_DB"] %>
   username: <%= ENV["POSTGRES_USER"] %>
   password: <%= ENV["POSTGRES_PASSWORD"] %>
+
+# Guilherme Settings
+
+# default: &default
+#   adapter: postgresql
+#   encoding: unicode
+#   pool: 5
+#   username: gago
+#   password: 123456
+#   host: localhost
+
+# development:
+#   <<: *default
+#   database: backup

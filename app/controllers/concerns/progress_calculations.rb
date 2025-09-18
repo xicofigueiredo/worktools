@@ -63,34 +63,29 @@ module ProgressCalculations
   end
 
   def moodle_calculate_progress_and_balance(timelines)
-    # Collect all topic IDs from all timelines’ subjects (using in-memory associations if already loaded)
-    all_topic_ids = timelines.flat_map { |timeline| timeline.moodle_topics.map(&:id) }.uniq
-
-    # Preload user_topics for current_user for these topics in one query, index by topic_id
-    user_topics_by_topic = current_user.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
 
     timelines.each do |timeline|
       topics = timeline.moodle_topics
       total_topics = topics.size
+      progress = 0
+      balance = 0
+      expected_progress = 0
+      total_time = timeline.moodle_topics.sum(:time).to_f
 
-        result = topics.each_with_object({ balance: 0, progress: 0.0, expected: 0.0 }) do |topic, h|
-
-          # Update balance based on deadline and done state
-          if topic.done && topic.deadline && topic.deadline >= Date.today
-            h[:balance] += 1
-          elsif !topic.done && topic.deadline && topic.deadline < Date.today
-            h[:balance] -= 1
-          end
-
-          # Sum progress if topic is done
-          h[:progress] += topic.percentage.to_f if topic.done
-          # Sum expected progress if deadline has passed
-          h[:expected] += topic.percentage.to_f if topic.deadline && topic.deadline < Date.today
+      topics.each do |topic|
+        # Update balance based on deadline and done state
+        if topic.done && topic.deadline && topic.deadline >= Date.today
+          balance += 1
+        elsif !topic.done && topic.deadline && topic.deadline < Date.today
+          balance -= 1
         end
+        percentage = topic.time / total_time if topic.time.positive? && total_time.positive?
 
-        balance = result[:balance]
-        progress = result[:progress]
-        expected_progress = result[:expected]
+        # Sum progress if topic is done
+        progress += percentage if topic.done && !percentage.nil?
+        # Sum expected progress if deadline has passed
+        expected_progress += percentage if topic.deadline && topic.deadline < Date.today && !percentage.nil?
+      end
 
 
       # Convert progress values into whole percentages

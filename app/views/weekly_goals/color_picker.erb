@@ -16,7 +16,8 @@
 
       <div class="container">
         <%= form_with(model: @timelines, url: update_colors_timelines_path(date: @date), method: :patch, data: { controller: "modals", action: "submit->modals#submit" }) do %>
-          <% @timelines.each do |timeline| %>
+          <!-- Update to include both timeline types -->
+          <% (@timelines + @moodle_timelines).each do |timeline| %>
             <div class="d-flex justify-content-between mb-2" data-controller="color-reset">
              <% name = timeline.subject_id == 666 ? timeline.personalized_name : timeline.subject.name %>
               <p><%= name %></p>

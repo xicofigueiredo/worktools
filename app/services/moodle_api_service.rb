@@ -197,14 +197,20 @@ class MoodleApiService
         as1 = true
         as2 = true
       elsif category == 19 # Year 7
-        moodle_timeline = MoodleTimeline.find_or_create_by!(
+        moodle_timeline = MoodleTimeline.find_or_create_by(
           user_id: user_id,
-          subject_id: 1007,
-          start_date: Date.today + 1.day,
-          end_date: Date.today + 1.year,
-          category: category,
-          hidden: false
-        )
+          subject_id: 1007
+        ) do |mt|
+          mt.start_date = Date.today + 1.day
+          mt.end_date = Date.today + 1.year
+          mt.category = category
+          mt.hidden = false
+          mt.balance = 0
+          mt.expected_progress = 0
+          mt.progress = 0
+          mt.total_time = 0
+          mt.difference = 0
+        end
 
         # Create one MoodleTopic per relevant course section (LTR, English, Maths, Science)
         desired_sections = ["Learning Through Research", "English", "Mathematics", "Science"]
@@ -235,14 +241,20 @@ class MoodleApiService
           topic.save!
         end
       elsif category == 18 # Year 8
-        moodle_timeline = MoodleTimeline.find_or_create_by!(
+        moodle_timeline = MoodleTimeline.find_or_create_by(
           user_id: user_id,
-          subject_id: 1008,
-          start_date: Date.today + 1.day,
-          end_date: Date.today + 1.year,
-          category: category,
-          hidden: false
-        )
+          subject_id: 1008
+        ) do |mt|
+          mt.start_date = Date.today + 1.day
+          mt.end_date = Date.today + 1.year
+          mt.category = category
+          mt.hidden = false
+          mt.balance = 0
+          mt.expected_progress = 0
+          mt.progress = 0
+          mt.total_time = 0
+          mt.difference = 0
+        end
 
         # Create one MoodleTopic per relevant course section (LTR, English, Maths, Science)
         desired_sections = ["Learning Through Research", "English", "Mathematics", "Science"]
@@ -273,14 +285,20 @@ class MoodleApiService
           topic.save!
         end
       elsif category == 33 # Year 9
-        moodle_timeline = MoodleTimeline.find_or_create_by!(
+        moodle_timeline = MoodleTimeline.find_or_create_by(
           user_id: user_id,
-          subject_id: 1009,
-          start_date: Date.today + 1.day,
-          end_date: Date.today + 1.year,
-          category: category,
-          hidden: false
-        )
+          subject_id: 1009
+        ) do |mt|
+          mt.start_date = Date.today + 1.day
+          mt.end_date = Date.today + 1.year
+          mt.category = category
+          mt.hidden = false
+          mt.balance = 0
+          mt.expected_progress = 0
+          mt.progress = 0
+          mt.total_time = 0
+          mt.difference = 0
+        end
 
         # Create one MoodleTopic per relevant course section (LTR, English, Maths, Science)
         desired_sections = ["Learning Through Research", "English", "Mathematics", "Science"]
@@ -326,29 +344,40 @@ class MoodleApiService
           end_date = Date.today + 1.year
           exam_date_id = nil
         else
-          start_date = timeline.start_date
-          end_date = timeline.end_date
+          start_date = timeline.start_date.present? ? timeline.start_date : Date.today
+          end_date = timeline.end_date.present? ? timeline.end_date : Date.today + 1.year
           exam_date_id = timeline.exam_date_id
         end
 
         if moodle_timeline.nil?
-          moodle_timeline = MoodleTimeline.create!(
-            user_id: user_id,
-            subject_id: subject.id,
-            start_date: start_date,
-            end_date: end_date,
-            exam_date_id: exam_date_id,
-            balance: 0,
-            expected_progress: 0,
-            progress: 0,
-            total_time: 0,
-            difference: 0,
-            category: category,
-            moodle_id: course_id,
-            hidden: false,
-            as1: as1,
-            as2: as2
-          )
+          begin
+            moodle_timeline = MoodleTimeline.create!(
+              user_id: user_id,
+              subject_id: subject.id,
+              start_date: start_date,
+              end_date: end_date,
+              exam_date_id: exam_date_id,
+              balance: 0,
+              expected_progress: 0,
+              progress: 0,
+              total_time: 0,
+              difference: 0,
+              category: category,
+              moodle_id: course_id,
+              hidden: false,
+              as1: as1,
+              as2: as2
+            )
+          rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
+            # If a duplicate was created by a race condition, find the existing one
+            moodle_timeline = MoodleTimeline.find_by(user_id: user_id, subject_id: subject.id)
+            if moodle_timeline.nil?
+              # If it still doesn't exist, re-raise the original error
+              raise e
+            else
+              puts "Found existing timeline for user #{user_id} and subject #{subject.id}"
+            end
+          end
         end
 
         created_timelines << moodle_timeline
@@ -361,7 +390,7 @@ class MoodleApiService
 
   def get_with_ect_activities
     # Define the category IDs we want to filter by
-    target_categories = [3, 4, 5, 15, 18, 19, 33]
+    target_categories = [35, 45, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57]
 
     # First, get all courses
     courses = call('core_course_get_courses', {})
@@ -388,22 +417,46 @@ class MoodleApiService
           course_id = course['id']
           course_name = course['shortname']
 
-          # Get activities for this course using an admin or manager user ID
-          activities = get_all_course_activities(course_id, 2)
+          begin
+            # Get activities with ECT data using custom API (admin user ID = 2)
+            completed_activities = get_all_course_activities(course_id, 2)
 
-          if activities.is_a?(Array)
-            with_ect = activities.count { |activity| activity[:ect].to_f > 0 }
-            without_ect = activities.count { |activity| activity[:ect].to_f == 0 }
-            total_ect = activities.sum { |activity| activity[:ect].to_f }
+            # Enrich missing ids (cmid) by name using core_course_get_contents
+            if completed_activities.any? { |a| a[:id].nil? }
+              begin
+                contents = call('core_course_get_contents', { courseid: course_id })
+                modules = Array(contents).flat_map { |s| s['modules'] || [] }
+                name_to_cmid = {}
+                modules.each { |m| n = m['name']; name_to_cmid[n] ||= m['id'] if n }
+                completed_activities.each { |a| a[:id] ||= name_to_cmid[a[:name]] }
+              rescue => e
+                puts "    Warning: Could not enrich moodle ids for course #{course_id}: #{e.message}"
+              end
+            end
 
-            total_with_ect += with_ect
-            total_without_ect += without_ect
+            if completed_activities.is_a?(Array)
+              with_ect = completed_activities.count { |activity| activity[:ect].to_f > 0 }
+              without_ect = completed_activities.count { |activity| activity[:ect].to_f == 0 }
+              total_ect = completed_activities.sum { |activity| activity[:ect].to_f }
 
-            puts "\n  Course: #{course_name} (ID: #{course_id})"
-            puts "  - Activities with ECT: #{with_ect}"
-            puts "  - Activities without ECT: #{without_ect}"
-            puts "  - Total activities: #{activities.length}"
-            puts "  - Total ECT: #{total_ect}"
+              total_with_ect += with_ect
+              total_without_ect += without_ect
+
+              puts "\n  Course: #{course_name} (ID: #{course_id})"
+              puts "  - Activities with ECT: #{with_ect}"
+              puts "  - Activities without ECT: #{without_ect}"
+              puts "  - Total activities: #{completed_activities.length}"
+              puts "  - Total ECT: #{total_ect}"
+
+              # Show activities with missing IDs after enrichment
+              missing_ids = completed_activities.count { |a| a[:id].nil? }
+              if missing_ids > 0
+                puts "  - Activities with missing IDs: #{missing_ids}"
+              end
+            end
+
+          rescue => e
+            puts "\n  ❌ Error processing course #{course_name} (ID: #{course_id}): #{e.message}"
           end
         end
       end
@@ -419,8 +472,12 @@ class MoodleApiService
       puts "\n📊 Category Breakdown:"
       courses_by_category.each do |category_id, category_courses|
         category_total_activities = category_courses.sum do |course|
-          activities = get_all_course_activities(course['id'], 2)
-          activities.is_a?(Array) ? activities.length : 0
+          begin
+            activities = get_all_course_activities(course['id'], 2)
+            activities.is_a?(Array) ? activities.length : 0
+          rescue
+            0
+          end
         end
 
         puts "Category #{category_id}:"
@@ -580,7 +637,7 @@ class MoodleApiService
     skipped_topics = []
 
     activities.each do |activity|
-      next if activity[:section_visible] == 0
+      next if activity[:section_visible] == 0 || activity[:ect] ==  0
 
       # Prefer exact id match; fallback to name for both timeline types
       mt = existing_topics_by_moodle_id[activity[:id]]

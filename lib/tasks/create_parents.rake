@@ -4,20 +4,7 @@ namespace :db do
   desc "Create or update parent accounts in bulk from a CSV file"
   task create_parents: :environment do
     file_path = 'lib/tasks/parentss.csv' # Adjust the path as necessary
-
-
-
-
-
-    #NEED TO FILTER THE KIDS THAT ARE NOT ACTIVE OR GRADUATED
-
-
-
-
-
-
-
-
+    kid_nil_counter = 0
     # Method to create or update a parent account
     create_parent_method = lambda do |name, email, password, kid_email|
       return if email.blank? || password.blank? || kid_email.blank?
@@ -32,6 +19,7 @@ namespace :db do
         return
       elsif kid.nil?
         puts "Kid with email #{kid_email} not found, skipping parent creation for #{email}."
+        kid_nil_counter += 1
         return
       end
 
@@ -69,6 +57,8 @@ namespace :db do
         end
       end
     end
+
+    puts "Kid nil counter: #{kid_nil_counter}"
 
     # Process each row in the CSV
     CSV.foreach(file_path, headers: true) do |row|

@@ -11,6 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
+
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -421,6 +422,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.string "mock50"
     t.string "mock100"
     t.string "exam_season"
+    t.bigint "moodle_timeline_id"
+    t.index ["moodle_timeline_id"], name: "index_knowledges_on_moodle_timeline_id"
     t.index ["sprint_goal_id"], name: "index_knowledges_on_sprint_goal_id"
     t.index ["timeline_id"], name: "index_knowledges_on_timeline_id"
   end
@@ -489,6 +492,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.boolean "blocks", default: [false, false, false, false], array: true
     t.index ["exam_date_id"], name: "index_moodle_timelines_on_exam_date_id"
     t.index ["subject_id"], name: "index_moodle_timelines_on_subject_id"
+    t.index ["user_id", "subject_id"], name: "index_moodle_timelines_on_user_and_subject", unique: true
     t.index ["user_id"], name: "index_moodle_timelines_on_user_id"
   end
 
@@ -1017,6 +1021,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
   add_foreign_key "inis", "kdas"
   add_foreign_key "kdas", "users"
   add_foreign_key "kdas", "weeks"
+  add_foreign_key "knowledges", "moodle_timelines"
   add_foreign_key "knowledges", "sprint_goals"
   add_foreign_key "knowledges", "timelines", on_delete: :cascade
   add_foreign_key "learner_flags", "users"

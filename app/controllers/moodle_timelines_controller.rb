@@ -22,29 +22,17 @@ class MoodleTimelinesController < ApplicationController
       @has_moodle_timeline = @learner.moodle_timelines.where(hidden: false).any?
   end
 
-  def show
-    @moodle_timeline = MoodleTimeline.find(params[:id])
-    @learner = User.find(params[:learner_id]) if params[:learner_id].present?
-    render partial: "moodle_timeline_detail", locals: { moodle_timeline: @moodle_timeline }, layout: false
-  end
-
   def moodle_show
     @moodle_timeline = MoodleTimeline.find(params[:id])
     @learner = User.find(params[:learner_id]) if params[:learner_id].present?
     render partial: "moodle_timeline_detail", locals: { moodle_timeline: @moodle_timeline }, layout: false
   end
 
-
   def create
     @moodle_timeline = current_user.moodle_timelines.new(moodle_timeline_params)
 
     if @moodle_timeline.save
-      # if current_user.hub_ids.include?(147)
-      if false
-        moodle_generate_topic_deadlines(@moodle_timeline)
-      else
-        generate_topic_deadlines(@moodle_timeline)
-      end
+      moodle_generate_topic_deadlines(@moodle_timeline)
       @moodle_timeline.save
       redirect_to moodle_timelines_path, notice: 'Moodle Timeline was successfully created.'
     else

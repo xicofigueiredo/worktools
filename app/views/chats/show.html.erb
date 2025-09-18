@@ -68,7 +68,7 @@
               <%= @chat.subject.name %> Tutor
             </h4>
             <small class="text-muted">
-              Personalized AI assistant for <%= current_user.full_name %>
+              Personalized AI assistant <%= current_user.full_name %>
             </small>
           </div>
           <div>
@@ -92,7 +92,7 @@
                   <% if message.assistant_message? %>
                     <div class="d-flex align-items-center mb-2">
                       <i class="fas fa-robot text-primary me-2"></i>
-                      <strong class="text-primary">AI Tutor</strong>
+                      <strong class="text-primary">Aristotle</strong>
                     </div>
                   <% else %>
                     <div class="d-flex align-items-center mb-2">
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
              style="max-width: 75%;">
           <div class="d-flex align-items-center mb-2">
             <i class="fas fa-${role === 'user' ? 'user' : 'robot'} ${role === 'user' ? 'text-white' : 'text-primary'} me-2"></i>
-            <strong class="${role === 'user' ? '' : 'text-primary'}">${role === 'user' ? 'You' : 'AI Tutor'}</strong>
+            <strong class="${role === 'user' ? '' : 'text-primary'}">${role === 'user' ? 'You' : 'Aristotle'}</strong>
           </div>
           <div class="message-content">
             ${content.replace(/\n/g, '<br>')}

@@ -169,6 +169,11 @@ class PagesController < ApplicationController
 
       @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
+      nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+      @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
+      @bw_consent = Consent.find_by(user_id: @learner.id, week_id: nearest_build_week&.id)
+      @activities = @bw_consent.consent_activities.any? if @bw_consent
+
       get_kda_averages(@learner.kdas, @current_sprint)
       redirect_to some_fallback_path, alert: "Learner not found." unless @learner
     elsif current_user.role == "lc"
@@ -466,6 +471,7 @@ class PagesController < ApplicationController
               @learner.notes.where(category: "knowledge").where("date >= ?", date_threshold).order(created_at: :desc)
             end
     @timelines = @learner.timelines.where(hidden: false)
+    @moodle_timelines = @learner.moodle_timelines.where(hidden: false)
 
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
     @current_sprint_weeks = @current_sprint.weeks.order(:start_date) if @current_sprint

@@ -12,18 +12,32 @@ class WeeklyGoalsController < ApplicationController
                                                                   @current_date, @current_date)
     @weekly_slots = @weekly_goal&.weekly_slots
     @current_week = Week.find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
-    @timelines = current_user.timelines
+    
+    # Get both regular timelines and moodle timelines
+    @timelines = current_user.timelines.where(hidden: false)
+    @moodle_timelines = current_user.moodle_timelines
 
     @subjects = []
 
+    # Add subjects from regular timelines
     @timelines.each do |timeline|
       subject = Subject.find_by("id = ?", timeline.subject_id)
-      @subjects.append(subject)
+      @subjects.append(subject) if subject
     end
+
+    # Add subjects from moodle timelines
+    @moodle_timelines.each do |moodle_timeline|
+      if moodle_timeline.subject
+        @subjects.append(moodle_timeline.subject)
+      end
+    end
+
+    @subjects.uniq!
   end
 
   def color_picker
     @timelines = current_user.timelines.where(hidden: false)
+    @moodle_timelines = current_user.moodle_timelines
     @date = params[:date]
   end
 
@@ -111,14 +125,27 @@ class WeeklyGoalsController < ApplicationController
     @name = @weekly_goal.user.full_name
     @is_edit = true
     @weekly_slots = @weekly_goal&.weekly_slots
-    @timelines = @weekly_goal.user.timelines
+    
+    # Get both timeline types for the user
+    @timelines = @weekly_goal.user.timelines.where(hidden: false)
+    @moodle_timelines = @weekly_goal.user.moodle_timelines
 
     @subjects = []
 
+    # Add subjects from regular timelines
     @timelines.each do |timeline|
       subject = Subject.find_by("id = ?", timeline.subject_id)
-      @subjects.append(subject)
+      @subjects.append(subject) if subject
     end
+
+    # Add subjects from moodle timelines  
+    @moodle_timelines.each do |moodle_timeline|
+      if moodle_timeline.subject
+        @subjects.append(moodle_timeline.subject)
+      end
+    end
+
+    @subjects.uniq!
   end
 
   def lc_update
@@ -183,17 +210,27 @@ class WeeklyGoalsController < ApplicationController
   end
 
   def set_subject_names
+    # Get subject names from regular timelines
     @subject_names = current_user.timelines.where(hidden: false).map(&:subject).uniq.pluck(:name)
     personalized_names = current_user.timelines.where(subject_id: 666, hidden: false).map(&:personalized_name)
+    
+    # Get subject names from moodle timelines
+    moodle_subject_names = current_user.moodle_timelines.map(&:subject).compact.uniq.pluck(:name)
+    moodle_personalized_names = current_user.moodle_timelines.where(subject: nil).map(&:personalized_name).compact
+    
+    # Combine all subject names
+    all_subject_names = (@subject_names + moodle_subject_names).reject { |name| name.blank? }.uniq
+    all_personalized_names = (personalized_names + moodle_personalized_names).reject { |name| name.blank? }.uniq
+    
     current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     skill_names = current_sprint.sprint_goals.where(user: current_user).map(&:skills).flatten.uniq.pluck(:extracurricular).reject(&:blank?).map(&:capitalize)
     communities_names = current_sprint.sprint_goals.where(user: current_user).map(&:communities).flatten.uniq.pluck(:involved).reject(&:blank?).map(&:capitalize)
 
     # Combine subjects and skills, prefixing each for clarity
-    @combined_options = @subject_names.reject { |name| name == '' } +
+    @combined_options = all_subject_names +
                         skill_names.map { |name| name } +
                         communities_names.map { |name| name } +
-                        personalized_names +
+                        all_personalized_names +
                         ["Other"]
   end
 
@@ -258,5 +295,17 @@ class WeeklyGoalsController < ApplicationController
       end
     end
     allowed_params
+  end
+
+  def find_timeline_for_subject(subject_name, timelines, moodle_timelines)
+    # First check regular timelines
+    timeline = timelines.find { |t| t.subject&.name == subject_name || t.personalized_name == subject_name }
+    return timeline if timeline
+
+    # Then check moodle timelines
+    moodle_timeline = moodle_timelines.find { |mt| mt.subject&.name == subject_name || mt.personalized_name == subject_name }
+    return moodle_timeline if moodle_timeline
+
+    nil
   end
 end

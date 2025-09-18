@@ -117,7 +117,7 @@ class ExamEnrollsController < ApplicationController
       # Get hub names for filtering exam enrolls
       dc_hub_names = Hub.where(id: dc_hub_ids).pluck(:name)
 
-      @exam_enrolls = @exam_enrolls
+      lc_exam_enrolls = @exam_enrolls
       .where('users.deactivate IS NULL OR users.deactivate = ? OR users.id IS NULL', false)
       .where('exam_enrolls.hub IN (?)', dc_hub_names)
       .where(
@@ -127,6 +127,18 @@ class ExamEnrollsController < ApplicationController
       )
       .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
 
+      if current_user.subjects.count > 0
+        cm_exam_enrolls = @exam_enrolls
+        .where('users.deactivate IS NULL OR users.deactivate = ? OR users.id IS NULL', false)
+        .where(
+          '(timelines.subject_id IN (?)) OR (timelines.id IS NULL)',
+          current_user.subjects
+        )
+        .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
+      end
+
+      @exam_enrolls = lc_exam_enrolls
+      @exam_enrolls += cm_exam_enrolls if cm_exam_enrolls.present?
     elsif current_user.role == 'cm'
       @exam_enrolls = @exam_enrolls
         .where('users.deactivate IS NULL OR users.deactivate = ? OR users.id IS NULL', false)
