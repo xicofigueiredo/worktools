@@ -11,7 +11,6 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
-
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -257,7 +256,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.string "subject_name"
     t.string "code"
     t.string "qualification"
-    t.boolean "progress_cut_off", default: false
     t.string "mock_results"
     t.string "bga_exam_centre"
     t.string "exam_board"
@@ -294,6 +292,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.integer "learning_coach_ids", default: [], array: true
     t.integer "timeline_id"
     t.string "specific_papers"
+    t.boolean "progress_cut_off", default: false
     t.string "personalized_exam_date"
     t.string "paper1"
     t.string "paper2"
@@ -320,6 +319,11 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.string "currency", default: "EUR"
     t.integer "number_of_subjects", default: 0, null: false
     t.index ["user_id"], name: "index_exam_finances_on_user_id"
+  end
+
+  create_table "excel_imports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "form_interrogation_joins", force: :cascade do |t|
@@ -740,7 +744,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.integer "sick_leaves_left", default: 5, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "carry_over_days"
+    t.integer "carry_over_days", default: 0, null: false
     t.integer "days_from_previous_year_used", default: 0, null: false
     t.index ["user_id", "year"], name: "index_staff_leave_entitlements_on_user_id_and_year", unique: true
     t.index ["user_id"], name: "index_staff_leave_entitlements_on_user_id"
@@ -819,6 +823,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.integer "progress"
     t.bigint "exam_date_id"
     t.boolean "anulado"
+    t.bigint "lws_timeline_id"
     t.datetime "mock50"
     t.datetime "mock100"
     t.string "personalized_name"
@@ -826,6 +831,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.boolean "hidden", default: false
     t.integer "difference"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
+    t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
   end
@@ -880,9 +886,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.string "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
-    t.string "confirmation_token"
-    t.datetime "confirmed_at"
-    t.datetime "confirmation_sent_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "full_name"
@@ -892,6 +895,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
     t.date "birthday"
     t.string "nationality"
     t.string "profile_pic"
+    t.datetime "last_login_at"
+    t.string "confirmation_token"
+    t.datetime "confirmed_at"
+    t.datetime "confirmation_sent_at"
     t.string "unconfirmed_email"
     t.boolean "deactivate", default: false
     t.bigint "moodle_id"
@@ -1023,7 +1030,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
   add_foreign_key "kdas", "weeks"
   add_foreign_key "knowledges", "moodle_timelines"
   add_foreign_key "knowledges", "sprint_goals"
-  add_foreign_key "knowledges", "timelines", on_delete: :cascade
   add_foreign_key "learner_flags", "users"
   add_foreign_key "lws_timelines", "users"
   add_foreign_key "monday_slots", "users", column: "lc_id"
@@ -1064,7 +1070,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_15_174901) do
   add_foreign_key "timeline_progresses", "timelines"
   add_foreign_key "timeline_progresses", "weeks"
   add_foreign_key "timelines", "exam_dates"
-  add_foreign_key "timelines", "subjects"
   add_foreign_key "timelines", "users"
   add_foreign_key "topics", "subjects"
   add_foreign_key "tuesday_slots", "users", column: "lc_id"
