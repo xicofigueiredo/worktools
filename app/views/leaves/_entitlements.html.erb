@@ -1,0 +1,82 @@
+<% year_now = Date.current.year %>
+
+<% entitlement = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: year_now) %>
+
+<% # Current year requests %>
+<% pending_holiday_current = current_user.staff_leaves.where(leave_type: "holiday", status: "pending")
+                                             .where("extract(year from start_date) = ?", year_now)
+                                             .sum(:total_days) %>
+<% pending_sick = current_user.staff_leaves.where(leave_type: "sick leave", status: "pending")
+                                       .where("extract(year from start_date) = ?", year_now)
+                                       .sum(:total_days) %>
+<% booked_holiday_current = current_user.staff_leaves.where(leave_type: "holiday", status: "approved")
+                                              .where("extract(year from start_date) = ?", year_now)
+                                              .sum(:total_days) %>
+<% booked_sick = current_user.staff_leaves.where(leave_type: "sick leave", status: "approved")
+                                        .where("extract(year from start_date) = ?", year_now)
+                                        .sum(:total_days) %>
+
+<% # Carry-over usage in next year %>
+<% next_year = year_now + 1 %>
+<% pending_carry_over = current_user.staff_leaves.where(leave_type: "holiday", status: "pending")
+                                           .where("extract(year from start_date) = ?", next_year)
+                                           .sum(:days_from_previous_year) %>
+<% booked_carry_over = current_user.staff_leaves.where(leave_type: "holiday", status: "approved")
+                                          .where("extract(year from start_date) = ?", next_year)
+                                          .sum(:days_from_previous_year) %>
+
+<% # Adjusted totals for holidays including carry-over %>
+<% pending_holiday = pending_holiday_current + pending_carry_over %>
+<% booked_holiday = booked_holiday_current + booked_carry_over %>
+<% holidays_left = entitlement.persisted? ? entitlement.holidays_left : 25 %>
+<% total_holidays = holidays_left + booked_holiday + pending_holiday %>
+<% total_sick = (entitlement.persisted? ? entitlement.sick_leaves_left : 5) + booked_sick + pending_sick %>
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">My Leaves for <%= year_now %></h5>
+    <div>
+      <%= link_to 'New Leave Request', new_leafe_path, class: 'btn btn-primary' %>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <table class="table mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Type</th>
+          <th>Total</th>
+          <th>Booked</th>
+          <th>Pending</th>
+          <th>Left</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Holidays</td>
+          <td><%= total_holidays %></td>
+          <td>
+            <%= booked_holiday %>
+            <% if booked_carry_over > 0 %>
+              <small class="text-muted">(includes <%= booked_carry_over %> used in <%= next_year %>)</small>
+            <% end %>
+          </td>
+          <td>
+            <%= pending_holiday %>
+            <% if pending_carry_over > 0 %>
+              <small class="text-muted">(includes <%= pending_carry_over %> used in <%= next_year %>)</small>
+            <% end %>
+          </td>
+          <td><%= holidays_left %></td>
+        </tr>
+        <tr>
+          <td>Sick Leaves</td>
+          <td><%= total_sick %></td>
+          <td><%= booked_sick %></td>
+          <td><%= pending_sick %></td>
+          <td><%= entitlement.persisted? ? entitlement.sick_leaves_left : 5 %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

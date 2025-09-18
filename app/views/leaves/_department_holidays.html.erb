@@ -1,0 +1,74 @@
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h2 class="h5 mb-0">Department Holidays for <%= @month.strftime('%B %Y') %></h2>
+    <div>
+      <%= link_to 'Previous Month', leaves_path(month: @prev_month.strftime('%Y-%m-01'), active_tab: 'manager'), class: 'btn btn-link btn-sm me-2' %>
+      <%= link_to 'Next Month', leaves_path(month: @next_month.strftime('%Y-%m-01'), active_tab: 'manager'), class: 'btn btn-link btn-sm' %>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <% filtered = @department_leaves.select { |l| l.status.in?(%w[pending approved]) } %>
+
+    <% if filtered.any? %>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Department</th>
+              <th>Name</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Total Days Used</th>
+              <th>Type of Leave</th>
+              <th class="text-center">Impediment</th>
+              <th>Docs</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% filtered.each do |leave| %>
+              <tr>
+                <td><%= leave.user.departments.first&.name || '—' %></td>
+                <td><%= leave.user.full_name %></td>
+                <td><%= leave.start_date %></td>
+                <td><%= leave.end_date %></td>
+                <td><%= leave.total_days %></td>
+                <td><%= leave.leave_type.capitalize %></td>
+
+                <td class="text-center">
+                  <% if leave.exception_requested && leave.exception_approver_messages.any? %>
+                    <% tooltip_lines = leave.exception_approver_messages.dup %>
+                    <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
+                    <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
+                  <% else %>
+                    -
+                  <% end %>
+                </td>
+
+                <td class="text-center">
+                  <% if leave.leave_type == 'sick leave' && leave.staff_leave_documents.any? %>
+                    <% doc = leave.staff_leave_documents.first %>
+                    <%= link_to download_document_leafe_path(leave, doc.id),
+                                title: "Download document",
+                                class: "btn btn-sm btn-outline-primary",
+                                target: "_blank",
+                                rel: "noopener" do %>
+                      <i class="fa fa-download" aria-hidden="true"></i>
+                    <% end %>
+                  <% end %>
+                </td>
+
+                <td><%= leave.status.capitalize %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="card-body">
+        <p class="mb-0">No holidays this month.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

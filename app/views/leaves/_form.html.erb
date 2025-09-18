@@ -1,0 +1,152 @@
+<%= form_with model: @staff_leave, url: leaves_path, local: true,
+  html: {
+    data: {
+      controller: "leave",
+      "leave-advance-days-value": StaffLeave::ADVANCE_DAYS,
+      "leave-preview-url-value": preview_leaves_path
+    }
+  } do |f| %>
+
+  <%= f.hidden_field :exception_requested,
+    value: false,
+    data: { "leave-target": "exceptionRequested" } %>
+  <%= f.hidden_field :exception_errors,
+    data: { "leave-target": "exceptionErrors" } %>
+  <%= f.hidden_field :days_from_previous_year, value: 0, data: { "leave-target": "daysFromPreviousHidden" } %>
+
+  <div class="row g-3">
+    <!-- Leave Type -->
+    <div class="col-12 col-md-3">
+      <div class="mb-2">
+        <%= f.label :leave_type, "Type", class: "form-label" %>
+        <%= f.select :leave_type,
+          [['Holiday', 'holiday'], ['Sick Leave', 'sick leave']], {},
+          data: { "leave-target": "type", action: "change->leave#validate" },
+          class: "form-select" %>
+      </div>
+    </div>
+
+    <!-- Start Date -->
+    <div class="col-12 col-md-4">
+      <div class="mb-2">
+        <%= f.label :start_date, "Start date", class: "form-label" %>
+        <%= f.date_field :start_date,
+          data: { "leave-target": "start", action: "change->leave#validate input->leave#validate" },
+          class: "form-control", required: true %>
+      </div>
+    </div>
+
+    <!-- End Date -->
+    <div class="col-12 col-md-4">
+      <div class="mb-2">
+        <%= f.label :end_date, "End date", class: "form-label" %>
+        <%= f.date_field :end_date,
+          data: { "leave-target": "end", action: "change->leave#validate input->leave#validate" },
+          class: "form-control", required: true %>
+      </div>
+    </div>
+
+    <!-- UI chooser that is only visible when carry is available -->
+    <div class="mb-3" data-leave-target="daysFromPrevWrapper" style="display:none;">
+      <label class="form-label">Use days from previous year?</label>
+      <div class="d-flex align-items-center gap-2">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="useCarry" data-leave-target="daysFromPrevCheckbox" data-action="change->leave#toggleUseCarry">
+          <label class="form-check-label" for="useCarry">Use carry-over days</label>
+        </div>
+
+        <div style="min-width:120px;">
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            data-leave-target="daysFromPrevInput"
+            min="0"
+            step="1"
+            value="0"
+            aria-label="Days from previous year"
+            disabled />
+          <div class="form-text small" data-leave-target="daysFromPrevInfo"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Validation message -->
+    <div class="col-12">
+      <div data-leave-target="message" class="small mb-2"></div>
+    </div>
+
+    <!-- Exception and days info -->
+    <div class="col-12 d-flex align-items-center">
+      <button id="exception_btn" type="button"
+        data-leave-target="exceptionBtn"
+        data-action="click->leave#showException"
+        class="btn btn-outline-secondary btn-sm me-2"
+        style="display:none;">
+        Exception Request
+      </button>
+    </div>
+
+    <!-- Exception Reason -->
+    <div class="col-12" data-leave-target="exception" style="display:none;">
+      <div class="mb-2">
+        <%= f.label :exception_reason, "Exception request (explain why)", class: "form-label" %>
+        <%= f.text_area :exception_reason, rows: 4,
+          data: { "leave-target": "exceptionReason", action: "input->leave#exceptionInput" },
+          class: "form-control" %>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="col-12">
+      <div class="mb-2">
+        <%= f.label :notes, "Notes (optional)", class: "form-label" %>
+        <%= f.text_area :notes, rows: 3, class: "form-control" %>
+      </div>
+    </div>
+
+    <!-- Document upload  -->
+    <div class="col-12" data-leave-target="documentsWrapper" style="display:none;">
+      <div class="mb-2">
+        <%= f.label :documents, "Medical documents", class: "form-label" %>
+        <%= f.file_field :documents, multiple: true, class: "form-control mb-2",
+            accept: ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" %>
+
+        <div class="form-text" style="font-size: 12px;">
+          Upload a medical report or justification only when requesting a sick leave. Only PDF and Word documents are allowed.
+        </div>
+
+        <% if @staff_leave.persisted? && @staff_leave.staff_leave_documents.any? %>
+          <div class="mt-2">
+            <small class="text-muted d-block mb-2">Current Documents:</small>
+            <% @staff_leave.staff_leave_documents.each do |document| %>
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="text-truncate"><%= document.file_name %></span>
+
+                <%= link_to 'Download', download_document_leave_path(@staff_leave, document.id),
+                            class: 'btn btn-sm btn-outline-primary' %>
+
+                <%= link_to 'Delete', delete_document_leave_path(@staff_leave, document.id),
+                            method: :delete,
+                            data: { confirm: 'Are you sure you want to delete this document?' },
+                            class: 'btn btn-danger btn-sm' %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="col-12 d-flex justify-content-end">
+      <%= f.submit 'Create request',
+        class: 'btn btn-primary',
+        data: { "leave-target": "submit" } %>
+    </div>
+  </div>
+<% end %>
+
+<style>
+  .text-orange {
+    color: darkorange !important;
+  }
+</style>

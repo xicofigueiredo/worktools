@@ -1,0 +1,148 @@
+<div class="card mb-4" data-controller="cancel">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h2 class="h5 mb-0">My Leave Requests</h2>
+    <%# small entitlements summary could go here if you prefer %>
+  </div>
+
+  <div class="card-body p-0">
+    <% if leaves.any? %>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Total Days Used</th>
+              <th>Type</th>
+              <th class="text-center">Impediment</th>
+              <th class="text-center">Status</th>
+              <th class="text-nowrap">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% leaves.each do |leave| %>
+              <tr>
+                <td><%= leave.start_date %></td>
+                <td><%= leave.end_date %></td>
+                <td><%= leave.total_days %></td>
+                <td><%= leave.leave_type.capitalize %></td>
+
+                <td class="text-center">
+                  <% if leave.exception_requested && leave.exception_user_messages.any? %>
+                    <% tooltip_lines = leave.exception_user_messages.dup %>
+                    <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
+                    <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
+                  <% else %>
+                    -
+                  <% end %>
+                </td>
+
+                <td class="text-center align-middle">
+                  <% status_badge_class = case leave.status
+                    when 'approved' then 'bg-success'
+                    when 'pending'  then 'bg-warning text-dark'
+                    when 'rejected' then 'bg-danger'
+                    when 'cancelled' then 'bg-secondary'
+                    else 'bg-secondary'
+                    end %>
+
+                  <div class="d-inline-flex align-items-center">
+                    <span class="badge <%= status_badge_class %>"><%= leave.status.to_s.capitalize %></span>
+
+                    <% if leave.status == 'rejected' %>
+                      <% rejected_conf = leave.confirmations.where(status: 'rejected').order(updated_at: :desc).first %>
+                      <% if rejected_conf.present? && rejected_conf.rejection_reason.present? %>
+                        <% reason = rejected_conf.rejection_reason.to_s.strip.gsub(/\r?\n/, ' | ') %>
+                        <% approver = rejected_conf.approver.try(:full_name) || "##{rejected_conf.approver_id}" %>
+                        <% when_txt = rejected_conf.validated_at&.strftime('%Y-%m-%d') %>
+                        <% tooltip_text = "Reason: #{reason} — By: #{approver} — On: #{when_txt}" %>
+
+                        <span class="badge bg-info text-dark ms-2" data-bs-toggle="tooltip" title="<%= h(tooltip_text) %>">i</span>
+                      <% end %>
+                    <% elsif leave.status == 'approved' %>
+                      <% approved_conf = leave.confirmations.where(status: 'approved').order(updated_at: :desc).first %>
+                      <% if approved_conf %>
+                        <% approver = approved_conf.approver.try(:full_name) || "##{approved_conf.approver_id}" %>
+                        <% when_txt = approved_conf.validated_at&.strftime('%Y-%m-%d') %>
+                        <% tip = "Approved by: #{approver} — On: #{when_txt}" %>
+                        <span class="badge bg-info text-dark ms-2" data-bs-toggle="tooltip" title="<%= h(tip) %>">i</span>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </td>
+
+                <td class="text-center">
+                  <% if leave.user_id == current_user.id && leave.status != 'cancelled' %>
+                    <% if leave.confirmations.pending.where(type: 'CancellationConfirmation').exists? %>
+                      <span class="badge bg-warning text-dark">Cancellation requested</span>
+                    <% else %>
+                      <div class="d-flex justify-content-center align-items-center gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger"
+                          title="Cancel leave"
+                          aria-label="Cancel leave"
+                          data-action="click->cancel#start"
+                          data-cancel-leave-id-value="<%= leave.id %>"
+                          data-cancel-start-date-value="<%= leave.start_date %>"
+                          data-cancel-leave-status-value="<%= leave.status %>">
+                          <i class="fa fa-times" aria-hidden="true"></i>
+                        </button>
+
+                        <% if leave.leave_type == 'sick leave' && leave.staff_leave_documents.any? %>
+                          <% doc = leave.staff_leave_documents.first %>
+                          <%= link_to download_document_leafe_path(leave, doc.id),
+                                      class: "btn btn-sm btn-outline-primary",
+                                      title: "Download document",
+                                      aria: { label: "Download document" },
+                                      target: "_blank",
+                                      rel: "noopener" do %>
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  <% else %>
+                    -
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="card-body">
+        <p class="mb-0">You have no leave requests yet.</p>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Cancellation modal (same as before) -->
+  <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form data-cancel-target="modalForm" method="post">
+          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>"/>
+          <div class="modal-header">
+            <h5 class="modal-title">Request cancellation</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p id="cancelModalInfo" class="small text-muted"></p>
+
+            <div class="mb-3">
+              <label for="cancelReason" class="form-label">Justification (required)</label>
+              <textarea id="cancelReason" data-cancel-target="reason" name="exception_reason" class="form-control" rows="3" required></textarea>
+              <input type="hidden" name="exception_requested" data-cancel-target="exceptionRequested" value="true" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-warning">Send cancellation request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

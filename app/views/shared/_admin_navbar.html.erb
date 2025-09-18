@@ -13,6 +13,11 @@
         <% if user_signed_in? %>
           <li class="nav-item">
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(timelines_path)%>">
+              <%= link_to 'Vacations', leaves_path, class: 'nav-link' %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(timelines_path)%>">
               <%= link_to "Timelines", timelines_path, class: "nav-link" %>
             </div>
           </li>
