@@ -180,8 +180,12 @@ class MoodleTimeline < ApplicationRecord
     else
       user_id = self.user.moodle_id
       course_id = self.moodle_id
+
+      if self.subject.board == "Portuguese Curriculum"
+        user_id = 2617
+      end
+      
       completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
-      # completed_activities = MoodleApiService.new.get_all_course_activities(course_id, 2617)
 
 
       # Enrich missing ids (cmid) by name using core_course_get_contents
