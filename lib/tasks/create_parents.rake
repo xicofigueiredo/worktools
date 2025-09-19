@@ -31,9 +31,8 @@ namespace :db do
             password_confirmation: password,
             confirmed_at: Time.now,
             role: 'Parent',
-            kids: [kid.id],
-            skip_domain_validation: true
-          )
+            kids: [kid.id]
+            )
 
           # Find LC with less than 3 hubs linked to the kid's hub
           lcs = kid.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').select { |lc| lc.hubs.count < 3 }

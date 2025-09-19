@@ -15,20 +15,13 @@ namespace :notifications do
 
     # hub_ids = [174, 191, 153, 168]
     # hubs_ids = Hub.where(country: "Portugal").pluck(:id)
-    User.where(role: "lc").or(User.where(role: "learner")).find_each do |user|
+    User.where(role: "lc").or(User.where(role: "lc")).find_each do |user|
       # next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
       if user.deactivate != true #&& main_hub&.hub_id.in?(hubs_ids)
         Notification.find_or_create_by!(
           user: user,
-          link: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_ZmI0Y2JhZTEtZjg4Yi00NmRiLTkzMmYtZGMwMTI2YjQ3MzQ4%40thread.v2/0?context=%7b%22Tid%22%3a%221ac2d08d-bbbe-4e3c-9622-88fbe8ac9830%22%2c%22Oid%22%3a%22b2f38093-aa8e-4086-b774-338ec8512012%22%7d",
-          message: "🚀 UP Talks: Exploring IT & Software Careers
-
-Are you interested in IT and Software?
-Don’t miss this exclusive session with industry professional Laura Bower, who will be sharing her insights, experience, and tips on navigating a career in tech.
-
-📅 Date: 18/09
-🕒 Time: 14h
-📍 Online: link below"
+          link: "",
+          message: "We are aware that some parents have not received the credentials, we are working to have them sent as soon as possible."
         )
         notifications_count += 1
       end
