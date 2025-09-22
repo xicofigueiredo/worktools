@@ -110,11 +110,24 @@
                            aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
                         <%= timeline.progress %>%
                       </div>
-                      <!-- Red segment for shortfall -->
-                      <div class="progress-bar bg-danger d-flex align-items-center justify-content-center" role="progressbar" style="width: <%= timeline.expected_progress - timeline.progress %>%;opacity: 0.8;"
-                           aria-valuenow="<%= timeline.expected_progress - timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
-                        <%= timeline.expected_progress - timeline.progress %>%
-                      </div>
+                      <!-- Red or yellow segment for shortfall -->
+                      <% shortfall = (timeline.expected_progress - timeline.progress).to_i %>
+                      <% shortfall = 0 if shortfall < 0 %>
+                      <% if shortfall <= 10 %>
+                        <div class="progress-bar bg-warning d-flex align-items-center justify-content-center"
+                            role="progressbar"
+                            style="width: <%= shortfall %>%; opacity: 0.8;"
+                            aria-valuenow="<%= shortfall %>" aria-valuemin="0" aria-valuemax="100">
+                          <%= shortfall %>%
+                        </div>
+                      <% else %>
+                        <div class="progress-bar bg-danger d-flex align-items-center justify-content-center"
+                            role="progressbar"
+                            style="width: <%= shortfall %>%; opacity: 0.8;"
+                            aria-valuenow="<%= shortfall %>" aria-valuemin="0" aria-valuemax="100">
+                          <%= shortfall %>%
+                        </div>
+                      <% end %>
                     <% end %>
                   </div>
                 </td>
