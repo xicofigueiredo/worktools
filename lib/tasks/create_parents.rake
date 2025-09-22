@@ -70,15 +70,17 @@ namespace :db do
 
         # Process each row in the CSV with encoding handling
         CSV.foreach(file_path, headers: true, encoding: "#{encoding}:UTF-8") do |row|
-          next if row['InstitutionalEmail'].blank? || row['Parent 1 - Full Name (Section 6)'].blank? || row['Parent 1 - Email (6)'].blank? || row['Status'] != 'Active'
+          next if row['InstitutionalEmail'].blank? || row['Status'] != 'Active'
 
           kid_email = row['InstitutionalEmail'].strip.downcase
 
-          # Create or update the first parent
-          parent1_name = row['Parent 1 - Full Name (Section 6)'].strip
-          parent1_email = row['Parent 1 - Email (6)'].strip.downcase
-          parent1_password = SecureRandom.hex(8)
-          create_parent_method.call(parent1_name, parent1_email, parent1_password, kid_email)
+          if row['Parent 1 - Full Name (Section 6)'].present? && row['Parent 1 - Email (6)'].present?
+            # Create or update the first parent
+            parent1_name = row['Parent 1 - Full Name (Section 6)'].strip
+            parent1_email = row['Parent 1 - Email (6)'].strip.downcase
+            parent1_password = SecureRandom.hex(8)
+            create_parent_method.call(parent1_name, parent1_email, parent1_password, kid_email)
+          end
 
           # Create or update the second parent if present
           if row['Parent 2 - Full Name (Section 6)'].present? && row['Parent 2 - Email (6)'].present?
