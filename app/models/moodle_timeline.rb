@@ -184,7 +184,7 @@ class MoodleTimeline < ApplicationRecord
       if self.subject.board == "Portuguese Curriculum"
         user_id = 2617
       end
-      
+
       completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
 
 
@@ -580,6 +580,70 @@ class MoodleTimeline < ApplicationRecord
       # Trigger the update if a block exists
       block_timeline&.send(:update_parent_math_al_timeline)
     end
+  end
+
+  def notify_users(actor)
+    # Only consider relevant changes
+    changes = saved_changes.slice('start_date', 'end_date', 'exam_date_id')
+    return if changes.blank?
+
+    learner = self.user
+
+    hub = learner.users_hubs.find_by(main: true)&.hub
+    return unless hub
+
+    hub_lcs = hub.users.where(role: 'lc').reject do |lc|
+      lc.hubs.count >= 3 || lc.deactivate
+    end
+
+    return if hub_lcs.blank?
+
+    # decide recipients depending on who made the update
+    recipients =
+      if actor.present? && actor.id == learner.id
+        # learner updated -> notify all LCs
+        hub_lcs
+      elsif actor.present? && actor.role == 'lc'
+        # LC updated -> notify other LCs (exclude actor)
+        hub_lcs.reject { |lc| lc.id == actor.id }
+      else
+        # system / unknown actor -> notify all LCs
+        hub_lcs
+      end
+
+    return if recipients.blank?
+
+    # Build human friendly change parts
+    parts = changes.map do |attr, (old_val, new_val)|
+      case attr
+      when 'exam_date_id'
+        old_label = ExamDate.find_by(id: old_val)&.date&.strftime('%d %b %Y') rescue old_val
+        new_label = ExamDate.find_by(id: new_val)&.date&.strftime('%d %b %Y') rescue new_val
+        "Exam session: #{old_label} → #{new_label}"
+      when 'start_date', 'end_date'
+        old_fmt = old_val.respond_to?(:strftime) ? old_val.strftime('%d %b %Y') : old_val
+        new_fmt = new_val.respond_to?(:strftime) ? new_val.strftime('%d %b %Y') : new_val
+        "#{attr.humanize}: #{old_fmt} → #{new_fmt}"
+      else
+        "#{attr.humanize}: #{old_val} → #{new_val}"
+      end
+    end
+
+    timeline_name = subject&.name.presence || personalized_name.presence || "Moodle Timeline"
+    actor_name = actor&.full_name || 'System'
+    message = "Moodle Timeline '#{timeline_name}' for #{learner.full_name} was updated by #{actor_name}: #{parts.join(', ')}"
+
+    # build a link to the learner timeline
+    link = Rails.application.routes.url_helpers.learner_profile_path(learner.id, active_tab: 'moodle-timelines', selected_timeline_id: id)
+
+    # create notifications
+    recipients.each do |rcpt|
+      n = Notification.find_or_initialize_by(user: rcpt, link: link, message: message)
+      n.read = false
+      n.save!
+    end
+  rescue => e
+    Rails.logger.error "Moodle_timeline#notify_users error: #{e.class} #{e.message}\n#{e.backtrace.first(8).join("\n")}"
   end
 
   private
