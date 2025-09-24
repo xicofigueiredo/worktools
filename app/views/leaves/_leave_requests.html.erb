@@ -1,7 +1,6 @@
 <div class="card mb-4" data-controller="cancel">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h2 class="h5 mb-0">My Leave Requests</h2>
-    <%# small entitlements summary could go here if you prefer %>
   </div>
 
   <div class="card-body p-0">
@@ -72,7 +71,8 @@
                 </td>
 
                 <td class="text-center">
-                  <% if leave.user_id == current_user.id && leave.status != 'cancelled' %>
+                  <% cancellable = leave.user_id == current_user.id && leave.status != 'cancelled' && (leave.start_date.to_date > Time.zone.today) %>
+                  <% if cancellable %>
                     <% if leave.confirmations.pending.where(type: 'CancellationConfirmation').exists? %>
                       <span class="badge bg-warning text-dark">Cancellation requested</span>
                     <% else %>
@@ -118,7 +118,6 @@
     <% end %>
   </div>
 
-  <!-- Cancellation modal (same as before) -->
   <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
