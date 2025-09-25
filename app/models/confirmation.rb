@@ -49,15 +49,35 @@ class Confirmation < ApplicationRecord
   def update_staff_leave_status
     leave = staff_leave
 
+    # --- CLEANUP: remove the notification that was created for this confirmation (best-effort)
+    begin
+      link = Rails.application.routes.url_helpers.leaves_path(active_tab: 'manager') + "#confirmation-#{id}"
+      Notification.where(user: approver, link: link).update!(read: true)
+    rescue => e
+      Rails.logger.warn "Confirmation#cleanup_notification failed for confirmation=#{id}: #{e.class} #{e.message}"
+    end
+
     if status == 'rejected'
       # For regular confirmations: mark leave rejected
-      # For cancellation confirmations: you likely want leave to remain approved on rejection (no change)
+      # For cancellation confirmations: rejection means the cancellation was refused (leave remains as-is)
       leave.update(status: 'rejected') unless self.is_a?(CancellationConfirmation)
     elsif status == 'approved'
       if self.is_a?(CancellationConfirmation)
-        # Approved cancellation request -> cancel the leave
-        leave.update(status: 'cancelled')
+        # Propagate cancellation approvals along the approval chain.
+        chain = leave.approval_chain
+        # try to find approver index; if not found, treat as starting at first
+        idx = chain.index(approver) || 0
+
+        if idx < (chain.length - 1)
+          # Ask the next manager in the chain to approve the cancellation
+          next_approver = chain[idx + 1]
+          leave.confirmations.create!(type: 'CancellationConfirmation', approver: next_approver, status: 'pending')
+        else
+          # Last approver approved cancellation -> cancel the leave
+          leave.update(status: 'cancelled')
+        end
       else
+        # Normal approval chain for creating approvals
         chain = leave.approval_chain
         next_index = chain.index(approver) + 1
         if next_index < chain.length

@@ -241,59 +241,88 @@ class LeavesController < ApplicationController
   def cancel
     @staff_leave = current_user.staff_leaves.find(params[:id])
 
-    # Already cancelled?
     if @staff_leave.status == 'cancelled'
       redirect_to leaves_path, alert: 'Leave is already cancelled.' and return
     end
 
-    case @staff_leave.status
-    when 'pending'
-      # immediate cancellation: destroy confirmations and mark cancelled
+    chain = @staff_leave.approval_chain || []
+    approved_confs = @staff_leave.confirmations.where(status: 'approved').order(:updated_at)
+    pending_cancellation_exists = @staff_leave.confirmations.pending.where(type: 'CancellationConfirmation').exists?
+
+    # If leave is pending and nobody approved -> immediate cancel as before
+    if @staff_leave.status == 'pending' && approved_confs.none?
       ActiveRecord::Base.transaction do
-        @staff_leave.confirmations.destroy_all
+        @staff_leave.confirmations.update!(read: true)
         @staff_leave.update!(status: 'cancelled')
       end
       redirect_to leaves_path, notice: 'Pending leave cancelled.' and return
-
-    when 'approved'
-      days_until_start = (@staff_leave.start_date - Date.current).to_i
-
-      # If within 16 days require exception and justification
-      if days_until_start < 16
-        exception_requested = ActiveModel::Type::Boolean.new.cast(params[:exception_requested])
-        exception_reason = params[:exception_reason].to_s.strip
-
-        unless exception_requested && exception_reason.present?
-          redirect_to leaves_path, alert: 'To request cancellation within 16 days you must request an exception and provide a justification.' and return
-        end
-      else
-        # Not within 16 days — allow request without justification, but accept one if provided
-        exception_requested = ActiveModel::Type::Boolean.new.cast(params[:exception_requested]) || false
-        exception_reason = params[:exception_reason].to_s.strip.presence
-      end
-
-      ActiveRecord::Base.transaction do
-        # persist exception flags/reason if present
-        if exception_requested || exception_reason.present?
-          @staff_leave.update!(exception_requested: true, exception_reason: exception_reason)
-        end
-
-        chain = @staff_leave.approval_chain
-        if chain.present?
-          # create a cancellation confirmation for the first approver
-          @staff_leave.confirmations.create!(type: 'CancellationConfirmation', approver: chain.first, status: 'pending')
-        else
-          # no approvers -> immediate cancel
-          @staff_leave.update!(status: 'cancelled')
-        end
-      end
-
-      redirect_to leaves_path, notice: 'Cancellation request sent to managers for approval.' and return
-
-    else
-      redirect_to leaves_path, alert: "Cannot cancel leave with status #{@staff_leave.status}." and return
     end
 
+    # From here on: either leave was 'approved' OR 'pending' but some approvals exist.
+    days_until_start = (@staff_leave.start_date - Date.current).to_i
+
+    if days_until_start < 16
+      exception_requested = ActiveModel::Type::Boolean.new.cast(params[:exception_requested])
+      exception_reason = params[:exception_reason].to_s.strip
+
+      unless exception_requested && exception_reason.present?
+        redirect_to leaves_path, alert: 'To request cancellation within 16 days you must request an exception and provide a justification.' and return
+      end
+    else
+      exception_requested = ActiveModel::Type::Boolean.new.cast(params[:exception_requested]) || false
+      exception_reason = params[:exception_reason].to_s.strip.presence
+    end
+
+    if pending_cancellation_exists
+      redirect_to leaves_path, alert: 'There is already a pending cancellation request for this leave.' and return
+    end
+
+    ActiveRecord::Base.transaction do
+      if exception_requested || exception_reason.present?
+        @staff_leave.update!(exception_requested: true, exception_reason: exception_reason)
+      end
+
+      if chain.blank?
+        # no approvers -> immediate cancel
+        @staff_leave.update!(status: 'cancelled')
+      else
+        # Decide who to send the first CancellationConfirmation to:
+        target_approver =
+          if approved_confs.none?
+            chain.first
+          elsif approved_confs.count < chain.length
+            # send to the most-recent approver who already approved
+            approved_confs.last.approver
+          else
+            # all approved -> re-run the chain starting at the first approver
+            chain.first
+          end
+
+        # --- CLEANUP: remove pending *original* confirmations so they don't overlap with the cancellation flow.
+        # We only remove confirmations of type 'Confirmation' that are still pending.
+        # Also try to delete the notification that was created for that confirmation (best-effort).
+        @staff_leave.confirmations.where(status: 'pending', type: 'Confirmation').find_each do |conf|
+          begin
+            # build the same link used when notification was created (best-effort)
+            link = Rails.application.routes.url_helpers.leaves_path(active_tab: 'manager') + "#confirmation-#{conf.id}"
+          rescue => _e
+            link = nil
+          end
+
+          Notification.where(user: conf.approver, link: link).update!(read: true) if link
+          conf.destroy
+        end
+
+        # create the cancellation confirmation (first step of cancellation flow)
+        @staff_leave.confirmations.create!(
+          type: 'CancellationConfirmation',
+          approver: target_approver,
+          status: 'pending'
+        )
+      end
+    end
+
+    redirect_to leaves_path, notice: 'Cancellation request sent to managers for approval.'
   rescue ActiveRecord::RecordNotFound
     redirect_to leaves_path, alert: 'Leave not found.'
   rescue ActiveRecord::RecordInvalid => e
@@ -318,11 +347,11 @@ class LeavesController < ApplicationController
       rejection_reason: reason
     )
 
-    redirect_to leaves_path, notice: 'Confirmation rejected.'
+    redirect_to leaves_path(active_tab: 'manager'), notice: 'Confirmation rejected.'
   rescue ActiveRecord::RecordNotFound
-    redirect_to leaves_path, alert: 'Confirmation not found or you are not authorized.'
+    redirect_to leaves_path(active_tab: 'manager'), alert: 'Confirmation not found or you are not authorized.'
   rescue ActiveRecord::RecordInvalid => e
-    redirect_to leaves_path, alert: "Could not reject confirmation: #{e.record.errors.full_messages.to_sentence}"
+    redirect_to leaves_path(active_tab: 'manager'), alert: "Could not reject confirmation: #{e.record.errors.full_messages.to_sentence}"
   end
 
   private
