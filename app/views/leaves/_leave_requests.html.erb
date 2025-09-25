@@ -71,7 +71,7 @@
                 </td>
 
                 <td class="text-center">
-                  <% cancellable = leave.user_id == current_user.id && leave.status != 'cancelled' && (leave.start_date.to_date > Time.zone.today) %>
+                  <% cancellable = leave.user_id == current_user.id && %w[pending approved].include?(leave.status) && (leave.start_date.to_date > Time.zone.today) %>
                   <% if cancellable %>
                     <% if leave.confirmations.pending.where(type: 'CancellationConfirmation').exists? %>
                       <span class="badge bg-warning text-dark">Cancellation requested</span>
