@@ -283,37 +283,34 @@ class LeavesController < ApplicationController
       end
 
       if chain.blank?
-        # no approvers -> immediate cancel
+        # No approvers -> immediate cancel
         @staff_leave.update!(status: 'cancelled')
-      else
-        # Decide who to send the first CancellationConfirmation to:
-        target_approver =
-          if approved_confs.none?
-            chain.first
-          elsif approved_confs.count < chain.length
-            # send to the most-recent approver who already approved
-            approved_confs.last.approver
-          else
-            # all approved -> re-run the chain starting at the first approver
-            chain.first
-          end
-
-        # --- CLEANUP: remove pending *original* confirmations so they don't overlap with the cancellation flow.
-        # We only remove confirmations of type 'Confirmation' that are still pending.
-        # Also try to delete the notification that was created for that confirmation (best-effort).
+      elsif approved_confs.none?
+        # No approvals yet -> immediate cancel and clean up pending confirmations
         @staff_leave.confirmations.where(status: 'pending', type: 'Confirmation').find_each do |conf|
           begin
-            # build the same link used when notification was created (best-effort)
             link = Rails.application.routes.url_helpers.leaves_path(active_tab: 'manager') + "#confirmation-#{conf.id}"
+            Notification.where(user: conf.approver, link: link).update!(read: true)
           rescue => _e
-            link = nil
+            # Silent catch; best-effort cleanup
           end
-
-          Notification.where(user: conf.approver, link: link).update!(read: true) if link
           conf.destroy
         end
-
-        # create the cancellation confirmation (first step of cancellation flow)
+        @staff_leave.update!(status: 'cancelled')
+      else
+        # Send cancellation to the first approver who has already approved
+        target_approver = approved_confs.first.approver
+        # Clean up any pending original confirmations
+        @staff_leave.confirmations.where(status: 'pending', type: 'Confirmation').find_each do |conf|
+          begin
+            link = Rails.application.routes.url_helpers.leaves_path(active_tab: 'manager') + "#confirmation-#{conf.id}"
+            Notification.where(user: conf.approver, link: link).update!(read: true)
+          rescue => _e
+            # Silent catch; best-effort cleanup
+          end
+          conf.destroy
+        end
+        # Create the cancellation confirmation for the first approver
         @staff_leave.confirmations.create!(
           type: 'CancellationConfirmation',
           approver: target_approver,

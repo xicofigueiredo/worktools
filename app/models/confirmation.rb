@@ -63,14 +63,15 @@ class Confirmation < ApplicationRecord
       leave.update(status: 'rejected') unless self.is_a?(CancellationConfirmation)
     elsif status == 'approved'
       if self.is_a?(CancellationConfirmation)
-        # Propagate cancellation approvals along the approval chain.
-        chain = leave.approval_chain
-        # try to find approver index; if not found, treat as starting at first
-        idx = chain.index(approver) || 0
+        # Get the list of approvers who have approved the original leave
+        approved_confs = leave.confirmations.where(status: 'approved', type: 'Confirmation').order(:updated_at)
+        approved_approvers = approved_confs.map(&:approver)
+        # Find the index of the current approver in the approved list
+        idx = approved_approvers.index(approver) || 0
 
-        if idx < (chain.length - 1)
-          # Ask the next manager in the chain to approve the cancellation
-          next_approver = chain[idx + 1]
+        if idx < (approved_approvers.length - 1)
+          # Ask the next manager who approved the original leave to approve the cancellation
+          next_approver = approved_approvers[idx + 1]
           leave.confirmations.create!(type: 'CancellationConfirmation', approver: next_approver, status: 'pending')
         else
           # Last approver approved cancellation -> cancel the leave
