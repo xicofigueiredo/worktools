@@ -20,7 +20,7 @@
       <div class="mb-2">
         <%= f.label :leave_type, "Type", class: "form-label" %>
         <%= f.select :leave_type,
-          [['Holiday', 'holiday'], ['Sick Leave', 'sick leave'], ['Paid Leave', 'paid leave']], {},
+          [['Holiday', 'holiday'], ['Sick Leave', 'sick leave'], ['Paid Leave', 'paid leave'], ['Marriage Leave', 'marriage leave']], {},
           data: { "leave-target": "type", action: "change->leave#validate" },
           class: "form-select" %>
       </div>
@@ -107,12 +107,12 @@
     <!-- Document upload  -->
     <div class="col-12" data-leave-target="documentsWrapper" style="display:none;">
       <div class="mb-2">
-        <%= f.label :documents, "Medical documents", class: "form-label" %>
+        <%= f.label :documents, "Documents", class: "form-label", data: { "leave-target": "documentsLabel" } %>
         <%= f.file_field :documents, multiple: true, class: "form-control mb-2",
-            accept: ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" %>
+            accept: ".pdf,.doc,.docx,application/pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" %>
 
-        <div class="form-text" style="font-size: 12px;">
-          Upload a medical report or justification only when requesting a sick leave. Only PDF and Word documents are allowed.
+        <div class="form-text" style="font-size: 12px;" data-leave-target="documentsText">
+          Upload required documents. Only PDF and Word documents are allowed.
         </div>
 
         <% if @staff_leave.persisted? && @staff_leave.staff_leave_documents.any? %>

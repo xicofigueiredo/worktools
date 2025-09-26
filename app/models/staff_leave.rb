@@ -7,7 +7,7 @@ class StaffLeave < ApplicationRecord
 
   ADVANCE_DAYS = 20
   STATUSES = %w[pending approved rejected cancelled].freeze
-  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave'].freeze
+  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave'].freeze
 
   validates :status, inclusion: { in: STATUSES }
   validates :leave_type, presence: true, inclusion: { in: LEAVE_TYPES }
@@ -22,6 +22,7 @@ class StaffLeave < ApplicationRecord
   validates :days_from_previous_year, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validate  :previous_year_days_allowed, on: :create
   validate  :paid_leave_minimum_days, on: :create
+  validate  :marriage_leave_max_days, on: :create
 
   before_validation :calculate_total_days, on: [:create, :update]
   after_create :deduct_entitlement_days
@@ -59,7 +60,7 @@ class StaffLeave < ApplicationRecord
     return 0 if year_start > year_end
 
     # Sick leave: consecutive days count (don't skip weekends/holidays)
-    if %w[sick leave paid leave].include?(leave_type)
+    if ['sick leave', 'paid leave', 'marriage leave'].include?(leave_type)
       count = 0
       (year_start..year_end).each do |d|
         next unless d.year == target_year
@@ -83,6 +84,17 @@ class StaffLeave < ApplicationRecord
   end
 
   private
+
+  def marriage_leave_max_days
+    return unless leave_type == 'marriage leave'
+    return if start_date.blank? || end_date.blank?
+
+    # consecutive days inclusive
+    consecutive_days = (end_date - start_date).to_i + 1
+    if consecutive_days > 15
+      errors.add(:base, "Marriage leave cannot exceed 15 consecutive days")
+    end
+  end
 
   def paid_leave_minimum_days
     return unless leave_type == 'paid leave'
@@ -160,7 +172,7 @@ class StaffLeave < ApplicationRecord
     return if end_date < start_date
 
     # Sick leaves count consecutive calendar days (include weekends & public holidays)
-    if %w[sick leave paid leave].include?(leave_type)
+    if ['sick leave', 'paid leave', 'marriage leave'].include?(leave_type)
       self.total_days = (end_date - start_date).to_i + 1
       return
     end
@@ -258,9 +270,13 @@ class StaffLeave < ApplicationRecord
   def no_self_overlaps
     return if start_date.blank? || end_date.blank? || user.blank?
 
-    if user.staff_leaves.where(status: ['pending', 'approved'], leave_type: leave_type)
-                        .where.not("end_date < ? OR start_date > ?", start_date, end_date).exists?
-      errors.add(:base, "You already have a pending or approved #{leave_type} in this period.")
+    existing = user.staff_leaves.where(status: ['pending', 'approved'])
+                              .where.not(id: id)
+                              .where.not("end_date < ? OR start_date > ?", start_date, end_date)
+    if existing.exists?
+      existing.each do |leave|
+        errors.add(:base, "You already have a pending or approved #{leave.leave_type} in this period from #{leave.start_date} to #{leave.end_date}.")
+      end
     end
   end
 

@@ -14,7 +14,7 @@ export default class extends Controller {
     "start", "end", "type",
     "message", "exception", "exceptionReason",
     "exceptionBtn", "submit", "exceptionRequested", "exceptionErrors",
-    "documentsWrapper", "form", "reason",
+    "documentsWrapper", "form", "reason", "documentsLabel", "documentsText",
     // carry-over targets
     "daysFromPrevWrapper", "daysFromPrevCheckbox", "daysFromPrevInput", "daysFromPrevInfo", "daysFromPreviousHidden"
   ]
@@ -57,6 +57,7 @@ export default class extends Controller {
     }
     this.isSick = initialType.toLowerCase().includes('sick')
     this.isPaid = initialType.toLowerCase().includes('paid')
+    this.isMarriage = initialType.toLowerCase().includes('marriage')
 
     if (this.hasStartTarget && this.hasEndTarget && this.hasTypeTarget) {
       this.validate()
@@ -113,6 +114,7 @@ export default class extends Controller {
     // keep flags in sync for client-side logic
     this.isSick = (type || '').toLowerCase().includes('sick')
     this.isPaid = (type || '').toLowerCase().includes('paid')
+    this.isMarriage = (type || '').toLowerCase().includes('marriage')
     this._toggleDocumentRequired()
 
     this.hardErrors = []
@@ -136,8 +138,12 @@ export default class extends Controller {
     if (start && end) {
       this.isSick = (type || '').toLowerCase().includes('sick')
       this.isPaid = (type || '').toLowerCase().includes('paid')
+      this.isMarriage = (type || '').toLowerCase().includes('marriage')
 
-      if (this.isSick || this.isPaid) {
+      this.totalDays = 0
+      this.daysByYear = {}
+
+      if (this.isSick || this.isPaid || this.isMarriage) {
         // compute per-year consecutive days locally so the info line appears instantly
         const localDaysByYear = this._computeConsecutiveDaysByYear(this.startTarget.value, this.endTarget.value)
         this.daysByYear = localDaysByYear
@@ -146,7 +152,7 @@ export default class extends Controller {
       }
     }
 
-    // front-end paid-leave minimum validation (consecutive calendar days) and include exact count in the message
+    // front-end paid-leave minimum validation (consecutive calendar days)
     if (start && end && this.isPaid) {
       const daysCount = this.totalDays || (() => {
         const s = this._parseDate(this.startTarget.value)
@@ -155,6 +161,17 @@ export default class extends Controller {
       })()
       if (daysCount < 30) {
         this.hardErrors.push(`Paid leave must be at least 30 consecutive days.`)
+      }
+    }
+
+    if (start && end && this.isMarriage) {
+      const daysCount = this.totalDays || (() => {
+        const s = this._parseDate(this.startTarget.value)
+        const e = this._parseDate(this.endTarget.value)
+        return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1
+      })()
+      if (daysCount > 15) {
+        this.hardErrors.push(`Marriage leave cannot exceed 15 consecutive days.`)
       }
     }
 
@@ -206,6 +223,8 @@ export default class extends Controller {
   exceptionInput() { this.displayMessages() }
 
   async fetchPreview() {
+    this.hardErrors = []
+    this.softErrors = []
     const start = this.startTarget?.value
     const end   = this.endTarget?.value
     const type  = this.typeTarget?.value
@@ -214,6 +233,7 @@ export default class extends Controller {
 
     this.isSick = (type || '').toLowerCase().includes('sick')
     this.isPaid = (type || '').toLowerCase().includes('paid')
+    this.isMarriage = (this.typeTarget.value || "").toLowerCase().includes('marriage')
 
     const token = document.querySelector('meta[name="csrf-token"]')?.content
     try {
@@ -387,6 +407,8 @@ export default class extends Controller {
           infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} day(s) of sick leave.`)
         } else if (this.isPaid) {
           infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of paid leave.`)
+        } else if (this.isMarriage) {
+          infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of marriage leave.`)
         } else {
           infos.push(`This will take ${allocation[yearKeys[0]]} day(s) of your entitlement for ${yearKeys[0]}.`)
         }
@@ -399,6 +421,10 @@ export default class extends Controller {
           const parts = []
           for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
           infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s) of paid leave: ${parts.join(' and ')}.`)
+        } else if (this.isMarriage) {
+          const parts = []
+          for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
+          infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s) of marriage leave: ${parts.join(' and ')}.`)
         } else {
           const parts = []
           for (const y of yearKeys) parts.push(`${allocation[y]} day(s) from ${y}`)
@@ -450,20 +476,21 @@ export default class extends Controller {
   _hideExceptionBtn() { if (this.hasExceptionBtnTarget) this.exceptionBtnTarget.style.display = "none" }
 
   _toggleDocumentField() {
-    // only show the document wrapper when sick leave is selected
     if (this.hasDocumentsWrapperTarget) {
       const type = (this.typeTarget?.value || "").toLowerCase()
-      if (type === "sick" || type === "sick leave") {
-        this.documentsWrapperTarget.style.display = "block"
+      if (type.includes('sick') || type.includes('marriage')) {
+        this._show(this.documentsWrapperTarget)
+        if (this.hasDocumentsLabelTarget) {
+          this.documentsLabelTarget.textContent = type.includes('marriage') ? 'Marriage documents' : 'Medical documents'
+        }
+        if (this.hasDocumentsTextTarget) {
+          this.documentsTextTarget.innerHTML = type.includes('marriage')
+            ? 'Upload required documents (e.g., marriage certificate) for marriage leave. Only PDF and Word documents are allowed.'
+            : 'Upload a medical report or justification for sick leave. Only PDF and Word documents are allowed.'
+        }
       } else {
-        this.documentsWrapperTarget.style.display = "none"
+        this._hide(this.documentsWrapperTarget)
       }
-    } else {
-      const docWrapper = document.querySelector('[data-leave-target="documentsWrapper"]')
-      if (!docWrapper) return
-      const typeEl = this.typeTarget || document.querySelector('[data-leave-target="type"]')
-      const type = (typeEl?.value || "").toLowerCase()
-      docWrapper.style.display = (type === "sick" || type === "sick leave") ? "block" : 'none'
     }
     // update required attribute if needed
     this._toggleDocumentRequired()
@@ -472,7 +499,7 @@ export default class extends Controller {
   _toggleDocumentRequired() {
     const fileInput = this.element.querySelector('input[type="file"][name*="documents"]')
     const type = (this.typeTarget?.value || "").toLowerCase()
-    const required = (type === "sick" || type === "sick leave")
+    const required = type.includes('sick') || type.includes('marriage')
     if (fileInput) {
       if (required) fileInput.setAttribute('required', 'required')
       else fileInput.removeAttribute('required')
