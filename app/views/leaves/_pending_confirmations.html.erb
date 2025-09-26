@@ -19,7 +19,7 @@
                 <th>Total Days Used</th>
                 <th>Type of Leave</th>
                 <th>Confirmation</th>
-                <th class="text-center">Impediment</th>
+                <th class="text-center">Notes / Impediment</th>
                 <th>Status</th>
                 <th class="text-nowrap">Actions</th>
               </tr>
@@ -44,27 +44,30 @@
                   </td>
 
                   <td class="text-center">
-                    <%# Impediment logic unchanged %>
-                    <% if conf.type == 'CancellationConfirmation' || conf.is_a?(CancellationConfirmation) %>
-                      <% days_until_start = (leave.start_date - Date.current).to_i rescue nil %>
-                      <% if leave.exception_requested && days_until_start && days_until_start < 16 %>
-                        <% tooltip_text = "User requested cancellation within #{days_until_start} day(s) (didn't ask earlier). Justification: #{leave.exception_reason}" %>
-                        <span class="badge bg-info text-dark" role="img" aria-label="Impediment" data-bs-toggle="tooltip" data-bs-placement="top" title="<%= h(tooltip_text) %>">i</span>
-                      <% elsif leave.exception_requested && leave.exception_approver_messages.any? %>
-                        <% tooltip_lines = leave.exception_approver_messages.dup %>
-                        <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
-                        <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
+                    <div class="d-flex justify-content-center gap-1">
+                      <% if conf.type == 'CancellationConfirmation' || conf.is_a?(CancellationConfirmation) %>
+                        <% days_until_start = (leave.start_date - Date.current).to_i rescue nil %>
+                        <% if leave.exception_requested && days_until_start && days_until_start < 16 %>
+                          <% tooltip_text = "User requested cancellation within #{days_until_start} day(s) (didn't ask earlier). Justification: #{leave.exception_reason}" %>
+                          <span class="badge bg-info text-dark" role="img" aria-label="Impediment" data-bs-toggle="tooltip" data-bs-placement="top" title="<%= h(tooltip_text) %>">i</span>
+                        <% elsif leave.exception_requested && leave.exception_approver_messages.any? %>
+                          <% tooltip_lines = leave.exception_approver_messages.dup %>
+                          <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
+                          <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
+                        <% end %>
                       <% else %>
-                        -
+                        <% if leave.exception_requested && leave.exception_approver_messages.any? %>
+                          <% tooltip_lines = leave.exception_approver_messages.dup %>
+                          <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
+                          <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
+                        <% end %>
                       <% end %>
-                    <% else %>
-                      <% if leave.exception_requested && leave.exception_approver_messages.any? %>
-                        <% tooltip_lines = leave.exception_approver_messages.dup %>
-                        <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
-                        <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
-                      <% else %>
-                        -
+                      <% if leave.notes.present? %>
+                        <span class="badge bg-primary" data-bs-toggle="tooltip" title="Notes: <%= h(leave.notes) %>">i</span>
                       <% end %>
+                    </div>
+                    <% if !leave.exception_requested && leave.exception_approver_messages.empty? && leave.notes.blank? %>
+                      -
                     <% end %>
                   </td>
 
@@ -91,7 +94,7 @@
                       <i class="fa fa-times" aria-hidden="true"></i>
                     </button>
 
-                    <% if leave.leave_type == 'sick leave' && leave.staff_leave_documents.any? %>
+                    <% if leave.staff_leave_documents.any? %>
                       <% doc = leave.staff_leave_documents.first %>
                       <%= link_to download_document_leafe_path(leave, doc.id),
                                   class: 'btn btn-sm btn-outline-primary',

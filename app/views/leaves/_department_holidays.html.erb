@@ -21,7 +21,7 @@
               <th>End Date</th>
               <th>Total Days Used</th>
               <th>Type of Leave</th>
-              <th class="text-center">Impediment</th>
+              <th class="text-center">Notes / Impediments</th>
               <th>Docs</th>
               <th>Status</th>
             </tr>
@@ -37,17 +37,23 @@
                 <td><%= leave.leave_type.capitalize %></td>
 
                 <td class="text-center">
-                  <% if leave.exception_requested && leave.exception_approver_messages.any? %>
-                    <% tooltip_lines = leave.exception_approver_messages.dup %>
-                    <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
-                    <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
-                  <% else %>
+                  <div class="d-flex justify-content-center gap-1">
+                    <% if leave.exception_requested && leave.exception_approver_messages.any? %>
+                      <% tooltip_lines = leave.exception_approver_messages.dup %>
+                      <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
+                      <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
+                    <% end %>
+                    <% if leave.notes.present? %>
+                      <span class="badge bg-primary" data-bs-toggle="tooltip" title="Notes: <%= h(leave.notes) %>">i</span>
+                    <% end %>
+                  </div>
+                  <% if !leave.exception_requested && leave.exception_approver_messages.empty? && leave.notes.blank? %>
                     -
                   <% end %>
                 </td>
 
                 <td class="text-center">
-                  <% if leave.leave_type == 'sick leave' && leave.staff_leave_documents.any? %>
+                  <% if leave.staff_leave_documents.any? %>
                     <% doc = leave.staff_leave_documents.first %>
                     <%= link_to download_document_leafe_path(leave, doc.id),
                                 title: "Download document",
