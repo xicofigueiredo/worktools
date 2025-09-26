@@ -77,25 +77,30 @@
                 </td>
 
                 <td class="text-center">
-                  <% cancellable = leave.user_id == current_user.id && %w[pending approved].include?(leave.status) && (leave.start_date.to_date > Time.zone.today) %>
-                  <% if cancellable %>
-                    <% if leave.confirmations.pending.where(type: 'CancellationConfirmation').exists? %>
+                  <% pending_cancellation = leave.confirmations.pending.where(type: 'CancellationConfirmation').exists? %>
+                  <% can_cancel = leave.user_id == current_user.id && %w[pending approved].include?(leave.status) &&
+                                  (leave.status == 'pending' || (leave.status == 'approved' && leave.start_date.to_date > Time.zone.today)) %>
+                  <% has_docs = leave.staff_leave_documents.any? %>
+                  <% if can_cancel || has_docs %>
+                    <% if pending_cancellation %>
                       <span class="badge bg-warning text-dark">Cancellation requested</span>
                     <% else %>
                       <div class="d-flex justify-content-center align-items-center gap-2">
-                        <button
-                          type="button"
-                          class="btn btn-sm btn-outline-danger"
-                          title="Cancel leave"
-                          aria-label="Cancel leave"
-                          data-action="click->cancel#start"
-                          data-cancel-leave-id-value="<%= leave.id %>"
-                          data-cancel-start-date-value="<%= leave.start_date %>"
-                          data-cancel-leave-status-value="<%= leave.status %>">
-                          <i class="fa fa-times" aria-hidden="true"></i>
-                        </button>
+                        <% if can_cancel %>
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            title="Cancel leave"
+                            aria-label="Cancel leave"
+                            data-action="click->cancel#start"
+                            data-cancel-leave-id-value="<%= leave.id %>"
+                            data-cancel-start-date-value="<%= leave.start_date %>"
+                            data-cancel-leave-status-value="<%= leave.status %>">
+                            <i class="fa fa-times" aria-hidden="true"></i>
+                          </button>
+                        <% end %>
 
-                        <% if leave.staff_leave_documents.any? %>
+                        <% if has_docs %>
                           <% doc = leave.staff_leave_documents.first %>
                           <%= link_to download_document_leafe_path(leave, doc.id),
                                       class: "btn btn-sm btn-outline-primary",
