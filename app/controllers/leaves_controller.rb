@@ -38,6 +38,18 @@ class LeavesController < ApplicationController
     @staff_leave.exception_requested = ActiveModel::Type::Boolean.new.cast(staff_leave_params[:exception_requested])
     @staff_leave.days_from_previous_year = staff_leave_params[:days_from_previous_year].to_i if staff_leave_params[:days_from_previous_year].present?
 
+    # Enforce mandatory medical document for sick leaves (server-side)
+    if @staff_leave.leave_type == 'sick leave'
+      docs_param = params.dig(:staff_leave, :documents)
+      # docs_param can be nil, an array, or a file. We consider it missing if nil or only blank strings.
+      docs_present = docs_param.present? && docs_param.any? { |d| d.present? && !d.is_a?(String) }
+      unless docs_present
+        @staff_leave.errors.add(:base, "Medical document required for sick leave")
+        flash.now[:alert] = @staff_leave.errors.full_messages.to_sentence
+        return render :new, status: :unprocessable_entity
+      end
+    end
+
     if @staff_leave.save
       # Handle document uploads (only for sick leaves by default)
       # expects params[:staff_leave][:documents] (array of uploaded files)
@@ -126,48 +138,66 @@ class LeavesController < ApplicationController
 
     years.each do |yr|
       days_by_year[yr] = staff_leave.days_in_year(yr)
-
-      ent = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
-      entitlements_by_year[yr] = ent.persisted? ? ent.send(left_field).to_i : (leave_type == 'holiday' ? 25 : 5)
     end
 
-    # For every year in the range, check if the leave overlaps Jan 1..Mar 31 of that year.
-    # If so, compute eligible carry days (business days inside that slice) and how many
-    # of those could be provided from the previous year's entitlement (<= 5 rule).
-    jan_mar_segments = []
+    # For holidays: keep original entitlement + carry logic (unchanged).
+    # For sick leaves: we should not compute carry nor "exceeds" — sick leaves are unlimited.
+    if leave_type == 'holiday'
+      left_field = :holidays_left
 
-    years.each do |yr|
-      jan_mar_start = Date.new(yr, 1, 1)
-      jan_mar_end   = Date.new(yr, 3, 31)
-      slice_start = [start_date, jan_mar_start].max
-      slice_end   = [end_date, jan_mar_end].min
+      years.each do |yr|
+        ent = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
+        entitlements_by_year[yr] = ent.persisted? ? ent.send(left_field).to_i : 25
+      end
 
-      next if slice_start > slice_end
+      # For every year in the range, check if the leave overlaps Jan 1..Mar 31 of that year.
+      # If so, compute eligible carry days (business days inside that slice) and how many
+      # of those could be provided from the previous year's entitlement (<= 5 rule).
+      jan_mar_segments = []
 
-      temp_leave = StaffLeave.new(user: current_user, start_date: slice_start, end_date: slice_end, leave_type: leave_type)
-      temp_leave.compute_total_days
-      eligible_carry_days = temp_leave.total_days.to_i
+      years.each do |yr|
+        jan_mar_start = Date.new(yr, 1, 1)
+        jan_mar_end   = Date.new(yr, 3, 31)
+        slice_start = [start_date, jan_mar_start].max
+        slice_end   = [end_date, jan_mar_end].min
 
-      # previous-year available
-      prev_year = yr - 1
-      prev_ent = StaffLeaveEntitlement.find_by(user: current_user, year: prev_year)
-      prev_holidays_left = prev_ent ? prev_ent.holidays_left.to_i : 0
+        next if slice_start > slice_end
 
-      entitlement_for_this_year = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
-      days_from_previous_used = entitlement_for_this_year.persisted? ? entitlement_for_this_year.days_from_previous_year_used.to_i : 0
+        temp_leave = StaffLeave.new(user: current_user, start_date: slice_start, end_date: slice_end, leave_type: leave_type)
+        temp_leave.compute_total_days
+        eligible_carry_days = temp_leave.total_days.to_i
 
-      # maximum that can be taken from previous year for this Jan-Mar slice:
-      previous_year_carry = [[5 - days_from_previous_used, prev_holidays_left].min, eligible_carry_days].min
-      previous_year_carry = [previous_year_carry, 0].max
+        # previous-year available
+        prev_year = yr - 1
+        prev_ent = StaffLeaveEntitlement.find_by(user: current_user, year: prev_year)
+        prev_holidays_left = prev_ent ? prev_ent.holidays_left.to_i : 0
 
-      jan_mar_segments << {
-        year: yr,
-        eligible_carry_days: eligible_carry_days,
-        previous_year: prev_year,
-        previous_year_holidays_left: prev_holidays_left,
-        previous_year_carry: previous_year_carry,
-        days_from_previous_year_used: days_from_previous_used
-      }
+        entitlement_for_this_year = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
+        days_from_previous_used = entitlement_for_this_year.persisted? ? entitlement_for_this_year.days_from_previous_year_used.to_i : 0
+
+        # maximum that can be taken from previous year for this Jan-Mar slice:
+        previous_year_carry = [[5 - days_from_previous_used, prev_holidays_left].min, eligible_carry_days].min
+        previous_year_carry = [previous_year_carry, 0].max
+
+        jan_mar_segments << {
+          year: yr,
+          eligible_carry_days: eligible_carry_days,
+          previous_year: prev_year,
+          previous_year_holidays_left: prev_holidays_left,
+          previous_year_carry: previous_year_carry,
+          days_from_previous_year_used: days_from_previous_used
+        }
+      end
+    else
+      # sick leave: do not perform availability checks
+      years.each do |yr|
+        # show how much was already used (helpful) but no enforcement
+        ent = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
+        entitlements_by_year[yr] = ent.persisted? ? ent.sick_leaves_used.to_i : 0
+      end
+
+      jan_mar_segments = []
+      exceeds = false
     end
 
     # Combined availability check (for soft messaging). We compute total available as:
@@ -178,48 +208,72 @@ class LeavesController < ApplicationController
 
     exceeds = staff_leave.total_days.to_i > total_available_including_possible_carry
 
-    # blocked periods (unchanged behaviour)
-    hub_id = current_user.users_hubs.find_by(main: true)&.hub_id
-    department_ids = current_user.department_ids
-    user_type = current_user.role
+    # --- blocked periods & overlaps  ---
+    blocked = false
+    blocked_messages = []
 
-    blocked_periods = BlockedPeriod.where("(user_id = ? OR user_type = ? OR hub_id = ? OR department_id IN (?)) AND
-                                          start_date <= ? AND end_date >= ?",
-                                          current_user.id, user_type, hub_id, department_ids, end_date, start_date)
-    blocked = blocked_periods.exists?
-    blocked_messages = blocked_periods.map do |bp|
-      scope = if bp.user_id
-                "your account"
-              elsif bp.user_type
-                "user type #{bp.user_type}"
-              elsif bp.hub_id
-                "hub #{Hub.find(bp.hub_id).name}"
-              elsif bp.department_id
-                "department #{Department.find(bp.department_id).name}"
-              else
-                "unknown scope"
-              end
-      "Can't take holidays on blocked period from #{bp.start_date} to #{bp.end_date} for #{scope}."
-    end
+    # only consider blocked periods for holidays
+    if leave_type == 'holiday'
+      hub_id = current_user.users_hubs.find_by(main: true)&.hub_id
+      department_ids = current_user.department_ids
+      user_type = current_user.role
 
-    # department overlaps (unchanged)
-    overlapping_messages = []
-    current_user.departments.each do |dept|
-      dept_user_ids = dept.user_ids - [current_user.id]
-      overlapping_leaves = StaffLeave.where(user_id: dept_user_ids, status: ['pending', 'approved'], leave_type: leave_type)
-                                    .where.not("end_date < ? OR start_date > ?", start_date, end_date)
-      overlapping_leaves.each do |leave|
-        status = leave.status
-        date_range = "#{leave.start_date} to #{leave.end_date}"
-        user_name = leave.user.full_name || "A user"
-        dept_name = dept.name
-        overlapping_messages << "#{user_name} of your #{dept_name} department has already a #{status} holiday on #{date_range}."
+      blocked_periods = BlockedPeriod.where("(user_id = :user_id OR user_type = :user_type OR hub_id = :hub_id OR department_id IN (:department_ids)) AND start_date <= :end_date AND end_date >= :start_date",
+                                            user_id: current_user.id, user_type: user_type, hub_id: hub_id, department_ids: department_ids,
+                                            start_date: start_date, end_date: end_date)
+      blocked = blocked_periods.exists?
+      blocked_messages = blocked_periods.map do |bp|
+        scope = if bp.user_id
+                  "your account"
+                elsif bp.user_type
+                  "user type #{bp.user_type}"
+                elsif bp.hub_id
+                  "hub #{Hub.find(bp.hub_id).name}"
+                elsif bp.department_id
+                  "department #{Department.find(bp.department_id).name}"
+                else
+                  "unknown scope"
+                end
+        "Can't take holidays on blocked period from #{bp.start_date} to #{bp.end_date} for #{scope}."
       end
     end
 
+    # department overlaps (only for holidays)
+    overlapping_messages = []
+    if leave_type == 'holiday'
+      current_user.departments.each do |dept|
+        dept_user_ids = dept.user_ids - [current_user.id]
+        overlapping_leaves = StaffLeave.where(user_id: dept_user_ids, status: ['pending', 'approved'], leave_type: leave_type)
+                                      .where.not("end_date < ? OR start_date > ?", start_date, end_date)
+        overlapping_leaves.each do |leave|
+          status = leave.status
+          date_range = "#{leave.start_date} to #{leave.end_date}"
+          user_name = leave.user.full_name || "A user"
+          dept_name = dept.name
+          overlapping_messages << "#{user_name} of your #{dept_name} department has already a #{status} #{leave_type} on #{date_range}."
+        end
+      end
+    end
+
+    # self-overlap: disallow if current user already has an overlapping pending/approved leave of the SAME type
     overlapping_self = current_user.staff_leaves.where(status: ['pending', 'approved'], leave_type: leave_type)
                                               .where.not("end_date < ? OR start_date > ?", start_date, end_date).exists?
     overlapping_self_message = "You already have a pending or approved #{leave_type} in this period." if overlapping_self
+
+    # For sick leave: check if user has overlapping leaves of OTHER types (e.g. approved holiday).
+    # If yes, treat that as an immediate conflict (hard error) and return messages explaining which leave(s) overlap.
+    overlapping_conflict = false
+    overlapping_conflict_messages = []
+    if leave_type == 'sick leave'
+      other_overlaps = current_user.staff_leaves.where(status: ['pending', 'approved']).where.not(leave_type: 'sick leave')
+                           .where.not("end_date < ? OR start_date > ?", start_date, end_date)
+      if other_overlaps.exists?
+        overlapping_conflict = true
+        overlapping_conflict_messages = other_overlaps.map do |leave|
+          "#{leave.leave_type.titleize} (#{leave.status}) already booked: #{leave.start_date} to #{leave.end_date}. Cancel that booking to request a sick leave in this period."
+        end
+      end
+    end
 
     render json: {
       total_days: staff_leave.total_days.to_i,
@@ -231,7 +285,9 @@ class LeavesController < ApplicationController
       blocked_messages: blocked_messages,
       overlapping_messages: overlapping_messages.uniq,
       overlapping_self: overlapping_self,
-      overlapping_self_message: overlapping_self_message
+      overlapping_self_message: overlapping_self_message,
+      overlapping_conflict: overlapping_conflict,
+      overlapping_conflict_messages: overlapping_conflict_messages
     }
   rescue => e
     Rails.logger.error "Leaves#preview error: #{e.class} #{e.message}\n#{e.backtrace.first(10).join("\n")}"

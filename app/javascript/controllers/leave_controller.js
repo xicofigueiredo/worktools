@@ -40,10 +40,27 @@ export default class extends Controller {
     this.previousCarryAvailable = 0
     this.leaveYear = null
 
+    // determine initial leave type safely (typeTarget may be absent)
+    let initialType = ""
+    if (this.hasTypeTarget) {
+      initialType = this.typeTarget.value || ""
+      // listen for changes so we update isSick immediately and re-validate
+      this.typeTarget.addEventListener('change', () => {
+        this.isSick = (this.typeTarget.value || "").toLowerCase().includes('sick')
+        this._toggleDocumentRequired()
+        try { this.validate() } catch (e) { /* ignore */ }
+      })
+    } else {
+      const el = this.element.querySelector('[data-leave-target="type"]')
+      if (el) initialType = el.value || ""
+    }
+    this.isSick = initialType.toLowerCase().includes('sick')
+
     if (this.hasStartTarget && this.hasEndTarget && this.hasTypeTarget) {
       this.validate()
     } else {
       this._toggleDocumentField()
+      this._toggleDocumentRequired()
     }
 
     if (this.hasExceptionErrorsTarget && this.element) {
@@ -79,6 +96,9 @@ export default class extends Controller {
         this.daysFromPrevCheckboxTarget.checked = false
       }
     }
+
+    // ensure file required flag is in sync
+    this._toggleDocumentRequired()
   }
 
   validate() {
@@ -87,6 +107,10 @@ export default class extends Controller {
     const start = this._parseDate(this.startTarget?.value)
     const end   = this._parseDate(this.endTarget?.value)
     const type  = (this.typeTarget?.value || "holiday").toLowerCase()
+
+    // keep isSick in sync for client-side logic
+    this.isSick = (type || '').toLowerCase().includes('sick')
+    this._toggleDocumentRequired()
 
     this.hardErrors = []
     this.softErrors = []
@@ -168,6 +192,9 @@ export default class extends Controller {
 
     if (!start || !end) return
 
+    // update isSick immediately based on the requested type
+    this.isSick = (type || '').toLowerCase().includes('sick')
+
     const token = document.querySelector('meta[name="csrf-token"]')?.content
     try {
       const resp = await fetch(this.previewUrlValue, {
@@ -212,17 +239,14 @@ export default class extends Controller {
       }
 
       // Prefer server-provided advance warning if present (optional, but doesn't hurt)
-      // If your backend returns json.advance_warning_message you can use it; otherwise this is safe.
       if (json.advance_warning_message) {
-        // avoid duplicate if server message equals client message
         if (!this.softErrors.includes(json.advance_warning_message)) {
           this.softErrors.push(json.advance_warning_message)
         }
-      } else {
-        // fallback server-side check not present — we already added client-side message above
-        // no-op
       }
-      if (json.exceeds) {
+
+      // Only show entitlement "exceeds" for non-sick leaves
+      if (!this.isSick && json.exceeds) {
         const entSum = Object.values(this.remainingEntitlements).reduce((a,b)=>a+Number(b||0),0)
         const sumPrevCarry = (this.janMarSegments || []).reduce((s,seg) => s + Number(seg.previous_year_carry || 0), 0)
         const available = entSum + sumPrevCarry
@@ -230,41 +254,32 @@ export default class extends Controller {
         const splitMsg = yearList.length > 1 ? ` (${yearList.map(y => `${this.daysByYear[y] || 0} in ${y}`).join(', ')})` : ''
         this.softErrors.push(`You only have ${available} days left to take ${type}s${splitMsg} (carry-over may be available for Jan–Mar segments).`)
       }
-      if (Array.isArray(json.blocked_messages)) this.softErrors.push(...(json.blocked_messages || []))
-      if (Array.isArray(json.overlapping_messages)) this.softErrors.push(...(json.overlapping_messages || []))
-      this.hardErrors = []
+
+      // BLOCKED messages: only relevant for holidays
+      if (!this.isSick && Array.isArray(json.blocked_messages)) this.softErrors.push(...(json.blocked_messages || []))
+
+      // overlapping messages:
+      // - if server signals a conflicting overlap with OTHER leave types (overlapping_conflict),
+      //   treat those messages as hard errors (user must cancel the other leave).
+      if (json.overlapping_conflict) {
+        if (Array.isArray(json.overlapping_conflict_messages)) {
+          this.hardErrors.push(...json.overlapping_conflict_messages)
+        } else if (Array.isArray(json.overlapping_messages)) {
+          this.hardErrors.push(...json.overlapping_messages)
+        }
+      } else {
+        // otherwise add overlapping_messages as soft warnings (department overlaps etc.)
+        if (Array.isArray(json.overlapping_messages)) this.softErrors.push(...(json.overlapping_messages || []))
+      }
+
+      // self overlap (same-type) is a hard error
+      this.hardErrors = this.hardErrors || []
       if (json.overlapping_self) this.hardErrors.push(json.overlapping_self_message)
 
       // carry UI handling: show when applicable; hide and CLEAR when not
       if (this.hasDaysFromPrevWrapperTarget) {
-        if (this.selectedJanMarSegment && this.previousCarryAvailable > 0 && this.eligibleCarryDays > 0) {
-          this._show(this.daysFromPrevWrapperTarget)
-          if (this.hasDaysFromPrevInfoTarget) {
-            this.daysFromPrevInfoTarget.innerText = `For Jan–Mar ${this.selectedJanMarSegment.year} you have ${this.previousCarryAvailable} carry days available from ${this.selectedJanMarSegment.previous_year}. Up to ${this.eligibleCarryDays} day(s) in this request fall into Jan–Mar ${this.selectedJanMarSegment.year}. Choose how many to use (0 to ${Math.min(this.previousCarryAvailable, this.eligibleCarryDays)}).`
-          }
-          if (this.hasDaysFromPrevInputTarget) {
-            this.daysFromPrevInputTarget.min = 0
-            this.daysFromPrevInputTarget.max = Math.min(this.previousCarryAvailable, this.eligibleCarryDays)
-            this.daysFromPrevInputTarget.value = 0
-            this.daysFromPrevInputTarget.disabled = true
-          }
-          if (this.hasDaysFromPreviousHiddenTarget) this.daysFromPreviousHiddenTarget.value = 0
-          if (this.hasDaysFromPrevCheckboxTarget) this.daysFromPrevCheckboxTarget.checked = false
-
-          // autosuggest only for Jan–Mar shortfall of selected segment
-          const neededInJanMar = Number(this.selectedJanMarSegment.eligible_carry_days || 0)
-          const entitlementForThatYear = Number(this.remainingEntitlements[this.selectedJanMarSegment.year] || 0)
-          const janMarShortfall = Math.max(0, neededInJanMar - entitlementForThatYear)
-          if (janMarShortfall > 0) {
-            const suggested = Math.min(this.previousCarryAvailable, this.eligibleCarryDays, janMarShortfall)
-            const chosen = Math.max(0, Math.min(Number(this.daysFromPrevInputTarget.max || 0), suggested))
-            this.daysFromPrevCheckboxTarget.checked = true
-            this.daysFromPrevInputTarget.disabled = false
-            this.daysFromPrevInputTarget.value = chosen
-            this.daysFromPreviousHiddenTarget.value = chosen
-          }
-        } else {
-          // HIDE and CLEAR everything related to carry — ensure checkbox is unchecked too
+        if (this.isSick) {
+          // hide & clear everything immediately for sick leaves
           this._hide(this.daysFromPrevWrapperTarget)
           if (this.hasDaysFromPrevInputTarget) {
             this.daysFromPrevInputTarget.value = 0
@@ -275,6 +290,50 @@ export default class extends Controller {
           }
           if (this.hasDaysFromPrevCheckboxTarget) {
             this.daysFromPrevCheckboxTarget.checked = false
+          }
+        } else {
+          // original carry UI logic (unchanged)...
+          if (this.selectedJanMarSegment && this.previousCarryAvailable > 0 && this.eligibleCarryDays > 0) {
+            this._show(this.daysFromPrevWrapperTarget)
+            if (this.hasDaysFromPrevInfoTarget) {
+              this.daysFromPrevInfoTarget.innerText = `For Jan–Mar ${this.selectedJanMarSegment.year} you have ${this.previousCarryAvailable} carry days available from ${this.selectedJanMarSegment.previous_year}. Up to ${this.eligibleCarryDays} day(s) in this request fall into Jan–Mar ${this.selectedJanMarSegment.year}. Choose how many to use (0 to ${Math.min(this.previousCarryAvailable, this.eligibleCarryDays)}).`
+            }
+            if (this.hasDaysFromPrevInputTarget) {
+              this.daysFromPrevInputTarget.min = 0
+              this.daysFromPrevInputTarget.max = Math.min(this.previousCarryAvailable, this.eligibleCarryDays)
+              this.daysFromPrevInputTarget.value = 0
+              this.daysFromPrevInputTarget.disabled = true
+            }
+            if (this.hasDaysFromPreviousHiddenTarget) this.daysFromPreviousHiddenTarget.value = 0
+            if (this.hasDaysFromPrevCheckboxTarget) this.daysFromPrevCheckboxTarget.checked = false
+
+            // autosuggest only for Jan–Mar shortfall of selected segment
+            const neededInJanMar = Number(this.selectedJanMarSegment.eligible_carry_days || 0)
+            const entitlementForThatYear = Number(this.remainingEntitlements[this.selectedJanMarSegment.year] || 0)
+            const janMarShortfall = Math.max(0, neededInJanMar - entitlementForThatYear)
+            if (janMarShortfall > 0) {
+              const suggested = Math.min(this.previousCarryAvailable, this.eligibleCarryDays, janMarShortfall)
+              const chosen = Math.max(0, Math.min(Number(this.daysFromPrevInputTarget.max || 0), suggested))
+              if (this.hasDaysFromPrevCheckboxTarget) this.daysFromPrevCheckboxTarget.checked = true
+              if (this.hasDaysFromPrevInputTarget) {
+                this.daysFromPrevInputTarget.disabled = false
+                this.daysFromPrevInputTarget.value = chosen
+              }
+              if (this.hasDaysFromPreviousHiddenTarget) this.daysFromPreviousHiddenTarget.value = chosen
+            }
+          } else {
+            // HIDE and CLEAR everything related to carry — ensure checkbox is unchecked too
+            this._hide(this.daysFromPrevWrapperTarget)
+            if (this.hasDaysFromPrevInputTarget) {
+              this.daysFromPrevInputTarget.value = 0
+              this.daysFromPrevInputTarget.disabled = true
+            }
+            if (this.hasDaysFromPreviousHiddenTarget) {
+              this.daysFromPreviousHiddenTarget.value = 0
+            }
+            if (this.hasDaysFromPrevCheckboxTarget) {
+              this.daysFromPrevCheckboxTarget.checked = false
+            }
           }
         }
       }
@@ -309,12 +368,12 @@ export default class extends Controller {
       const min = Number(ev.target.min || 0)
       v = Math.max(min, Math.min(max, v))
       ev.target.value = v
-      this.daysFromPreviousHiddenTarget.value = v
+      if (this.hasDaysFromPreviousHiddenTarget) this.daysFromPreviousHiddenTarget.value = v
       this.displayMessages()
     })
   }
 
-  // === allocation & message builder (removed the extra clarifying parenthesis line) ===
+  // === allocation & message builder ===
   displayMessages() {
     const bypassed = this._exceptionShown() && this._hasExceptionReason()
     const effectiveSoftErrors = bypassed ? [] : this.softErrors
@@ -343,7 +402,8 @@ export default class extends Controller {
       Object.keys(this.daysByYear || {}).forEach(k => { allocation[Number(k)] = Number(this.daysByYear[k] || 0) })
       const carrySelected = this.hasDaysFromPreviousHiddenTarget ? Number(this.daysFromPreviousHiddenTarget.value || 0) : 0
 
-      if (carrySelected > 0 && this.selectedJanMarSegment) {
+      // only apply carry if not a sick leave (carry UI will be hidden for sick leaves anyway)
+      if (!this.isSick && carrySelected > 0 && this.selectedJanMarSegment) {
         const segYear = Number(this.selectedJanMarSegment.year)
         const prevYear = Number(this.selectedJanMarSegment.previous_year)
         if (allocation[prevYear] == null) allocation[prevYear] = 0
@@ -358,11 +418,26 @@ export default class extends Controller {
       if (yearKeys.length === 0 && this.totalDays > 0) {
         infos.push(`This will take ${this.totalDays} day(s) in the selected range.`)
       } else if (yearKeys.length === 1) {
-        infos.push(`This will take ${allocation[yearKeys[0]]} day(s) of your entitlement for ${yearKeys[0]}.`)
+        // single-year message:
+        if (this.isSick) {
+          // "This request is equivalent to X day(s) of sick leave."
+          infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} day(s) of sick leave.`)
+        } else {
+          // holidays keep entitlement wording
+          infos.push(`This will take ${allocation[yearKeys[0]]} day(s) of your entitlement for ${yearKeys[0]}.`)
+        }
       } else if (yearKeys.length > 1) {
-        const parts = []
-        for (const y of yearKeys) parts.push(`${allocation[y]} day(s) from ${y}`)
-        infos.push(`This will take ${parts.join(' and ')}.`)
+        // multi-year message
+        if (this.isSick) {
+          // "This request is equivalent to TOTAL day(s) of sick leave: A in 2024 and B in 2025."
+          const parts = []
+          for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
+          infos.push(`This request is equivalent to ${this.totalDays} day(s) of sick leave: ${parts.join(' and ')}.`)
+        } else {
+          const parts = []
+          for (const y of yearKeys) parts.push(`${allocation[y]} day(s) from ${y}`)
+          infos.push(`This will take ${parts.join(' and ')}.`)
+        }
       }
     }
 
@@ -407,7 +482,9 @@ export default class extends Controller {
   _hasExceptionReason() { return this.hasExceptionReasonTarget && this.exceptionReasonTarget.value.trim().length > 0 }
   _showExceptionBtn() { if (this.hasExceptionBtnTarget) this.exceptionBtnTarget.style.display = "inline-block" }
   _hideExceptionBtn() { if (this.hasExceptionBtnTarget) this.exceptionBtnTarget.style.display = "none" }
+
   _toggleDocumentField() {
+    // only show the document wrapper when sick leave is selected
     if (this.hasDocumentsWrapperTarget) {
       const type = (this.typeTarget?.value || "").toLowerCase()
       if (type === "sick" || type === "sick leave") {
@@ -421,6 +498,22 @@ export default class extends Controller {
       const typeEl = this.typeTarget || document.querySelector('[data-leave-target="type"]')
       const type = (typeEl?.value || "").toLowerCase()
       docWrapper.style.display = (type === "sick" || type === "sick leave") ? "block" : 'none'
+    }
+    // update required flag on actual file input
+    this._toggleDocumentRequired()
+  }
+
+  _toggleDocumentRequired() {
+    // find file input in the form and mark required when sick is selected
+    const fileInput = this.element.querySelector('input[type="file"][name*="documents"]')
+    const type = (this.typeTarget?.value || "").toLowerCase()
+    const required = (type === "sick" || type === "sick leave")
+    if (fileInput) {
+      if (required) {
+        fileInput.setAttribute('required', 'required')
+      } else {
+        fileInput.removeAttribute('required')
+      }
     }
   }
 }
