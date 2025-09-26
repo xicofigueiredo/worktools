@@ -7,7 +7,7 @@ class StaffLeave < ApplicationRecord
 
   ADVANCE_DAYS = 20
   STATUSES = %w[pending approved rejected cancelled].freeze
-  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave', 'parental leave'].freeze
+  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].freeze
 
   validates :status, inclusion: { in: STATUSES }
   validates :leave_type, presence: true, inclusion: { in: LEAVE_TYPES }
@@ -23,6 +23,7 @@ class StaffLeave < ApplicationRecord
   validate  :previous_year_days_allowed, on: :create
   validate  :paid_leave_minimum_days, on: :create
   validate  :marriage_leave_max_days, on: :create
+  validate :notes_required_for_other, on: :create
 
   before_validation :calculate_total_days, on: [:create, :update]
   after_create :deduct_entitlement_days
@@ -60,7 +61,7 @@ class StaffLeave < ApplicationRecord
     return 0 if year_start > year_end
 
     # Sick leave: consecutive days count (don't skip weekends/holidays)
-    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave'].include?(leave_type)
+    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
       count = 0
       (year_start..year_end).each do |d|
         next unless d.year == target_year
@@ -84,6 +85,12 @@ class StaffLeave < ApplicationRecord
   end
 
   private
+
+  def notes_required_for_other
+    if leave_type == 'other' && notes.blank?
+      errors.add(:notes, "must explain the purpose of the 'other' leave")
+    end
+  end
 
   def marriage_leave_max_days
     return unless leave_type == 'marriage leave'
@@ -172,7 +179,7 @@ class StaffLeave < ApplicationRecord
     return if end_date < start_date
 
     # Sick leaves count consecutive calendar days (include weekends & public holidays)
-    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave'].include?(leave_type)
+    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
       self.total_days = (end_date - start_date).to_i + 1
       return
     end

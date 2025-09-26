@@ -270,6 +270,8 @@ class LeavesController < ApplicationController
       exceeds = staff_leave.total_days.to_i > total_available_including_possible_carry
     end
 
+    notes_message = leave_type == 'other' ? "This request spans #{staff_leave.total_days.to_i} consecutive days (including weekends/holidays). Provide details in notes." : nil
+
     render json: {
       total_days: staff_leave.total_days.to_i,
       days_by_year: days_by_year,
@@ -280,7 +282,8 @@ class LeavesController < ApplicationController
       blocked_messages: blocked_messages,
       overlapping_messages: overlapping_messages.uniq,
       overlapping_conflict: overlapping_conflict,
-      overlapping_conflict_messages: overlapping_conflict_messages
+      overlapping_conflict_messages: overlapping_conflict_messages,
+      notes_message: notes_message
     }
   rescue => e
     Rails.logger.error "Leaves#preview error: #{e.class} #{e.message}\n#{e.backtrace.first(10).join("\n")}"

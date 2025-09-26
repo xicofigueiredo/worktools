@@ -55,10 +55,13 @@ export default class extends Controller {
       const el = this.element.querySelector('[data-leave-target="type"]')
       if (el) initialType = el.value || ""
     }
+
+    // FIX: use initialType (type variable not defined here previously)
     this.isSick = initialType.toLowerCase().includes('sick')
     this.isPaid = initialType.toLowerCase().includes('paid')
     this.isMarriage = initialType.toLowerCase().includes('marriage')
     this.isParental = initialType.toLowerCase().includes('parental')
+    this.isOther = initialType.toLowerCase().includes('other')
 
     if (this.hasStartTarget && this.hasEndTarget && this.hasTypeTarget) {
       this.validate()
@@ -112,11 +115,12 @@ export default class extends Controller {
     const end   = this._parseDate(this.endTarget?.value)
     const type  = (this.typeTarget?.value || "holiday").toLowerCase()
 
-    // keep flags in sync for client-side logic
+    // keep flags in sync for client-side logic (use safe optional chaining)
     this.isSick = (type || '').toLowerCase().includes('sick')
     this.isPaid = (type || '').toLowerCase().includes('paid')
     this.isMarriage = (type || '').toLowerCase().includes('marriage')
-    this.isParental = (this.typeTarget.value || "").toLowerCase().includes('parental')
+    this.isParental = (type || '').toLowerCase().includes('parental')
+    this.isOther = (type || '').toLowerCase().includes('other')
     this._toggleDocumentRequired()
 
     this.hardErrors = []
@@ -136,17 +140,19 @@ export default class extends Controller {
       this.hardErrors.push("End date must be the same or after the start date")
     }
 
-    // If we have a valid date range, and leave is sick/paid, compute consecutive-day counts locally
+    // If we have a valid date range, and leave is sick/paid (or other consecutive-type), compute consecutive-day counts locally
     if (start && end) {
+      // keep flags in sync again
       this.isSick = (type || '').toLowerCase().includes('sick')
       this.isPaid = (type || '').toLowerCase().includes('paid')
       this.isMarriage = (type || '').toLowerCase().includes('marriage')
-      this.isParental = (this.typeTarget.value || "").toLowerCase().includes('parental')
+      this.isParental = (type || '').toLowerCase().includes('parental')
+      this.isOther = (type || '').toLowerCase().includes('other')
 
       this.totalDays = 0
       this.daysByYear = {}
 
-      if (this.isSick || this.isPaid || this.isMarriage || this.isParental) {
+      if (this.isSick || this.isPaid || this.isMarriage || this.isParental || this.isOther) {
         // compute per-year consecutive days locally so the info line appears instantly
         const localDaysByYear = this._computeConsecutiveDaysByYear(this.startTarget.value, this.endTarget.value)
         this.daysByYear = localDaysByYear
@@ -167,6 +173,7 @@ export default class extends Controller {
       }
     }
 
+    // marriage rule example (keeps selected count for message if you want)
     if (start && end && this.isMarriage) {
       const daysCount = this.totalDays || (() => {
         const s = this._parseDate(this.startTarget.value)
@@ -174,7 +181,7 @@ export default class extends Controller {
         return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1
       })()
       if (daysCount > 15) {
-        this.hardErrors.push(`Marriage leave cannot exceed 15 consecutive days.`)
+        this.hardErrors.push(`Marriage leave cannot exceed 15 consecutive days (selected: ${daysCount} day(s)).`)
       }
     }
 
@@ -236,8 +243,9 @@ export default class extends Controller {
 
     this.isSick = (type || '').toLowerCase().includes('sick')
     this.isPaid = (type || '').toLowerCase().includes('paid')
-    this.isMarriage = (this.typeTarget.value || "").toLowerCase().includes('marriage')
+    this.isMarriage = (type || '').toLowerCase().includes('marriage')
     this.isParental = (type || '').toLowerCase().includes('parental')
+    this.isOther = (type || '').toLowerCase().includes('other')
 
     const token = document.querySelector('meta[name="csrf-token"]')?.content
     try {
@@ -415,6 +423,8 @@ export default class extends Controller {
           infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of marriage leave.`)
         } else if (this.isParental) {
           infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of parental leave.`)
+        } else if (this.isOther) {
+          infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s). Provide explanation in notes.`)
         } else {
           infos.push(`This will take ${allocation[yearKeys[0]]} day(s) of your entitlement for ${yearKeys[0]}.`)
         }
@@ -435,6 +445,10 @@ export default class extends Controller {
           const parts = []
           for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
           infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s) of parental leave: ${parts.join(' and ')}.`)
+        } else if (this.isOther) {
+          const parts = []
+          for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
+          infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s): ${parts.join(' and ')}. Provide explanation in notes.`)
         } else {
           const parts = []
           for (const y of yearKeys) parts.push(`${allocation[y]} day(s) from ${y}`)
