@@ -7,7 +7,7 @@ class StaffLeave < ApplicationRecord
 
   ADVANCE_DAYS = 20
   STATUSES = %w[pending approved rejected cancelled].freeze
-  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave'].freeze
+  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave', 'parental leave'].freeze
 
   validates :status, inclusion: { in: STATUSES }
   validates :leave_type, presence: true, inclusion: { in: LEAVE_TYPES }
@@ -60,7 +60,7 @@ class StaffLeave < ApplicationRecord
     return 0 if year_start > year_end
 
     # Sick leave: consecutive days count (don't skip weekends/holidays)
-    if ['sick leave', 'paid leave', 'marriage leave'].include?(leave_type)
+    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave'].include?(leave_type)
       count = 0
       (year_start..year_end).each do |d|
         next unless d.year == target_year
@@ -172,7 +172,7 @@ class StaffLeave < ApplicationRecord
     return if end_date < start_date
 
     # Sick leaves count consecutive calendar days (include weekends & public holidays)
-    if ['sick leave', 'paid leave', 'marriage leave'].include?(leave_type)
+    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave'].include?(leave_type)
       self.total_days = (end_date - start_date).to_i + 1
       return
     end

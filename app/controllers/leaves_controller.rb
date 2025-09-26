@@ -39,7 +39,7 @@ class LeavesController < ApplicationController
     @staff_leave.days_from_previous_year = staff_leave_params[:days_from_previous_year].to_i if staff_leave_params[:days_from_previous_year].present?
 
     # Enforce mandatory medical document for sick leaves (server-side)
-    if %w[sick leave marriage leave].include?(@staff_leave.leave_type)
+    if ['sick leave', 'marriage leave', 'parental leave'].include?(@staff_leave.leave_type)
       docs_param = params.dig(:staff_leave, :documents)
       # docs_param can be nil, an array, or a file. We consider it missing if nil or only blank strings.
       docs_present = docs_param.present? && docs_param.any? { |d| d.present? && !d.is_a?(String) }
@@ -53,7 +53,7 @@ class LeavesController < ApplicationController
     if @staff_leave.save
       # Handle document uploads (only for sick leaves by default)
       # expects params[:staff_leave][:documents] (array of uploaded files)
-      if %w[sick leave marriage leave].include?(@staff_leave.leave_type) && params.dig(:staff_leave, :documents).present?
+      if ['sick leave', 'marriage leave', 'parental leave'].include?(@staff_leave.leave_type) && params.dig(:staff_leave, :documents).present?
         upload_errors = []
         params[:staff_leave][:documents].each do |doc|
           next if doc.blank? || doc.is_a?(String)

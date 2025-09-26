@@ -58,6 +58,7 @@ export default class extends Controller {
     this.isSick = initialType.toLowerCase().includes('sick')
     this.isPaid = initialType.toLowerCase().includes('paid')
     this.isMarriage = initialType.toLowerCase().includes('marriage')
+    this.isParental = initialType.toLowerCase().includes('parental')
 
     if (this.hasStartTarget && this.hasEndTarget && this.hasTypeTarget) {
       this.validate()
@@ -115,6 +116,7 @@ export default class extends Controller {
     this.isSick = (type || '').toLowerCase().includes('sick')
     this.isPaid = (type || '').toLowerCase().includes('paid')
     this.isMarriage = (type || '').toLowerCase().includes('marriage')
+    this.isParental = (this.typeTarget.value || "").toLowerCase().includes('parental')
     this._toggleDocumentRequired()
 
     this.hardErrors = []
@@ -139,11 +141,12 @@ export default class extends Controller {
       this.isSick = (type || '').toLowerCase().includes('sick')
       this.isPaid = (type || '').toLowerCase().includes('paid')
       this.isMarriage = (type || '').toLowerCase().includes('marriage')
+      this.isParental = (this.typeTarget.value || "").toLowerCase().includes('parental')
 
       this.totalDays = 0
       this.daysByYear = {}
 
-      if (this.isSick || this.isPaid || this.isMarriage) {
+      if (this.isSick || this.isPaid || this.isMarriage || this.isParental) {
         // compute per-year consecutive days locally so the info line appears instantly
         const localDaysByYear = this._computeConsecutiveDaysByYear(this.startTarget.value, this.endTarget.value)
         this.daysByYear = localDaysByYear
@@ -234,6 +237,7 @@ export default class extends Controller {
     this.isSick = (type || '').toLowerCase().includes('sick')
     this.isPaid = (type || '').toLowerCase().includes('paid')
     this.isMarriage = (this.typeTarget.value || "").toLowerCase().includes('marriage')
+    this.isParental = (type || '').toLowerCase().includes('parental')
 
     const token = document.querySelector('meta[name="csrf-token"]')?.content
     try {
@@ -409,6 +413,8 @@ export default class extends Controller {
           infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of paid leave.`)
         } else if (this.isMarriage) {
           infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of marriage leave.`)
+        } else if (this.isParental) {
+          infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of parental leave.`)
         } else {
           infos.push(`This will take ${allocation[yearKeys[0]]} day(s) of your entitlement for ${yearKeys[0]}.`)
         }
@@ -425,6 +431,10 @@ export default class extends Controller {
           const parts = []
           for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
           infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s) of marriage leave: ${parts.join(' and ')}.`)
+        } else if (this.isParental) {
+          const parts = []
+          for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
+          infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s) of parental leave: ${parts.join(' and ')}.`)
         } else {
           const parts = []
           for (const y of yearKeys) parts.push(`${allocation[y]} day(s) from ${y}`)
@@ -478,15 +488,25 @@ export default class extends Controller {
   _toggleDocumentField() {
     if (this.hasDocumentsWrapperTarget) {
       const type = (this.typeTarget?.value || "").toLowerCase()
-      if (type.includes('sick') || type.includes('marriage')) {
+      if (type.includes('sick') || type.includes('marriage') || type.includes('parental')) {
         this._show(this.documentsWrapperTarget)
         if (this.hasDocumentsLabelTarget) {
-          this.documentsLabelTarget.textContent = type.includes('marriage') ? 'Marriage documents' : 'Medical documents'
+          if (type.includes('sick')) {
+            this.documentsLabelTarget.textContent = 'Medical documents'
+          } else if (type.includes('marriage')) {
+            this.documentsLabelTarget.textContent = 'Marriage documents'
+          } else if (type.includes('parental')) {
+            this.documentsLabelTarget.textContent = 'Parental documents'
+          }
         }
         if (this.hasDocumentsTextTarget) {
-          this.documentsTextTarget.innerHTML = type.includes('marriage')
-            ? 'Upload required documents (e.g., marriage certificate) for marriage leave. Only PDF and Word documents are allowed.'
-            : 'Upload a medical report or justification for sick leave. Only PDF and Word documents are allowed.'
+          if (type.includes('sick')) {
+            this.documentsTextTarget.innerHTML = 'Upload a medical report or justification for sick leave. Only PDF and Word documents are allowed.'
+          } else if (type.includes('marriage')) {
+            this.documentsTextTarget.innerHTML = 'Upload required documents (e.g., marriage certificate) for marriage leave. Only PDF and Word documents are allowed.'
+          } else if (type.includes('parental')) {
+            this.documentsTextTarget.innerHTML = 'Upload required documents (e.g., birth certificate) for parental leave. Only PDF and Word documents are allowed.'
+          }
         }
       } else {
         this._hide(this.documentsWrapperTarget)
@@ -499,7 +519,7 @@ export default class extends Controller {
   _toggleDocumentRequired() {
     const fileInput = this.element.querySelector('input[type="file"][name*="documents"]')
     const type = (this.typeTarget?.value || "").toLowerCase()
-    const required = type.includes('sick') || type.includes('marriage')
+    const required = type.includes('sick') || type.includes('marriage') || type.includes('parental')
     if (fileInput) {
       if (required) fileInput.setAttribute('required', 'required')
       else fileInput.removeAttribute('required')
