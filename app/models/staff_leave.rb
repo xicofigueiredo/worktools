@@ -7,7 +7,7 @@ class StaffLeave < ApplicationRecord
 
   ADVANCE_DAYS = 20
   STATUSES = %w[pending approved rejected cancelled].freeze
-  LEAVE_TYPES = ['holiday', 'sick leave'].freeze
+  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave'].freeze
 
   validates :status, inclusion: { in: STATUSES }
   validates :leave_type, presence: true, inclusion: { in: LEAVE_TYPES }
@@ -21,6 +21,7 @@ class StaffLeave < ApplicationRecord
   validate  :exception_reason_if_requested
   validates :days_from_previous_year, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validate  :previous_year_days_allowed, on: :create
+  validate  :paid_leave_minimum_days, on: :create
 
   before_validation :calculate_total_days, on: [:create, :update]
   after_create :deduct_entitlement_days
@@ -58,7 +59,7 @@ class StaffLeave < ApplicationRecord
     return 0 if year_start > year_end
 
     # Sick leave: consecutive days count (don't skip weekends/holidays)
-    if leave_type == 'sick leave'
+    if %w[sick leave paid leave].include?(leave_type)
       count = 0
       (year_start..year_end).each do |d|
         next unless d.year == target_year
@@ -82,6 +83,17 @@ class StaffLeave < ApplicationRecord
   end
 
   private
+
+  def paid_leave_minimum_days
+    return unless leave_type == 'paid leave'
+    return if start_date.blank? || end_date.blank?
+
+    # consecutive days inclusive
+    consecutive_days = (end_date - start_date).to_i + 1
+    if consecutive_days < 30
+      errors.add(:base, "Paid leave must be at least 30 consecutive days")
+    end
+  end
 
   def previous_year_days_allowed
     return unless leave_type == 'holiday' && start_date.present? && end_date.present?
@@ -148,7 +160,7 @@ class StaffLeave < ApplicationRecord
     return if end_date < start_date
 
     # Sick leaves count consecutive calendar days (include weekends & public holidays)
-    if leave_type == 'sick leave'
+    if %w[sick leave paid leave].include?(leave_type)
       self.total_days = (end_date - start_date).to_i + 1
       return
     end

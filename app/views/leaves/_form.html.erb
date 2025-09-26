@@ -20,7 +20,7 @@
       <div class="mb-2">
         <%= f.label :leave_type, "Type", class: "form-label" %>
         <%= f.select :leave_type,
-          [['Holiday', 'holiday'], ['Sick Leave', 'sick leave']], {},
+          [['Holiday', 'holiday'], ['Sick Leave', 'sick leave'], ['Paid Leave', 'paid leave']], {},
           data: { "leave-target": "type", action: "change->leave#validate" },
           class: "form-select" %>
       </div>

@@ -120,16 +120,14 @@ class LeavesController < ApplicationController
       return render json: { error: "Invalid start_date or end_date" }, status: :unprocessable_entity
     end
 
-    leave_type = params[:leave_type]
-
+    leave_type = params[:leave_type].to_s
     if end_date < start_date
       return render json: { error: "end_date must be the same or after start_date" }, status: :unprocessable_entity
     end
 
+    # build a StaffLeave to compute totals using model logic (which handles sick/paid vs holiday)
     staff_leave = StaffLeave.new(user: current_user, start_date: start_date, end_date: end_date, leave_type: leave_type)
     staff_leave.compute_total_days
-
-    left_field = leave_type == 'holiday' ? :holidays_left : :sick_leaves_left
 
     # Build per-year counts and per-year entitlements
     years = (start_date.year..end_date.year).to_a
@@ -137,82 +135,54 @@ class LeavesController < ApplicationController
     entitlements_by_year = {}
 
     years.each do |yr|
+      # days_in_year uses model logic: consecutive for sick/paid, business days for holiday
       days_by_year[yr] = staff_leave.days_in_year(yr)
+
+      ent = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
+
+      if leave_type == 'holiday'
+        entitlements_by_year[yr] = ent.persisted? ? ent.holidays_left.to_i : 25
+      else
+        entitlements_by_year[yr] = 0
+      end
     end
 
-    # For holidays: keep original entitlement + carry logic (unchanged).
-    # For sick leaves: we should not compute carry nor "exceeds" — sick leaves are unlimited.
-    if leave_type == 'holiday'
-      left_field = :holidays_left
+    # Jan-Mar carry logic only meaningful for holidays; reuse previous logic (no change)
+    jan_mar_segments = []
+    years.each do |yr|
+      jan_mar_start = Date.new(yr, 1, 1)
+      jan_mar_end   = Date.new(yr, 3, 31)
+      slice_start = [start_date, jan_mar_start].max
+      slice_end   = [end_date, jan_mar_end].min
+      next if slice_start > slice_end
 
-      years.each do |yr|
-        ent = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
-        entitlements_by_year[yr] = ent.persisted? ? ent.send(left_field).to_i : 25
-      end
+      temp_leave = StaffLeave.new(user: current_user, start_date: slice_start, end_date: slice_end, leave_type: leave_type)
+      temp_leave.compute_total_days
+      eligible_carry_days = temp_leave.total_days.to_i
 
-      # For every year in the range, check if the leave overlaps Jan 1..Mar 31 of that year.
-      # If so, compute eligible carry days (business days inside that slice) and how many
-      # of those could be provided from the previous year's entitlement (<= 5 rule).
-      jan_mar_segments = []
+      prev_year = yr - 1
+      prev_ent = StaffLeaveEntitlement.find_by(user: current_user, year: prev_year)
+      prev_holidays_left = prev_ent ? prev_ent.holidays_left.to_i : 0
 
-      years.each do |yr|
-        jan_mar_start = Date.new(yr, 1, 1)
-        jan_mar_end   = Date.new(yr, 3, 31)
-        slice_start = [start_date, jan_mar_start].max
-        slice_end   = [end_date, jan_mar_end].min
+      entitlement_for_this_year = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
+      days_from_previous_used = entitlement_for_this_year.persisted? ? entitlement_for_this_year.days_from_previous_year_used.to_i : 0
 
-        next if slice_start > slice_end
+      previous_year_carry = [[5 - days_from_previous_used, prev_holidays_left].min, eligible_carry_days].min
+      previous_year_carry = [previous_year_carry, 0].max
 
-        temp_leave = StaffLeave.new(user: current_user, start_date: slice_start, end_date: slice_end, leave_type: leave_type)
-        temp_leave.compute_total_days
-        eligible_carry_days = temp_leave.total_days.to_i
-
-        # previous-year available
-        prev_year = yr - 1
-        prev_ent = StaffLeaveEntitlement.find_by(user: current_user, year: prev_year)
-        prev_holidays_left = prev_ent ? prev_ent.holidays_left.to_i : 0
-
-        entitlement_for_this_year = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
-        days_from_previous_used = entitlement_for_this_year.persisted? ? entitlement_for_this_year.days_from_previous_year_used.to_i : 0
-
-        # maximum that can be taken from previous year for this Jan-Mar slice:
-        previous_year_carry = [[5 - days_from_previous_used, prev_holidays_left].min, eligible_carry_days].min
-        previous_year_carry = [previous_year_carry, 0].max
-
-        jan_mar_segments << {
-          year: yr,
-          eligible_carry_days: eligible_carry_days,
-          previous_year: prev_year,
-          previous_year_holidays_left: prev_holidays_left,
-          previous_year_carry: previous_year_carry,
-          days_from_previous_year_used: days_from_previous_used
-        }
-      end
-    else
-      # sick leave: do not perform availability checks
-      years.each do |yr|
-        # show how much was already used (helpful) but no enforcement
-        ent = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
-        entitlements_by_year[yr] = ent.persisted? ? ent.sick_leaves_used.to_i : 0
-      end
-
-      jan_mar_segments = []
-      exceeds = false
+      jan_mar_segments << {
+        year: yr,
+        eligible_carry_days: eligible_carry_days,
+        previous_year: prev_year,
+        previous_year_holidays_left: prev_holidays_left,
+        previous_year_carry: previous_year_carry,
+        days_from_previous_year_used: days_from_previous_used
+      }
     end
 
-    # Combined availability check (for soft messaging). We compute total available as:
-    # sum(entitlements_by_year) + sum(previous_year_carry across jan-mar segments).
-    sum_entitlements = entitlements_by_year.values.sum
-    sum_possible_carry = jan_mar_segments.map { |s| s[:previous_year_carry].to_i }.sum
-    total_available_including_possible_carry = sum_entitlements + sum_possible_carry
-
-    exceeds = staff_leave.total_days.to_i > total_available_including_possible_carry
-
-    # --- blocked periods & overlaps  ---
+    # blocked periods & overlaps adjustments:
     blocked = false
     blocked_messages = []
-
-    # only consider blocked periods for holidays
     if leave_type == 'holiday'
       hub_id = current_user.users_hubs.find_by(main: true)&.hub_id
       department_ids = current_user.department_ids
@@ -255,24 +225,32 @@ class LeavesController < ApplicationController
       end
     end
 
-    # self-overlap: disallow if current user already has an overlapping pending/approved leave of the SAME type
+    # self-overlap (same-type)
     overlapping_self = current_user.staff_leaves.where(status: ['pending', 'approved'], leave_type: leave_type)
                                               .where.not("end_date < ? OR start_date > ?", start_date, end_date).exists?
     overlapping_self_message = "You already have a pending or approved #{leave_type} in this period." if overlapping_self
 
-    # For sick leave: check if user has overlapping leaves of OTHER types (e.g. approved holiday).
-    # If yes, treat that as an immediate conflict (hard error) and return messages explaining which leave(s) overlap.
+    # For sick & paid: check overlap with OTHER types (hard conflict)
     overlapping_conflict = false
     overlapping_conflict_messages = []
-    if leave_type == 'sick leave'
-      other_overlaps = current_user.staff_leaves.where(status: ['pending', 'approved']).where.not(leave_type: 'sick leave')
-                           .where.not("end_date < ? OR start_date > ?", start_date, end_date)
+    if ['sick leave', 'paid leave'].include?(leave_type)
+      other_overlaps = current_user.staff_leaves.where(status: ['pending', 'approved']).where.not(leave_type: leave_type)
+                          .where.not("end_date < ? OR start_date > ?", start_date, end_date)
       if other_overlaps.exists?
         overlapping_conflict = true
         overlapping_conflict_messages = other_overlaps.map do |leave|
-          "#{leave.leave_type.titleize} (#{leave.status}) already booked: #{leave.start_date} to #{leave.end_date}. Cancel that booking to request a sick leave in this period."
+          "#{leave.leave_type.titleize} (#{leave.status}) already booked: #{leave.start_date} to #{leave.end_date}. Cancel that booking to request a #{leave_type} in this period."
         end
       end
+    end
+
+    sum_entitlements = entitlements_by_year.values.sum
+    sum_possible_carry = jan_mar_segments.map { |s| s[:previous_year_carry].to_i }.sum
+    total_available_including_possible_carry = sum_entitlements + sum_possible_carry
+
+    exceeds = false
+    if leave_type == 'holiday'
+      exceeds = staff_leave.total_days.to_i > total_available_including_possible_carry
     end
 
     render json: {
@@ -283,7 +261,7 @@ class LeavesController < ApplicationController
       exceeds: exceeds,
       blocked: blocked,
       blocked_messages: blocked_messages,
-      overlapping_messages: overlapping_messages.uniq,
+      overlapping_messages: overlapping_messages,
       overlapping_self: overlapping_self,
       overlapping_self_message: overlapping_self_message,
       overlapping_conflict: overlapping_conflict,
