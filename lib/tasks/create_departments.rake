@@ -1,6 +1,6 @@
 namespace :db do
   desc "Create departments from CSV. (headers: name,manager,superior_department)"
-  task import_departments: :environment do
+  task create_departments: :environment do
     require 'csv'
     csv_path = 'lib/tasks/departments.csv'
     unless File.exist?(csv_path)
