@@ -4,6 +4,7 @@ class ApplicationController < ActionController::Base
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :check_browser
   before_action :count_notifications
+  before_action :count_pending_confirmations
   before_action :set_current_role
 
   # Method to switch roles (only for admins)
@@ -26,6 +27,10 @@ class ApplicationController < ActionController::Base
   def count_notifications
     @notification_count = current_user&.notifications&.unread&.count || 0
     @unread_notifications = current_user&.notifications&.where(read: false)&.order(created_at: :desc) || []
+  end
+
+  def count_pending_confirmations
+    @pending_confirmations_count = current_user ? Confirmation.pending.where(approver: current_user).count : 0
   end
 
   def check_browser
