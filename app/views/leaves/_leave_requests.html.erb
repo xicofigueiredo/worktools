@@ -101,14 +101,34 @@
                         <% end %>
 
                         <% if has_docs %>
-                          <% doc = leave.staff_leave_documents.first %>
-                          <%= link_to download_document_leafe_path(leave, doc.id),
-                                      class: "btn btn-sm btn-outline-primary",
-                                      title: "Download document",
-                                      aria: { label: "Download document" },
-                                      target: "_blank",
-                                      rel: "noopener" do %>
-                            <i class="fa fa-download" aria-hidden="true"></i>
+                          <% documents = leave.staff_leave_documents %>
+                          <% if documents.size == 1 %>
+                            <% doc = documents.first %>
+                            <%= link_to download_document_leafe_path(leave, doc.id),
+                                        class: "btn btn-sm btn-outline-primary",
+                                        title: "Download document",
+                                        aria: { label: "Download document" },
+                                        target: "_blank",
+                                        rel: "noopener" do %>
+                              <i class="fa fa-download" aria-hidden="true"></i>
+                            <% end %>
+                          <% else %>
+                            <div class="btn-group" role="group">
+                              <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-download" aria-hidden="true"></i>
+                              </button>
+                              <ul class="dropdown-menu">
+                                <% documents.each_with_index do |doc, index| %>
+                                  <li>
+                                    <%= link_to "Document #{index + 1}",
+                                                download_document_leafe_path(leave, doc.id),
+                                                class: "dropdown-item",
+                                                target: "_blank",
+                                                rel: "noopener" %>
+                                  </li>
+                                <% end %>
+                              </ul>
+                            </div>
                           <% end %>
                         <% end %>
                       </div>
