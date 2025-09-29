@@ -209,19 +209,37 @@ class LeavesController < ApplicationController
       end
     end
 
-    # department overlaps (only for holidays)
+    # overlaps (only for holidays)
     overlapping_messages = []
     if leave_type == 'holiday'
-      current_user.departments.each do |dept|
-        dept_user_ids = dept.user_ids - [current_user.id]
-        overlapping_leaves = StaffLeave.where(user_id: dept_user_ids, status: ['pending', 'approved'], leave_type: leave_type)
-                                      .where.not("end_date < ? OR start_date > ?", start_date, end_date)
+      if current_user.role == 'lc'
+        main_hub = current_user.users_hubs.find_by(main: true)&.hub
+        hub_lc_user_ids = main_hub.users.where(role: 'lc').pluck(:id) - [current_user.id]
+
+        overlapping_leaves = StaffLeave.where(user_id: hub_lc_user_ids, status: ['pending', 'approved'], leave_type: leave_type)
+                                              .where.not("end_date < ? OR start_date > ?", start_date, end_date)
+
         overlapping_leaves.each do |leave|
           status = leave.status
           date_range = "#{leave.start_date} to #{leave.end_date}"
           user_name = leave.user.full_name || "A user"
-          dept_name = dept.name
-          overlapping_messages << "#{user_name} of your #{dept_name} department has already a #{status} #{leave_type} on #{date_range}."
+          hub_name = main_hub.name
+          overlapping_messages << "#{user_name} of your hub #{hub_name} has already a #{status} #{leave_type} on #{date_range}."
+        end
+      else
+        current_user.departments.each do |dept|
+          dept_user_ids = dept.user_ids - [current_user.id]
+          overlapping_leaves = StaffLeave.where(user_id: dept_user_ids,
+                                                status: ['pending', 'approved'],
+                                                leave_type: leave_type)
+                                        .where.not("end_date < ? OR start_date > ?", start_date, end_date)
+          overlapping_leaves.each do |leave|
+            status = leave.status
+            date_range = "#{leave.start_date} to #{leave.end_date}"
+            user_name = leave.user.full_name || "A user"
+            dept_name = dept.name
+            overlapping_messages << "#{user_name} of your #{dept_name} department has already a #{status} #{leave_type} on #{date_range}."
+          end
         end
       end
     end
