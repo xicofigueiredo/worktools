@@ -14,6 +14,16 @@
           <option value="<%= d.id %>"><%= d.name %></option>
         <% end %>
       </select>
+
+      <!-- Excel-style export button (matches modal button styling) -->
+      <!-- Uses FontAwesome icon if available; otherwise shows "Export" text -->
+      <button id="export-xlsx-btn"
+              type="button"
+              class="btn btn-sm btn-outline-success ms-2"
+              title="Export visible rows to Excel"
+              aria-label="Export visible rows to Excel">
+        <i class="fas fa-file-excel" aria-hidden="true"></i>
+      </button>
     </div>
   </div>
 
@@ -36,7 +46,6 @@
             <td colspan="6" class="text-center text-muted py-3">No users found for the selected departments.</td>
           </tr>
         <% else %>
-          <%# Group rows by primary department name (fallback to first department or "—") %>
           <% grouped = @rows.group_by do |r|
                dept = (r[:primary_department] || r[:departments].first)
                [dept&.id, dept&.name || "—"]
@@ -47,9 +56,7 @@
               <% primary_dept = (r[:primary_department] || r[:departments].first) %>
               <tr data-dept-id="<%= primary_dept&.id %>">
                 <td><%= primary_dept&.name || '—' %></td>
-                <td>
-                  <%= "#{r[:user].full_name}" %>
-                </td>
+                <td><%= "#{r[:user].full_name}" %></td>
                 <td><%= r[:total_holidays] %></td>
                 <td>
                   <%= r[:booked_holiday] %>
@@ -73,53 +80,30 @@
   </div>
 </div>
 
-<!-- Inline client-side filter script -->
+<!-- Inline scripts: filter + client-side XLSX export (SheetJS) -->
 <script>
   document.addEventListener('turbo:load', function () {
     var clientFilter = document.getElementById('client-dept-filter');
+    var exportBtn = document.getElementById('export-xlsx-btn');
     if (!clientFilter) return;
 
     // restore saved selection (optional)
     try {
       var saved = localStorage.getItem('deptFilter');
       if (saved) clientFilter.value = saved;
-    } catch (e) {
-      // ignore storage errors
-    }
+    } catch (e) {}
 
     function applyFilter(val) {
       var allRows = document.querySelectorAll('#dept-entitlements-table tbody tr[data-dept-id]');
-      // show/hide user rows
       allRows.forEach(function (row) {
-        // dataset.deptId is a string, val is string
         if (val === 'all' || val === '' ) {
           row.style.display = '';
         } else {
           row.style.display = (row.dataset.deptId === val) ? '' : 'none';
         }
       });
-
-      // hide/show department headers depending on whether any child rows are visible
-      var headers = document.querySelectorAll('#dept-entitlements-table tbody tr.dept-header');
-      headers.forEach(function (hdr) {
-        var group = hdr.dataset.deptGroup; // a dept id or 'none'
-        // find any user-row with matching data-dept-id that is visible
-        var hasVisible = false;
-        var childRows = document.querySelectorAll('#dept-entitlements-table tbody tr[data-dept-id="' + group + '"]');
-        if (childRows.length === 0) {
-          // no child rows (shouldn't usually happen) — decide whether to show header
-          hasVisible = (val === 'all' || val === '' || group === 'none');
-        } else {
-          childRows.forEach(function (r) {
-            if (r.style.display !== 'none') hasVisible = true;
-          });
-        }
-
-        hdr.style.display = hasVisible ? '' : 'none';
-      });
     }
 
-    // initial apply
     applyFilter(clientFilter.value);
 
     clientFilter.addEventListener('change', function () {
@@ -127,5 +111,92 @@
       try { localStorage.setItem('deptFilter', val); } catch (e) {}
       applyFilter(val);
     });
+
+    // Ensure SheetJS (XLSX) is loaded, then call callback
+    function ensureXLSX(callback) {
+      if (window.XLSX) return callback();
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js';
+      s.async = true;
+      s.onload = function () { callback(); };
+      s.onerror = function () {
+        alert('Failed to load Excel export library. Please try again or contact the administrator.');
+      };
+      document.head.appendChild(s);
+    }
+
+    // Export visible rows to .xlsx
+    function exportVisibleRowsXLSX() {
+      var table = document.getElementById('dept-entitlements-table');
+      if (!table) { alert('Table not found'); return; }
+
+      var tbodyRows = Array.from(table.querySelectorAll('tbody tr'));
+      var visibleData = [];
+
+      tbodyRows.forEach(function (row) {
+        // only export data rows that have data-dept-id and are visible
+        if (!row.dataset.deptId) return;
+        var style = window.getComputedStyle(row);
+        if (style.display === 'none') return;
+
+        var cols = Array.from(row.querySelectorAll('td'));
+        if (cols.length === 0) return;
+
+        // Extract text content and trim
+        var cells = cols.map(function (td) {
+          return (td.innerText || '').trim();
+        });
+        visibleData.push(cells);
+      });
+
+      if (visibleData.length === 0) {
+        alert('No visible rows to export.');
+        return;
+      }
+
+      // Header row
+      var header = ['Department', 'Name', 'Total', 'Booked', 'Pending', 'Left'];
+      var aoa = [header].concat(visibleData);
+
+      // Use SheetJS to create workbook
+      try {
+        var ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        // Optional: set column widths (characters)
+        ws['!cols'] = [
+          { wch: 25 }, // Department
+          { wch: 30 }, // Name
+          { wch: 10 }, // Total
+          { wch: 15 }, // Booked
+          { wch: 15 }, // Pending
+          { wch: 10 }  // Left
+        ];
+
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Entitlements');
+
+        var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        var blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+        var filename = 'department_entitlements_' + new Date().toISOString().slice(0,10) + '.xlsx';
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('XLSX export error', err);
+        alert('Failed to export to Excel. Check console for details.');
+      }
+    }
+
+    if (exportBtn) {
+      exportBtn.addEventListener('click', function () {
+        ensureXLSX(function () { exportVisibleRowsXLSX(); });
+      });
+    }
   });
 </script>
