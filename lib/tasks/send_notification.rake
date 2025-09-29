@@ -13,15 +13,64 @@ namespace :notifications do
     #      notifications_count += 1
     #  end
 
-    # hub_ids = [174, 191, 153, 168]
-    # hubs_ids = Hub.where(country: "Portugal").pluck(:id)
-    User.where(role: "lc").or(User.where(role: "lc")).find_each do |user|
+    hub_ids = Hub.where(country: "Portugal").pluck(:id)
+
+    User.where(role: "guardian").or(User.where(role: "guardian")).find_each do |user|
       # next unless (user.hub_ids & hub_ids).any?  # This checks for any overlap between the two arrays
-      if user.deactivate != true #&& main_hub&.hub_id.in?(hubs_ids)
+      send = false
+
+      # Filter out nil/invalid kid IDs and only process valid ones
+      valid_kids = user.kids&.compact&.reject(&:blank?) || []
+
+      valid_kids.each do |kid_id|
+        begin
+          kid = User.find(kid_id)
+          # Check if the kid belongs to any of the Portuguese hubs
+          if kid.users_hubs.where(hub_id: hub_ids).exists? && kid.deactivate != true
+            send = true
+          end
+        rescue ActiveRecord::RecordNotFound
+          # Skip if kid doesn't exist
+          puts "Warning: Kid with ID #{kid_id} not found for guardian #{user.email}"
+          next
+        end
+      end
+
+      if user.deactivate != true && send #&& main_hub&.hub_id.in?(hubs_ids)
         Notification.find_or_create_by!(
           user: user,
           link: "",
-          message: "We are aware that some parents have not received the credentials, we are working to have them sent as soon as possible."
+          message: "Important Information – We’re Here to Help
+
+Dear Parents and Guardians,
+
+At Brave Generation Academy, we deeply value the trust you place in us and want you to always feel supported in every step of your child’s educational journey.
+
+If, at any time, you are contacted by a public entity with questions about your choice to enrol your child at BGA, we kindly encourage you to reach out to us before taking any action or responding. We are here to guide you, offer clarification, and help ensure that all information is communicated clearly, calmly, and with your child’s best interests in mind.
+
+Our aim is for you to feel confident and at ease in your decision, knowing that any questions or concerns will be addressed thoughtfully and in partnership with you.
+
+You can always count on us.
+
+Warm regards,
+The BGA Team
+
+Portuguese:
+
+Informação Importante – Estamos Aqui para Ajudar
+
+Caros Pais e Encarregados de Educação,
+
+Na Brave Generation Academy, valorizamos muito a confiança que depositam em nós e queremos garantir que se sentem apoiados ao longo do percurso educativo dos vossos filhos.
+
+Se, em algum momento, forem contactados por qualquer entidade pública a questionar a vossa opção de inscrição na BGA, pedimos que, antes de tomarem qualquer decisão ou de responderem, entrem em contacto conosco. Estamos totalmente disponíveis para vos orientar, esclarecer e garantir que toda a informação é comunicada de forma clara, tranquila e tendo sempre em mente os melhores interesses da criança.
+
+O nosso objetivo é assegurar que se sentem seguros e confiantes na vossa escolha, sabendo que qualquer dúvida ou questão será tratada da melhor forma possível, sempre em parceria convosco.
+
+Contem sempre conosco.
+
+Com os melhores cumprimentos,
+A Equipa da Brave Generation Academy"
         )
         notifications_count += 1
       end
