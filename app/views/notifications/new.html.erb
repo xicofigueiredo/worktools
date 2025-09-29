@@ -1,0 +1,184 @@
+<div class="container">
+  <div class="card main-card">
+    <div class="card-header">
+      <h2><i class="fas fa-bell me-2"></i>Create New Notification</h2>
+    </div>
+    <div class="card-body">
+      <%= form_with url: notifications_path, method: :post, local: true, class: "notification-form" do |form| %>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group mb-3">
+              <%= form.label "notification[message]", "Notification Message", class: "form-label fw-bold" %>
+              <%= form.text_area "notification[message]", rows: 4, class: "form-control",
+                  placeholder: "Enter the notification message here...", required: true %>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group mb-3">
+              <%= form.label "notification[link]", "Link (Optional)", class: "form-label fw-bold" %>
+              <%= form.url_field "notification[link]", class: "form-control",
+                  placeholder: "https://example.com (optional)" %>
+              <div class="form-text">Add a link that users can click to get more information</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group mb-4">
+              <label class="form-label fw-bold">Send To:</label>
+
+              <div class="border rounded p-3 bg-light">
+                <!-- All Users Option -->
+                <div class="form-check mb-3">
+                  <%= check_box_tag :all_users, "1", false, class: "form-check-input", id: "all_users_check" %>
+                  <label class="form-check-label fw-bold text-primary" for="all_users_check">
+                    <i class="fas fa-users me-1"></i>All Active Users
+                  </label>
+                </div>
+
+                <!-- Specific Roles -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Or select by Role:</label>
+                  <div class="row">
+                    <% @roles.each do |role| %>
+                      <div class="col-md-4 col-sm-6">
+                        <div class="form-check">
+                          <%= check_box_tag "roles[]", role, false, class: "form-check-input role-check", id: "role_#{role}" %>
+                          <label class="form-check-label" for="role_<%= role %>">
+                            <i class="<%= role_icon(role) %> me-1"></i><%= role.titleize %>
+                          </label>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+
+                <!-- Countries -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Or select by Country:</label>
+                  <div class="row">
+                    <% @countries.each do |country| %>
+                      <div class="col-md-4 col-sm-6">
+                        <div class="form-check">
+                          <%= check_box_tag "countries[]", country, false, class: "form-check-input country-check", id: "country_#{country.downcase.gsub(/\s+/, '_')}" %>
+                          <label class="form-check-label" for="country_<%= country.downcase.gsub(/\s+/, '_') %>">
+                            <i class="fas fa-globe me-1"></i><%= country %>
+                          </label>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+
+                <!-- Specific Users -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Or select specific users:</label>
+                  <select name="user_ids[]" multiple class="form-select" size="6" id="user_select">
+                    <% @users.each do |user| %>
+                      <option value="<%= user.id %>">
+                        <%= user.full_name %> (<%= user.email %>) - <%= user.role.titleize %>
+                      </option>
+                    <% end %>
+                  </select>
+                  <div class="form-text">Hold Ctrl/Cmd to select multiple users</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="d-flex gap-2">
+              <%= form.submit "Send Notification", class: "btn btn-primary btn-lg" %>
+              <%= link_to "Cancel", notifications_path, class: "btn btn-secondary btn-lg" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const allUsersCheck = document.getElementById('all_users_check');
+  const roleChecks = document.querySelectorAll('.role-check');
+  const countryChecks = document.querySelectorAll('.country-check');
+  const userSelect = document.getElementById('user_select');
+
+  // When "All Users" is checked, uncheck everything else
+  allUsersCheck.addEventListener('change', function() {
+    if (this.checked) {
+      roleChecks.forEach(check => check.checked = false);
+      countryChecks.forEach(check => check.checked = false);
+      userSelect.selectedIndex = -1;
+    }
+  });
+
+  // When any role is checked, uncheck "All Users" and other selections
+  roleChecks.forEach(check => {
+    check.addEventListener('change', function() {
+      if (this.checked) {
+        allUsersCheck.checked = false;
+        countryChecks.forEach(check => check.checked = false);
+        userSelect.selectedIndex = -1;
+      }
+    });
+  });
+
+  // When any country is checked, uncheck "All Users" and other selections
+  countryChecks.forEach(check => {
+    check.addEventListener('change', function() {
+      if (this.checked) {
+        allUsersCheck.checked = false;
+        roleChecks.forEach(check => check.checked = false);
+        userSelect.selectedIndex = -1;
+      }
+    });
+  });
+
+  // When specific users are selected, uncheck everything else
+  userSelect.addEventListener('change', function() {
+    if (this.selectedOptions.length > 0) {
+      allUsersCheck.checked = false;
+      roleChecks.forEach(check => check.checked = false);
+      countryChecks.forEach(check => check.checked = false);
+    }
+  });
+});
+</script>
+
+<style>
+.notification-form .form-label {
+  margin-bottom: 0.5rem;
+}
+
+.notification-form .form-control,
+.notification-form .form-select {
+  margin-bottom: 0.5rem;
+}
+
+.main-card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+#user_select {
+  max-height: 200px;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+</style>

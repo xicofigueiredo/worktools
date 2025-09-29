@@ -162,7 +162,7 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :notifications, only: [:index] do
+    resources :notifications, only: [:index, :new, :create] do
       member do
         patch :mark_as_read
         delete :destroy
