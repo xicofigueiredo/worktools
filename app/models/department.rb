@@ -9,4 +9,17 @@ class Department < ApplicationRecord
     sub_depts = sub_departments.flat_map(&:all_users)
     (users + sub_depts).uniq
   end
+
+  # Return this department id plus all descendant department ids
+  def subtree_ids
+    ids = []
+    stack = [self]
+    while stack.any?
+      d = stack.pop
+      next if d.nil? || ids.include?(d.id)
+      ids << d.id
+      stack.concat(d.sub_departments.to_a)
+    end
+    ids
+  end
 end

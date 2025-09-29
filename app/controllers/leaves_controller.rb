@@ -10,6 +10,7 @@ class LeavesController < ApplicationController
     @prev_month = @month.prev_month
 
     if current_user.managed_departments.present?
+      prepare_manager_entitlements if current_user&.managed_departments&.present?
       @pending_confirmations = current_user.confirmations.pending
 
       depts = current_user.managed_departments
@@ -407,5 +408,84 @@ class LeavesController < ApplicationController
 
   def staff_leave_params
     params.require(:staff_leave).permit(:leave_type, :start_date, :end_date, :exception_requested, :exception_reason, :notes, :exception_errors, :days_from_previous_year)
+  end
+
+  def prepare_manager_entitlements
+    year_now = Date.current.year
+    next_year = year_now + 1
+
+    # collect ids for all managed departments (including their sub-departments)
+    managed = current_user.managed_departments.to_a
+    managed_ids = managed.flat_map { |d| d.subtree_ids }.uniq
+
+    # list of departments to build filter dropdown (only those under manager)
+    @managed_departments = Department.where(id: managed_ids).order(:name)
+
+    # Optional server-side filter: only show users who belong to selected department subtree
+    if params[:department_id].present? && managed_ids.include?(params[:department_id].to_i)
+      selected_dept = Department.find(params[:department_id])
+      visible_dept_ids = selected_dept.subtree_ids
+    else
+      visible_dept_ids = managed_ids
+    end
+
+    # fetch users who belong to any of the visible departments
+    # preload departments to avoid N+1 when calling user.departments
+    @dept_users = User.joins(:users_departments)
+                      .where(users_departments: { department_id: visible_dept_ids })
+                      .includes(:departments)
+                      .distinct
+                      .order('users.full_name')
+
+    user_ids = @dept_users.map(&:id)
+    @rows = []
+    return if user_ids.empty?
+
+    entitlements_by_user = StaffLeaveEntitlement.where(user_id: user_ids, year: year_now).index_by(&:user_id)
+
+    # aggregated sums grouped by user_id
+    pending_current = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'pending')
+                                .where("extract(year from start_date) = ?", year_now)
+                                .group(:user_id).sum(:total_days)
+
+    booked_current  = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'approved')
+                                .where("extract(year from start_date) = ?", year_now)
+                                .group(:user_id).sum(:total_days)
+
+    pending_carry = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'pending')
+                              .where("extract(year from start_date) = ?", next_year)
+                              .group(:user_id).sum(:days_from_previous_year)
+
+    booked_carry  = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'approved')
+                              .where("extract(year from start_date) = ?", next_year)
+                              .group(:user_id).sum(:days_from_previous_year)
+
+    @rows = @dept_users.map do |u|
+      entitlement = entitlements_by_user[u.id]
+      holidays_left = entitlement&.holidays_left || 25
+
+      pc = pending_current[u.id] || 0
+      bc = booked_current[u.id]  || 0
+      pco = pending_carry[u.id]  || 0
+      bco = booked_carry[u.id]   || 0
+
+      pending_holiday = pc + pco
+      booked_holiday  = bc + bco
+      total_holidays  = holidays_left + booked_holiday + pending_holiday
+
+      primary_dept = u.departments.first # choose a "primary" department - change as appropriate
+
+      {
+        user: u,
+        departments: u.departments.to_a,      # already preloaded
+        primary_department: primary_dept,
+        holidays_left: holidays_left,
+        booked_holiday: booked_holiday,
+        pending_holiday: pending_holiday,
+        booked_carry_over: bco,
+        pending_carry_over: pco,
+        total_holidays: total_holidays
+      }
+    end
   end
 end

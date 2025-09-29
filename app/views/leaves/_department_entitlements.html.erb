@@ -1,0 +1,131 @@
+<% year_now = Date.current.year %>
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Department Entitlements — <%= year_now %></h5>
+
+    <div class="d-flex gap-2 align-items-center">
+      <label class="mb-0 me-2 small text-muted">Filter</label>
+
+      <!-- Client-side filter select -->
+      <select id="client-dept-filter" class="form-select form-select-sm">
+        <option value="all">All departments</option>
+        <% @managed_departments.to_a.each do |d| %>
+          <option value="<%= d.id %>"><%= d.name %></option>
+        <% end %>
+      </select>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <table class="table table-sm mb-0" id="dept-entitlements-table">
+      <thead class="table-light">
+        <tr>
+          <th>Department</th>
+          <th>Name</th>
+          <th>Total</th>
+          <th>Booked</th>
+          <th>Pending</th>
+          <th>Left</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% if @rows.blank? %>
+          <tr>
+            <td colspan="6" class="text-center text-muted py-3">No users found for the selected departments.</td>
+          </tr>
+        <% else %>
+          <%# Group rows by primary department name (fallback to first department or "—") %>
+          <% grouped = @rows.group_by do |r|
+               dept = (r[:primary_department] || r[:departments].first)
+               [dept&.id, dept&.name || "—"]
+             end %>
+
+          <% grouped.each do |(dept_id, dept_name), rows| %>
+            <% rows.each do |r| %>
+              <% primary_dept = (r[:primary_department] || r[:departments].first) %>
+              <tr data-dept-id="<%= primary_dept&.id %>">
+                <td><%= primary_dept&.name || '—' %></td>
+                <td>
+                  <%= "#{r[:user].full_name}" %>
+                </td>
+                <td><%= r[:total_holidays] %></td>
+                <td>
+                  <%= r[:booked_holiday] %>
+                  <% if r[:booked_carry_over].to_i > 0 %>
+                    <small class="text-muted">(includes <%= r[:booked_carry_over] %> from <%= year_now + 1 %>)</small>
+                  <% end %>
+                </td>
+                <td>
+                  <%= r[:pending_holiday] %>
+                  <% if r[:pending_carry_over].to_i > 0 %>
+                    <small class="text-muted">(includes <%= r[:pending_carry_over] %> from <%= year_now + 1 %>)</small>
+                  <% end %>
+                </td>
+                <td><%= r[:holidays_left] %></td>
+              </tr>
+            <% end %>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Inline client-side filter script -->
+<script>
+  document.addEventListener('turbo:load', function () {
+    var clientFilter = document.getElementById('client-dept-filter');
+    if (!clientFilter) return;
+
+    // restore saved selection (optional)
+    try {
+      var saved = localStorage.getItem('deptFilter');
+      if (saved) clientFilter.value = saved;
+    } catch (e) {
+      // ignore storage errors
+    }
+
+    function applyFilter(val) {
+      var allRows = document.querySelectorAll('#dept-entitlements-table tbody tr[data-dept-id]');
+      // show/hide user rows
+      allRows.forEach(function (row) {
+        // dataset.deptId is a string, val is string
+        if (val === 'all' || val === '' ) {
+          row.style.display = '';
+        } else {
+          row.style.display = (row.dataset.deptId === val) ? '' : 'none';
+        }
+      });
+
+      // hide/show department headers depending on whether any child rows are visible
+      var headers = document.querySelectorAll('#dept-entitlements-table tbody tr.dept-header');
+      headers.forEach(function (hdr) {
+        var group = hdr.dataset.deptGroup; // a dept id or 'none'
+        // find any user-row with matching data-dept-id that is visible
+        var hasVisible = false;
+        var childRows = document.querySelectorAll('#dept-entitlements-table tbody tr[data-dept-id="' + group + '"]');
+        if (childRows.length === 0) {
+          // no child rows (shouldn't usually happen) — decide whether to show header
+          hasVisible = (val === 'all' || val === '' || group === 'none');
+        } else {
+          childRows.forEach(function (r) {
+            if (r.style.display !== 'none') hasVisible = true;
+          });
+        }
+
+        hdr.style.display = hasVisible ? '' : 'none';
+      });
+    }
+
+    // initial apply
+    applyFilter(clientFilter.value);
+
+    clientFilter.addEventListener('change', function () {
+      var val = clientFilter.value;
+      try { localStorage.setItem('deptFilter', val); } catch (e) {}
+      applyFilter(val);
+    });
+  });
+</script>
