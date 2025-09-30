@@ -181,10 +181,10 @@ class MoodleTimeline < ApplicationRecord
       user_id = self.user.moodle_id
       course_id = self.moodle_id
 
-      if self.subject.board == "Portuguese Curriculum"
+      if self.subject.board == "Portuguese Curriculum" || self.subject.board == "UP"
         user_id = 2617
       end
-      
+
       completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
 
 
