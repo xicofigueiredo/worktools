@@ -254,6 +254,8 @@ class MoodleTimeline < ApplicationRecord
           as2: as2
         )
       end
+
+      moodle_generate_topic_deadlines(self)
     end
   end
 
