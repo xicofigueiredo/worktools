@@ -19,7 +19,7 @@ module Users
     def update
       # Preserve the reset password token for re-rendering the form on validation errors
       @reset_password_token = params[:user][:reset_password_token] if params[:user]
-      
+
       super do |resource|
         if resource.errors.empty?
           # Ensure that `changed_password` is set to true after a successful password reset
