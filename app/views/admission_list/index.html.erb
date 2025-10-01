@@ -1,0 +1,29 @@
+<h1>Admissions — Learner List</h1>
+
+<table style="width:100%; border-collapse:collapse;">
+  <thead>
+    <tr>
+      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Status</th>
+      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Student #</th>
+      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Learner Name</th>
+      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Curriculum</th>
+      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Grade / Year</th>
+      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @learner_infos.each do |row| %>
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.status.presence || '-' %></td>
+        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.student_number.present? ? row.student_number : '-' %></td>
+        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.full_name.presence || '-' %></td>
+        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.curriculum_course_option.presence || '-' %></td>
+        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.grade_year.presence || '-' %></td>
+        <td style="padding:8px; border-bottom:1px solid #f6f6f6;">
+          <%= link_to 'View', admission_path(row), class: 'btn' %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

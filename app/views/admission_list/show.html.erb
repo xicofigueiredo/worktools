@@ -1,0 +1,38 @@
+<h1>
+  <%= @learner_info.preferred_name.presence || @learner_info.full_name.presence || "Learner ##{@learner_info.id}" %>
+</h1>
+
+<p>
+  <strong>Email:</strong>
+  <%= @learner_info.institutional_email.presence || @learner_info.personal_email.presence || '-' %>
+</p>
+
+<table style="width:100%; border-collapse:collapse;">
+  <tbody>
+    <% @show_columns.each do |attr| %>
+      <tr>
+        <th style="text-align:left; padding:8px; width:240px; vertical-align: top; border-bottom:1px solid #eee;">
+          <%= attr.to_s.humanize %>
+        </th>
+        <td style="padding:8px; border-bottom:1px solid #fafafa;">
+          <% value = @learner_info.send(attr) %>
+          <% if value.is_a?(TrueClass) %>
+            Yes
+          <% elsif value.is_a?(FalseClass) %>
+            No
+          <% elsif value.is_a?(Date) || value.is_a?(Time) || value.is_a?(ActiveSupport::TimeWithZone) %>
+            <%= value.to_s %>
+          <% elsif value.nil? || (value.respond_to?(:empty?) && value.empty?) %>
+            -
+          <% else %>
+            <%= value %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<p style="margin-top:1rem;">
+  <%= link_to 'Back to list', admissions_path %>
+</p>

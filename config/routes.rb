@@ -68,6 +68,10 @@ Rails.application.routes.draw do
       resources :topics, except: [:show, :index]
     end
 
+    # Admissions list
+    get '/admissions',          to: 'admission_list#index', as: :admissions
+    get '/admissions/:id',      to: 'admission_list#show',  as: :admission
+
     resources :leaves, only: [:index, :new, :create, :show] do
       collection do
         post :preview
