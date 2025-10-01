@@ -101,7 +101,6 @@ class TimelinesController < ApplicationController
   def update
     @learner = @timeline.user
 
-    ## i want to add a method that if i add a topic on dbeaver, it will automatically add the user_topic to all the users after update timeline
     if @timeline.update(timeline_params)
 
       @timeline.save

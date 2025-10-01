@@ -19,6 +19,10 @@ class HolidaysController < ApplicationController
         moodle_generate_topic_deadlines(timeline)
         timeline.save
       end
+      current_user.timelines.where(hidden: false).each do |timeline|
+        generate_topic_deadlines(timeline)
+        timeline.save
+      end
       redirect_to moodle_timelines_path, notice: 'Holiday was successfully created.'
     else
       render :new, status: :unprocessable_entity
