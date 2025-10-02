@@ -19,7 +19,6 @@ namespace :timelines do
       begin
         puts "🔄 Processing Timeline ID #{timeline.id}..."
         generate_topic_deadlines(timeline)
-        timeline.save!
 
         # Find an appropriate exam date for this timeline's subject
         # Look for exam dates that are after the timeline's end date
