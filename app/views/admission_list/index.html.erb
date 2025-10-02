@@ -1,29 +1,81 @@
 <h1>Admissions — Learner List</h1>
 
-<table style="width:100%; border-collapse:collapse;">
-  <thead>
-    <tr>
-      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Status</th>
-      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Student #</th>
-      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Learner Name</th>
-      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Curriculum</th>
-      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Grade / Year</th>
-      <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Actions</th>
-    </tr>
-  </thead>
+<div style="padding: 0 24px;">
 
-  <tbody>
-    <% @learner_infos.each do |row| %>
-      <tr>
-        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.status.presence || '-' %></td>
-        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.student_number.present? ? row.student_number : '-' %></td>
-        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.full_name.presence || '-' %></td>
-        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.curriculum_course_option.presence || '-' %></td>
-        <td style="padding:8px; border-bottom:1px solid #f6f6f6;"><%= row.grade_year.presence || '-' %></td>
-        <td style="padding:8px; border-bottom:1px solid #f6f6f6;">
-          <%= link_to 'View', admission_path(row), class: 'btn' %>
-        </td>
-      </tr>
+  <div style="margin-bottom: 12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <%= form_with url: admissions_path, method: :get, local: true, html: { style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" } do |f| %>
+      <div>
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Status</label>
+        <%= select_tag :status,
+              options_for_select([['All', '']] + @statuses.map { |s| [s, s] }, params[:status]),
+              include_blank: false,
+              style: 'min-width:160px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+      </div>
+
+      <div>
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Programme</label>
+        <%= select_tag :programme,
+              options_for_select([['All', '']] + @programmes.map { |p| [p, p] }, params[:programme]),
+              include_blank: false,
+              style: 'min-width:220px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+      </div>
+
+      <div>
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Curriculum</label>
+        <%= select_tag :curriculum,
+              options_for_select([['All', '']] + @curricula.map { |c| [c, c] }, params[:curriculum]),
+              include_blank: false,
+              style: 'min-width:220px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+      </div>
+
+      <div>
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Grade / Year</label>
+        <%= select_tag :grade_year,
+              options_for_select([['All', '']] + @grades.map { |g| [g, g] }, params[:grade_year]),
+              include_blank: false,
+              style: 'min-width:140px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+      </div>
+
+      <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
+        <%= submit_tag "Filter", style: "padding:7px 12px; border-radius:6px; background:#007bff; color:white; border:none; cursor:pointer;" %>
+        <%= link_to "Clear", admissions_path, style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
+      </div>
     <% end %>
-  </tbody>
-</table>
+  </div>
+
+  <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: auto;">
+    <table style="width:100%; border-collapse:collapse; min-width:800px;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Status</th>
+          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Student Number</th>
+          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Learner Name</th>
+          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Programme</th>
+          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Curriculum</th>
+          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Grade / Year</th>
+          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% @learner_infos.each do |row| %>
+          <tr>
+            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.status.presence || '-' %></td>
+            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.student_number.present? ? row.student_number : '-' %></td>
+            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.full_name.presence || '-' %></td>
+            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.programme.presence || '-' %></td>
+            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.curriculum_course_option.presence || '-' %></td>
+            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.grade_year.presence || '-' %></td>
+            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
+              <%= link_to admission_path(row),
+                          title: "View #{row.full_name}",
+                          style: "display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; background:#0d6efd; color:white; text-decoration:none; border:none;" do %>
+                <i class="fa fa-eye" aria-hidden="true" style="font-size:14px;"></i>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

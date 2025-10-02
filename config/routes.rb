@@ -69,8 +69,13 @@ Rails.application.routes.draw do
     end
 
     # Admissions list
-    get '/admissions',          to: 'admission_list#index', as: :admissions
-    get '/admissions/:id',      to: 'admission_list#show',  as: :admission
+    resources :admissions, controller: 'admission_list', only: [:index, :show] do
+      member do
+        get 'documents', action: :documents
+        post 'documents', action: :create_document
+        delete 'documents/:document_id', action: :destroy_document, as: 'document'
+      end
+    end
 
     resources :leaves, only: [:index, :new, :create, :show] do
       collection do

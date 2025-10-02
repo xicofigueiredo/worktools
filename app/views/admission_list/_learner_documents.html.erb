@@ -1,0 +1,68 @@
+<h3 class="h5 mb-2">Required documents</h3>
+<p class="text-muted mb-3">Contract, Special Needs (optional), Last term report, Proof of Payment, Learner ID, Parent's ID, Medical Form</p>
+
+<div class="row gy-3">
+  <% LearnerDocument::DOCUMENT_TYPES.each do |doc_type| %>
+    <% human = doc_type.humanize.titleize %>
+    <% existing = @learner_info.learner_documents.find_by(document_type: doc_type) %>
+
+    <div class="col-12 col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-2"><%= human %>
+            <% if doc_type == 'special_needs' %>
+              <small class="text-muted">(optional)</small>
+            <% end %>
+          </h5>
+
+          <% if existing && existing.file.attached? %>
+            <p class="mb-2"><strong>File:</strong> <%= existing.display_name %></p>
+
+            <div class="d-flex gap-2 mb-2">
+              <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-primary' do %>
+                <i class="fa fa-download" aria-hidden="true"></i>&nbsp;Download
+              <% end %>
+
+              <% if existing.file.blob.content_type.start_with?('image/') %>
+                <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-outline-secondary' do %>
+                  <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;Preview
+                <% end %>
+              <% end %>
+
+              <%= button_to document_admission_path(@learner_info, existing.id),
+                            method: :delete,
+                            data: { confirm: "Delete #{human}?" },
+                            class: 'btn btn-sm btn-danger',
+                            form: { style: 'display:inline' } do %>
+                <i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Remove
+              <% end %>
+            </div>
+
+            <% if existing.description.present? %>
+              <p class="mb-0"><strong>Description:</strong> <%= existing.description %></p>
+            <% end %>
+
+          <% else %>
+            <%= form_with url: documents_admission_path(@learner_info), multipart: true, local: true do |f| %>
+              <%= hidden_field_tag 'learner_document[document_type]', doc_type %>
+
+              <div class="mb-2">
+                <label class="form-label small mb-1">Select file (PDF / JPG / PNG)</label>
+                <%= file_field_tag 'learner_document[file]', accept: 'application/pdf,image/*', required: true, class: 'form-control form-control-sm' %>
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label small mb-1">Description (optional)</label>
+                <%= text_field_tag 'learner_document[description]', nil, placeholder: 'Notes about the file', class: 'form-control form-control-sm' %>
+              </div>
+
+              <div>
+                <%= submit_tag "Upload #{human}", class: 'btn btn-sm btn-success' %>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
