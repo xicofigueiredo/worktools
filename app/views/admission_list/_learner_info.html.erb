@@ -1,42 +1,192 @@
-<div class="mb-3">
-  <h1 class="h4 mb-1"><%= @learner_info.preferred_name.presence || @learner_info.full_name.presence || "Learner ##{@learner_info.id}" %></h1>
-  <p class="mb-0 text-muted">
-    <strong>Email:</strong>
-    <%= @learner_info.institutional_email.presence || @learner_info.personal_email.presence || '-' %>
-  </p>
-  <p class="mb-0 text-muted">
-    <strong>Student #:</strong> <%= @learner_info.student_number.presence || '-' %>
-    &nbsp; • &nbsp;
-    <strong>Start Date:</strong> <%= @learner_info.start_date.present? ? @learner_info.start_date.to_s : '-' %>
-  </p>
+<% edit_mode = params[:edit] == '1' || @learner_info.errors.any? %>
+
+<% editable = %i[
+  programme preferred_name full_name curriculum_course_option grade_year start_date
+  transfer_of_programme_date end_date end_day_communication personal_email phone_number
+  id_information fiscal_number home_address gender use_of_image_authorisation
+  emergency_protocol_choice parent1_email parent1_phone_number parent1_id_information
+  parent2_email parent2_phone_number parent2_id_information parent2_info_not_to_be_contacted
+  deposit sponsor payment_plan discount_mt scholarship_percentage discount_af withdrawal_reason
+  preferred_name native_language
+] %>
+
+<% render_input = lambda do |f, attr, opts = {}|
+     label = opts[:label] || attr.to_s.humanize
+     type = opts[:type] || :text
+     col = opts[:col] || '12'
+     value = f ? f.object.send(attr) : @learner_info.send(attr)
+
+     if edit_mode && editable.include?(attr)
+       case type
+       when :text_area
+         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
+           concat f.label(attr, label)
+           concat f.text_area(attr, rows: opts[:rows] || 2, class: "form-control")
+         end)
+       when :select
+         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
+           concat f.label(attr, label)
+           concat f.select(attr, opts[:choices], { include_blank: opts[:include_blank] || false }, class: "form-select")
+         end)
+       when :checkbox
+         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
+           concat(content_tag(:label, class: "form-label d-block") do
+             concat f.check_box(attr, class: "form-check-input", checked: !!value)
+             concat " "
+             concat label
+           end)
+         end)
+       when :date
+         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
+           concat f.label(attr, label)
+           concat f.date_field(attr, class: "form-control")
+         end)
+       else
+         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
+           concat f.label(attr, label)
+           concat f.text_field(attr, class: "form-control")
+         end)
+       end
+     else
+       display_value =
+         case value
+         when TrueClass then "Yes"
+         when FalseClass then "No"
+         when Date, Time, ActiveSupport::TimeWithZone then value.to_s
+         else value.presence || "-"
+         end
+
+       concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
+         concat label_tag(nil, label, class: "form-label")
+         concat tag.input value: display_value, readonly: true, class: "form-control-plaintext"
+       end)
+     end
+end %>
+
+<div class="mb-3 d-flex justify-content-between align-items-start">
+  <div>
+    <h1 class="h4 mb-1"><%= @learner_info.preferred_name.presence || @learner_info.full_name.presence || "Learner ##{@learner_info.id}" %></h1>
+    <p class="mb-0 text-muted">
+      <strong>Email:</strong>
+      <%= @learner_info.institutional_email.presence || @learner_info.personal_email.presence || '-' %>
+    </p>
+    <p class="mb-0 text-muted">
+      <strong>Student #:</strong> <%= @learner_info.student_number.presence || '-' %>
+      &nbsp; • &nbsp;
+      <strong>Start Date:</strong> <%= @learner_info.start_date.present? ? @learner_info.start_date.to_s : '-' %>
+    </p>
+  </div>
+
+  <div class="text-end">
+    <% if edit_mode %>
+      <div class="d-flex gap-2">
+      </div>
+    <% else %>
+      <div class="d-flex gap-2">
+        <%= link_to 'Edit', admission_path(@learner_info, edit: '1'), class: 'btn btn-primary' %>
+        <%= link_to 'Back to list', admissions_path, class: 'btn btn-secondary' %>
+      </div>
+    <% end %>
+  </div>
 </div>
 
-<table class="table table-sm table-bordered">
-  <tbody>
-    <% @show_columns.each do |attr| %>
-      <tr>
-        <th style="width: 240px; vertical-align: top; background:#fafafa;">
-          <%= attr.to_s.humanize %>
-        </th>
-        <td>
-          <% value = @learner_info.send(attr) %>
-          <% if value.is_a?(TrueClass) %>
-            Yes
-          <% elsif value.is_a?(FalseClass) %>
-            No
-          <% elsif value.is_a?(Date) || value.is_a?(Time) || (defined?(ActiveSupport::TimeWithZone) && value.is_a?(ActiveSupport::TimeWithZone)) %>
-            <%= value.to_s %>
-          <% elsif value.nil? || (value.respond_to?(:empty?) && value.empty?) %>
-            <span class="text-muted">-</span>
-          <% else %>
-            <%= value %>
-          <% end %>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% if edit_mode %>
+  <%= form_with model: @learner_info, url: admission_path(@learner_info), method: :patch, local: true, html: { id: 'learner-info-form' } do |f| %>
+    <div class="mb-3 d-flex justify-content-end gap-2">
+      <%= f.submit "Save changes", class: "btn btn-primary" %>
+      <%= link_to 'Cancel', admission_path(@learner_info), class: 'btn btn-secondary' %>
+    </div>
 
-<p class="mt-3">
-  <%= link_to 'Back to list', admissions_path, class: 'btn btn-secondary' %>
-</p>
+    <div class="row gx-3">
+      <% render_input.call(f, :programme, type: :select, choices: [
+           "In-person (with Hub access): Secondary Education (Grades 6 to 12)",
+           "In-person (with Hub access): UP Programme (Higher Education)",
+           "Online Only (no Hub access): Secondary Education (Grades 6 to 12)",
+           "Online Only (no Hub access): UP Programme (Higher Education)",
+           "BAS Programme (Academy of Sports)",
+           "In-person (with Hub access): Own Curriculum",
+           "UPx Programme (Higher Education)"
+         ], col: '6') %>
+
+      <% render_input.call(f, :preferred_name, col: '6') %>
+      <% render_input.call(f, :full_name, col: '6') %>
+      <% render_input.call(f, :curriculum_course_option, col: '6') %>
+      <% render_input.call(f, :grade_year, col: '6') %>
+
+      <% render_input.call(f, :start_date, type: :date, col: '4') %>
+      <% render_input.call(f, :transfer_of_programme_date, type: :date, col: '4') %>
+      <% render_input.call(f, :end_date, type: :date, col: '4') %>
+
+      <% render_input.call(f, :end_day_communication, col: '4') %>
+      <% render_input.call(f, :personal_email, col: '4') %>
+      <% render_input.call(f, :phone_number, col: '4') %>
+
+      <% render_input.call(f, :id_information, col: '4') %>
+      <% render_input.call(f, :fiscal_number, col: '4') %>
+
+      <% render_input.call(f, :home_address, type: :text_area, rows: 2, col: '8') %>
+      <% render_input.call(f, :gender, col: '4') %>
+
+      <% render_input.call(f, :use_of_image_authorisation, type: :checkbox, col: '6') %>
+      <% render_input.call(f, :emergency_protocol_choice, type: :checkbox, col: '6') %>
+
+      <% render_input.call(f, :parent1_email, col: '6') %>
+      <% render_input.call(f, :parent1_phone_number, col: '6') %>
+      <% render_input.call(f, :parent1_id_information, col: '6') %>
+
+      <% render_input.call(f, :parent2_email, col: '6') %>
+      <% render_input.call(f, :parent2_phone_number, col: '6') %>
+      <% render_input.call(f, :parent2_id_information, col: '6') %>
+
+      <% render_input.call(f, :parent2_info_not_to_be_contacted, type: :text_area, rows: 2, col: '12') %>
+
+      <% render_input.call(f, :deposit, col: '4') %>
+      <% render_input.call(f, :sponsor, col: '4') %>
+      <% render_input.call(f, :payment_plan, col: '4') %>
+
+      <% render_input.call(f, :discount_mt, col: '4') %>
+      <% render_input.call(f, :scholarship_percentage, col: '4') %>
+      <% render_input.call(f, :discount_af, col: '4') %>
+
+      <% render_input.call(f, :withdrawal_reason, type: :text_area, rows: 2, col: '12') %>
+
+      <% render_input.call(f, :native_language, col: '4') %>
+    </div>
+  <% end %>
+
+<% else %>
+  <div class="row gx-3">
+    <% render_input.call(nil, :programme, type: :select, col: '6') %>
+    <% render_input.call(nil, :preferred_name, col: '6') %>
+    <% render_input.call(nil, :full_name, col: '6') %>
+    <% render_input.call(nil, :curriculum_course_option, col: '6') %>
+    <% render_input.call(nil, :grade_year, col: '6') %>
+    <% render_input.call(nil, :start_date, type: :date, col: '4') %>
+    <% render_input.call(nil, :transfer_of_programme_date, type: :date, col: '4') %>
+    <% render_input.call(nil, :end_date, type: :date, col: '4') %>
+    <% render_input.call(nil, :end_day_communication, col: '4') %>
+    <% render_input.call(nil, :personal_email, col: '4') %>
+    <% render_input.call(nil, :phone_number, col: '4') %>
+    <% render_input.call(nil, :id_information, col: '4') %>
+    <% render_input.call(nil, :fiscal_number, col: '4') %>
+    <% render_input.call(nil, :home_address, type: :text_area, rows: 2, col: '8') %>
+    <% render_input.call(nil, :gender, col: '4') %>
+    <% render_input.call(nil, :use_of_image_authorisation, type: :checkbox, col: '6') %>
+    <% render_input.call(nil, :emergency_protocol_choice, type: :checkbox, col: '6') %>
+    <% render_input.call(nil, :parent1_email, col: '6') %>
+    <% render_input.call(nil, :parent1_phone_number, col: '6') %>
+    <% render_input.call(nil, :parent1_id_information, col: '6') %>
+    <% render_input.call(nil, :parent2_email, col: '6') %>
+    <% render_input.call(nil, :parent2_phone_number, col: '6') %>
+    <% render_input.call(nil, :parent2_id_information, col: '6') %>
+    <% render_input.call(nil, :parent2_info_not_to_be_contacted, type: :text_area, rows: 2, col: '12') %>
+    <% render_input.call(nil, :deposit, col: '4') %>
+    <% render_input.call(nil, :sponsor, col: '4') %>
+    <% render_input.call(nil, :payment_plan, col: '4') %>
+    <% render_input.call(nil, :discount_mt, col: '4') %>
+    <% render_input.call(nil, :scholarship_percentage, col: '4') %>
+    <% render_input.call(nil, :discount_af, col: '4') %>
+    <% render_input.call(nil, :withdrawal_reason, type: :text_area, rows: 2, col: '12') %>
+    <% render_input.call(nil, :native_language, col: '4') %>
+  </div>
+<% end %>

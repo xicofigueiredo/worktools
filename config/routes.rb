@@ -69,7 +69,7 @@ Rails.application.routes.draw do
     end
 
     # Admissions list
-    resources :admissions, controller: 'admission_list', only: [:index, :show] do
+    resources :admissions, controller: 'admission_list', only: [:index, :show, :update] do
       member do
         get 'documents', action: :documents
         post 'documents', action: :create_document

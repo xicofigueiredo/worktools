@@ -1,6 +1,6 @@
 class AdmissionListController < ApplicationController
   # TODO: Add permissions
-  before_action :set_learner_info, only: [:show, :documents, :create_document, :destroy_document]
+  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document]
 
   def index
     @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
@@ -24,6 +24,17 @@ class AdmissionListController < ApplicationController
     @learner_info = LearnerInfo.includes(:user).find(params[:id])
     excluded = %w[id user_id created_at updated_at]
     @show_columns = LearnerInfo.column_names - excluded
+  end
+
+  def update
+    if @learner_info.update(learner_info_params)
+      flash[:notice] = "Learner updated successfully."
+      redirect_to admission_path(@learner_info)
+    else
+      flash.now[:alert] = "There were errors updating the learner: " + @learner_info.errors.full_messages.to_sentence
+      @show_attributes = LearnerInfo.column_names - %w[id user_id created_at updated_at]
+      render :show, status: :unprocessable_entity
+    end
   end
 
   def documents
@@ -83,5 +94,43 @@ class AdmissionListController < ApplicationController
 
   def set_learner_info
     @learner_info = LearnerInfo.find(params[:id])
+  end
+
+  def learner_info_params
+    params.require(:learner_info).permit(
+      :programme,
+      :full_name,
+      :curriculum_course_option,
+      :grade_year,
+      :start_date,
+      :transfer_of_programme_date,
+      :end_date,
+      :end_day_communication,
+      :personal_email,
+      :phone_number,
+      :id_information,
+      :fiscal_number,
+      :home_address,
+      :gender,
+      :use_of_image_authorisation,
+      :emergency_protocol_choice,
+      :parent1_email,
+      :parent1_phone_number,
+      :parent1_id_information,
+      :parent2_email,
+      :parent2_phone_number,
+      :parent2_id_information,
+      :parent2_info_not_to_be_contacted,
+      :deposit,
+      :sponsor,
+      :payment_plan,
+      :discount_mt,
+      :scholarship_percentage,
+      :discount_af,
+      :withdrawal_reason,
+      :personal_email,
+      :preferred_name,
+      :native_language
+    )
   end
 end
