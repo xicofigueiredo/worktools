@@ -1,6 +1,7 @@
 require './app/controllers/concerns/working_days_and_holidays'
 require './app/controllers/concerns/generate_topic_deadlines'
 # lib/tasks/simulate_update.rake
+include GenerateTopicDeadlines
 
 namespace :timelines do
   desc "Update timelines that have exam season nil"
