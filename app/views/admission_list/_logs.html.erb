@@ -1,0 +1,38 @@
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Activity Log</strong>
+    <small class="text-muted"><%= pluralize(@learner_info.learner_info_logs.count, 'entry') %></small>
+  </div>
+  <div class="card-body">
+    <% logs = @learner_info.learner_info_logs.order(created_at: :desc).limit(200) %>
+    <% if logs.any? %>
+      <% logs.each do |log| %>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between">
+            <div>
+              <strong><%= log.summary %></strong>
+              <% if log.note.present? %>
+                <div class="text-muted"><%= simple_format(log.note) %></div>
+              <% end %>
+            </div>
+            <div class="text-end text-muted">
+              <div><%= log.created_at.strftime("%d-%m-%Y %H:%M") %></div>
+              <div><%= log.user&.full_name || log.user&.email || 'System' %></div>
+            </div>
+          </div>
+
+          <% if log.changed_fields.present? %>
+            <div class="mt-2"><strong>Fields changed:</strong> <%= log.changed_fields.join(', ') %></div>
+          <% end %>
+
+          <% if log.changed_data.present? %>
+            <pre style="background:#f8f9fa;padding:8px;border-radius:6px;margin-top:8px;"><%= JSON.pretty_generate(log.changed_data) rescue log.changed_data.inspect %></pre>
+          <% end %>
+        </div>
+        <hr />
+      <% end %>
+    <% else %>
+      <p class="text-muted">No activity logged yet.</p>
+    <% end %>
+  </div>
+</div>

@@ -1,58 +1,188 @@
+<%# app/views/admission_list/_learner_info.html.erb %>
+<%# Learner info partial with sections: Basic / Contact / Parents / Financial / School / Administrative %>
+<%# - Unified layout; edit mode enables only permitted fields (editable array) %>
+
+<style>
+  /* Keep section cards as-is (no changes) */
+  .li-section {
+    border: 1px solid #000;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 18px;
+    background: #fff;
+  }
+  .li-section h4 { margin-top: 0; margin-bottom: 12px; font-weight: 600; }
+
+  /* Editable controls: subtle darker background to indicate they can be edited */
+  .editable-input,
+  .editable-input:enabled {
+    background-color: #f3f8ff; /* subtle pale blue — tweak to taste */
+    border-color: #cfe4ff;
+    color: #111;
+  }
+
+  /* Keep disabled/locked controls easy to read and visually distinct */
+  input[disabled].form-control,
+  textarea[disabled].form-control,
+  select[disabled].form-select {
+    background-color: #ffffff; /* keep white for locked (or use #f8f9fa if you prefer slight gray) */
+    border-color: #e0e0e0;
+    color: #444;
+    opacity: 1;
+  }
+
+  /* Date inputs and selects inherit the class; ensure consistent padding */
+  input.form-control, textarea.form-control, select.form-select, input[type="date"].form-control {
+    border-radius: 4px;
+    padding: .375rem .5rem;
+  }
+
+  /* Plaintext view styling (unchanged) */
+  .form-control-plaintext {
+    background: transparent;
+    color: #212529;
+    padding-top: .375rem;
+    padding-bottom: .375rem;
+  }
+</style>
+
+
 <% edit_mode = params[:edit] == '1' || @learner_info.errors.any? %>
 
+<%# Keep this in sync with controller strong params (only these will be allowed to be updated) %>
 <% editable = %i[
   programme preferred_name full_name curriculum_course_option grade_year start_date
   transfer_of_programme_date end_date end_day_communication personal_email phone_number
   id_information fiscal_number home_address gender use_of_image_authorisation
   emergency_protocol_choice parent1_email parent1_phone_number parent1_id_information
   parent2_email parent2_phone_number parent2_id_information parent2_info_not_to_be_contacted
-  deposit sponsor payment_plan discount_mt scholarship_percentage discount_af withdrawal_reason
-  preferred_name native_language
+  deposit sponsor payment_plan discount_mt scholarship_percentage admission_fee discount_af
+  preferred_name native_language monthly_tuition billable_fee_per_month
 ] %>
 
+<%# Field presentation hints: type, grid column, rows, choices for selects %>
+<% field_opts = {
+  programme: { type: :select, col: '6', choices: [
+    "In-person (with Hub access): Secondary Education (Grades 6 to 12)",
+    "In-person (with Hub access): UP Programme (Higher Education)",
+    "Online Only (no Hub access): Secondary Education (Grades 6 to 12)",
+    "Online Only (no Hub access): UP Programme (Higher Education)",
+    "BAS Programme (Academy of Sports)",
+    "In-person (with Hub access): Own Curriculum",
+    "UPx Programme (Higher Education)"
+  ]},
+  preferred_name: { col: '6' },
+  full_name: { col: '6' },
+  student_number: { col: '6' },
+  curriculum_course_option: { col: '6' },
+  grade_year: { col: '6' },
+  start_date: { type: :date, col: '4' },
+  birthdate: { type: :date, col: '4' },
+  transfer_of_programme_date: { type: :date, col: '4' },
+  end_date: { type: :date, col: '4' },
+  end_day_communication: { col: '4' },
+
+  personal_email: { col: '6' },
+  institutional_email: { col: '6' },
+  phone_number: { col: '6' },
+  home_address: { type: :text_area, rows: 2, col: '12' },
+  nationality: { col: '6' },
+  gender: { col: '6' },
+  native_language: { col: '6' },
+
+  parent1_full_name: { col: '6' },
+  parent1_email: { col: '6' },
+  parent1_phone_number: { col: '6' },
+  parent1_id_information: { col: '6' },
+
+  parent2_full_name: { col: '6' },
+  parent2_email: { col: '6' },
+  parent2_phone_number: { col: '6' },
+  parent2_id_information: { col: '6' },
+  parent2_info_not_to_be_contacted: { type: :text_area, rows: 2, col: '12' },
+
+  deposit: { col: '4' },
+  sponsor: { col: '4' },
+  payment_plan: { col: '4' },
+  monthly_tuition: { col: '4' },
+  discount_mt: { col: '4' },
+  scholarship: { col: '4' },
+  scholarship_percentage: { col: '4' },
+  admission_fee: { col: '4' },
+  discount_af: { col: '4' },
+  billable_fee_per_month: { col: '4' },
+  billable_af: { col: '4' },
+
+  registering_school_pt_plus: { col: '6' },
+  previous_schooling: { col: '6' },
+  previous_school_status: { col: '6' },
+  previous_school_name: { col: '6' },
+  previous_school_email: { col: '6' },
+
+  id_information: { col: '6' },
+  fiscal_number: { col: '6' },
+  use_of_image_authorisation: { type: :checkbox, col: '6' },
+  emergency_protocol_choice: { type: :checkbox, col: '6' },
+
+  withdrawal_category: { col: '6' },
+  withdrawal_reason: { type: :text_area, rows: 2, col: '12' }
+} %>
+
+<%# Central renderer: in edit_mode renders form control (disabled if not in editable),
+     in view mode renders plaintext (dates formatted dd-mm-yyyy) %>
 <% render_input = lambda do |f, attr, opts = {}|
      label = opts[:label] || attr.to_s.humanize
-     type = opts[:type] || :text
-     col = opts[:col] || '12'
+     type  = opts[:type]  || :text
+     col   = opts[:col]   || '12'
+
      value = f ? f.object.send(attr) : @learner_info.send(attr)
 
-     if edit_mode && editable.include?(attr)
+     if edit_mode && f
+       disabled_flag = !editable.include?(attr)
+       input_classes = "form-control"
+       input_classes += " editable-input" unless disabled_flag
+
        case type
        when :text_area
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
            concat f.label(attr, label)
-           concat f.text_area(attr, rows: opts[:rows] || 2, class: "form-control")
+           concat f.text_area(attr, rows: opts[:rows] || 2, class: input_classes, disabled: disabled_flag)
          end)
        when :select
+         choices = opts[:choices] || []
+         select_classes = disabled_flag ? "form-select" : "form-select editable-input"
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
            concat f.label(attr, label)
-           concat f.select(attr, opts[:choices], { include_blank: opts[:include_blank] || false }, class: "form-select")
+           concat f.select(attr, choices, { include_blank: opts[:include_blank] || false }, class: select_classes, disabled: disabled_flag)
          end)
        when :checkbox
+         # checkbox visuals don't change background well; keep standard but still disabled when locked
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
-           concat(content_tag(:label, class: "form-label d-block") do
-             concat f.check_box(attr, class: "form-check-input", checked: !!value)
+           concat(content_tag(:label, class: "form-check") do
+             concat f.check_box(attr, disabled: disabled_flag, class: "form-check-input")
              concat " "
-             concat label
+             concat content_tag(:span, label, class: "form-check-label")
            end)
          end)
        when :date
+         date_classes = disabled_flag ? "form-control" : "form-control editable-input"
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
            concat f.label(attr, label)
-           concat f.date_field(attr, class: "form-control")
+           concat f.date_field(attr, class: date_classes, disabled: disabled_flag)
          end)
        else
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
            concat f.label(attr, label)
-           concat f.text_field(attr, class: "form-control")
+           concat f.text_field(attr, class: input_classes, disabled: disabled_flag)
          end)
        end
+
      else
        display_value =
          case value
          when TrueClass then "Yes"
          when FalseClass then "No"
-         when Date, Time, ActiveSupport::TimeWithZone then value.to_s
+         when Date, Time, ActiveSupport::TimeWithZone then (value.present? ? value.strftime("%d-%m-%Y") : "-")
          else value.presence || "-"
          end
 
@@ -63,31 +193,16 @@
      end
 end %>
 
-<div class="mb-3 d-flex justify-content-between align-items-start">
-  <div>
-    <h1 class="h4 mb-1"><%= @learner_info.preferred_name.presence || @learner_info.full_name.presence || "Learner ##{@learner_info.id}" %></h1>
-    <p class="mb-0 text-muted">
-      <strong>Email:</strong>
-      <%= @learner_info.institutional_email.presence || @learner_info.personal_email.presence || '-' %>
-    </p>
-    <p class="mb-0 text-muted">
-      <strong>Student #:</strong> <%= @learner_info.student_number.presence || '-' %>
-      &nbsp; • &nbsp;
-      <strong>Start Date:</strong> <%= @learner_info.start_date.present? ? @learner_info.start_date.to_s : '-' %>
-    </p>
-  </div>
-
-  <div class="text-end">
-    <% if edit_mode %>
-      <div class="d-flex gap-2">
-      </div>
-    <% else %>
-      <div class="d-flex gap-2">
-        <%= link_to 'Edit', admission_path(@learner_info, edit: '1'), class: 'btn btn-primary' %>
-        <%= link_to 'Back to list', admissions_path, class: 'btn btn-secondary' %>
-      </div>
-    <% end %>
-  </div>
+<%# Top buttons area: Edit/Back when viewing; Save/Cancel appear inside the form in edit mode %>
+<div class="mb-3 d-flex justify-content-end align-items-start">
+  <% if edit_mode %>
+    <%# Nothing here - save/cancel will render inside the form %>
+  <% else %>
+    <div class="d-flex gap-2">
+      <%= link_to 'Edit', admission_path(@learner_info, edit: '1'), class: 'btn btn-primary' %>
+      <%= link_to 'Back to list', admissions_path, class: 'btn btn-secondary' %>
+    </div>
+  <% end %>
 </div>
 
 <% if edit_mode %>
@@ -97,96 +212,183 @@ end %>
       <%= link_to 'Cancel', admission_path(@learner_info), class: 'btn btn-secondary' %>
     </div>
 
-    <div class="row gx-3">
-      <% render_input.call(f, :programme, type: :select, choices: [
-           "In-person (with Hub access): Secondary Education (Grades 6 to 12)",
-           "In-person (with Hub access): UP Programme (Higher Education)",
-           "Online Only (no Hub access): Secondary Education (Grades 6 to 12)",
-           "Online Only (no Hub access): UP Programme (Higher Education)",
-           "BAS Programme (Academy of Sports)",
-           "In-person (with Hub access): Own Curriculum",
-           "UPx Programme (Higher Education)"
-         ], col: '6') %>
-
-      <% render_input.call(f, :preferred_name, col: '6') %>
-      <% render_input.call(f, :full_name, col: '6') %>
-      <% render_input.call(f, :curriculum_course_option, col: '6') %>
-      <% render_input.call(f, :grade_year, col: '6') %>
-
-      <% render_input.call(f, :start_date, type: :date, col: '4') %>
-      <% render_input.call(f, :transfer_of_programme_date, type: :date, col: '4') %>
-      <% render_input.call(f, :end_date, type: :date, col: '4') %>
-
-      <% render_input.call(f, :end_day_communication, col: '4') %>
-      <% render_input.call(f, :personal_email, col: '4') %>
-      <% render_input.call(f, :phone_number, col: '4') %>
-
-      <% render_input.call(f, :id_information, col: '4') %>
-      <% render_input.call(f, :fiscal_number, col: '4') %>
-
-      <% render_input.call(f, :home_address, type: :text_area, rows: 2, col: '8') %>
-      <% render_input.call(f, :gender, col: '4') %>
-
-      <% render_input.call(f, :use_of_image_authorisation, type: :checkbox, col: '6') %>
-      <% render_input.call(f, :emergency_protocol_choice, type: :checkbox, col: '6') %>
-
-      <% render_input.call(f, :parent1_email, col: '6') %>
-      <% render_input.call(f, :parent1_phone_number, col: '6') %>
-      <% render_input.call(f, :parent1_id_information, col: '6') %>
-
-      <% render_input.call(f, :parent2_email, col: '6') %>
-      <% render_input.call(f, :parent2_phone_number, col: '6') %>
-      <% render_input.call(f, :parent2_id_information, col: '6') %>
-
-      <% render_input.call(f, :parent2_info_not_to_be_contacted, type: :text_area, rows: 2, col: '12') %>
-
-      <% render_input.call(f, :deposit, col: '4') %>
-      <% render_input.call(f, :sponsor, col: '4') %>
-      <% render_input.call(f, :payment_plan, col: '4') %>
-
-      <% render_input.call(f, :discount_mt, col: '4') %>
-      <% render_input.call(f, :scholarship_percentage, col: '4') %>
-      <% render_input.call(f, :discount_af, col: '4') %>
-
-      <% render_input.call(f, :withdrawal_reason, type: :text_area, rows: 2, col: '12') %>
-
-      <% render_input.call(f, :native_language, col: '4') %>
+    <div class="li-section li-grid">
+      <h4>Basic information</h4>
+      <div class="row gx-3">
+        <%# Placed name, student number, start date, birthdate here per request %>
+        <% render_input.call(f, :full_name, field_opts[:full_name] || { col: '6' }) %>
+        <% render_input.call(f, :preferred_name, field_opts[:preferred_name] || { col: '6' }) %>
+        <% render_input.call(f, :student_number, field_opts[:student_number] || { col: '6' }) %>
+        <% render_input.call(f, :start_date, field_opts[:start_date] || { type: :date, col: '6' }) %>
+        <% render_input.call(f, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }) %>
+        <% render_input.call(f, :programme, field_opts[:programme] || { col: '6' }) %>
+        <% render_input.call(f, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }) %>
+        <% render_input.call(f, :grade_year, field_opts[:grade_year] || { col: '6' }) %>
+        <% render_input.call(f, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '6' }) %>
+        <% render_input.call(f, :end_date, field_opts[:end_date] || { type: :date, col: '6' }) %>
+        <% render_input.call(f, :end_day_communication, field_opts[:end_day_communication] || { col: '6' }) %>
+      </div>
     </div>
+
+    <div class="li-section li-grid">
+      <h4>Contact information</h4>
+      <div class="row gx-3">
+        <% render_input.call(f, :personal_email, field_opts[:personal_email] || { col: '6' }) %>
+        <% render_input.call(f, :institutional_email, field_opts[:institutional_email] || { col: '6' }) %>
+        <% render_input.call(f, :phone_number, field_opts[:phone_number] || { col: '6' }) %>
+        <% render_input.call(f, :home_address, field_opts[:home_address] || { type: :text_area, rows: 2, col: '12' }) %>
+        <% render_input.call(f, :nationality, field_opts[:nationality] || { col: '6' }) %>
+        <% render_input.call(f, :gender, field_opts[:gender] || { col: '6' }) %>
+        <% render_input.call(f, :native_language, field_opts[:native_language] || { col: '6' }) %>
+      </div>
+    </div>
+
+    <div class="li-section li-grid">
+      <h4>Parents / Guardians</h4>
+      <div class="row gx-3">
+        <% render_input.call(f, :parent1_full_name, field_opts[:parent1_full_name] || { col: '6' }) %>
+        <% render_input.call(f, :parent1_email, field_opts[:parent1_email] || { col: '6' }) %>
+        <% render_input.call(f, :parent1_phone_number, field_opts[:parent1_phone_number] || { col: '6' }) %>
+        <% render_input.call(f, :parent1_id_information, field_opts[:parent1_id_information] || { col: '6' }) %>
+
+        <% render_input.call(f, :parent2_full_name, field_opts[:parent2_full_name] || { col: '6' }) %>
+        <% render_input.call(f, :parent2_email, field_opts[:parent2_email] || { col: '6' }) %>
+        <% render_input.call(f, :parent2_phone_number, field_opts[:parent2_phone_number] || { col: '6' }) %>
+        <% render_input.call(f, :parent2_id_information, field_opts[:parent2_id_information] || { col: '6' }) %>
+
+        <% render_input.call(f, :parent2_info_not_to_be_contacted, field_opts[:parent2_info_not_to_be_contacted] || { type: :text_area, rows: 2, col: '12' }) %>
+      </div>
+    </div>
+
+    <div class="li-section li-grid">
+      <h4>Financial / Payments</h4>
+      <div class="row gx-3">
+        <% render_input.call(f, :deposit, field_opts[:deposit] || { col: '4' }) %>
+        <% render_input.call(f, :sponsor, field_opts[:sponsor] || { col: '4' }) %>
+        <% render_input.call(f, :payment_plan, field_opts[:payment_plan] || { col: '4' }) %>
+        <% render_input.call(f, :monthly_tuition, field_opts[:monthly_tuition] || { col: '4' }) %>
+        <% render_input.call(f, :discount_mt, field_opts[:discount_mt] || { col: '4' }) %>
+        <% render_input.call(f, :scholarship, field_opts[:scholarship] || { col: '4' }) %>
+        <% render_input.call(f, :scholarship_percentage, field_opts[:scholarship_percentage] || { col: '4' }) %>
+        <% render_input.call(f, :admission_fee, field_opts[:admission_fee] || { col: '4' }) %>
+        <% render_input.call(f, :discount_af, field_opts[:discount_af] || { col: '4' }) %>
+        <% render_input.call(f, :billable_fee_per_month, field_opts[:billable_fee_per_month] || { col: '4' }) %>
+        <% render_input.call(f, :billable_af, field_opts[:billable_af] || { col: '4' }) %>
+      </div>
+    </div>
+
+    <div class="li-section li-grid">
+      <h4>School / Previous education</h4>
+      <div class="row gx-3">
+        <% render_input.call(f, :registering_school_pt_plus, field_opts[:registering_school_pt_plus] || { col: '6' }) %>
+        <% render_input.call(f, :previous_schooling, field_opts[:previous_schooling] || { col: '6' }) %>
+        <% render_input.call(f, :previous_school_status, field_opts[:previous_school_status] || { col: '6' }) %>
+        <% render_input.call(f, :previous_school_name, field_opts[:previous_school_name] || { col: '6' }) %>
+        <% render_input.call(f, :previous_school_email, field_opts[:previous_school_email] || { col: '6' }) %>
+      </div>
+    </div>
+
+    <div class="li-section li-grid">
+      <h4>Administrative</h4>
+      <div class="row gx-3">
+        <% render_input.call(f, :id_information, field_opts[:id_information] || { col: '6' }) %>
+        <% render_input.call(f, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }) %>
+        <% render_input.call(f, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }) %>
+        <% render_input.call(f, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { type: :checkbox, col: '6' }) %>
+        <% render_input.call(f, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }) %>
+        <% render_input.call(f, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }) %>
+      </div>
+    </div>
+
   <% end %>
 
 <% else %>
-  <div class="row gx-3">
-    <% render_input.call(nil, :programme, type: :select, col: '6') %>
-    <% render_input.call(nil, :preferred_name, col: '6') %>
-    <% render_input.call(nil, :full_name, col: '6') %>
-    <% render_input.call(nil, :curriculum_course_option, col: '6') %>
-    <% render_input.call(nil, :grade_year, col: '6') %>
-    <% render_input.call(nil, :start_date, type: :date, col: '4') %>
-    <% render_input.call(nil, :transfer_of_programme_date, type: :date, col: '4') %>
-    <% render_input.call(nil, :end_date, type: :date, col: '4') %>
-    <% render_input.call(nil, :end_day_communication, col: '4') %>
-    <% render_input.call(nil, :personal_email, col: '4') %>
-    <% render_input.call(nil, :phone_number, col: '4') %>
-    <% render_input.call(nil, :id_information, col: '4') %>
-    <% render_input.call(nil, :fiscal_number, col: '4') %>
-    <% render_input.call(nil, :home_address, type: :text_area, rows: 2, col: '8') %>
-    <% render_input.call(nil, :gender, col: '4') %>
-    <% render_input.call(nil, :use_of_image_authorisation, type: :checkbox, col: '6') %>
-    <% render_input.call(nil, :emergency_protocol_choice, type: :checkbox, col: '6') %>
-    <% render_input.call(nil, :parent1_email, col: '6') %>
-    <% render_input.call(nil, :parent1_phone_number, col: '6') %>
-    <% render_input.call(nil, :parent1_id_information, col: '6') %>
-    <% render_input.call(nil, :parent2_email, col: '6') %>
-    <% render_input.call(nil, :parent2_phone_number, col: '6') %>
-    <% render_input.call(nil, :parent2_id_information, col: '6') %>
-    <% render_input.call(nil, :parent2_info_not_to_be_contacted, type: :text_area, rows: 2, col: '12') %>
-    <% render_input.call(nil, :deposit, col: '4') %>
-    <% render_input.call(nil, :sponsor, col: '4') %>
-    <% render_input.call(nil, :payment_plan, col: '4') %>
-    <% render_input.call(nil, :discount_mt, col: '4') %>
-    <% render_input.call(nil, :scholarship_percentage, col: '4') %>
-    <% render_input.call(nil, :discount_af, col: '4') %>
-    <% render_input.call(nil, :withdrawal_reason, type: :text_area, rows: 2, col: '12') %>
-    <% render_input.call(nil, :native_language, col: '4') %>
+  <%# VIEW MODE: same sections, read-only %>
+
+  <div class="li-section li-grid">
+    <h4>Basic information</h4>
+    <div class="row gx-3">
+      <% render_input.call(nil, :full_name, field_opts[:full_name] || { col: '6' }) %>
+      <% render_input.call(nil, :preferred_name, field_opts[:preferred_name] || { col: '6' }) %>
+      <% render_input.call(nil, :student_number, field_opts[:student_number] || { col: '6' }) %>
+      <% render_input.call(nil, :start_date, field_opts[:start_date] || { type: :date, col: '6' }) %>
+      <% render_input.call(nil, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }) %>
+      <% render_input.call(nil, :programme, field_opts[:programme] || { col: '6' }) %>
+      <% render_input.call(nil, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }) %>
+      <% render_input.call(nil, :grade_year, field_opts[:grade_year] || { col: '6' }) %>
+      <% render_input.call(nil, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '6' }) %>
+      <% render_input.call(nil, :end_date, field_opts[:end_date] || { type: :date, col: '6' }) %>
+      <% render_input.call(nil, :end_day_communication, field_opts[:end_day_communication] || { col: '6' }) %>
+    </div>
+  </div>
+
+  <div class="li-section li-grid">
+    <h4>Contact information</h4>
+    <div class="row gx-3">
+      <% render_input.call(nil, :personal_email, field_opts[:personal_email] || { col: '6' }) %>
+      <% render_input.call(nil, :institutional_email, field_opts[:institutional_email] || { col: '6' }) %>
+      <% render_input.call(nil, :phone_number, field_opts[:phone_number] || { col: '6' }) %>
+      <% render_input.call(nil, :home_address, field_opts[:home_address] || { type: :text_area, rows: 2, col: '12' }) %>
+      <% render_input.call(nil, :nationality, field_opts[:nationality] || { col: '6' }) %>
+      <% render_input.call(nil, :gender, field_opts[:gender] || { col: '6' }) %>
+      <% render_input.call(nil, :native_language, field_opts[:native_language] || { col: '6' }) %>
+    </div>
+  </div>
+
+  <div class="li-section li-grid">
+    <h4>Parents / Guardians</h4>
+    <div class="row gx-3">
+      <% render_input.call(nil, :parent1_full_name, field_opts[:parent1_full_name] || { col: '6' }) %>
+      <% render_input.call(nil, :parent1_email, field_opts[:parent1_email] || { col: '6' }) %>
+      <% render_input.call(nil, :parent1_phone_number, field_opts[:parent1_phone_number] || { col: '6' }) %>
+      <% render_input.call(nil, :parent1_id_information, field_opts[:parent1_id_information] || { col: '6' }) %>
+
+      <% render_input.call(nil, :parent2_full_name, field_opts[:parent2_full_name] || { col: '6' }) %>
+      <% render_input.call(nil, :parent2_email, field_opts[:parent2_email] || { col: '6' }) %>
+      <% render_input.call(nil, :parent2_phone_number, field_opts[:parent2_phone_number] || { col: '6' }) %>
+      <% render_input.call(nil, :parent2_id_information, field_opts[:parent2_id_information] || { col: '6' }) %>
+
+      <% render_input.call(nil, :parent2_info_not_to_be_contacted, field_opts[:parent2_info_not_to_be_contacted] || { type: :text_area, rows: 2, col: '12' }) %>
+    </div>
+  </div>
+
+  <div class="li-section li-grid">
+    <h4>Financial / Payments</h4>
+    <div class="row gx-3">
+      <% render_input.call(nil, :deposit, field_opts[:deposit] || { col: '4' }) %>
+      <% render_input.call(nil, :sponsor, field_opts[:sponsor] || { col: '4' }) %>
+      <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '4' }) %>
+      <% render_input.call(nil, :monthly_tuition, field_opts[:monthly_tuition] || { col: '4' }) %>
+      <% render_input.call(nil, :discount_mt, field_opts[:discount_mt] || { col: '4' }) %>
+      <% render_input.call(nil, :scholarship, field_opts[:scholarship] || { col: '4' }) %>
+      <% render_input.call(nil, :scholarship_percentage, field_opts[:scholarship_percentage] || { col: '4' }) %>
+      <% render_input.call(nil, :admission_fee, field_opts[:admission_fee] || { col: '4' }) %>
+      <% render_input.call(nil, :discount_af, field_opts[:discount_af] || { col: '4' }) %>
+      <% render_input.call(nil, :billable_fee_per_month, field_opts[:billable_fee_per_month] || { col: '4' }) %>
+      <% render_input.call(nil, :billable_af, field_opts[:billable_af] || { col: '4' }) %>
+    </div>
+  </div>
+
+  <div class="li-section li-grid">
+    <h4>School / Previous education</h4>
+    <div class="row gx-3">
+      <% render_input.call(nil, :registering_school_pt_plus, field_opts[:registering_school_pt_plus] || { col: '6' }) %>
+      <% render_input.call(nil, :previous_schooling, field_opts[:previous_schooling] || { col: '6' }) %>
+      <% render_input.call(nil, :previous_school_status, field_opts[:previous_school_status] || { col: '6' }) %>
+      <% render_input.call(nil, :previous_school_name, field_opts[:previous_school_name] || { col: '6' }) %>
+      <% render_input.call(nil, :previous_school_email, field_opts[:previous_school_email] || { col: '6' }) %>
+    </div>
+  </div>
+
+  <div class="li-section li-grid">
+    <h4>Administrative</h4>
+    <div class="row gx-3">
+      <% render_input.call(nil, :id_information, field_opts[:id_information] || { col: '6' }) %>
+      <% render_input.call(nil, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }) %>
+      <% render_input.call(nil, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }) %>
+      <% render_input.call(nil, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { type: :checkbox, col: '6' }) %>
+      <% render_input.call(nil, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }) %>
+      <% render_input.call(nil, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }) %>
+    </div>
   </div>
 <% end %>

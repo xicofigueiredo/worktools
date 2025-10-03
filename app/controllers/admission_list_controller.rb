@@ -1,19 +1,17 @@
 class AdmissionListController < ApplicationController
   # TODO: Add permissions
-  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document]
+  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document, :download_document]
 
   def index
     @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
     @curricula = LearnerInfo.distinct.pluck(:curriculum_course_option).compact.sort
     @grades    = LearnerInfo.distinct.pluck(:grade_year).compact.sort
-    @programmes = LearnerInfo.distinct.pluck(:programme).compact.sort
 
-    scope = LearnerInfo.select(:id, :status, :student_number, :full_name, :curriculum_course_option, :grade_year, :programme)
+    scope = LearnerInfo.select(:id, :full_name, :curriculum_course_option, :grade_year)
 
     scope = scope.where(status: params[:status]) if params[:status].present?
     scope = scope.where(curriculum_course_option: params[:curriculum]) if params[:curriculum].present?
     scope = scope.where(grade_year: params[:grade_year]) if params[:grade_year].present?
-    scope = scope.where(programme: params[:programme]) if params[:programme].present?
 
     scope = scope.order(Arel.sql("COALESCE(student_number, 99999999), id"))
 
@@ -28,6 +26,13 @@ class AdmissionListController < ApplicationController
 
   def update
     if @learner_info.update(learner_info_params)
+      # log the change (pass current_user)
+      begin
+        @learner_info.log_update(current_user, @learner_info.saved_changes)
+      rescue => e
+        Rails.logger.error "Failed to create learner_info log: #{e.class}: #{e.message}"
+      end
+
       flash[:notice] = "Learner updated successfully."
       redirect_to admission_path(@learner_info)
     else
@@ -74,20 +79,61 @@ class AdmissionListController < ApplicationController
     end
 
     if saved
+      # create a log entry for the upload (include filename if present)
+      begin
+        @learner_info.learner_info_logs.create!(
+          user: current_user,
+          action: 'document_upload',
+          changed_fields: [],
+          changed_data: {
+            'document_type' => @document.document_type,
+            'filename' => (@document.file.attached? ? @document.file.filename.to_s : nil),
+            'blob_id' => (@document.file.attached? ? @document.file.blob.id : nil)
+          },
+          note: "Uploaded #{ @document.document_type }"
+        )
+      rescue => e
+        Rails.logger.error "Failed to log document upload: #{e.class}: #{e.message}"
+      end
+
       flash[:notice] = "#{@document.human_type} uploaded."
     else
       flash[:alert] = @document.errors.full_messages.to_sentence
     end
 
-    redirect_to admission_path(@learner_info)
+    redirect_to admission_path(@learner_info, active_tab: 'documents')
   end
 
   def destroy_document
     @document = @learner_info.learner_documents.find(params[:document_id])
-    @document.file.purge if @document.file.attached?
+
+    # capture info for log before destroying/purging
+    filename = @document.file.attached? ? @document.file.filename.to_s : nil
+    doc_type = @document.document_type
+
+    if @document.file.attached?
+      @document.file.purge
+    end
     @document.destroy
-    flash[:notice] = "#{@document.human_type} removed."
-    redirect_to admission_path(@learner_info)
+
+    # log deletion
+    begin
+      @learner_info.learner_info_logs.create!(
+        user: current_user,
+        action: 'document_delete',
+        changed_fields: [],
+        changed_data: {
+          'document_type' => doc_type,
+          'filename' => filename
+        },
+        note: "Removed #{doc_type}"
+      )
+    rescue => e
+      Rails.logger.error "Failed to log document deletion: #{e.class}: #{e.message}"
+    end
+
+    flash[:notice] = "#{doc_type.humanize} removed."
+    redirect_to admission_path(@learner_info, active_tab: 'documents')
   end
 
   private

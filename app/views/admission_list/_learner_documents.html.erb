@@ -16,7 +16,7 @@
           </h5>
 
           <% if existing && existing.file.attached? %>
-            <p class="mb-2"><strong>File:</strong> <%= existing.display_name %></p>
+            <p class="mb-2"><strong>File:</strong> <%= existing.file_name %></p>
 
             <div class="d-flex gap-2 mb-2">
               <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-primary' do %>

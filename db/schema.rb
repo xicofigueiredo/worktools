@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_01_162824) do
+ActiveRecord::Schema[7.0].define(version: 2025_10_03_144537) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -459,6 +459,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_01_162824) do
     t.datetime "updated_at", null: false
     t.boolean "life_experiences", default: false
     t.index ["user_id"], name: "index_learner_flags_on_user_id"
+  end
+
+  create_table "learner_info_logs", force: :cascade do |t|
+    t.bigint "learner_info_id", null: false
+    t.bigint "user_id"
+    t.string "action", null: false
+    t.string "changed_fields", default: [], array: true
+    t.jsonb "changed_data", default: {}
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_learner_info_logs_on_created_at"
+    t.index ["learner_info_id"], name: "index_learner_info_logs_on_learner_info_id"
+    t.index ["user_id"], name: "index_learner_info_logs_on_user_id"
   end
 
   create_table "learner_infos", force: :cascade do |t|

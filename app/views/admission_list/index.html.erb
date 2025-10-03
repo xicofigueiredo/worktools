@@ -13,14 +13,6 @@
       </div>
 
       <div>
-        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Programme</label>
-        <%= select_tag :programme,
-              options_for_select([['All', '']] + @programmes.map { |p| [p, p] }, params[:programme]),
-              include_blank: false,
-              style: 'min-width:220px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
-      </div>
-
-      <div>
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Curriculum</label>
         <%= select_tag :curriculum,
               options_for_select([['All', '']] + @curricula.map { |c| [c, c] }, params[:curriculum]),
@@ -47,10 +39,7 @@
     <table style="width:100%; border-collapse:collapse; min-width:800px;">
       <thead>
         <tr>
-          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Status</th>
-          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Student Number</th>
           <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Learner Name</th>
-          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Programme</th>
           <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Curriculum</th>
           <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Grade / Year</th>
           <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Actions</th>
@@ -60,10 +49,7 @@
       <tbody>
         <% @learner_infos.each do |row| %>
           <tr>
-            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.status.presence || '-' %></td>
-            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.student_number.present? ? row.student_number : '-' %></td>
             <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.full_name.presence || '-' %></td>
-            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.programme.presence || '-' %></td>
             <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.curriculum_course_option.presence || '-' %></td>
             <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.grade_year.presence || '-' %></td>
             <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
