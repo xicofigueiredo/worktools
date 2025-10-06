@@ -16,7 +16,7 @@ class LearnerDocument < ApplicationRecord
   validate :file_attached
 
   def human_type
-    document_type.humanize.titleize
+    document_type.tr('_', ' ').titleize.gsub(/\bId\b/, 'ID')
   end
 
   private

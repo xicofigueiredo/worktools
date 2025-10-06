@@ -90,7 +90,7 @@ class AdmissionListController < ApplicationController
             'filename' => (@document.file.attached? ? @document.file.filename.to_s : nil),
             'blob_id' => (@document.file.attached? ? @document.file.blob.id : nil)
           },
-          note: "Uploaded #{ @document.document_type }"
+          note: "Uploaded #{ @document.human_type }"
         )
       rescue => e
         Rails.logger.error "Failed to log document upload: #{e.class}: #{e.message}"
@@ -126,7 +126,7 @@ class AdmissionListController < ApplicationController
           'document_type' => doc_type,
           'filename' => filename
         },
-        note: "Removed #{doc_type}"
+        note: "Removed #{@document.human_type}"
       )
     rescue => e
       Rails.logger.error "Failed to log document deletion: #{e.class}: #{e.message}"
