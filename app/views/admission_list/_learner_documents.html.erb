@@ -4,7 +4,7 @@
 <div class="row gy-3">
   <% LearnerDocument::DOCUMENT_TYPES.each do |doc_type| %>
     <% human = doc_type.tr('_', ' ').titleize.gsub(/\bId\b/, 'ID') %>
-    <% existing = @learner_info.learner_documents.find_by(document_type: doc_type) %>
+    <% existing_docs = @learner_info.learner_documents.where(document_type: doc_type) %>
 
     <div class="col-12 col-md-6">
       <div class="card h-100">
@@ -15,51 +15,58 @@
             <% end %>
           </h5>
 
-          <% if existing && existing.file.attached? %>
-            <p class="mb-2"><strong>File:</strong> <%= existing.file_name %></p>
+          <% if existing_docs.any? %>
+            <h6 class="small mb-2">Existing Files (<%= existing_docs.size %>)</h6>
+            <% existing_docs.each do |existing| %>
+              <div class="mb-3 border-bottom pb-2">
+                <p class="mb-1"><strong>File:</strong> <%= existing.file.filename %></p>
 
-            <div class="d-flex gap-2 mb-2">
-              <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-primary' do %>
-                <i class="fa fa-download" aria-hidden="true"></i>&nbsp;Download
-              <% end %>
+                <div class="d-flex gap-2 mb-1">
+                  <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-primary' do %>
+                    <i class="fa fa-download" aria-hidden="true"></i>&nbsp;Download
+                  <% end %>
 
-              <% if existing.file.blob.content_type.start_with?('image/') %>
-                <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-outline-secondary' do %>
-                  <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;Preview
+                  <% if existing.file.blob.content_type.start_with?('image/') %>
+                    <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-outline-secondary' do %>
+                      <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;Preview
+                    <% end %>
+                  <% end %>
+
+                  <%= button_to document_admission_path(@learner_info, existing.id),
+                                method: :delete,
+                                data: { confirm: "Delete this #{human} file?" },
+                                class: 'btn btn-sm btn-danger',
+                                form: { style: 'display:inline' } do %>
+                    <i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Remove
+                  <% end %>
+                </div>
+
+                <% if existing.description.present? %>
+                  <p class="mb-0 small"><strong>Description:</strong> <%= existing.description %></p>
                 <% end %>
-              <% end %>
+              </div>
+            <% end %>
+          <% else %>
+            <p class="text-muted mb-2">No files uploaded yet.</p>
+          <% end %>
 
-              <%= button_to document_admission_path(@learner_info, existing.id),
-                            method: :delete,
-                            data: { confirm: "Delete #{human}?" },
-                            class: 'btn btn-sm btn-danger',
-                            form: { style: 'display:inline' } do %>
-                <i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Remove
-              <% end %>
+          <h6 class="small mb-2">Add File(s)</h6>
+          <%= form_with url: documents_admission_path(@learner_info), multipart: true, local: true do |f| %>
+            <%= hidden_field_tag 'learner_document[document_type]', doc_type %>
+
+            <div class="mb-2">
+              <label class="form-label small mb-1">Select file(s) (PDF / JPG / PNG) - multiple allowed</label>
+              <%= file_field_tag 'learner_document[file][]', accept: 'application/pdf,image/*', multiple: true, class: 'form-control form-control-sm' %>
             </div>
 
-            <% if existing.description.present? %>
-              <p class="mb-0"><strong>Description:</strong> <%= existing.description %></p>
-            <% end %>
+            <div class="mb-2">
+              <label class="form-label small mb-1">Description (optional, applies to all selected files)</label>
+              <%= text_field_tag 'learner_document[description]', nil, placeholder: 'Notes about the file(s)', class: 'form-control form-control-sm' %>
+            </div>
 
-          <% else %>
-            <%= form_with url: documents_admission_path(@learner_info), multipart: true, local: true do |f| %>
-              <%= hidden_field_tag 'learner_document[document_type]', doc_type %>
-
-              <div class="mb-2">
-                <label class="form-label small mb-1">Select file (PDF / JPG / PNG)</label>
-                <%= file_field_tag 'learner_document[file]', accept: 'application/pdf,image/*', required: true, class: 'form-control form-control-sm' %>
-              </div>
-
-              <div class="mb-2">
-                <label class="form-label small mb-1">Description (optional)</label>
-                <%= text_field_tag 'learner_document[description]', nil, placeholder: 'Notes about the file', class: 'form-control form-control-sm' %>
-              </div>
-
-              <div>
-                <%= submit_tag "Upload #{human}", class: 'btn btn-sm btn-success' %>
-              </div>
-            <% end %>
+            <div>
+              <%= submit_tag "Upload to #{human}", class: 'btn btn-sm btn-success' %>
+            </div>
           <% end %>
         </div>
       </div>

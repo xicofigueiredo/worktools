@@ -51,72 +51,69 @@ class AdmissionListController < ApplicationController
   end
 
   def create_document
-    permitted = params.require(:learner_document).permit(:document_type, :description, :file)
+    permitted = params.require(:learner_document).permit(:document_type, :description, file: [])
 
     unless LearnerDocument::DOCUMENT_TYPES.include?(permitted[:document_type])
       flash[:alert] = "Invalid document type"
       return redirect_to admission_path(@learner_info)
     end
 
-    # keep one document per type: replace if exists
-    existing = @learner_info.learner_documents.find_by(document_type: permitted[:document_type])
+    files = Array.wrap(permitted[:file]).compact
+    if files.blank?
+      flash[:alert] = "No file selected"
+      return redirect_to admission_path(@learner_info, active_tab: 'documents')
+    end
 
-    if existing
-      if permitted[:file].present?
-        existing.file.purge if existing.file.attached?
-        existing.file.attach(permitted[:file])
-      end
-      existing.description = permitted[:description] if permitted.key?(:description)
-      saved = existing.save
-      @document = existing
-    else
-      @document = @learner_info.learner_documents.build(
+    saved_docs = []
+    files.each do |file|
+      document = @learner_info.learner_documents.build(
         document_type: permitted[:document_type],
         description: permitted[:description]
       )
-      @document.file.attach(permitted[:file]) if permitted[:file].present?
-      saved = @document.save
-    end
-
-    if saved
-      # create a log entry for the upload (include filename if present)
-      begin
-        @learner_info.learner_info_logs.create!(
-          user: current_user,
-          action: 'document_upload',
-          changed_fields: [],
-          changed_data: {
-            'document_type' => @document.document_type,
-            'filename' => (@document.file.attached? ? @document.file.filename.to_s : nil),
-            'blob_id' => (@document.file.attached? ? @document.file.blob.id : nil)
-          },
-          note: "Uploaded #{ @document.human_type }"
-        )
-      rescue => e
-        Rails.logger.error "Failed to log document upload: #{e.class}: #{e.message}"
+      document.file.attach(file)
+      if document.save
+        saved_docs << document
+      else
+        flash[:alert] = document.errors.full_messages.to_sentence
+        return redirect_to admission_path(@learner_info, active_tab: 'documents')
       end
-
-      flash[:notice] = "#{@document.human_type} uploaded."
-    else
-      flash[:alert] = @document.errors.full_messages.to_sentence
     end
 
+    # Log the upload(s)
+    begin
+      changed_data = saved_docs.map do |doc|
+        {
+          'document_type' => doc.document_type,
+          'filename' => doc.file.filename.to_s,
+          'blob_id' => doc.file.blob.id
+        }
+      end
+      @learner_info.learner_info_logs.create!(
+        user: current_user,
+        action: 'document_upload',
+        changed_fields: [],
+        changed_data: changed_data,
+        note: "Uploaded #{saved_docs.size} file(s) for #{saved_docs.first.human_type}"
+      )
+    rescue => e
+      Rails.logger.error "Failed to log document upload: #{e.class}: #{e.message}"
+    end
+
+    flash[:notice] = "#{saved_docs.first.human_type} uploaded (#{saved_docs.size} file(s))."
     redirect_to admission_path(@learner_info, active_tab: 'documents')
   end
 
   def destroy_document
     @document = @learner_info.learner_documents.find(params[:document_id])
 
-    # capture info for log before destroying/purging
     filename = @document.file.attached? ? @document.file.filename.to_s : nil
     doc_type = @document.document_type
+    human_type = @document.human_type
 
-    if @document.file.attached?
-      @document.file.purge
-    end
+    @document.file.purge if @document.file.attached?
     @document.destroy
 
-    # log deletion
+    # Log deletion
     begin
       @learner_info.learner_info_logs.create!(
         user: current_user,
@@ -126,13 +123,13 @@ class AdmissionListController < ApplicationController
           'document_type' => doc_type,
           'filename' => filename
         },
-        note: "Removed #{@document.human_type}"
+        note: "Removed #{human_type}"
       )
     rescue => e
       Rails.logger.error "Failed to log document deletion: #{e.class}: #{e.message}"
     end
 
-    flash[:notice] = "#{doc_type.humanize} removed."
+    flash[:notice] = "#{human_type} removed."
     redirect_to admission_path(@learner_info, active_tab: 'documents')
   end
 

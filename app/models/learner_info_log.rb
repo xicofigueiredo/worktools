@@ -13,7 +13,15 @@ class LearnerInfoLog < ApplicationRecord
         "Updated"
       end
     when 'document_upload'
-      "Document uploaded: #{changed_data['filename'] || changed_data['document_type']}"
+      if changed_data.is_a?(Array) && changed_data.present?
+        filenames = changed_data.map { |d| d['filename'] }.compact.join(', ')
+        doc_type = changed_data.first['document_type']
+        "Uploaded #{changed_data.size} document(s) for #{doc_type}: #{filenames}"
+      elsif changed_data.is_a?(Hash)
+        "Document uploaded: #{changed_data['filename'] || changed_data['document_type']}"
+      else
+        "Document uploaded"
+      end
     when 'document_delete'
       "Document removed: #{changed_data['filename'] || changed_data['document_type']}"
     else
