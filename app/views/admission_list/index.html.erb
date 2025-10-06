@@ -17,11 +17,14 @@
               data: { admission_search_target: "searchInput", action: "input->admission-search#submit" },
               style: 'min-width:220px; padding:6px 30px 6px 6px; border-radius:6px; border:1px solid #ccc;' %>
 
-        <% if params[:search].present? %>
-          <button type="button"
-                  data-action="click->admission-search#clearSearch"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">✕</button>
-        <% end %>
+        <!-- always render the clear button, Stimulus will toggle it -->
+        <button type="button"
+                data-action="click->admission-search#clearSearch"
+                data-admission-search-target="searchClear"
+                aria-label="Clear search"
+                style="position: absolute; right: 8px; top: 30px; background: none; border: none; cursor: pointer; color: #888; font-size: 16px;">
+          ✕
+        </button>
       </div>
 
       <div style="position: relative;">
@@ -32,11 +35,13 @@
               data: { admission_search_target: "statusSelect", action: "change->admission-search#submit" },
               style: 'min-width:160px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
 
-        <% if params[:status].present? %>
-          <button type="button"
-                  data-action="click->admission-search#clearStatus"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">✕</button>
-        <% end %>
+        <button type="button"
+                data-action="click->admission-search#clearStatus"
+                data-admission-search-target="statusClear"
+                aria-label="Clear status"
+                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
+          ✕
+        </button>
       </div>
 
       <div style="position: relative;">
@@ -47,11 +52,13 @@
               data: { admission_search_target: "curriculumSelect", action: "change->admission-search#submit" },
               style: 'min-width:220px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
 
-        <% if params[:curriculum].present? %>
-          <button type="button"
-                  data-action="click->admission-search#clearCurriculum"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">✕</button>
-        <% end %>
+        <button type="button"
+                data-action="click->admission-search#clearCurriculum"
+                data-admission-search-target="curriculumClear"
+                aria-label="Clear curriculum"
+                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
+          ✕
+        </button>
       </div>
 
       <div style="position: relative;">
@@ -62,11 +69,13 @@
               data: { admission_search_target: "gradeSelect", action: "change->admission-search#submit" },
               style: 'min-width:140px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
 
-        <% if params[:grade_year].present? %>
-          <button type="button"
-                  data-action="click->admission-search#clearGrade"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">✕</button>
-        <% end %>
+        <button type="button"
+                data-action="click->admission-search#clearGrade"
+                data-admission-search-target="gradeClear"
+                aria-label="Clear grade"
+                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
+          ✕
+        </button>
       </div>
 
       <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
