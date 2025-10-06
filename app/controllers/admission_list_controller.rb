@@ -9,6 +9,16 @@ class AdmissionListController < ApplicationController
 
     scope = LearnerInfo.select(:id, :full_name, :curriculum_course_option, :grade_year)
 
+    if params[:search].present?
+      search_term = "%#{params[:search].strip}%"
+      scope = scope.where(
+        "full_name ILIKE :search OR personal_email ILIKE :search OR institutional_email ILIKE :search OR " +
+        "parent1_full_name ILIKE :search OR parent1_email ILIKE :search OR " +
+        "parent2_full_name ILIKE :search OR parent2_email ILIKE :search",
+        search: search_term
+      )
+    end
+
     scope = scope.where(status: params[:status]) if params[:status].present?
     scope = scope.where(curriculum_course_option: params[:curriculum]) if params[:curriculum].present?
     scope = scope.where(grade_year: params[:grade_year]) if params[:grade_year].present?

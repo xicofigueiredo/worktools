@@ -3,65 +3,113 @@
 <div style="padding: 0 24px;">
 
   <div style="margin-bottom: 12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-    <%= form_with url: admissions_path, method: :get, local: true, html: { style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" } do |f| %>
-      <div>
+    <%= form_with url: admissions_path,
+                  method: :get,
+                  local: true,
+                  data: { controller: "admission-search", turbo_frame: "learner_infos" },
+                  html: { style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" } do |f| %>
+
+      <div style="position: relative;">
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Search</label>
+        <%= f.text_field :search,
+              value: params[:search],
+              placeholder: "Search learner/parent name or email...",
+              data: { admission_search_target: "searchInput", action: "input->admission-search#submit" },
+              style: 'min-width:220px; padding:6px 30px 6px 6px; border-radius:6px; border:1px solid #ccc;' %>
+
+        <% if params[:search].present? %>
+          <button type="button"
+                  data-action="click->admission-search#clearSearch"
+                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">✕</button>
+        <% end %>
+      </div>
+
+      <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Status</label>
         <%= select_tag :status,
               options_for_select([['All', '']] + @statuses.map { |s| [s, s] }, params[:status]),
               include_blank: false,
+              data: { admission_search_target: "statusSelect", action: "change->admission-search#submit" },
               style: 'min-width:160px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+
+        <% if params[:status].present? %>
+          <button type="button"
+                  data-action="click->admission-search#clearStatus"
+                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">✕</button>
+        <% end %>
       </div>
 
-      <div>
+      <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Curriculum</label>
         <%= select_tag :curriculum,
               options_for_select([['All', '']] + @curricula.map { |c| [c, c] }, params[:curriculum]),
               include_blank: false,
+              data: { admission_search_target: "curriculumSelect", action: "change->admission-search#submit" },
               style: 'min-width:220px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+
+        <% if params[:curriculum].present? %>
+          <button type="button"
+                  data-action="click->admission-search#clearCurriculum"
+                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">✕</button>
+        <% end %>
       </div>
 
-      <div>
+      <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Grade / Year</label>
         <%= select_tag :grade_year,
               options_for_select([['All', '']] + @grades.map { |g| [g, g] }, params[:grade_year]),
               include_blank: false,
+              data: { admission_search_target: "gradeSelect", action: "change->admission-search#submit" },
               style: 'min-width:140px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+
+        <% if params[:grade_year].present? %>
+          <button type="button"
+                  data-action="click->admission-search#clearGrade"
+                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">✕</button>
+        <% end %>
       </div>
 
       <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
-        <%= submit_tag "Filter", style: "padding:7px 12px; border-radius:6px; background:#007bff; color:white; border:none; cursor:pointer;" %>
-        <%= link_to "Clear", admissions_path, style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
+        <%= link_to "Clear All", admissions_path, style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
       </div>
     <% end %>
   </div>
 
   <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: auto;">
-    <table style="width:100%; border-collapse:collapse; min-width:800px;">
-      <thead>
-        <tr>
-          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Learner Name</th>
-          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Curriculum</th>
-          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Grade / Year</th>
-          <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <% @learner_infos.each do |row| %>
+    <%= turbo_frame_tag "learner_infos" do %>
+      <table style="width:100%; border-collapse:collapse; min-width:800px;">
+        <thead>
           <tr>
-            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.full_name.presence || '-' %></td>
-            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.curriculum_course_option.presence || '-' %></td>
-            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.grade_year.presence || '-' %></td>
-            <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
-              <%= link_to admission_path(row),
-                          title: "View #{row.full_name}",
-                          style: "display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; background:#0d6efd; color:white; text-decoration:none; border:none;" do %>
-                <i class="fa fa-eye" aria-hidden="true" style="font-size:14px;"></i>
-              <% end %>
-            </td>
+            <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Learner Name</th>
+            <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Curriculum</th>
+            <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Grade / Year</th>
+            <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Actions</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+
+        <tbody>
+          <% if @learner_infos.any? %>
+            <% @learner_infos.each do |row| %>
+              <tr>
+                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.full_name.presence || '-' %></td>
+                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.curriculum_course_option.presence || '-' %></td>
+                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.grade_year.presence || '-' %></td>
+                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
+                  <%= link_to admission_path(row),
+                              title: "View #{row.full_name}",
+                              style: "display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; background:#0d6efd; color:white; text-decoration:none; border:none;" do %>
+                    <i class="fa fa-eye" aria-hidden="true" style="font-size:14px;"></i>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="4" style="padding:16px; text-align:center; color:#888;">No learners found matching your search.</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
   </div>
 </div>
