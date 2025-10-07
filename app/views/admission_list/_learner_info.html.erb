@@ -70,8 +70,9 @@
   phone_number: { col: '6' },
   home_address: { type: :text_area, rows: 2, col: '12' },
   nationality: { col: '6' },
-  gender: { col: '6' },
+  gender: { type: :select, col: '6', choices: ['Male', 'Female', 'Other'] },
   native_language: { col: '6' },
+  english_proficiency: { type: :toggle, col: '6' },
 
   parent1_full_name: { col: '6' },
   parent1_email: { col: '6' },
@@ -97,7 +98,12 @@
   billable_af: { col: '4' },
 
   registering_school_pt_plus: { col: '6' },
-  previous_schooling: { col: '6' },
+  previous_schooling: { type: :select, col: '6', choices: [
+    "Abroad",
+    "National Private",
+    "National Public",
+    "Homeschooled",
+  ]},
   previous_school_status: { col: '6' },
   previous_school_name: { col: '6' },
   previous_school_email: { col: '6' },
@@ -146,6 +152,16 @@
              concat content_tag(:span, label, class: "form-check-label")
            end)
          end)
+       when :toggle
+        # Label on top like other inputs, switch below (simple)
+        concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
+          # label (same placement as text inputs)
+          concat content_tag(:label, label, class: "toggle-label-top")
+          # switch control (bootstrap form-switch). disabled when not editable.
+          concat(content_tag(:div, class: "mt-1 form-check form-switch") do
+            concat f.check_box(attr, disabled: disabled_flag, class: "form-check-input", id: "switch_#{attr}")
+          end)
+        end)
        when :date
          date_classes = disabled_flag ? "form-control" : "form-control editable-input"
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
@@ -222,6 +238,7 @@ end %>
         <% render_input.call(f, :nationality, field_opts[:nationality] || { col: '6' }) %>
         <% render_input.call(f, :gender, field_opts[:gender] || { col: '6' }) %>
         <% render_input.call(f, :native_language, field_opts[:native_language] || { col: '6' }) %>
+        <% render_input.call(f, :english_proficiency, field_opts[:english_proficiency] || { type: :toggle, col: '6' }) %>
       </div>
     </div>
 
@@ -312,6 +329,7 @@ end %>
       <% render_input.call(nil, :nationality, field_opts[:nationality] || { col: '6' }) %>
       <% render_input.call(nil, :gender, field_opts[:gender] || { col: '6' }) %>
       <% render_input.call(nil, :native_language, field_opts[:native_language] || { col: '6' }) %>
+      <% render_input.call(nil, :english_proficiency, field_opts[:english_proficiency] || { type: :toggle, col: '6' }) %>
     </div>
   </div>
 
