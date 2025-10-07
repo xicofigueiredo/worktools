@@ -1,3 +1,5 @@
+<% perm = @permission || LearnerInfoPermission.new(current_user, @learner_info) %>
+
 <div class="card mb-3">
   <div class="card-header d-flex justify-content-between align-items-center">
     <strong>Activity Log</strong>
@@ -7,6 +9,9 @@
     <% logs = @learner_info.learner_info_logs.order(created_at: :desc).limit(200) %>
     <% if logs.any? %>
       <% logs.each do |log| %>
+        <% log_perm = LearnerInfoLogPermission.new(current_user, log) %>
+        <% next unless log_perm.show? %>
+
         <div class="mb-3">
           <div class="d-flex justify-content-between">
             <div>
@@ -26,7 +31,11 @@
           <% end %>
 
           <% if log.changed_data.present? %>
-            <pre style="background:#f8f9fa;padding:8px;border-radius:6px;margin-top:8px;"><%= JSON.pretty_generate(log.changed_data) rescue log.changed_data.inspect %></pre>
+            <% if log_perm.view_changed_data? %>
+              <pre style="background:#f8f9fa;padding:8px;border-radius:6px;margin-top:8px;"><%= JSON.pretty_generate(log.changed_data) rescue log.changed_data.inspect %></pre>
+            <% else %>
+              <div class="text-muted small">Some changes were made (not visible to you).</div>
+            <% end %>
           <% end %>
         </div>
         <hr />

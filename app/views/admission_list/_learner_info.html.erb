@@ -1,9 +1,4 @@
-<%# app/views/admission_list/_learner_info.html.erb %>
-<%# Learner info partial with sections: Basic / Contact / Parents / Financial / School / Administrative %>
-<%# - Unified layout; edit mode enables only permitted fields (editable array) %>
-
 <style>
-  /* Keep section cards as-is (no changes) */
   .li-section {
     border: 1px solid #000;
     border-radius: 12px;
@@ -13,31 +8,27 @@
   }
   .li-section h4 { margin-top: 0; margin-bottom: 12px; font-weight: 600; }
 
-  /* Editable controls: subtle darker background to indicate they can be edited */
   .editable-input,
   .editable-input:enabled {
-    background-color: #f3f8ff; /* subtle pale blue — tweak to taste */
+    background-color: #f3f8ff;
     border-color: #cfe4ff;
     color: #111;
   }
 
-  /* Keep disabled/locked controls easy to read and visually distinct */
   input[disabled].form-control,
   textarea[disabled].form-control,
   select[disabled].form-select {
-    background-color: #ffffff; /* keep white for locked (or use #f8f9fa if you prefer slight gray) */
+    background-color: #ffffff;
     border-color: #e0e0e0;
     color: #444;
     opacity: 1;
   }
 
-  /* Date inputs and selects inherit the class; ensure consistent padding */
   input.form-control, textarea.form-control, select.form-select, input[type="date"].form-control {
     border-radius: 4px;
     padding: .375rem .5rem;
   }
 
-  /* Plaintext view styling (unchanged) */
   .form-control-plaintext {
     background: transparent;
     color: #212529;
@@ -48,17 +39,9 @@
 
 
 <% edit_mode = params[:edit] == '1' || @learner_info.errors.any? %>
-
-<%# Keep this in sync with controller strong params (only these will be allowed to be updated) %>
-<% editable = %i[
-  programme preferred_name full_name curriculum_course_option grade_year start_date
-  transfer_of_programme_date end_date end_day_communication personal_email phone_number
-  id_information fiscal_number home_address gender use_of_image_authorisation
-  emergency_protocol_choice parent1_email parent1_phone_number parent1_id_information
-  parent2_email parent2_phone_number parent2_id_information parent2_info_not_to_be_contacted
-  deposit sponsor payment_plan discount_mt scholarship_percentage admission_fee discount_af
-  preferred_name native_language monthly_tuition billable_fee_per_month
-] %>
+<% perm = @permission || LearnerInfoPermission.new(current_user, @learner_info) %>
+<% visible_fields = perm.visible_fields.map(&:to_sym) %>
+<% editable_attrs  = edit_mode ? perm.permitted_attributes.map(&:to_sym) : [] %>
 
 <%# Field presentation hints: type, grid column, rows, choices for selects %>
 <% field_opts = {
@@ -128,17 +111,17 @@
   withdrawal_reason: { type: :text_area, rows: 2, col: '12' }
 } %>
 
-<%# Central renderer: in edit_mode renders form control (disabled if not in editable),
-     in view mode renders plaintext (dates formatted dd-mm-yyyy) %>
 <% render_input = lambda do |f, attr, opts = {}|
+     attr_sym = attr.to_sym
+     next unless visible_fields.include?(attr_sym)
+
      label = opts[:label] || attr.to_s.humanize
      type  = opts[:type]  || :text
      col   = opts[:col]   || '12'
-
      value = f ? f.object.send(attr) : @learner_info.send(attr)
 
      if edit_mode && f
-       disabled_flag = !editable.include?(attr)
+       disabled_flag = !editable_attrs.include?(attr_sym)
        input_classes = "form-control"
        input_classes += " editable-input" unless disabled_flag
 
@@ -156,7 +139,6 @@
            concat f.select(attr, choices, { include_blank: opts[:include_blank] || false }, class: select_classes, disabled: disabled_flag)
          end)
        when :checkbox
-         # checkbox visuals don't change background well; keep standard but still disabled when locked
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
            concat(content_tag(:label, class: "form-check") do
              concat f.check_box(attr, disabled: disabled_flag, class: "form-check-input")
@@ -193,13 +175,14 @@
      end
 end %>
 
-<%# Top buttons area: Edit/Back when viewing; Save/Cancel appear inside the form in edit mode %>
 <div class="mb-3 d-flex justify-content-end align-items-start">
   <% if edit_mode %>
-    <%# Nothing here - save/cancel will render inside the form %>
+    <%# Save/Cancel appear inside form %>
   <% else %>
     <div class="d-flex gap-2">
-      <%= link_to 'Edit', admission_path(@learner_info, edit: '1'), class: 'btn btn-primary' %>
+      <% if perm.update? %>
+        <%= link_to 'Edit', admission_path(@learner_info, edit: '1'), class: 'btn btn-primary' %>
+      <% end %>
       <%= link_to 'Back to list', admissions_path, class: 'btn btn-secondary' %>
     </div>
   <% end %>
@@ -215,7 +198,6 @@ end %>
     <div class="li-section li-grid">
       <h4>Basic information</h4>
       <div class="row gx-3">
-        <%# Placed name, student number, start date, birthdate here per request %>
         <% render_input.call(f, :full_name, field_opts[:full_name] || { col: '6' }) %>
         <% render_input.call(f, :preferred_name, field_opts[:preferred_name] || { col: '6' }) %>
         <% render_input.call(f, :student_number, field_opts[:student_number] || { col: '6' }) %>
@@ -303,8 +285,6 @@ end %>
   <% end %>
 
 <% else %>
-  <%# VIEW MODE: same sections, read-only %>
-
   <div class="li-section li-grid">
     <h4>Basic information</h4>
     <div class="row gx-3">

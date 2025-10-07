@@ -1,6 +1,5 @@
 class AdmissionListController < ApplicationController
-  # TODO: Add permissions
-  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document, :download_document]
+  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document]
 
   def index
     @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
@@ -36,13 +35,18 @@ class AdmissionListController < ApplicationController
   end
 
   def show
-    @learner_info = LearnerInfo.includes(:user).find(params[:id])
+    # @learner_info and @permission set by before_action
+    head :forbidden and return unless @permission.show?
+
     excluded = %w[id user_id created_at updated_at]
     @show_columns = LearnerInfo.column_names - excluded
   end
 
   def update
-    if @learner_info.update(learner_info_params)
+    # authorization
+    head :forbidden and return unless @permission.update?
+
+    if @learner_info.update(learner_info_params_from_permission)
       # log the change (pass current_user)
       begin
         @learner_info.log_update(current_user, @learner_info.saved_changes)
@@ -60,6 +64,9 @@ class AdmissionListController < ApplicationController
   end
 
   def documents
+    # show documents tab (AJAX or redirect back)
+    head :forbidden and return unless @permission.show?
+
     @documents = @learner_info.learner_documents.order(:document_type)
     respond_to do |format|
       format.html { redirect_to admission_path(@learner_info) }
@@ -68,6 +75,11 @@ class AdmissionListController < ApplicationController
   end
 
   def create_document
+    # upload files — only allow if the user may update this learner (admissions/admin per your rules)
+    unless @permission.update?
+      return redirect_to admission_path(@learner_info), alert: "Not authorized to upload documents."
+    end
+
     permitted = params.require(:learner_document).permit(:document_type, :description, file: [])
 
     unless LearnerDocument::DOCUMENT_TYPES.include?(permitted[:document_type])
@@ -122,6 +134,11 @@ class AdmissionListController < ApplicationController
 
   def destroy_document
     @document = @learner_info.learner_documents.find(params[:document_id])
+    doc_perm = LearnerDocumentPermission.new(current_user, @document)
+
+    unless doc_perm.destroy?
+      return redirect_to admission_path(@learner_info, active_tab: 'documents'), alert: "Not authorized to remove this document."
+    end
 
     filename = @document.file.attached? ? @document.file.filename.to_s : nil
     doc_type = @document.document_type
@@ -153,44 +170,20 @@ class AdmissionListController < ApplicationController
   private
 
   def set_learner_info
-    @learner_info = LearnerInfo.find(params[:id])
+    # include user for view convenience
+    @learner_info = LearnerInfo.includes(:user).find(params[:id])
+    @permission   = LearnerInfoPermission.new(current_user, @learner_info)
   end
 
-  def learner_info_params
-    params.require(:learner_info).permit(
-      :programme,
-      :full_name,
-      :curriculum_course_option,
-      :grade_year,
-      :start_date,
-      :transfer_of_programme_date,
-      :end_date,
-      :end_day_communication,
-      :personal_email,
-      :phone_number,
-      :id_information,
-      :fiscal_number,
-      :home_address,
-      :gender,
-      :use_of_image_authorisation,
-      :emergency_protocol_choice,
-      :parent1_email,
-      :parent1_phone_number,
-      :parent1_id_information,
-      :parent2_email,
-      :parent2_phone_number,
-      :parent2_id_information,
-      :parent2_info_not_to_be_contacted,
-      :deposit,
-      :sponsor,
-      :payment_plan,
-      :discount_mt,
-      :scholarship_percentage,
-      :discount_af,
-      :withdrawal_reason,
-      :personal_email,
-      :preferred_name,
-      :native_language
-    )
+  # Use permission-defined attributes for strong params
+  def learner_info_params_from_permission
+    permitted = Array(@permission&.permitted_attributes).map(&:to_sym)
+    permitted = [] if permitted.blank?
+
+    if params[:learner_info].present?
+      params.require(:learner_info).permit(permitted)
+    else
+      {}
+    end
   end
 end

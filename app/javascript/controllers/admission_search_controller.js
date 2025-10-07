@@ -30,7 +30,7 @@ export default class extends Controller {
     clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {
       this._requestSubmit();
-    }, 300);
+    }, 500);
   }
 
   clearSearch(event) {
