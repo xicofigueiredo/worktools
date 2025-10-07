@@ -59,8 +59,9 @@
 
           <h6 class="small mb-2">Add File(s)</h6>
 
-          <%# show upload form only if the learner-level permission allows updates %>
-          <% if perm.update? %>
+          <%# show upload form only if document-level permission allows creating this doc type %>
+          <% uploader_perm = LearnerDocumentPermission.new(current_user, nil) %>
+          <% if uploader_perm.create?(doc_type) %>
             <%= form_with url: documents_admission_path(@learner_info), multipart: true, local: true do |f| %>
               <%= hidden_field_tag 'learner_document[document_type]', doc_type %>
 
@@ -79,7 +80,7 @@
               </div>
             <% end %>
           <% else %>
-            <p class="text-muted small mb-0">You do not have permission to upload documents.</p>
+            <p class="text-muted small mb-0">You do not have permission to upload this type of document.</p>
           <% end %>
 
         </div>

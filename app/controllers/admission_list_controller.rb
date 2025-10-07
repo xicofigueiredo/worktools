@@ -75,16 +75,19 @@ class AdmissionListController < ApplicationController
   end
 
   def create_document
-    # upload files — only allow if the user may update this learner (admissions/admin per your rules)
-    unless @permission.update?
-      return redirect_to admission_path(@learner_info), alert: "Not authorized to upload documents."
-    end
-
+    # validate params
     permitted = params.require(:learner_document).permit(:document_type, :description, file: [])
+    doc_type = permitted[:document_type].to_s
 
-    unless LearnerDocument::DOCUMENT_TYPES.include?(permitted[:document_type])
+    unless LearnerDocument::DOCUMENT_TYPES.include?(doc_type)
       flash[:alert] = "Invalid document type"
       return redirect_to admission_path(@learner_info)
+    end
+
+    # document-level permission: allow admin/admissions OR (edu and doc_type == 'last_term_report')
+    doc_perm = LearnerDocumentPermission.new(current_user, nil)
+    unless doc_perm.create?(doc_type)
+      return redirect_to admission_path(@learner_info), alert: "Not authorized to upload this type of document."
     end
 
     files = Array.wrap(permitted[:file]).compact
@@ -96,7 +99,7 @@ class AdmissionListController < ApplicationController
     saved_docs = []
     files.each do |file|
       document = @learner_info.learner_documents.build(
-        document_type: permitted[:document_type],
+        document_type: doc_type,
         description: permitted[:description]
       )
       document.file.attach(file)
