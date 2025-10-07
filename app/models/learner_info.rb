@@ -5,6 +5,22 @@ class LearnerInfo < ApplicationRecord
 
   # validate user needs to be learner?
 
+  EMAIL_FIELDS = %w[
+    personal_email
+    institutional_email
+    parent1_email
+    parent2_email
+    previous_school_email
+  ].freeze
+
+  before_validation :normalize_emails
+
+  VALID_EMAIL_REGEX = URI::MailTo::EMAIL_REGEXP
+
+  validates *EMAIL_FIELDS.map(&:to_sym),
+            format: { with: VALID_EMAIL_REGEX, message: "is not a valid email" },
+            allow_blank: true
+
   def log_update(by_user = nil, saved_changes_hash = nil, note: nil)
     saved_changes_hash ||= saved_changes
     return if saved_changes_hash.blank?
@@ -25,5 +41,14 @@ class LearnerInfo < ApplicationRecord
       changed_data: changed_data,
       note: note
     )
+  end
+
+  private
+
+  def normalize_emails
+    EMAIL_FIELDS.each do |attr|
+      next unless (val = self[attr]).present?
+      self[attr] = val.strip.downcase
+    end
   end
 end

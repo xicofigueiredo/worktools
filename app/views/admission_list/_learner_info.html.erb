@@ -65,8 +65,8 @@
   end_date: { type: :date, col: '4' },
   end_day_communication: { col: '4' },
 
-  personal_email: { col: '6' },
-  institutional_email: { col: '6' },
+  personal_email: { type: :email, col: '6' },
+  institutional_email: { type: :email, col: '6' },
   phone_number: { col: '6' },
   home_address: { type: :text_area, rows: 2, col: '12' },
   nationality: { col: '6' },
@@ -75,12 +75,12 @@
   english_proficiency: { type: :toggle, col: '6' },
 
   parent1_full_name: { col: '6' },
-  parent1_email: { col: '6' },
+  parent1_email: { type: :email, col: '6' },
   parent1_phone_number: { col: '6' },
   parent1_id_information: { col: '6' },
 
   parent2_full_name: { col: '6' },
-  parent2_email: { col: '6' },
+  parent2_email: { type: :email, col: '6' },
   parent2_phone_number: { col: '6' },
   parent2_id_information: { col: '6' },
   parent2_info_not_to_be_contacted: { type: :text_area, rows: 2, col: '12' },
@@ -106,7 +106,7 @@
   ]},
   previous_school_status: { col: '6' },
   previous_school_name: { col: '6' },
-  previous_school_email: { col: '6' },
+  previous_school_email: { type: :email, col: '6' },
 
   id_information: { col: '6' },
   fiscal_number: { col: '6' },
@@ -167,6 +167,17 @@
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
            concat f.label(attr, label)
            concat f.date_field(attr, class: date_classes, disabled: disabled_flag)
+         end)
+        when :email
+         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
+           concat f.label(attr, label)
+           concat f.email_field(
+             attr,
+             class: input_classes,
+             disabled: disabled_flag,
+             placeholder: "name@example.com",
+             autocomplete: "email"
+           )
          end)
        else
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
