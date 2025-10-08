@@ -43,6 +43,14 @@ class LearnerInfo < ApplicationRecord
     )
   end
 
+  def institutional_email_prefix
+    institutional_email.to_s.split('@').first || ''
+  end
+
+  def institutional_email_prefix=(prefix)
+    self.institutional_email = prefix.present? ? "#{prefix.strip.downcase}@edubga.com" : nil
+  end
+
   private
 
   def normalize_emails

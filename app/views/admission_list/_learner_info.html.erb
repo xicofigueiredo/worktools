@@ -102,7 +102,7 @@
     "Abroad",
     "National Private",
     "National Public",
-    "Homeschooled",
+    "Homeschooled"
   ]},
   previous_school_status: { col: '6' },
   previous_school_name: { col: '6' },
@@ -113,7 +113,19 @@
   use_of_image_authorisation: { type: :checkbox, col: '6' },
   emergency_protocol_choice: { type: :checkbox, col: '6' },
 
-  withdrawal_category: { col: '6' },
+  withdrawal_category: { type: :select, col: '6', choices: [
+    "Moved abroad",
+    "Balencing Studies",
+    "No adaptation - Back to traditional",
+    "No adaptation - Back to online",
+    "Lack of Support or Guidance",
+    "Lack of Social aspects",
+    "Accreditation",
+    "Expelled",
+    "Learning Dificulties",
+    "Changed Curriculum",
+    "Graduaded"
+  ]},
   withdrawal_reason: { type: :text_area, rows: 2, col: '12' }
 } %>
 
@@ -131,6 +143,15 @@
        input_classes = "form-control"
        input_classes += " editable-input" unless disabled_flag
 
+      if attr_sym == :institutional_email
+         concat(content_tag(:div, class: "mb-3 col-md-#{opts[:col] || 6}") do
+           concat f.label(:institutional_email, label) # Label still says "Institutional email"
+           concat(content_tag(:div, class: "input-group") do
+             concat f.text_field(:institutional_email_prefix, value: f.object.institutional_email_prefix, class: input_classes, disabled: disabled_flag, placeholder: "name")
+             concat content_tag(:span, "@edubga.com", class: "input-group-text")
+           end)
+         end)
+      else
        case type
        when :text_area
          concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
@@ -185,7 +206,7 @@
            concat f.text_field(attr, class: input_classes, disabled: disabled_flag)
          end)
        end
-
+      end
      else
        display_value =
          case value
@@ -197,7 +218,14 @@
 
        concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
          concat label_tag(nil, label, class: "form-label")
-         concat tag.input value: display_value, readonly: true, class: "form-control-plaintext"
+         case type
+         when :text_area
+           concat tag.textarea(display_value, rows: opts[:rows] || 2, class: "form-control", disabled: true)
+         when :email
+           concat tag.input(value: display_value, type: "email", class: "form-control", disabled: true)
+         else
+           concat tag.input(value: display_value, type: "text", class: "form-control", disabled: true)
+         end
        end)
      end
 end %>
