@@ -9,7 +9,9 @@ export default class extends Controller {
     "searchClear",
     "statusClear",
     "curriculumClear",
-    "gradeClear"
+    "gradeClear",
+    "programmeSelect",
+    "programmeClear"
   ];
 
   connect() {
@@ -61,6 +63,15 @@ export default class extends Controller {
     this._submitNow();
   }
 
+  clearProgramme(event) {
+    event.preventDefault();
+    if (this.hasProgrammeSelectTarget) {
+      this.programmeSelectTarget.value = "";
+    }
+    this._updateClearForAll();
+    this._submitNow();
+  }
+
   // helpers ------------------------------------------------
 
   _requestSubmit() {
@@ -92,6 +103,10 @@ export default class extends Controller {
 
     if (this.hasGradeSelectTarget && this.hasGradeClearTarget) {
       this._updateClear(this.gradeSelectTarget, this.gradeClearTarget);
+    }
+
+    if (this.hasProgrammeSelectTarget && this.hasProgrammeClearTarget) {
+      this._updateClear(this.programmeSelectTarget, this.programmeClearTarget);
     }
   }
 

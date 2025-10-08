@@ -77,6 +77,22 @@
             ✕
           </button>
         </div>
+        <div style="position: relative;">
+          <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Programme</label>
+          <%= select_tag :programme,
+                options_for_select([['All', '']] + @programmes.map { |p| [p, p] }, params[:programme]),
+                include_blank: false,
+                data: { admission_search_target: "programmeSelect", action: "change->admission-search#submit" },
+                style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+
+          <button type="button"
+                  data-action="click->admission-search#clearProgramme"
+                  data-admission-search-target="programmeClear"
+                  aria-label="Clear programme"
+                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
+            ✕
+          </button>
+        </div>
 
         <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
           <%= link_to "Clear All", admissions_path, style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
@@ -140,6 +156,18 @@
                 <span aria-hidden="true" style="margin-left:6px;">✕</span>
               </button>
             <% end %>
+
+            <% if params[:programme].present? %>
+              <button type="button"
+                      class="filter-chip"
+                      style="<%= chip_style %>"
+                      aria-label="Remove programme filter"
+                      data-action="click->admission-search#clearProgramme">
+                <strong style="font-weight:600;">Programme:</strong>
+                <span><%= h(params[:programme]) %></span>
+                <span aria-hidden="true" style="margin-left:6px;">✕</span>
+              </button>
+            <% end %>
           </div>
         </div>
       <% end %>
@@ -150,6 +178,7 @@
         <thead>
           <tr>
             <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Learner Name</th>
+            <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Programme</th>
             <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Curriculum</th>
             <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Grade / Year</th>
             <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Actions</th>
@@ -161,6 +190,7 @@
             <% @learner_infos.each do |row| %>
               <tr>
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.full_name.presence || '-' %></td>
+                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.programme.presence || '-' %></td>
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.curriculum_course_option.presence || '-' %></td>
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.grade_year.presence || '-' %></td>
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
