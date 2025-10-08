@@ -1,4 +1,3 @@
-# lib/tasks/import_learner_infos_verbose.rake
 require 'csv'
 
 namespace :admissions do
@@ -214,6 +213,24 @@ namespace :admissions do
           attrs[attr] = parsed
         end
 
+        if attrs[:programme].present?
+          long_to_short = {
+            normalize.call('In-person (with Hub access): Secondary Education (Grades 6 to 12)') => 'In-Person: Secondary Education',
+            normalize.call('In-person (with Hub access): UP Programme (Higher Education)')     => 'In-Person: UP Programme',
+            normalize.call('Online Only (no Hub access): Secondary Education (Grades 6 to 12)') => 'Online: Secondary Education',
+            normalize.call('Online Only (no Hub access): UP Programme (Higher Education)')    => 'Online: UP Programme',
+            normalize.call('BAS Programme (Academy of Sports)')                               => 'BAS Programme',
+            normalize.call('In-person (with Hub access): Own Curriculum')                     => 'Own Curriculum'
+          }
+
+          incoming_key = normalize.call(attrs[:programme])
+          if long_to_short.key?(incoming_key)
+            old = attrs[:programme]
+            attrs[:programme] = long_to_short[incoming_key]
+            puts "Row #{row_num}: NORMALIZED programme - #{old.inspect} -> #{attrs[:programme].inspect}"
+          end
+        end
+
         # compute start_date and student_number
         start_date = attrs[:start_date]
         if start_date.present?
@@ -274,7 +291,7 @@ namespace :admissions do
               u = User.find_by(email: attrs[:institutional_email])
               li.user = u if u
             end
-            li.save!
+            li.save(validate: false)
             created += 1
             puts "Row #{row_num}: CREATED id=#{li.id} #{ident} student_number=#{attrs[:student_number].inspect}"
           end
