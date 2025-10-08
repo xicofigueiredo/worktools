@@ -45,6 +45,23 @@
         </div>
 
         <div style="position: relative;">
+          <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Programme</label>
+          <%= select_tag :programme,
+                options_for_select([['All', '']] + @programmes.map { |p| [p, p] }, params[:programme]),
+                include_blank: false,
+                data: { admission_search_target: "programmeSelect", action: "change->admission-search#submit" },
+                style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+
+          <button type="button"
+                  data-action="click->admission-search#clearProgramme"
+                  data-admission-search-target="programmeClear"
+                  aria-label="Clear programme"
+                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
+            ✕
+          </button>
+        </div>
+
+        <div style="position: relative;">
           <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Curriculum</label>
           <%= select_tag :curriculum,
                 options_for_select([['All', '']] + @curricula.map { |c| [c, c] }, params[:curriculum]),
@@ -77,23 +94,6 @@
             ✕
           </button>
         </div>
-        <div style="position: relative;">
-          <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Programme</label>
-          <%= select_tag :programme,
-                options_for_select([['All', '']] + @programmes.map { |p| [p, p] }, params[:programme]),
-                include_blank: false,
-                data: { admission_search_target: "programmeSelect", action: "change->admission-search#submit" },
-                style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
-
-          <button type="button"
-                  data-action="click->admission-search#clearProgramme"
-                  data-admission-search-target="programmeClear"
-                  aria-label="Clear programme"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
-            ✕
-          </button>
-        </div>
-
         <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
           <%= link_to "Clear All", admissions_path, style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
         </div>
@@ -133,6 +133,18 @@
               </button>
             <% end %>
 
+            <% if params[:programme].present? %>
+              <button type="button"
+                      class="filter-chip"
+                      style="<%= chip_style %>"
+                      aria-label="Remove programme filter"
+                      data-action="click->admission-search#clearProgramme">
+                <strong style="font-weight:600;">Programme:</strong>
+                <span><%= h(params[:programme]) %></span>
+                <span aria-hidden="true" style="margin-left:6px;">✕</span>
+              </button>
+            <% end %>
+
             <% if params[:curriculum].present? %>
               <button type="button"
                       class="filter-chip"
@@ -153,18 +165,6 @@
                       data-action="click->admission-search#clearGrade">
                 <strong style="font-weight:600;">Grade:</strong>
                 <span><%= h(params[:grade_year]) %></span>
-                <span aria-hidden="true" style="margin-left:6px;">✕</span>
-              </button>
-            <% end %>
-
-            <% if params[:programme].present? %>
-              <button type="button"
-                      class="filter-chip"
-                      style="<%= chip_style %>"
-                      aria-label="Remove programme filter"
-                      data-action="click->admission-search#clearProgramme">
-                <strong style="font-weight:600;">Programme:</strong>
-                <span><%= h(params[:programme]) %></span>
                 <span aria-hidden="true" style="margin-left:6px;">✕</span>
               </button>
             <% end %>
