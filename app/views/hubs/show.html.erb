@@ -12,6 +12,19 @@
     <% if @hub.google_map_link.present? %>
       <p><a href="<%= @hub.google_map_link %>" target="_blank" rel="noopener">Open in Google Maps</a></p>
     <% end %>
+    <h3>Learning Coaches</h3>
+    <% if @lcs.any? %>
+      <ul>
+        <% @lcs.each do |lc| %>
+          <li>
+            <%= lc.full_name.presence || lc.email %>
+            — <small><%= lc.email %></small>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p style="color:#666;">No LCs available for this hub.</p>
+    <% end %>
   </div>
 
   <div style="flex:1; background:#fff; border:1px solid #eee; padding:16px; border-radius:6px;">

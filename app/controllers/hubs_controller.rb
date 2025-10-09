@@ -11,6 +11,12 @@ class HubsController < ApplicationController
                                  )
                                  .where(users: { deactivate: false })
 
+    @lcs = @hub.users.where(role: 'lc')
+                      .left_joins(:hubs)
+                      .where(deactivate: [false, nil])
+                      .group('users.id')
+                      .having('COUNT(hubs.id) < ?', 3)
+
     # Basic counts
     @total_active_learners = active_learners.count
 
