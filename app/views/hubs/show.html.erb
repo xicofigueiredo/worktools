@@ -1,102 +1,352 @@
-<h1>Hub — <%= @hub.name %></h1>
+<!-- app/views/hubs/show.html.erb -->
+<%# Hub dashboard - pure HTML/CSS fallback (4 panels) %>
+<%# Required controller variables: @hub, @total_active_learners, @capacity_total, @free_spots, @capacity_pct, @lcs, @age_bucket_ranges, @gender_distribution, @curriculum_distribution, @nationality_counts, @learners_sample %>
 
-<div style="display:flex; gap:24px; align-items:flex-start; margin-bottom:20px;">
-  <div style="min-width:360px; background:#fff; border:1px solid #eee; padding:16px; border-radius:6px;">
-    <h2 style="margin-top:0;">Details</h2>
-    <p><strong>Country:</strong> <%= @hub.country.presence || '-' %></p>
-    <p><strong>City / Region:</strong> <%= [@hub.city.presence, @hub.region.presence].compact.join(' / ').presence || '-' %></p>
-    <p><strong>Address:</strong> <%= simple_format(@hub.address.presence || '-') %></p>
-    <p><strong>Type:</strong> <%= @hub.type.presence || '-' %></p>
-    <p><strong>Exam center:</strong> <%= @hub.exam_center ? 'Yes' : 'No' %></p>
-    <p><strong>Capacity:</strong> <%= @hub.capacity.present? ? @hub.capacity : '-' %></p>
-    <% if @hub.google_map_link.present? %>
-      <p><a href="<%= @hub.google_map_link %>" target="_blank" rel="noopener">Open in Google Maps</a></p>
-    <% end %>
-    <h3>Learning Coaches</h3>
-    <% if @lcs.any? %>
-      <ul>
-        <% @lcs.each do |lc| %>
-          <li>
-            <%= lc.full_name.presence || lc.email %>
-            — <small><%= lc.email %></small>
-          </li>
-        <% end %>
-      </ul>
-    <% else %>
-      <p style="color:#666;">No LCs available for this hub.</p>
-    <% end %>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel-border: #e6e6e6;
+    --muted: #6b7280;
+    --accent-1: #60a5fa;
+    --accent-2: #34d399;
+    --accent-3: #f97316;
+    --accent-4: #f472b6;
+    --accent-5: #f59e0b;
+    --accent-6: #8b5cf6;
+  }
+
+  .hub-container {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color: #111827;
+    padding: 20px;
+  }
+
+  .grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .panel {
+    background: var(--bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  /* Top-left: title+capacity+LCs layout inside panel */
+  .top-left {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .hub-info {
+    flex: 1 1 60%;
+  }
+  .hub-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .hub-sub {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+  }
+
+  .capacity-bar {
+    position: relative;
+    background: #f3f4f6;
+    border-radius: 8px;
+    height: 34px;
+    overflow: hidden;
+    border: 1px solid #eaeaea;
+  }
+  .capacity-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-2), #10b981);
+    transition: width .4s ease;
+  }
+  .capacity-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #053a3a;
+  }
+  .capacity-note { margin-top: 8px; color: var(--muted); }
+
+  .lcs-column {
+    flex: 1 1 40%;
+    min-width: 160px;
+    border-left: 1px dashed #f1f1f1;
+    padding-left: 12px;
+  }
+  .lcs-column h4 { margin-top: 0; margin-bottom: 8px; }
+  .lc-item { margin-bottom: 8px; }
+
+  /* Top-right: age + gender */
+  .top-right-inner { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+  .age-buckets { flex: 1 1 220px; min-width: 220px; }
+  .age-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .age-label { width:92px; color:#111827; }
+  .age-track { flex:1; background:#f8fafc; height:10px; border-radius:999px; overflow:hidden; }
+  .age-fill { height:100%; background: var(--accent-1); }
+
+  .gender-pie {
+    width:160px;
+    height:160px;
+    border-radius:50%;
+    position:relative;
+    background:#f3f4f6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .gender-center { text-align:center; pointer-events:none; font-weight:700; }
+
+  /* Bottom-left: curriculum donut + legend on right side */
+  .curriculum-wrap { display:flex; gap:14px; align-items:center; }
+  .donut {
+    width:240px;
+    height:240px;
+    border-radius:50%;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f3f4f6;
+  }
+  .donut-center-circle {
+    width:96px;
+    height:96px;
+    border-radius:50%;
+    background:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.6);
+    font-weight:700;
+  }
+  .curr-legend { display:flex; flex-direction:column; gap:8px; max-height:220px; overflow:auto; }
+
+  .legend-item { display:flex; gap:10px; align-items:center; }
+  .legend-swatch { width:14px; height:14px; border-radius:3px; flex:0 0 14px; }
+
+  /* Bottom-right: nationalities vertical bars */
+  .nat-chart-box { padding-top:8px; }
+  .nat-chart {
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    height:220px;
+    border-left:1px solid #eee;
+    border-bottom:1px solid #eee;
+    padding:8px;
+  }
+  .nat-bar { flex:0 0 70px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; }
+  .nat-rect { width:100%; border-radius:6px 6px 0 0; display:flex; align-items:flex-end; justify-content:center; color:white; font-weight:700; padding-top:6px; box-sizing:border-box; }
+  .nat-label { margin-top:6px; text-align:center; font-size:12px; color:#111827; word-break:break-word; }
+
+  /* small table styles */
+  .sample-table { width:100%; border-collapse:collapse; margin-top:12px; }
+  .sample-table th, .sample-table td { text-align:left; padding:8px; border-bottom:1px solid #f3f3f3; }
+
+  /* responsive */
+  @media (max-width:980px) {
+    .grid-2x2 { grid-template-columns: 1fr; }
+    .top-left { flex-direction:column; }
+    .lcs-column { border-left: none; padding-left:0; border-top:1px dashed #f1f1f1; padding-top:12px; margin-top:12px; }
+  }
+</style>
+
+<div class="hub-container">
+  <div style="display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:14px;">
+    <div>
+      <div style="font-size:1.5rem; font-weight:700;"><%= h(@hub.name) %></div>
+      <div class="muted" style="color:var(--muted);">Hub dashboard</div>
+    </div>
+    <div style="text-align:right; color:#374151; font-weight:600;">
+      <% display_type = (@hub.type.presence || 'PW').to_s.upcase %>
+      <div><%= h((@hub.country.presence || '-') + " - " + @hub.name + " | " + display_type) %></div>
+    </div>
   </div>
 
-  <div style="flex:1; background:#fff; border:1px solid #eee; padding:16px; border-radius:6px;">
-    <h2 style="margin-top:0;">Active learners (users not deactivated)</h2>
-    <p style="margin:0 0 12px 0;">
-      <strong><%= @total_active_learners %></strong> active learner<%= 's' if @total_active_learners != 1 %>
-      <% if @capacity_percentage %>
-        · Capacity usage: <strong><%= @capacity_usage_count %> / <%= @hub.capacity %></strong> (<%= @capacity_percentage %>%)
-      <% end %>
-    </p>
+  <div class="grid-2x2">
+    <!-- PANEL 1: Title + Capacity + LCs -->
+    <div class="panel">
+      <div class="top-left">
+        <div class="hub-info">
+          <div class="hub-title"><%= h(@hub.country.presence || '-') %> — <%= h(@hub.name) %> <span style="font-weight:600; color:var(--muted);">| <%= display_type %></span></div>
+          <div class="hub-sub"><%= h(@hub.city.presence || '-') %><% if @hub.region.present? %> · <%= h(@hub.region) %><% end %></div>
 
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <div style="min-width:180px; background:#fafafa; padding:10px; border-radius:6px; border:1px solid #f0f0f0;">
-        <strong>Avg age</strong>
-        <div style="font-size:1.4rem;"><%= @age_average || '-' %></div>
-      </div>
-
-      <div style="min-width:220px; background:#fafafa; padding:10px; border-radius:6px; border:1px solid #f0f0f0;">
-        <strong>Age buckets</strong>
-        <div style="margin-top:8px;">
-          <% @age_buckets.each do |label, count| %>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-              <div style="width:90px;"><%= label %></div>
-              <div style="flex:1; background:#fff; border-radius:999px; border:1px solid #eee; height:10px; position:relative;">
-                <% pct = (@total_active_learners > 0 ? (count.to_f / @total_active_learners * 100).round(1) : 0) %>
-                <div style="height:100%; width:<%= pct %>%; background:linear-gradient(90deg,#60a5fa,#3b82f6); border-radius:999px;"></div>
+          <%# Capacity behavior:
+               - If capacity set: fill according to capacity pct (0..100)
+               - If capacity NOT set: show number of active learners and show bar as full
+            %>
+          <div>
+            <% if @capacity_total.present? && @capacity_total.to_i > 0 %>
+              <% pct = @capacity_pct.to_f.round(1) rescue 0 %>
+              <div class="capacity-bar" role="progressbar" aria-valuemin="0" aria-valuemax="<%= @capacity_total %>" aria-valuenow="<%= @total_active_learners %>">
+                <div class="capacity-fill" style="width:<%= pct %>%;"></div>
+                <div class="capacity-center"><%= @total_active_learners %> / <%= @capacity_total %></div>
               </div>
-              <div style="width:48px; text-align:right;"><%= count %></div>
-            </div>
+              <div class="capacity-note"><strong><%= @free_spots %></strong> free spot<%= 's' if @free_spots != 1 %></div>
+            <% else %>
+              <%# capacity not set: show learners number and full bar %>
+              <div class="capacity-bar" role="progressbar" aria-valuemin="0" aria-valuemax="<%= @total_active_learners %>" aria-valuenow="<%= @total_active_learners %>">
+                <div class="capacity-fill" style="width:100%;"></div>
+                <div class="capacity-center"><%= @total_active_learners %> learners</div>
+              </div>
+              <div class="capacity-note">Capacity not set for this hub.</div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="lcs-column">
+          <h4>Learning Coaches</h4>
+          <% if @lcs.present? %>
+            <% @lcs.each do |lc| %>
+              <div class="lc-item">
+                <strong><%= h(lc.full_name.presence || lc.email) %></strong>
+                <div class="muted" style="font-size:0.9rem;"><%= h(lc.email) %> · <%= lc.read_attribute('hubs_count') || 0 %> hubs</div>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="muted">No LCs available for this hub.</div>
           <% end %>
         </div>
       </div>
     </div>
 
-    <hr style="margin:12px 0;">
-
-    <div style="display:flex; gap:16px; flex-wrap:wrap;">
-      <div style="min-width:220px;">
-        <strong>By programme</strong>
-        <table style="width:100%; margin-top:8px; border-collapse:collapse;">
-          <% @programme_distribution.each do |k,v| %>
-            <tr>
-              <td style="padding:4px 6px; width:1%; white-space:nowrap;"><%= v %></td>
-              <td style="padding:4px 6px;"><%= k.presence || 'Unknown' %></td>
-            </tr>
+    <!-- PANEL 2: Age buckets + Gender -->
+    <div class="panel">
+      <h3 style="margin-top:0; margin-bottom:8px;">Age & Gender</h3>
+      <div class="top-right-inner">
+        <div class="age-buckets panel-section">
+          <% total_age = (@age_bucket_ranges || {}).values.sum rescue 0 %>
+          <% (@age_bucket_ranges || {}).each do |label, cnt| %>
+            <% pct = total_age > 0 ? (cnt.to_f / total_age * 100.0).round(1) : 0 %>
+            <div class="age-row">
+              <div class="age-label"><%= h(label) %></div>
+              <div class="age-track"><div class="age-fill" style="width:<%= pct %>%;"></div></div>
+              <div style="width:36px; text-align:right;"><%= cnt %></div>
+            </div>
           <% end %>
-        </table>
-      </div>
+        </div>
 
-      <div style="min-width:220px;">
-        <strong>By curriculum</strong>
-        <table style="width:100%; margin-top:8px; border-collapse:collapse;">
-          <% @curriculum_distribution.each do |k,v| %>
-            <tr>
-              <td style="padding:4px 6px; width:1%; white-space:nowrap;"><%= v %></td>
-              <td style="padding:4px 6px;"><%= k.presence || 'Unknown' %></td>
-            </tr>
-          <% end %>
-        </table>
-      </div>
+        <div style="width:180px;">
+          <h4 style="margin:0 0 8px 0;">Gender</h4>
+          <% total_gender = (@gender_distribution || {}).values.sum rescue 0 %>
+          <% if total_gender > 0 %>
+            <%# Build conic-gradient stops for gender pie %>
+            <% g_offset = 0.0 %>
+            <% g_colors = ['#60a5fa','#f472b6','#8b5cf6','#94a3b8'] %>
+            <% g_stops = [] %>
+            <% gi = 0 %>
+            <% @gender_distribution.each do |lbl, num| %>
+              <% gpct = (num.to_f / total_gender * 100.0) %>
+              <% g_stops << "#{g_colors[gi % g_colors.length]} #{g_offset.round(2)}% #{(g_offset + gpct).round(2)}%" %>
+              <% g_offset += gpct %>
+              <% gi += 1 %>
+            <% end %>
 
-      <div style="min-width:220px;">
-        <strong>By grade</strong>
-        <table style="width:100%; margin-top:8px; border-collapse:collapse;">
-          <% @grade_distribution.each do |k,v| %>
-            <tr>
-              <td style="padding:4px 6px; width:1%; white-space:nowrap;"><%= v %></td>
-              <td style="padding:4px 6px;"><%= k.presence || 'Unknown' %></td>
-            </tr>
+            <div class="gender-pie" style="background: conic-gradient(<%= g_stops.join(', ') %>);">
+              <div class="gender-center">
+                <div style="font-weight:700;"><%= total_gender %></div>
+                <div class="muted" style="font-size:0.85rem;">Learners</div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px;">
+              <% gi = 0 %>
+              <% @gender_distribution.each do |lbl, num| %>
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+                  <div style="width:12px; height:12px; background:<%= g_colors[gi % g_colors.length] %>"></div>
+                  <div style="flex:1;"><%= h(lbl.presence || 'Unknown') %></div>
+                  <div style="font-weight:700;"><%= num %></div>
+                </div>
+                <% gi += 1 %>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="muted">No gender data.</div>
           <% end %>
-        </table>
+        </div>
       </div>
+    </div>
+
+    <!-- PANEL 3: Curriculum donut + legend (legend to the right of donut) -->
+    <div class="panel">
+      <h3 style="margin-top:0; margin-bottom:8px;">Curriculum distribution</h3>
+      <div class="curriculum-wrap">
+        <% total_curr = (@curriculum_distribution || {}).values.sum rescue 0 %>
+        <% if total_curr > 0 %>
+          <% offset = 0.0 %>
+          <% stops = [] %>
+          <% colors = ['#60a5fa','#34d399','#f97316','#f472b6','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#84cc16'] %>
+          <% color_idx = 0 %>
+          <% @curriculum_distribution.each do |label, cnt| %>
+            <% pct = (cnt.to_f / total_curr * 100.0) %>
+            <% stops << "#{colors[color_idx % colors.length]} #{offset.round(2)}% #{(offset + pct).round(2)}%" %>
+            <% offset += pct %>
+            <% color_idx += 1 %>
+          <% end %>
+
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="donut" style="background: conic-gradient(<%= stops.join(', ') %>)">
+              <div class="donut-center-circle">
+                <div style="font-size:1.1rem;"><%= @total_active_learners %></div>
+                <div style="font-size:0.85rem; color:var(--muted);">Learners</div>
+              </div>
+            </div>
+
+            <div class="curr-legend">
+              <% color_idx = 0 %>
+              <% @curriculum_distribution.each do |label, cnt| %>
+                <div class="legend-item">
+                  <div class="legend-swatch" style="background:<%= colors[color_idx % colors.length] %>"></div>
+                  <div><strong><%= h(label.presence || 'Unknown') %></strong> <span class="muted">— <%= cnt %></span></div>
+                </div>
+                <% color_idx += 1 %>
+              <% end %>
+            </div>
+          </div>
+        <% else %>
+          <div class="muted">No curriculum data.</div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- PANEL 4: Nationalities vertical bar chart -->
+    <div class="panel">
+      <h3 style="margin-top:0;">Nationalities</h3>
+      <% nat_counts = (@nationality_counts || {}).dup rescue {} %>
+      <% if nat_counts.any? %>
+        <% max_cnt = nat_counts.values.max.to_f %>
+        <div class="nat-chart-box">
+          <div class="nat-chart" role="img" aria-label="Nationality distribution">
+            <% nat_counts.each_with_index do |(nat, cnt), idx| %>
+              <% height_pct = max_cnt > 0 ? ((cnt.to_f / max_cnt) * 100.0).round(1) : 0 %>
+              <% bar_color = ['#8b5cf6','#60a5fa','#34d399','#f97316','#f472b6','#ef4444'][idx % 6] %>
+              <div class="nat-bar">
+                <%# ensure a minimum visible height (6%) so very small values still show %>
+                <div class="nat-rect" style="height:<%= [height_pct, 6].max %>%; background:<%= bar_color %>;">
+                  <span style="padding:4px; font-size:12px;"><%= cnt %></span>
+                </div>
+                <div class="nat-label"><%= h(nat.presence || 'Unknown') %></div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div class="muted">No nationality data.</div>
+      <% end %>
     </div>
   </div>
 </div>
