@@ -1,0 +1,89 @@
+<h1>Hub — <%= @hub.name %></h1>
+
+<div style="display:flex; gap:24px; align-items:flex-start; margin-bottom:20px;">
+  <div style="min-width:360px; background:#fff; border:1px solid #eee; padding:16px; border-radius:6px;">
+    <h2 style="margin-top:0;">Details</h2>
+    <p><strong>Country:</strong> <%= @hub.country.presence || '-' %></p>
+    <p><strong>City / Region:</strong> <%= [@hub.city.presence, @hub.region.presence].compact.join(' / ').presence || '-' %></p>
+    <p><strong>Address:</strong> <%= simple_format(@hub.address.presence || '-') %></p>
+    <p><strong>Type:</strong> <%= @hub.type.presence || '-' %></p>
+    <p><strong>Exam center:</strong> <%= @hub.exam_center ? 'Yes' : 'No' %></p>
+    <p><strong>Capacity:</strong> <%= @hub.capacity.present? ? @hub.capacity : '-' %></p>
+    <% if @hub.google_map_link.present? %>
+      <p><a href="<%= @hub.google_map_link %>" target="_blank" rel="noopener">Open in Google Maps</a></p>
+    <% end %>
+  </div>
+
+  <div style="flex:1; background:#fff; border:1px solid #eee; padding:16px; border-radius:6px;">
+    <h2 style="margin-top:0;">Active learners (users not deactivated)</h2>
+    <p style="margin:0 0 12px 0;">
+      <strong><%= @total_active_learners %></strong> active learner<%= 's' if @total_active_learners != 1 %>
+      <% if @capacity_percentage %>
+        · Capacity usage: <strong><%= @capacity_usage_count %> / <%= @hub.capacity %></strong> (<%= @capacity_percentage %>%)
+      <% end %>
+    </p>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div style="min-width:180px; background:#fafafa; padding:10px; border-radius:6px; border:1px solid #f0f0f0;">
+        <strong>Avg age</strong>
+        <div style="font-size:1.4rem;"><%= @age_average || '-' %></div>
+      </div>
+
+      <div style="min-width:220px; background:#fafafa; padding:10px; border-radius:6px; border:1px solid #f0f0f0;">
+        <strong>Age buckets</strong>
+        <div style="margin-top:8px;">
+          <% @age_buckets.each do |label, count| %>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <div style="width:90px;"><%= label %></div>
+              <div style="flex:1; background:#fff; border-radius:999px; border:1px solid #eee; height:10px; position:relative;">
+                <% pct = (@total_active_learners > 0 ? (count.to_f / @total_active_learners * 100).round(1) : 0) %>
+                <div style="height:100%; width:<%= pct %>%; background:linear-gradient(90deg,#60a5fa,#3b82f6); border-radius:999px;"></div>
+              </div>
+              <div style="width:48px; text-align:right;"><%= count %></div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <hr style="margin:12px 0;">
+
+    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+      <div style="min-width:220px;">
+        <strong>By programme</strong>
+        <table style="width:100%; margin-top:8px; border-collapse:collapse;">
+          <% @programme_distribution.each do |k,v| %>
+            <tr>
+              <td style="padding:4px 6px; width:1%; white-space:nowrap;"><%= v %></td>
+              <td style="padding:4px 6px;"><%= k.presence || 'Unknown' %></td>
+            </tr>
+          <% end %>
+        </table>
+      </div>
+
+      <div style="min-width:220px;">
+        <strong>By curriculum</strong>
+        <table style="width:100%; margin-top:8px; border-collapse:collapse;">
+          <% @curriculum_distribution.each do |k,v| %>
+            <tr>
+              <td style="padding:4px 6px; width:1%; white-space:nowrap;"><%= v %></td>
+              <td style="padding:4px 6px;"><%= k.presence || 'Unknown' %></td>
+            </tr>
+          <% end %>
+        </table>
+      </div>
+
+      <div style="min-width:220px;">
+        <strong>By grade</strong>
+        <table style="width:100%; margin-top:8px; border-collapse:collapse;">
+          <% @grade_distribution.each do |k,v| %>
+            <tr>
+              <td style="padding:4px 6px; width:1%; white-space:nowrap;"><%= v %></td>
+              <td style="padding:4px 6px;"><%= k.presence || 'Unknown' %></td>
+            </tr>
+          <% end %>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

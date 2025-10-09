@@ -1,4 +1,4 @@
-<h1>Admissions — Learner List</h1>
+<h1>Admissions List</h1>
 
 <div style="padding: 0 24px;">
   <%= turbo_frame_tag "learner_infos" do %>
@@ -221,7 +221,9 @@
               <tr>
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.full_name.presence || '-' %></td>
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
-                  <% if row.hub_name.present? %>
+                  <% if row.hub_id.present? && row.hub_name.present? %>
+                    <%= link_to row.hub_name, hub_path(row.hub_id), data: { turbo_frame: "_top" }, style: "color:#0d6efd; text-decoration:none;" %>
+                  <% elsif row.hub_name.present? %>
                     <%= row.hub_name %>
                   <% else %>
                     No hub assigned

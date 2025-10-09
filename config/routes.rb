@@ -77,6 +77,8 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :hubs, only: [:index, :show]
+
     resources :leaves, only: [:index, :new, :create, :show] do
       collection do
         post :preview

@@ -49,8 +49,16 @@ class AdmissionListController < ApplicationController
       LIMIT 1) AS hub_name
     SQL
 
+    hub_id_subquery = <<~SQL.squish
+      (SELECT hubs.id
+      FROM hubs
+      JOIN users_hubs uh ON uh.hub_id = hubs.id
+      WHERE uh.user_id = learner_infos.user_id AND uh.main = TRUE
+      LIMIT 1) AS hub_id
+    SQL
+
     # final scope used to render table (add select/order as you had before)
-    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme, Arel.sql(hub_name_subquery))
+    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme,Arel.sql(hub_id_subquery), Arel.sql(hub_name_subquery))
     scope = scope.order(Arel.sql("COALESCE(student_number, 99999999), id"))
 
     @learner_infos = scope
