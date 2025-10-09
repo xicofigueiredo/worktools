@@ -11,7 +11,9 @@ export default class extends Controller {
     "curriculumClear",
     "gradeClear",
     "programmeSelect",
-    "programmeClear"
+    "programmeClear",
+    "hubSelect",
+    "hubClear"
   ];
 
   connect() {
@@ -72,6 +74,15 @@ export default class extends Controller {
     this._submitNow();
   }
 
+  clearHub(event) {
+    event.preventDefault();
+    if (this.hasHubSelectTarget) {
+      this.hubSelectTarget.value = "";
+    }
+    this._updateClearForAll();
+    this._submitNow();
+  }
+
   // helpers ------------------------------------------------
 
   _requestSubmit() {
@@ -107,6 +118,10 @@ export default class extends Controller {
 
     if (this.hasProgrammeSelectTarget && this.hasProgrammeClearTarget) {
       this._updateClear(this.programmeSelectTarget, this.programmeClearTarget);
+    }
+
+    if (this.hasHubSelectTarget && this.hasHubClearTarget) {
+      this._updateClear(this.hubSelectTarget, this.hubClearTarget);
     }
   }
 

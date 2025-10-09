@@ -1,4 +1,97 @@
 require 'csv'
+require 'set'
+require 'i18n' unless defined?(I18n)
+
+def normalize_name_for_match(s)
+  return "" if s.nil?
+  # convert encoding and to utf8 already done by your to_utf8 helper
+  t = s.to_s.dup
+  t = I18n.transliterate(t) if defined?(I18n) # remove accents
+  t = t.downcase
+  t = t.gsub(/[^\w\s-]/, '')   # remove punctuation (keep - and spaces)
+  t = t.gsub(/\s+/, ' ').strip
+  t
+end
+
+# simple levenshtein distance implementation (ruby)
+def levenshtein(a, b)
+  a = a.to_s
+  b = b.to_s
+  return b.length if a.length == 0
+  return a.length if b.length == 0
+  v0 = (0..b.length).to_a
+  v1 = Array.new(b.length + 1)
+  a.length.times do |i|
+    v1[0] = i + 1
+    b.length.times do |j|
+      cost = (a[i] == b[j]) ? 0 : 1
+      v1[j + 1] = [
+        v1[j] + 1,          # insertion
+        v0[j + 1] + 1,      # deletion
+        v0[j] + cost        # substitution
+      ].min
+    end
+    v0 = v1.dup
+  end
+  v1[b.length]
+end
+
+# match hub by heuristics/similarity. returns Hub record or nil
+def find_best_hub_match(raw_hub_fragment)
+  return nil if raw_hub_fragment.nil? || raw_hub_fragment.strip == ''
+
+  frag_norm = normalize_name_for_match(raw_hub_fragment)
+
+  # load hubs once (cache) - uses DB Hub model
+  @cached_hubs ||= Hub.all.map { |h| [h, normalize_name_for_match(h.name)] }
+
+  # 1) exact normalized match
+  @cached_hubs.each do |h, name_norm|
+    return h if name_norm == frag_norm
+  end
+
+  # 2) exact downcase match (in case of punctuation differences)
+  @cached_hubs.each do |h, name_norm|
+    return h if name_norm == frag_norm
+  end
+
+  # 3) ends_with or contains (e.g. "Cascais Centre 2" -> "Cascais 2")
+  @cached_hubs.each do |h, name_norm|
+    return h if frag_norm.end_with?(name_norm) || name_norm.end_with?(frag_norm)
+    return h if frag_norm.include?(name_norm) || name_norm.include?(frag_norm)
+  end
+
+  # 4) token overlap (score by intersection)
+  frag_tokens = Set.new(frag_norm.split)
+  best = nil
+  best_score = -1
+  @cached_hubs.each do |h, name_norm|
+    tokens = Set.new(name_norm.split)
+    common = (frag_tokens & tokens).size
+    # weight by token intersection proportion
+    score = common.to_f / [tokens.size, frag_tokens.size].max
+    if score > best_score
+      best_score = score
+      best = h
+    end
+  end
+  # if tokens overlap tightly, accept
+  return best if best_score >= 0.6
+
+  # 5) fallback: minimum Levenshtein distance (accept if small relative to length)
+  distances = @cached_hubs.map do |h, name_norm|
+    d = levenshtein(frag_norm, name_norm)
+    [h, name_norm, d]
+  end
+  distances.sort_by! { |_,_,d| d }
+  top_h, top_name_norm, top_d = distances.first
+  # acceptance threshold: <= 3 OR <= 25% of length
+  if top_d <= 3 || top_d.to_f <= ( [frag_norm.length, top_name_norm.length].max * 0.25 )
+    return top_h
+  end
+
+  nil
+end
 
 namespace :admissions do
   desc "Import admissions CSV into learner_infos. Generates student_number from start_date year. Prints status for every row."
@@ -244,65 +337,118 @@ namespace :admissions do
         # identifier for logs
         ident = attrs[:institutional_email].presence || "#{attrs[:full_name].to_s[0..40]}|#{attrs[:birthdate].to_s}"
 
-        # find existing by institutional email OR by full_name + birthdate
+        # ---------- FETCH RAW HUB CELL + MATCH (keep these as local variables, NOT in attrs) ----------
+        raw_hub_cell = fetch.call(row, 'Hub Location (Section 2)', 'Hub Location', 'Hub')
+        raw_hub_for_logging = to_utf8.call(raw_hub_cell).to_s.strip
+
+        hub_fragment = nil
+        if raw_hub_cell.present?
+          s = raw_hub_cell.to_s
+          hub_fragment = s.include?('-') ? s.split('-', 2).last.to_s.strip : s.strip
+        end
+
+        matched_hub = find_best_hub_match(hub_fragment)  # returns a Hub or nil
+
+        # ---------- FIND existing learner by email or name+birthdate ----------
         found = nil
         if attrs[:institutional_email].present?
           found = LearnerInfo.find_by(institutional_email: attrs[:institutional_email])
         end
-
         if found.nil? && attrs[:full_name].present? && attrs[:birthdate].present?
           found = LearnerInfo.find_by(full_name: attrs[:full_name], birthdate: attrs[:birthdate])
         end
 
-        if found
-          # compare current values and new ones for diffs (string compare)
-          diffs = {}
-          attrs.each do |k,v|
-            current = found.send(k)
-            # normalize for comparison
-            cur_s = current.respond_to?(:strftime) ? current.to_s : (current.nil? ? '' : current.to_s)
-            new_s = v.respond_to?(:strftime) ? v.to_s : (v.nil? ? '' : v.to_s)
-            if cur_s != new_s
-              diffs[k] = { from: cur_s, to: new_s }
-            end
-          end
+        li_var = nil
 
-          if diffs.empty?
-            no_changes += 1
-            puts "Row #{row_num}: NO CHANGES for #{ident}"
-          else
-            if dry_run
-              updated += 1
-              puts "Row #{row_num}: WOULD UPDATE #{ident} - changes: #{diffs.keys.join(', ')}"
+        begin
+          if found
+            # compute diffs for log
+            diffs = {}
+            attrs.each do |k, v|
+              current = found.send(k)
+              cur_s = current.respond_to?(:strftime) ? current.to_s : (current.nil? ? '' : current.to_s)
+              new_s = v.respond_to?(:strftime) ? v.to_s : (v.nil? ? '' : v.to_s)
+              diffs[k] = { from: cur_s, to: new_s } if cur_s != new_s
+            end
+
+            if diffs.empty?
+              no_changes += 1
+              puts "Row #{row_num}: NO CHANGES for #{ident}"
+              li_var = found
             else
-              found.assign_attributes(attrs)
-              found.save!
-              updated += 1
-              puts "Row #{row_num}: UPDATED #{ident} (id=#{found.id}) - changes: #{diffs.keys.join(', ')}"
+              if dry_run
+                updated += 1
+                puts "Row #{row_num}: WOULD UPDATE #{ident} - changes: #{diffs.keys.join(', ')}"
+                li_var = found
+              else
+                found.assign_attributes(attrs)
+                found.save!
+                updated += 1
+                puts "Row #{row_num}: UPDATED #{ident} (id=#{found.id}) - changes: #{diffs.keys.join(', ')}"
+                li_var = found
+              end
             end
-          end
-        else
-          if dry_run
-            created += 1
-            puts "Row #{row_num}: WOULD CREATE #{ident} student_number=#{attrs[:student_number].inspect}"
-          else
-            li = LearnerInfo.new(attrs)
-            if attrs[:institutional_email].present?
-              u = User.find_by(email: attrs[:institutional_email])
-              li.user = u if u
-            end
-            li.save(validate: false)
-            created += 1
-            puts "Row #{row_num}: CREATED id=#{li.id} #{ident} student_number=#{attrs[:student_number].inspect}"
-          end
-        end
 
-      rescue => e
-        errors += 1
-        puts "Row #{row_num}: ERROR for #{(defined?(ident) && ident) ? ident : 'UNKNOWN'} -> #{e.class}: #{e.message}"
-        # print short backtrace for debugging
-        e.backtrace.first(5).each { |bt| puts "  #{bt}" }
-        Rails.logger.error "Admissions import error (row #{row_num}): #{e.full_message}"
+          else
+            # create
+            if dry_run
+              created += 1
+              puts "Row #{row_num}: WOULD CREATE #{ident} student_number=#{attrs[:student_number].inspect}"
+            else
+              li_var = LearnerInfo.new(attrs)
+              if attrs[:institutional_email].present?
+                u = User.find_by(email: attrs[:institutional_email])
+                li_var.user = u if u
+              end
+              li_var.save!(validate: false)
+              created += 1
+              puts "Row #{row_num}: CREATED id=#{li_var.id} #{ident} student_number=#{attrs[:student_number].inspect}"
+            end
+          end
+
+          # ---------- HUB ASSOCIATION: only when not dry-run AND we found a Hub ----------
+          if !dry_run && matched_hub
+            # Find a user to attach - prefer li_var.user, then institutional_email lookup
+            user_to_attach = (li_var && li_var.respond_to?(:user) && li_var.user.present?) ? li_var.user : (attrs[:institutional_email].present? ? User.find_by(email: attrs[:institutional_email]) : nil)
+
+            if user_to_attach
+              ActiveRecord::Base.transaction do
+                # unset any existing main hub(s) for this user (partial-unique index expects only 1 main)
+                if user_to_attach.respond_to?(:users_hubs)
+                  user_to_attach.users_hubs.where(main: true).update_all(main: false)
+                  user_to_attach.users_hubs.create!(hub: matched_hub, main: true)
+                else
+                  # fallback if you don't have association method named users_hubs
+                  UsersHub.where(user_id: user_to_attach.id, main: true).update_all(main: false)
+                  UsersHub.create!(user_id: user_to_attach.id, hub_id: matched_hub.id, main: true)
+                end
+              end
+
+              user_ident = if user_to_attach.respond_to?(:email) && user_to_attach.email.present?
+                            user_to_attach.email
+                          elsif user_to_attach.respond_to?(:name) && user_to_attach.name.present?
+                            user_to_attach.name
+                          else
+                            "user##{user_to_attach.id}"
+                          end
+              puts "Row #{row_num}: associated #{user_ident} in #{matched_hub.name}"
+            else
+              # matched hub present but no user available -> log and skip association
+              maybe_user = attrs[:institutional_email].presence || "NO_USER"
+              puts "Row #{row_num}: couldn't associate the user #{maybe_user} to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\" (no user found)"
+            end
+
+          elsif !dry_run && !matched_hub
+            maybe_user = (li_var && li_var.user) ? (li_var.user.email.presence || "user##{li_var.user.id}") : (attrs[:institutional_email].presence || "NO_USER")
+            puts "Row #{row_num}: couldn't associate the user #{maybe_user} to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\""
+          end
+
+        rescue => e
+          errors += 1
+          puts "Row #{row_num}: ERROR for #{ident} -> #{e.class}: #{e.message}"
+          e.backtrace.first(5).each { |bt| puts "  #{bt}" }
+          Rails.logger.error "Admissions import error (row #{row_num}): #{e.full_message}"
+        end
       end
     end
 

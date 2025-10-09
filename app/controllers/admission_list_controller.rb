@@ -6,6 +6,7 @@ class AdmissionListController < ApplicationController
     @curricula = LearnerInfo.distinct.pluck(:curriculum_course_option).compact.sort
     @grades    = LearnerInfo.distinct.pluck(:grade_year).compact.sort
     @programmes = LearnerInfo.distinct.pluck(:programme).compact.sort
+    @hubs = Hub.order(:name).pluck(:name)
 
     # build a scope purely for filtering/counting (no select/order)
     filter_scope = LearnerInfo.all
@@ -24,13 +25,32 @@ class AdmissionListController < ApplicationController
     filter_scope = filter_scope.where(curriculum_course_option: params[:curriculum]) if params[:curriculum].present?
     filter_scope = filter_scope.where(grade_year: params[:grade_year]) if params[:grade_year].present?
     filter_scope = filter_scope.where(programme: params[:programme]) if params[:programme].present?
+    if params[:hub].present?
+      hub = Hub.find_by(name: params[:hub])
+      if hub
+        filter_scope = filter_scope.where(
+          "EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id = ? AND uh.main = TRUE)",
+          hub.id
+        )
+      else
+        filter_scope = filter_scope.where("1 = 0")
+      end
+    end
 
     # counts
     @total_count    = LearnerInfo.count
     @filtered_count = filter_scope.count
 
+    hub_name_subquery = <<~SQL.squish
+      (SELECT hubs.name
+      FROM hubs
+      JOIN users_hubs uh ON uh.hub_id = hubs.id
+      WHERE uh.user_id = learner_infos.user_id AND uh.main = TRUE
+      LIMIT 1) AS hub_name
+    SQL
+
     # final scope used to render table (add select/order as you had before)
-    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme)
+    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme, Arel.sql(hub_name_subquery))
     scope = scope.order(Arel.sql("COALESCE(student_number, 99999999), id"))
 
     @learner_infos = scope
