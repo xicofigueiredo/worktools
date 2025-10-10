@@ -1,3 +1,5 @@
+require 'csv'
+
 class AdmissionListController < ApplicationController
   before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document]
 
@@ -198,6 +200,88 @@ class AdmissionListController < ApplicationController
 
     flash[:notice] = "#{human_type} removed."
     redirect_to admission_path(@learner_info, active_tab: 'documents')
+  end
+
+  def export_form
+    # Get permission for current user to know which fields they can see
+    @permission = LearnerInfoPermission.new(current_user, nil)
+    @visible_fields = @permission.visible_fields
+
+    # Store current filter params to pass to export
+    @current_filters = {
+      search: params[:search],
+      status: params[:status],
+      hub: params[:hub],
+      programme: params[:programme],
+      curriculum: params[:curriculum],
+      grade_year: params[:grade_year]
+    }.compact
+
+    # Render without layout for AJAX requests
+    render layout: false
+  end
+
+  def export_csv
+    @permission = LearnerInfoPermission.new(current_user, nil)
+    visible_fields = @permission.visible_fields
+
+    # Get selected fields from form
+    selected_fields = params[:fields]&.select { |f| visible_fields.include?(f.to_sym) } || []
+
+    if selected_fields.empty?
+      flash[:alert] = "Please select at least one field to export"
+      return redirect_to admissions_path(request.query_parameters.except(:fields, :use_filters))
+    end
+
+    # Build scope with same filtering logic as index
+    filter_scope = LearnerInfo.all
+
+    # Apply filters if user chose to use them
+    if params[:use_filters] == '1'
+      if params[:search].present?
+        search_term = "%#{params[:search].strip}%"
+        filter_scope = filter_scope.where(
+          "full_name ILIKE :search OR personal_email ILIKE :search OR institutional_email ILIKE :search OR " \
+          "parent1_full_name ILIKE :search OR parent1_email ILIKE :search OR " \
+          "parent2_full_name ILIKE :search OR parent2_email ILIKE :search",
+          search: search_term
+        )
+      end
+
+      filter_scope = filter_scope.where(status: params[:status]) if params[:status].present?
+      filter_scope = filter_scope.where(curriculum_course_option: params[:curriculum]) if params[:curriculum].present?
+      filter_scope = filter_scope.where(grade_year: params[:grade_year]) if params[:grade_year].present?
+      filter_scope = filter_scope.where(programme: params[:programme]) if params[:programme].present?
+
+      if params[:hub].present?
+        hub = Hub.find_by(name: params[:hub])
+        if hub
+          filter_scope = filter_scope.where(
+            "EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id = ? AND uh.main = TRUE)",
+            hub.id
+          )
+        else
+          filter_scope = filter_scope.where("1 = 0")
+        end
+      end
+    end
+
+    # Generate CSV
+    csv_string = CSV.generate(headers: true) do |csv|
+      # Add headers (humanized field names)
+      csv << selected_fields.map { |f| f.to_s.humanize }
+
+      # Add data rows
+      filter_scope.find_each do |learner|
+        csv << selected_fields.map { |field| learner.send(field) }
+      end
+    end
+
+    # Send file
+    send_data csv_string,
+      filename: "learners_export_#{Date.today.strftime('%Y%m%d')}.csv",
+      type: 'text/csv',
+      disposition: 'attachment'
   end
 
   private

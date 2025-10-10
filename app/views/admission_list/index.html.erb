@@ -1,3 +1,20 @@
+<style>
+  .muted {
+    color: #777;
+    opacity: 1;
+  }
+
+  .muted a {
+    color: inherit !important;
+    text-decoration: none;
+  }
+
+  .muted .view-button {
+    opacity: 0.6;
+    pointer-events: auto;
+  }
+</style>
+
 <h1>Admissions List</h1>
 
 <div style="padding: 0 24px;">
@@ -112,7 +129,15 @@
           </button>
         </div>
         <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
-          <%= link_to "Clear All", admissions_path, style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
+          <%= link_to "Clear All", admissions_path,
+              style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
+
+          <button type="button"
+                  onclick="openExportModal()"
+                  style="padding:7px 12px; border-radius:6px; background:#28a745; color:white; border:1px solid #28a745; display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <i class="fa fa-download" aria-hidden="true"></i>
+            Export CSV
+          </button>
         </div>
 
         <% chip_style = "display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; color:inherit; font-size:0.9rem; margin-top:12px;" %>
@@ -214,28 +239,46 @@
             <th style="text-align:left; padding:12px 16px; border-bottom:1px solid #eee;">Actions</th>
           </tr>
         </thead>
-
         <tbody>
           <% if @learner_infos.any? %>
             <% @learner_infos.each do |row| %>
-              <tr>
-                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.full_name.presence || '-' %></td>
+              <% active = row.status.to_s.downcase == "active" %>
+              <tr class="<%= 'muted' unless active %>">
+                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
+                  <%= (
+                    name = row.full_name.to_s.strip.gsub(/\s+/, ' ');
+                    parts = name.split(' ');
+                    display = [parts.first, parts.length > 1 ? parts.last : nil].compact.map { |p| p.downcase.capitalize }.join(' ');
+                    display.presence || '-'
+                  ) %>
+                </td>
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
                   <% if row.hub_id.present? && row.hub_name.present? %>
-                    <%= link_to row.hub_name, hub_path(row.hub_id), data: { turbo_frame: "_top" }, style: "color:#0d6efd; text-decoration:none;" %>
+                    <%= link_to row.hub_name, hub_path(row.hub_id), data: { turbo_frame: "_top" } %>
                   <% elsif row.hub_name.present? %>
                     <%= row.hub_name %>
                   <% else %>
                     No hub assigned
                   <% end %>
                 </td>
-                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.programme.presence || '-' %></td>
-                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.curriculum_course_option.presence || '-' %></td>
-                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;"><%= row.grade_year.presence || '-' %></td>
+
+                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
+                  <%= row.programme.presence || '-' %>
+                </td>
+
+                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
+                  <%= row.curriculum_course_option.presence || '-' %>
+                </td>
+
+                <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
+                  <%= row.grade_year.presence || '-' %>
+                </td>
+
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
                   <%= link_to admission_path(row),
                               title: "View #{row.full_name}",
                               data: { turbo_frame: "_top" },
+                              class: "view-button",
                               style: "display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; background:#0d6efd; color:white; text-decoration:none; border:none;" do %>
                     <i class="fa fa-eye" aria-hidden="true" style="font-size:14px;"></i>
                   <% end %>
@@ -244,7 +287,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="4" style="padding:16px; text-align:center; color:#888;">No learners found matching your search.</td>
+              <td colspan="6" style="padding:16px; text-align:center; color:#888;">No learners found matching your search.</td>
             </tr>
           <% end %>
         </tbody>
@@ -254,3 +297,112 @@
   <% end %>
 
 </div>
+
+<!-- Export Modal -->
+<div id="exportModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; overflow: auto;">
+  <div style="position: relative; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div id="exportModalContent" style="background: white; border-radius: 12px; max-width: 1200px; width: 100%; max-height: 90vh; overflow: auto; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+      <!-- Content will be loaded here -->
+      <div style="padding: 40px; text-align: center;">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p style="margin-top: 16px; color: #666;">Loading export options...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Global select/deselect functions
+  function selectAllFields() {
+    document.querySelectorAll('.field-checkbox').forEach(cb => cb.checked = true);
+  }
+
+  function deselectAllFields() {
+    document.querySelectorAll('.field-checkbox').forEach(cb => cb.checked = false);
+  }
+
+  // Category-specific select/deselect
+  function selectCategory(categoryId) {
+    document.querySelectorAll(`.field-checkbox[data-category="${categoryId}"]`)
+      .forEach(cb => cb.checked = true);
+  }
+
+  function deselectCategory(categoryId) {
+    document.querySelectorAll(`.field-checkbox[data-category="${categoryId}"]`)
+      .forEach(cb => cb.checked = false);
+  }
+
+  // Submit the form
+  function submitExport() {
+    const form = document.getElementById('exportForm');
+    const checkedBoxes = document.querySelectorAll('.field-checkbox:checked');
+
+    if (checkedBoxes.length === 0) {
+      alert('Please select at least one field to export');
+      return;
+    }
+
+    // Submit the form (will trigger download)
+    form.submit();
+
+    // Close modal after a brief delay
+    setTimeout(() => {
+      closeExportModal();
+    }, 500);
+  }
+
+  function openExportModal() {
+    const modal = document.getElementById('exportModal');
+    const content = document.getElementById('exportModalContent');
+
+    // Show modal
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+
+    // Build URL with current filter params
+    const params = new URLSearchParams(window.location.search);
+    const exportUrl = '<%= export_admissions_path %>?' + params.toString();
+
+    // Fetch the form
+    fetch(exportUrl, {
+      headers: {
+        'Accept': 'text/html',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      content.innerHTML = html;
+    })
+    .catch(error => {
+      content.innerHTML = '<div style="padding: 40px; text-align: center;"><p style="color: #dc3545;">Error loading export form. Please try again.</p></div>';
+      console.error('Error:', error);
+    });
+  }
+
+  function closeExportModal() {
+    const modal = document.getElementById('exportModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  // Close on outside click
+  document.addEventListener('click', function(event) {
+    const modal = document.getElementById('exportModal');
+    if (event.target === modal) {
+      closeExportModal();
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      const modal = document.getElementById('exportModal');
+      if (modal.style.display === 'block') {
+        closeExportModal();
+      }
+    }
+  });
+</script>

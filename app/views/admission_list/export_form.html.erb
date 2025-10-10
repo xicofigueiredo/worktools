@@ -1,0 +1,199 @@
+<%
+  # Define field categories exactly like in show view
+  field_categories = {
+    'Basic Information' => [
+      :full_name, :preferred_name, :student_number, :start_date, :birthdate,
+      :programme, :curriculum_course_option, :grade_year,
+      :transfer_of_programme_date, :end_date, :end_day_communication
+    ],
+    'Contact Information' => [
+      :personal_email, :institutional_email, :phone_number, :home_address,
+      :nationality, :gender, :native_language, :english_proficiency
+    ],
+    'Parents / Guardians' => [
+      :parent1_full_name, :parent1_email, :parent1_phone_number, :parent1_id_information,
+      :parent2_full_name, :parent2_email, :parent2_phone_number, :parent2_id_information,
+      :parent2_info_not_to_be_contacted
+    ],
+    'Financial / Payments' => [
+      :deposit, :sponsor, :payment_plan, :monthly_tuition, :discount_mt,
+      :scholarship, :scholarship_percentage, :admission_fee, :discount_af,
+      :billable_fee_per_month, :billable_af
+    ],
+    'School / Previous Education' => [
+      :registering_school_pt_plus, :previous_schooling, :previous_school_status,
+      :previous_school_name, :previous_school_email
+    ],
+    'Administrative' => [
+      :id_information, :fiscal_number, :use_of_image_authorisation,
+      :emergency_protocol_choice, :withdrawal_category, :withdrawal_reason
+    ]
+  }
+
+  # Filter to only show fields the user has permission to see
+  visible_categories = field_categories.map do |category_name, fields|
+    visible_fields_in_category = fields.select { |f| @visible_fields.include?(f) }
+    [category_name, visible_fields_in_category] if visible_fields_in_category.any?
+  end.compact.to_h
+%>
+
+<style>
+  .li-section {
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+  }
+
+  .li-section h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .modal-header-custom {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    border-bottom: 1px solid #dee2e6;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-body-custom {
+    padding: 24px;
+  }
+
+  .modal-footer-custom {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    z-index: 10;
+    border-top: 1px solid #dee2e6;
+    padding: 16px 24px;
+  }
+</style>
+
+<div class="modal-header-custom">
+  <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Export Learners to CSV</h2>
+  <button type="button"
+          onclick="closeExportModal()"
+          style="background: none; border: none; font-size: 28px; color: #666; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px;"
+          onmouseover="this.style.background='#f0f0f0'"
+          onmouseout="this.style.background='none'"
+          aria-label="Close">
+    ×
+  </button>
+</div>
+
+<div class="modal-body-custom">
+  <%= form_with url: export_admissions_path, method: :post, id: 'exportForm', data: { turbo: false } do |f| %>
+
+    <!-- Hidden fields to preserve filters -->
+    <% @current_filters.each do |key, value| %>
+      <%= hidden_field_tag key, value %>
+    <% end %>
+
+    <!-- Option to use current filters -->
+    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+      <h3 style="margin-top: 0; font-size: 1.1rem;">Apply Current Filters?</h3>
+
+      <% if @current_filters.any? %>
+        <div style="margin-bottom: 12px;">
+          <strong>Active filters:</strong>
+          <ul style="margin: 8px 0;">
+            <% @current_filters.each do |key, value| %>
+              <li><%= key.to_s.humanize %>: <strong><%= value %></strong></li>
+            <% end %>
+          </ul>
+        </div>
+      <% else %>
+        <p style="color: #666; margin: 8px 0;">No filters currently applied</p>
+      <% end %>
+
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <%= check_box_tag :use_filters, '1', @current_filters.any?, style: 'width: 18px; height: 18px;' %>
+        <span>Export only filtered learners</span>
+      </label>
+      <p style="color: #666; font-size: 0.9rem; margin: 4px 0 0 26px;">
+        Unchecked = export all learners you have access to
+      </p>
+    </div>
+
+    <!-- Global select/deselect buttons -->
+    <div style="display: flex; gap: 8px; margin-bottom: 20px; justify-content: flex-end;">
+      <button type="button" onclick="selectAllFields()"
+              style="padding: 8px 16px; border-radius: 6px; background: #0d6efd; color: white; border: none; cursor: pointer; font-weight: 500;">
+        Select All Fields
+      </button>
+      <button type="button" onclick="deselectAllFields()"
+              style="padding: 8px 16px; border-radius: 6px; background: #6c757d; color: white; border: none; cursor: pointer; font-weight: 500;">
+        Deselect All Fields
+      </button>
+    </div>
+
+    <!-- Field selection by category -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <% visible_categories.each do |category_name, fields| %>
+        <% category_id = category_name.parameterize.underscore %>
+
+        <div class="li-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h4 style="margin: 0; font-weight: 600;"><%= category_name %></h4>
+            <div style="display: flex; gap: 8px;">
+              <button type="button"
+                      onclick="selectCategory('<%= category_id %>')"
+                      style="padding: 5px 12px; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer; font-size: 0.875rem;">
+                Select All
+              </button>
+              <button type="button"
+                      onclick="deselectCategory('<%= category_id %>')"
+                      style="padding: 5px 12px; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer; font-size: 0.875rem;">
+                Deselect All
+              </button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
+            <% fields.each do |field| %>
+              <label style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 6px; cursor: pointer; background: #f8f9fa; transition: background 0.2s;"
+                     onmouseover="this.style.background='#e9ecef'"
+                     onmouseout="this.style.background='#f8f9fa'">
+                <%= check_box_tag 'fields[]', field, true,
+                    class: 'field-checkbox',
+                    data: { category: category_id },
+                    style: 'width: 18px; height: 18px; cursor: pointer;' %>
+                <span style="font-size: 0.9rem;"><%= field.to_s.humanize %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<div class="modal-footer-custom">
+  <div style="display: flex; gap: 12px; justify-content: space-between; align-items: center;">
+    <div style="color: #666; font-size: 0.9rem;">
+      <i class="fa fa-info-circle" aria-hidden="true"></i>
+      Only fields you have permission to view are shown
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <button type="button"
+              onclick="closeExportModal()"
+              style="padding: 10px 24px; border-radius: 6px; background: #6c757d; color: white; border: none; cursor: pointer; font-weight: 500;">
+        Cancel
+      </button>
+      <button type="button"
+              onclick="submitExport()"
+              style="padding: 10px 24px; border-radius: 6px; background: #28a745; color: white; border: none; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+        <i class="fa fa-download" aria-hidden="true"></i>
+        Download CSV
+      </button>
+    </div>
+  </div>
+</div>

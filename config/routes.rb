@@ -70,6 +70,10 @@ Rails.application.routes.draw do
 
     # Admissions list
     resources :admissions, controller: 'admission_list', only: [:index, :show, :update] do
+      collection do
+        get 'export', action: :export_form
+        post 'export', action: :export_csv
+      end
       member do
         get 'documents', action: :documents
         post 'documents', action: :create_document
