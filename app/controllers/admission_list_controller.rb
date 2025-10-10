@@ -207,15 +207,11 @@ class AdmissionListController < ApplicationController
     @permission = LearnerInfoPermission.new(current_user, nil)
     @visible_fields = @permission.visible_fields
 
-    # Store current filter params to pass to export
-    @current_filters = {
-      search: params[:search],
-      status: params[:status],
-      hub: params[:hub],
-      programme: params[:programme],
-      curriculum: params[:curriculum],
-      grade_year: params[:grade_year]
-    }.compact
+    @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
+    @curricula = LearnerInfo.distinct.pluck(:curriculum_course_option).compact.sort
+    @grades    = LearnerInfo.distinct.pluck(:grade_year).compact.sort
+    @programmes = LearnerInfo.distinct.pluck(:programme).compact.sort
+    @hubs = Hub.order(:name).pluck(:name)
 
     # Render without layout for AJAX requests
     render layout: false
@@ -230,35 +226,37 @@ class AdmissionListController < ApplicationController
 
     if selected_fields.empty?
       flash[:alert] = "Please select at least one field to export"
-      return redirect_to admissions_path(request.query_parameters.except(:fields, :use_filters))
+      return redirect_to admissions_path
     end
 
-    # Build scope with same filtering logic as index
+    # Build scope
     filter_scope = LearnerInfo.all
 
-    # Apply filters if user chose to use them
-    if params[:use_filters] == '1'
-      if params[:search].present?
-        search_term = "%#{params[:search].strip}%"
-        filter_scope = filter_scope.where(
-          "full_name ILIKE :search OR personal_email ILIKE :search OR institutional_email ILIKE :search OR " \
-          "parent1_full_name ILIKE :search OR parent1_email ILIKE :search OR " \
-          "parent2_full_name ILIKE :search OR parent2_email ILIKE :search",
-          search: search_term
-        )
-      end
+    # Apply multi-select filters
+    if params[:status].present? && params[:status].is_a?(Array)
+      filter_scope = filter_scope.where(status: params[:status].reject(&:blank?))
+    end
 
-      filter_scope = filter_scope.where(status: params[:status]) if params[:status].present?
-      filter_scope = filter_scope.where(curriculum_course_option: params[:curriculum]) if params[:curriculum].present?
-      filter_scope = filter_scope.where(grade_year: params[:grade_year]) if params[:grade_year].present?
-      filter_scope = filter_scope.where(programme: params[:programme]) if params[:programme].present?
+    if params[:curriculum].present? && params[:curriculum].is_a?(Array)
+      filter_scope = filter_scope.where(curriculum_course_option: params[:curriculum].reject(&:blank?))
+    end
 
-      if params[:hub].present?
-        hub = Hub.find_by(name: params[:hub])
-        if hub
+    if params[:grade_year].present? && params[:grade_year].is_a?(Array)
+      filter_scope = filter_scope.where(grade_year: params[:grade_year].reject(&:blank?))
+    end
+
+    if params[:programme].present? && params[:programme].is_a?(Array)
+      filter_scope = filter_scope.where(programme: params[:programme].reject(&:blank?))
+    end
+
+    if params[:hub].present? && params[:hub].is_a?(Array)
+      hub_names = params[:hub].reject(&:blank?)
+      if hub_names.any?
+        hubs = Hub.where(name: hub_names)
+        if hubs.any?
           filter_scope = filter_scope.where(
-            "EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id = ? AND uh.main = TRUE)",
-            hub.id
+            "EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id IN (?) AND uh.main = TRUE)",
+            hubs.pluck(:id)
           )
         else
           filter_scope = filter_scope.where("1 = 0")

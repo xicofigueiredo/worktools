@@ -61,6 +61,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-radius: 12px 12px 0 0;
   }
 
   .modal-body-custom {
@@ -74,6 +75,43 @@
     z-index: 10;
     border-top: 1px solid #dee2e6;
     padding: 16px 24px;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .filter-select-box {
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    background: white;
+  }
+
+  .filter-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .filter-option:hover {
+    background: #f8f9fa;
+  }
+
+  .filter-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .filter-option label {
+    cursor: pointer;
+    margin: 0;
+    font-size: 0.9rem;
+    flex: 1;
   }
 </style>
 
@@ -92,47 +130,131 @@
 <div class="modal-body-custom">
   <%= form_with url: export_admissions_path, method: :post, id: 'exportForm', data: { turbo: false } do |f| %>
 
-    <!-- Hidden fields to preserve filters -->
-    <% @current_filters.each do |key, value| %>
-      <%= hidden_field_tag key, value %>
-    <% end %>
-
-    <!-- Option to use current filters -->
-    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-      <h3 style="margin-top: 0; font-size: 1.1rem;">Apply Current Filters?</h3>
-
-      <% if @current_filters.any? %>
-        <div style="margin-bottom: 12px;">
-          <strong>Active filters:</strong>
-          <ul style="margin: 8px 0;">
-            <% @current_filters.each do |key, value| %>
-              <li><%= key.to_s.humanize %>: <strong><%= value %></strong></li>
-            <% end %>
-          </ul>
-        </div>
-      <% else %>
-        <p style="color: #666; margin: 8px 0;">No filters currently applied</p>
-      <% end %>
-
-      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-        <%= check_box_tag :use_filters, '1', @current_filters.any?, style: 'width: 18px; height: 18px;' %>
-        <span>Export only filtered learners</span>
-      </label>
-      <p style="color: #666; font-size: 0.9rem; margin: 4px 0 0 26px;">
-        Unchecked = export all learners you have access to
+    <!-- Filters Section -->
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+      <h3 style="margin-top: 0; font-size: 1.1rem; margin-bottom: 16px;">Filter Learners to Export</h3>
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 16px;">
+        Select multiple options from each filter. Leave all unchecked to export all learners.
       </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+
+        <!-- Status Filter -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; font-size: 0.95rem;">Status</label>
+            <button type="button"
+                    onclick="toggleFilterCategory('status')"
+                    style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
+              Select All
+            </button>
+          </div>
+          <div class="filter-select-box">
+            <% @statuses.each do |status| %>
+              <div class="filter-option">
+                <%= check_box_tag 'status[]', status, false, id: "status_#{status.parameterize}", data: { filter_category: 'status' } %>
+                <%= label_tag "status_#{status.parameterize}", status %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Hub Filter -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; font-size: 0.95rem;">Hub</label>
+            <button type="button"
+                    onclick="toggleFilterCategory('hub')"
+                    style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
+              Select All
+            </button>
+          </div>
+          <div class="filter-select-box">
+            <% @hubs.each do |hub| %>
+              <div class="filter-option">
+                <%= check_box_tag 'hub[]', hub, false, id: "hub_#{hub.parameterize}", data: { filter_category: 'hub' } %>
+                <%= label_tag "hub_#{hub.parameterize}", hub %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Programme Filter -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; font-size: 0.95rem;">Programme</label>
+            <button type="button"
+                    onclick="toggleFilterCategory('programme')"
+                    style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
+              Select All
+            </button>
+          </div>
+          <div class="filter-select-box">
+            <% @programmes.each do |programme| %>
+              <div class="filter-option">
+                <%= check_box_tag 'programme[]', programme, false, id: "programme_#{programme.parameterize}", data: { filter_category: 'programme' } %>
+                <%= label_tag "programme_#{programme.parameterize}", programme %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Curriculum Filter -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; font-size: 0.95rem;">Curriculum</label>
+            <button type="button"
+                    onclick="toggleFilterCategory('curriculum')"
+                    style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
+              Select All
+            </button>
+          </div>
+          <div class="filter-select-box">
+            <% @curricula.each do |curriculum| %>
+              <div class="filter-option">
+                <%= check_box_tag 'curriculum[]', curriculum, false, id: "curriculum_#{curriculum.parameterize}", data: { filter_category: 'curriculum' } %>
+                <%= label_tag "curriculum_#{curriculum.parameterize}", curriculum %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Grade/Year Filter -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; font-size: 0.95rem;">Grade / Year</label>
+            <button type="button"
+                    onclick="toggleFilterCategory('grade_year')"
+                    style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
+              Select All
+            </button>
+          </div>
+          <div class="filter-select-box">
+            <% @grades.each do |grade| %>
+              <div class="filter-option">
+                <%= check_box_tag 'grade_year[]', grade, false, id: "grade_year_#{grade.parameterize}", data: { filter_category: 'grade_year' } %>
+                <%= label_tag "grade_year_#{grade.parameterize}", grade %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Global select/deselect buttons -->
-    <div style="display: flex; gap: 8px; margin-bottom: 20px; justify-content: flex-end;">
-      <button type="button" onclick="selectAllFields()"
-              style="padding: 8px 16px; border-radius: 6px; background: #0d6efd; color: white; border: none; cursor: pointer; font-weight: 500;">
-        Select All Fields
-      </button>
-      <button type="button" onclick="deselectAllFields()"
-              style="padding: 8px 16px; border-radius: 6px; background: #6c757d; color: white; border: none; cursor: pointer; font-weight: 500;">
-        Deselect All Fields
-      </button>
+    <!-- Global select/deselect buttons for fields -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="margin: 0; font-size: 1.1rem;">Select Fields to Export</h3>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" onclick="selectAllFields()"
+                style="padding: 8px 16px; border-radius: 6px; background: #0d6efd; color: white; border: none; cursor: pointer; font-weight: 500;">
+          Select All Fields
+        </button>
+        <button type="button" onclick="deselectAllFields()"
+                style="padding: 8px 16px; border-radius: 6px; background: #6c757d; color: white; border: none; cursor: pointer; font-weight: 500;">
+          Deselect All Fields
+        </button>
+      </div>
     </div>
 
     <!-- Field selection by category -->

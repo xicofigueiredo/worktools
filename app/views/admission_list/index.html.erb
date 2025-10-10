@@ -405,4 +405,13 @@
       }
     }
   });
+
+  function toggleFilterCategory(category) {
+    const checkboxes = document.querySelectorAll(`input[data-filter-category="${category}"]`);
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+    checkboxes.forEach(cb => {
+      cb.checked = !allChecked;
+    });
+  }
 </script>
