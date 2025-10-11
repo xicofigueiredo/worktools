@@ -6,11 +6,8 @@ class HubsController < ApplicationController
     # 1) user ids that belong to this hub as main
     hub_user_ids = UsersHub.where(hub_id: hub_id, main: true).distinct.pluck(:user_id)
 
-    # 2) active users (deactivate = false)
-    active_user_ids = User.where(id: hub_user_ids, deactivate: false).distinct.pluck(:id)
-
-    # 3) learner infos for those users (eager load user to avoid n+1)
-    @active_learners_scope = LearnerInfo.where(user_id: active_user_ids).includes(:user)
+    # 2) Get all learner infos for hub users, filter by status = "Active"
+    @active_learners_scope = LearnerInfo.where(user_id: hub_user_ids, status: 'Active').includes(:user)
 
     # basic totals
     @total_active_learners = @active_learners_scope.count
@@ -26,7 +23,7 @@ class HubsController < ApplicationController
       @capacity_pct = nil
     end
 
-    # AGE calculations (from birthdate)
+    # age calculations
     birthdates = @active_learners_scope.where.not(birthdate: nil).pluck(:birthdate)
     today = Date.current
     ages = birthdates.map do |bd|
@@ -37,7 +34,7 @@ class HubsController < ApplicationController
 
     @age_average = ages.any? ? (ages.sum.to_f / ages.size).round(1) : nil
 
-    # age buckets requested: 11-13 / 14-15 / 16-17 / 18+
+    # age buckets
     @age_bucket_ranges = {
       '11-13' => 0,
       '14-15' => 0,
