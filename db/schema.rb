@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_03_144537) do
+ActiveRecord::Schema[7.0].define(version: 2025_10_13_190642) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -676,6 +676,25 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_03_144537) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["kda_id"], name: "index_p2ps_on_kda_id"
+  end
+
+  create_table "pricing_tiers", force: :cascade do |t|
+    t.string "model", null: false
+    t.string "country", null: false
+    t.string "currency", null: false
+    t.string "hub_type", null: false
+    t.string "specific_hub"
+    t.string "curriculum"
+    t.integer "admission_fee"
+    t.integer "monthly_fee"
+    t.integer "renewal_fee"
+    t.string "invoice_recipient"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["curriculum"], name: "index_pricing_tiers_on_curriculum"
+    t.index ["model", "country", "currency", "hub_type", "specific_hub", "curriculum"], name: "index_pricing_tiers_on_unique_combination"
+    t.index ["model", "country", "hub_type"], name: "index_pricing_tiers_on_model_and_country_and_hub_type"
   end
 
   create_table "public_holidays", force: :cascade do |t|
