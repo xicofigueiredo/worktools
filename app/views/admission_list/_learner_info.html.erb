@@ -56,7 +56,16 @@
   preferred_name: { col: '6' },
   full_name: { col: '6' },
   student_number: { col: '6' },
-  curriculum_course_option: { col: '6' },
+  curriculum_course_option: { type: :select, col: '6', choices: [
+    "British Curriculum",
+    "American Curriculum",
+    "Own Curriculum",
+    "UP Business",
+    "UP Sports Management",
+    "UP Computing",
+    "Portuguese Curriculum",
+    "UPx Business"
+  ]},
   grade_year: { col: '6' },
   start_date: { type: :date, col: '4' },
   birthdate: { type: :date, col: '4' },

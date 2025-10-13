@@ -4,16 +4,14 @@ require 'i18n' unless defined?(I18n)
 
 def normalize_name_for_match(s)
   return "" if s.nil?
-  # convert encoding and to utf8 already done by your to_utf8 helper
   t = s.to_s.dup
-  t = I18n.transliterate(t) if defined?(I18n) # remove accents
+  t = I18n.transliterate(t) if defined?(I18n)
   t = t.downcase
-  t = t.gsub(/[^\w\s-]/, '')   # remove punctuation (keep - and spaces)
+  t = t.gsub(/[^\w\s-]/, '')
   t = t.gsub(/\s+/, ' ').strip
   t
 end
 
-# simple levenshtein distance implementation (ruby)
 def levenshtein(a, b)
   a = a.to_s
   b = b.to_s
@@ -26,9 +24,9 @@ def levenshtein(a, b)
     b.length.times do |j|
       cost = (a[i] == b[j]) ? 0 : 1
       v1[j + 1] = [
-        v1[j] + 1,          # insertion
-        v0[j + 1] + 1,      # deletion
-        v0[j] + cost        # substitution
+        v1[j] + 1,
+        v0[j + 1] + 1,
+        v0[j] + cost
       ].min
     end
     v0 = v1.dup
@@ -36,13 +34,10 @@ def levenshtein(a, b)
   v1[b.length]
 end
 
-# match hub by heuristics/similarity. returns Hub record or nil
 def find_best_hub_match(raw_hub_fragment)
   return nil if raw_hub_fragment.nil? || raw_hub_fragment.strip == ''
 
   frag_norm = normalize_name_for_match(raw_hub_fragment)
-
-  # load hubs once (cache) - uses DB Hub model
   @cached_hubs ||= Hub.all.map { |h| [h, normalize_name_for_match(h.name)] }
 
   # 1) exact normalized match
@@ -50,51 +45,194 @@ def find_best_hub_match(raw_hub_fragment)
     return h if name_norm == frag_norm
   end
 
-  # 2) exact downcase match (in case of punctuation differences)
-  @cached_hubs.each do |h, name_norm|
-    return h if name_norm == frag_norm
-  end
-
-  # 3) ends_with or contains (e.g. "Cascais Centre 2" -> "Cascais 2")
+  # 2) ends_with or contains
   @cached_hubs.each do |h, name_norm|
     return h if frag_norm.end_with?(name_norm) || name_norm.end_with?(frag_norm)
     return h if frag_norm.include?(name_norm) || name_norm.include?(frag_norm)
   end
 
-  # 4) token overlap (score by intersection)
+  # 3) token overlap
   frag_tokens = Set.new(frag_norm.split)
   best = nil
   best_score = -1
   @cached_hubs.each do |h, name_norm|
     tokens = Set.new(name_norm.split)
     common = (frag_tokens & tokens).size
-    # weight by token intersection proportion
     score = common.to_f / [tokens.size, frag_tokens.size].max
     if score > best_score
       best_score = score
       best = h
     end
   end
-  # if tokens overlap tightly, accept
   return best if best_score >= 0.6
 
-  # 5) fallback: minimum Levenshtein distance (accept if small relative to length)
+  # 4) Levenshtein fallback
   distances = @cached_hubs.map do |h, name_norm|
     d = levenshtein(frag_norm, name_norm)
     [h, name_norm, d]
   end
   distances.sort_by! { |_,_,d| d }
   top_h, top_name_norm, top_d = distances.first
-  # acceptance threshold: <= 3 OR <= 25% of length
-  if top_d <= 3 || top_d.to_f <= ( [frag_norm.length, top_name_norm.length].max * 0.25 )
+  if top_d <= 3 || top_d.to_f <= ([frag_norm.length, top_name_norm.length].max * 0.25)
     return top_h
   end
 
   nil
 end
 
+# Curriculum normalization mapping
+def normalize_curriculum(raw_curriculum)
+  return nil if raw_curriculum.nil? || raw_curriculum.to_s.strip.empty?
+
+  curriculum_map = {
+    'american curriculum (fia)' => 'American Curriculum',
+    'british curriculum' => 'British Curriculum',
+    'alternative (own) curriculum' => 'Own Curriculum',
+    'up business' => 'UP Business',
+    'american curriculum (ecampus)' => 'Own Curriculum',
+    'up sports and leisure' => 'UP Sports Management',
+    'unsure' => nil,
+    'up computing' => 'UP Computing',
+    'american curriculum (flvs)' => 'Own Curriculum',
+    'up business (bga)' => 'UP Business',
+    'esl course' => 'Own Curriculum',
+    'portuguese curriculum' => 'Portuguese Curriculum',
+    'american curriculum' => 'American Curriculum',
+    'up business management' => 'UPx Business',
+    'own curriculum' => 'Own Curriculum',
+    'upx business management' => 'UPx Business',
+    'up business ; upx business management' => 'UPx Business'
+  }
+
+  normalized_key = raw_curriculum.to_s.strip.downcase
+  mapped = curriculum_map[normalized_key]
+
+  return mapped if mapped || curriculum_map.key?(normalized_key)
+
+  # Fallback: if it contains "up business" variations
+  if normalized_key.include?('upx') && normalized_key.include?('business')
+    return 'UPx Business'
+  elsif normalized_key.include?('up') && normalized_key.include?('business')
+    return 'UP Business'
+  elsif normalized_key.include?('ecampus') || normalized_key.include?('flvs') || normalized_key.include?('esl')
+    return 'Own Curriculum'
+  end
+
+  # Return original if no mapping found
+  raw_curriculum.to_s.strip
+end
+
+# Grade normalization based on curriculum
+def normalize_grade(raw_grade, curriculum)
+  return nil if raw_grade.nil? || raw_grade.to_s.strip.empty?
+  return nil if curriculum.nil?
+
+  grade_str = raw_grade.to_s.strip
+
+  # Extract year/grade number from strings like "US Grade 12 (UK Year 13)"
+  # Try to match the pattern and extract both US and UK values
+  us_match = grade_str.match(/US\s+(?:Grade|Year)\s+(\d+)/i)
+  uk_match = grade_str.match(/UK\s+Year\s+(\d+)/i)
+  pt_match = grade_str.match(/PT\s+Year\s+(\d+)/i)
+
+  # Also handle simple numeric grades
+  simple_number = grade_str.match(/^\d+$/) ? grade_str.to_i : nil
+
+  case curriculum
+  when 'British Curriculum'
+    if uk_match
+      year_num = uk_match[1].to_i
+      return "Year #{year_num}"
+    elsif us_match
+      # Convert US to UK using mapping
+      us_grade = us_match[1].to_i
+      uk_year = case us_grade
+                when 12 then 13
+                when 11 then 12
+                when 10 then 11
+                when 9 then 10
+                when 8 then 9
+                when 7 then 8
+                else us_grade
+                end
+      return "Year #{uk_year}"
+    elsif simple_number
+      return "Year #{simple_number}"
+    end
+
+  when 'American Curriculum'
+    if us_match
+      grade_num = us_match[1].to_i
+      return "Grade #{grade_num}"
+    elsif uk_match
+      # Convert UK to US using mapping
+      uk_year = uk_match[1].to_i
+      us_grade = case uk_year
+                 when 13 then 12
+                 when 12 then 11
+                 when 11 then 10
+                 when 10 then 9
+                 when 9 then 8
+                 when 8 then 7
+                 else uk_year
+                 end
+      return "Grade #{us_grade}"
+    elsif simple_number
+      return "Grade #{simple_number}"
+    end
+
+  when 'Portuguese Curriculum'
+    if pt_match
+      year_num = pt_match[1].to_i
+      return "Year #{year_num}"
+    elsif us_match
+      # Convert US to PT using mapping (PT follows similar to UK)
+      us_grade = us_match[1].to_i
+      pt_year = case us_grade
+                when 12 then 12
+                when 11 then 11
+                when 10 then 10
+                when 9 then 9
+                when 8 then 8
+                when 7 then 7
+                else us_grade
+                end
+      return "Year #{pt_year}"
+    elsif simple_number
+      return "Year #{simple_number}"
+    end
+
+  when 'UP Business', 'UPx Business', 'UP Computing', 'UP Sports Management'
+    # UP programs use Level system
+    if grade_str.match(/Level\s+(\d+)/i)
+      level_num = $1.to_i
+      return "Level #{level_num}"
+    elsif us_match
+      # Map US grades to UP levels (approximate)
+      us_grade = us_match[1].to_i
+      level = case us_grade
+              when 12 then 6
+              when 11 then 5
+              when 10 then 4
+              when 9 then 3
+              else nil
+              end
+      return "Level #{level}" if level
+    elsif simple_number && simple_number >= 3 && simple_number <= 6
+      return "Level #{simple_number}"
+    end
+
+  when 'Own Curriculum'
+    # Own Curriculum doesn't have normalized grades
+    return nil
+  end
+
+  # If no mapping found, return original
+  raw_grade
+end
+
 namespace :admissions do
-  desc "Import admissions CSV into learner_infos. Generates student_number from start_date year. Prints status for every row."
+  desc "Import admissions CSV into learner_infos with curriculum and grade normalization"
   task import_learner_infos: :environment do
     csv_file_path = Rails.root.join('lib', 'tasks', 'admissions_list.csv')
 
@@ -108,9 +246,6 @@ namespace :admissions do
     puts "CSV: #{csv_file_path}"
     puts
 
-    # -----------------------
-    # Encoding helper
-    # -----------------------
     to_utf8 = lambda do |val|
       return nil if val.nil?
       s = val.is_a?(String) ? val.dup : val.to_s
@@ -133,9 +268,6 @@ namespace :admissions do
       end
     end
 
-    # -----------------------
-    # helpers / parsers
-    # -----------------------
     nilish = ->(v) { v.nil? || v.to_s.strip == '' || %w[n/a na null].include?(v.to_s.strip.downcase) }
 
     parse_date = ->(v) do
@@ -163,21 +295,19 @@ namespace :admissions do
 
     normalize = ->(s) { to_utf8.call(s).to_s.strip.downcase.gsub(/\s+/, ' ') }
 
-    # flexible fetch: exact header then normalized header matching
     fetch = lambda do |row, *candidates|
-      headers_norm = row.headers.map { |h| [ normalize.call(h), h ] }.to_h
+      headers_norm = row.headers.map { |h| [normalize.call(h), h] }.to_h
       candidates.each do |cand|
         return to_utf8.call(row[cand]) if row.headers.include?(cand)
         key = normalize.call(cand)
         if headers_norm.key?(key)
-          raw = row[ headers_norm[key] ]
+          raw = row[headers_norm[key]]
           return to_utf8.call(raw)
         end
       end
       nil
     end
 
-    # FIELD_MAP: map to your DB columns (keys are learner_info attributes)
     FIELD_MAP = {
       status: ['Status'],
       programme: ['Programme (Section 2)', 'Programme'],
@@ -196,7 +326,7 @@ namespace :admissions do
       id_information: ["Learner's ID Information (5)"],
       fiscal_number: ["Learner's Fiscal Number (5)"],
       english_proficiency: ['English Proficiency (5)', 'English Proficiency'],
-      home_address: ['Home Address (5: Street Address + City + Postal Code + Country)','Home Address'],
+      home_address: ['Home Address (5: Street Address + City + Postal Code + Country)', 'Home Address'],
       gender: ["Learner's Gender (5)", 'Gender'],
       use_of_image_authorisation: ['Use of Image Authorisation (Section 7)'],
       emergency_protocol_choice: ['Emergency Protocol Choice (Section 9)'],
@@ -231,7 +361,6 @@ namespace :admissions do
       withdrawal_reason: ['Withdrawal Reason'],
     }.freeze
 
-    # parse_field (lambda)
     parse_field = lambda do |value, key|
       return nil if nilish.call(value)
       case key
@@ -250,7 +379,6 @@ namespace :admissions do
       end
     end
 
-    # student number generator (same approach as before)
     generate_student_number = lambda do |year, max_retries = 5|
       raise ArgumentError, "invalid year #{year}" unless year.is_a?(Integer) && year > 0
 
@@ -281,22 +409,20 @@ namespace :admissions do
       end
     end
 
-    # counters
     total = 0
     created = 0
     updated = 0
     no_changes = 0
     errors = 0
 
-    # print detected headers for debugging
     sample_table = CSV.read(csv_file_path, headers: true, encoding: 'bom|utf-8')
     puts "Detected CSV headers (#{sample_table.headers.size}):"
-    sample_table.headers.each_with_index { |h,i| puts "  #{i+1}. #{to_utf8.call(h).inspect}" }
+    sample_table.headers.each_with_index { |h, i| puts "  #{i + 1}. #{to_utf8.call(h).inspect}" }
     puts
 
     CSV.foreach(csv_file_path, headers: true, encoding: 'bom|utf-8') do |row|
       total += 1
-      row_num = total + 1 # approximate CSV row number (including header)
+      row_num = total + 1
       begin
         attrs = {}
 
@@ -306,14 +432,15 @@ namespace :admissions do
           attrs[attr] = parsed
         end
 
+        # Programme normalization
         if attrs[:programme].present?
           long_to_short = {
             normalize.call('In-person (with Hub access): Secondary Education (Grades 6 to 12)') => 'In-Person: Secondary Education',
-            normalize.call('In-person (with Hub access): UP Programme (Higher Education)')     => 'In-Person: UP Programme',
+            normalize.call('In-person (with Hub access): UP Programme (Higher Education)') => 'In-Person: UP Programme',
             normalize.call('Online Only (no Hub access): Secondary Education (Grades 6 to 12)') => 'Online: Secondary Education',
-            normalize.call('Online Only (no Hub access): UP Programme (Higher Education)')    => 'Online: UP Programme',
-            normalize.call('BAS Programme (Academy of Sports)')                               => 'BAS Programme',
-            normalize.call('In-person (with Hub access): Own Curriculum')                     => 'Own Curriculum'
+            normalize.call('Online Only (no Hub access): UP Programme (Higher Education)') => 'Online: UP Programme',
+            normalize.call('BAS Programme (Academy of Sports)') => 'BAS Programme',
+            normalize.call('In-person (with Hub access): Own Curriculum') => 'Own Curriculum'
           }
 
           incoming_key = normalize.call(attrs[:programme])
@@ -324,7 +451,26 @@ namespace :admissions do
           end
         end
 
-        # compute start_date and student_number
+        # Curriculum normalization
+        if attrs[:curriculum_course_option].present?
+          old_curriculum = attrs[:curriculum_course_option]
+          normalized_curriculum = normalize_curriculum(old_curriculum)
+          if normalized_curriculum != old_curriculum
+            attrs[:curriculum_course_option] = normalized_curriculum
+            puts "Row #{row_num}: NORMALIZED curriculum - #{old_curriculum.inspect} -> #{normalized_curriculum.inspect}"
+          end
+        end
+
+        # Grade normalization based on curriculum
+        if attrs[:grade_year].present? && attrs[:curriculum_course_option].present?
+          old_grade = attrs[:grade_year]
+          normalized_grade = normalize_grade(old_grade, attrs[:curriculum_course_option])
+          if normalized_grade && normalized_grade != old_grade
+            attrs[:grade_year] = normalized_grade
+            puts "Row #{row_num}: NORMALIZED grade - #{old_grade.inspect} -> #{normalized_grade.inspect} (curriculum: #{attrs[:curriculum_course_option]})"
+          end
+        end
+
         start_date = attrs[:start_date]
         if start_date.present?
           year = start_date.year
@@ -334,10 +480,8 @@ namespace :admissions do
           attrs[:student_number] = nil
         end
 
-        # identifier for logs
         ident = attrs[:institutional_email].presence || "#{attrs[:full_name].to_s[0..40]}|#{attrs[:birthdate].to_s}"
 
-        # ---------- FETCH RAW HUB CELL + MATCH (keep these as local variables, NOT in attrs) ----------
         raw_hub_cell = fetch.call(row, 'Hub Location (Section 2)', 'Hub Location', 'Hub')
         raw_hub_for_logging = to_utf8.call(raw_hub_cell).to_s.strip
 
@@ -347,9 +491,8 @@ namespace :admissions do
           hub_fragment = s.include?('-') ? s.split('-', 2).last.to_s.strip : s.strip
         end
 
-        matched_hub = find_best_hub_match(hub_fragment)  # returns a Hub or nil
+        matched_hub = find_best_hub_match(hub_fragment)
 
-        # ---------- FIND existing learner by email or name+birthdate ----------
         found = nil
         if attrs[:institutional_email].present?
           found = LearnerInfo.find_by(institutional_email: attrs[:institutional_email])
@@ -362,7 +505,6 @@ namespace :admissions do
 
         begin
           if found
-            # compute diffs for log
             diffs = {}
             attrs.each do |k, v|
               current = found.send(k)
@@ -390,7 +532,6 @@ namespace :admissions do
             end
 
           else
-            # create
             if dry_run
               created += 1
               puts "Row #{row_num}: WOULD CREATE #{ident} student_number=#{attrs[:student_number].inspect}"
@@ -406,19 +547,15 @@ namespace :admissions do
             end
           end
 
-          # ---------- HUB ASSOCIATION: only when not dry-run AND we found a Hub ----------
           if !dry_run && matched_hub
-            # Find a user to attach - prefer li_var.user, then institutional_email lookup
             user_to_attach = (li_var && li_var.respond_to?(:user) && li_var.user.present?) ? li_var.user : (attrs[:institutional_email].present? ? User.find_by(email: attrs[:institutional_email]) : nil)
 
             if user_to_attach
               ActiveRecord::Base.transaction do
-                # unset any existing main hub(s) for this user (partial-unique index expects only 1 main)
                 if user_to_attach.respond_to?(:users_hubs)
                   user_to_attach.users_hubs.where(main: true).update_all(main: false)
                   user_to_attach.users_hubs.create!(hub: matched_hub, main: true)
                 else
-                  # fallback if you don't have association method named users_hubs
                   UsersHub.where(user_id: user_to_attach.id, main: true).update_all(main: false)
                   UsersHub.create!(user_id: user_to_attach.id, hub_id: matched_hub.id, main: true)
                 end
@@ -433,7 +570,6 @@ namespace :admissions do
                           end
               puts "Row #{row_num}: associated #{user_ident} in #{matched_hub.name}"
             else
-              # matched hub present but no user available -> log and skip association
               maybe_user = attrs[:institutional_email].presence || "NO_USER"
               puts "Row #{row_num}: couldn't associate the user #{maybe_user} to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\" (no user found)"
             end
