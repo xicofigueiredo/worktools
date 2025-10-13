@@ -83,6 +83,8 @@ Rails.application.routes.draw do
 
     resources :hubs, only: [:index, :show]
 
+    resources :pricing_tiers, only: [:index, :update]
+
     resources :leaves, only: [:index, :new, :create, :show] do
       collection do
         post :preview
