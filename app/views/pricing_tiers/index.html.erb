@@ -1,191 +1,452 @@
-<div class="container mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold mb-6">Pricing Tiers</h1>
+<style>
+  .pricing-tier-row:hover {
+    background-color: #f8f9fa;
+  }
 
-  <!-- Filters -->
-  <div class="bg-white shadow rounded-lg p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4">Filters</h2>
-    <%= form_with url: pricing_tiers_path, method: :get, local: true, class: "space-y-4" do |f| %>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div>
-          <%= f.label :model, "Model", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= f.select :model,
-              options_for_select([["All Models", ""]] + @models.map { |m| [m, m] }, params[:model]),
-              {},
-              class: "w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+  .edit-field-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .edit-field-container .field-value {
+    flex: 1;
+  }
+
+  .edit-btn-small {
+    padding: 6px 8px;
+    background: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    position: relative;
+    transition: background-color 0.2s;
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .edit-btn-small:hover {
+    background: #0b5ed7;
+  }
+
+  .save-btn-small {
+    padding: 6px 8px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    position: relative;
+    transition: background-color 0.2s;
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .save-btn-small:hover {
+    background: #218838;
+  }
+
+  .cancel-btn-small {
+    padding: 6px 8px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    position: relative;
+    transition: background-color 0.2s;
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cancel-btn-small:hover {
+    background: #5a6268;
+  }
+
+  /* Tooltip styles */
+  .edit-btn-small::after,
+  .save-btn-small::after,
+  .cancel-btn-small::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    margin-bottom: 5px;
+    z-index: 1000;
+  }
+
+  .edit-btn-small:hover::after,
+  .save-btn-small:hover::after,
+  .cancel-btn-small:hover::after {
+    opacity: 1;
+  }
+
+  .edit-input {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .edit-textarea {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+  }
+</style>
+
+<h1>Pricing Tiers</h1>
+
+<div style="padding: 0 24px;">
+  <!-- Filters Section -->
+  <div style="margin-bottom: 20px;">
+    <%= form_with url: pricing_tiers_path, method: :get, local: true do |f| %>
+      <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; padding: 20px;">
+        <h2 style="font-size: 1.1rem; margin-bottom: 16px; color: #333;">Filters</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+          <div>
+            <%= f.label :model, "Model", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
+            <%= f.select :model,
+                options_for_select([["All Models", ""]] + @models.map { |m| [m, m] }, params[:model]),
+                {},
+                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
+          </div>
+
+          <div>
+            <%= f.label :country, "Country", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
+            <%= f.select :country,
+                options_for_select([["All Countries", ""]] + @countries.map { |c| [c, c] }, params[:country]),
+                {},
+                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
+          </div>
+
+          <div>
+            <%= f.label :hub_type, "Hub Type", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
+            <%= f.select :hub_type,
+                options_for_select([["All Hub Types", ""]] + @hub_types.map { |h| [h, h] }, params[:hub_type]),
+                {},
+                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
+          </div>
+
+          <div>
+            <%= f.label :specific_hub, "Specific Hub", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
+            <%= f.select :specific_hub,
+                options_for_select([["All Specific Hubs", ""]] + @specific_hubs.map { |s| [s, s] }, params[:specific_hub]),
+                {},
+                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
+          </div>
+
+          <div>
+            <%= f.label :curriculum, "Curriculum", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
+            <%= f.select :curriculum,
+                options_for_select([["All Curriculums", ""]] + @curriculums.map { |c| [c, c] }, params[:curriculum]),
+                {},
+                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
+          </div>
         </div>
 
-        <div>
-          <%= f.label :country, "Country", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= f.select :country,
-              options_for_select([["All Countries", ""]] + @countries.map { |c| [c, c] }, params[:country]),
-              {},
-              class: "w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
+        <div style="display: flex; gap: 8px;">
+          <%= f.submit "Apply Filters", style: "padding: 7px 12px; border-radius: 6px; background: #0d6efd; color: white; border: 1px solid #0d6efd; cursor: pointer;" %>
+          <%= link_to "Clear All", pricing_tiers_path, style: "padding: 7px 12px; border-radius: 6px; background: #f0f0f0; color: #333; text-decoration: none; border: 1px solid #ddd;" %>
         </div>
-
-        <div>
-          <%= f.label :hub_type, "Hub Type", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= f.select :hub_type,
-              options_for_select([["All Hub Types", ""]] + @hub_types.map { |h| [h, h] }, params[:hub_type]),
-              {},
-              class: "w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-        </div>
-
-        <div>
-          <%= f.label :specific_hub, "Specific Hub", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= f.select :specific_hub,
-              options_for_select([["All Specific Hubs", ""]] + @specific_hubs.map { |s| [s, s] }, params[:specific_hub]),
-              {},
-              class: "w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-        </div>
-
-        <div>
-          <%= f.label :curriculum, "Curriculum", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= f.select :curriculum,
-              options_for_select([["All Curriculums", ""]] + @curriculums.map { |c| [c, c] }, params[:curriculum]),
-              {},
-              class: "w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500" %>
-        </div>
-      </div>
-
-      <div class="flex gap-2">
-        <%= f.submit "Apply Filters", class: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition cursor-pointer" %>
-        <%= link_to "Clear Filters", pricing_tiers_path, class: "bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition" %>
       </div>
     <% end %>
   </div>
 
   <!-- Results Count -->
-  <div class="mb-4">
-    <p class="text-gray-600"><%= pluralize(@pricing_tiers.count, 'pricing tier') %> found</p>
+  <div style="margin-bottom: 12px; font-size: 0.95rem; color: #333;">
+    Showing <strong><%= @pricing_tiers.count %></strong> pricing tier<%= "s" if @pricing_tiers.count != 1 %>
   </div>
 
   <!-- Pricing Tiers Table -->
-  <div class="bg-white shadow rounded-lg overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hub Type</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Specific Hub</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Curriculum</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission Fee</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Fee</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Renewal Fee</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice To</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
+  <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: auto;">
+    <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
+      <thead>
+        <tr>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Model</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Country</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Currency</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Hub Type</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Specific Hub</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Curriculum</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Admission Fee</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Monthly Fee</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Renewal Fee</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Invoice To</th>
+          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @pricing_tiers.any? %>
           <% @pricing_tiers.each do |tier| %>
-            <tr class="hover:bg-gray-50" id="tier-<%= tier.id %>">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= tier.model %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= tier.country %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= tier.currency %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= tier.hub_type %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= tier.specific_hub %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= tier.curriculum %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span class="view-mode"><%= number_to_currency(tier.admission_fee || 0, unit: "") %></span>
-                <input type="number" class="edit-mode hidden w-full border border-gray-300 rounded px-2 py-1"
-                       data-field="admission_fee" value="<%= tier.admission_fee %>">
+            <tr class="pricing-tier-row" id="tier-<%= tier.id %>">
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <%= tier.model %>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span class="view-mode"><%= number_to_currency(tier.monthly_fee || 0, unit: "") %></span>
-                <input type="number" class="edit-mode hidden w-full border border-gray-300 rounded px-2 py-1"
-                       data-field="monthly_fee" value="<%= tier.monthly_fee %>">
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <%= tier.country %>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span class="view-mode"><%= number_to_currency(tier.renewal_fee || 0, unit: "") %></span>
-                <input type="number" class="edit-mode hidden w-full border border-gray-300 rounded px-2 py-1"
-                       data-field="renewal_fee" value="<%= tier.renewal_fee %>">
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <%= tier.currency %>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span class="view-mode"><%= tier.invoice_recipient %></span>
-                <input type="text" class="edit-mode hidden w-full border border-gray-300 rounded px-2 py-1"
-                       data-field="invoice_recipient" value="<%= tier.invoice_recipient %>">
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <%= tier.hub_type %>
               </td>
-              <td class="px-6 py-4 text-sm text-gray-900">
-                <span class="view-mode"><%= tier.notes %></span>
-                <textarea class="edit-mode hidden w-full border border-gray-300 rounded px-2 py-1"
-                          data-field="notes" rows="2"><%= tier.notes %></textarea>
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <%= tier.specific_hub %>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <button class="edit-btn text-blue-600 hover:text-blue-800 font-medium" data-id="<%= tier.id %>">
-                  Edit
-                </button>
-                <button class="save-btn hidden text-green-600 hover:text-green-800 font-medium mr-2" data-id="<%= tier.id %>">
-                  Save
-                </button>
-                <button class="cancel-btn hidden text-gray-600 hover:text-gray-800 font-medium" data-id="<%= tier.id %>">
-                  Cancel
-                </button>
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <%= tier.curriculum %>
+              </td>
+
+              <!-- Admission Fee -->
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <div class="edit-field-container">
+                  <span class="field-value view-mode" data-field="admission_fee">
+                    <%= number_to_currency(tier.admission_fee || 0, unit: "") %>
+                  </span>
+                  <div class="edit-mode" style="display: none; width: 100%;">
+                    <input type="number" class="edit-input" data-field="admission_fee" value="<%= tier.admission_fee %>" step="1">
+                  </div>
+                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="admission_fee" title="Edit">
+                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
+                  </button>
+                  <div class="edit-actions" style="display: none;">
+                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="admission_fee" title="Save">
+                      ✓
+                    </button>
+                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="admission_fee" title="Cancel">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Monthly Fee -->
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <div class="edit-field-container">
+                  <span class="field-value view-mode" data-field="monthly_fee">
+                    <%= number_to_currency(tier.monthly_fee || 0, unit: "") %>
+                  </span>
+                  <div class="edit-mode" style="display: none; width: 100%;">
+                    <input type="number" class="edit-input" data-field="monthly_fee" value="<%= tier.monthly_fee %>" step="1">
+                  </div>
+                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="monthly_fee" title="Edit">
+                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
+                  </button>
+                  <div class="edit-actions" style="display: none;">
+                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="monthly_fee" title="Save">
+                      ✓
+                    </button>
+                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="monthly_fee" title="Cancel">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Renewal Fee -->
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <div class="edit-field-container">
+                  <span class="field-value view-mode" data-field="renewal_fee">
+                    <%= number_to_currency(tier.renewal_fee || 0, unit: "") %>
+                  </span>
+                  <div class="edit-mode" style="display: none; width: 100%;">
+                    <input type="number" class="edit-input" data-field="renewal_fee" value="<%= tier.renewal_fee %>" step="1">
+                  </div>
+                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="renewal_fee" title="Edit">
+                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
+                  </button>
+                  <div class="edit-actions" style="display: none;">
+                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="renewal_fee" title="Save">
+                      ✓
+                    </button>
+                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="renewal_fee" title="Cancel">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Invoice Recipient -->
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
+                <div class="edit-field-container">
+                  <span class="field-value view-mode" data-field="invoice_recipient">
+                    <%= tier.invoice_recipient %>
+                  </span>
+                  <div class="edit-mode" style="display: none; width: 100%;">
+                    <input type="text" class="edit-input" data-field="invoice_recipient" value="<%= tier.invoice_recipient %>">
+                  </div>
+                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="invoice_recipient" title="Edit">
+                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
+                  </button>
+                  <div class="edit-actions" style="display: none;">
+                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="invoice_recipient" title="Save">
+                      ✓
+                    </button>
+                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="invoice_recipient" title="Cancel">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Notes -->
+              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle; max-width: 300px;">
+                <div class="edit-field-container">
+                  <span class="field-value view-mode" data-field="notes" style="display: block; word-wrap: break-word;">
+                    <%= tier.notes %>
+                  </span>
+                  <div class="edit-mode" style="display: none; width: 100%;">
+                    <textarea class="edit-textarea" data-field="notes" rows="3"><%= tier.notes %></textarea>
+                  </div>
+                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="notes" title="Edit">
+                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
+                  </button>
+                  <div class="edit-actions" style="display: none;">
+                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="notes" title="Save">
+                      ✓
+                    </button>
+                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="notes" title="Cancel">
+                      ✕
+                    </button>
+                  </div>
+                </div>
               </td>
             </tr>
           <% end %>
-        </tbody>
-      </table>
-    </div>
+        <% else %>
+          <tr>
+            <td colspan="11" style="padding: 16px; text-align: center; color: #888;">
+              No pricing tiers found matching your filters.
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
   </div>
-
-  <% if @pricing_tiers.empty? %>
-    <div class="text-center py-12">
-      <p class="text-gray-500 text-lg">No pricing tiers found matching your filters.</p>
-    </div>
-  <% end %>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const csrfToken = document.querySelector('[name="csrf-token"]').content;
 
-  document.querySelectorAll('.edit-btn').forEach(button => {
+  // Store original values
+  const originalValues = {};
+
+  document.querySelectorAll('.edit-field-container').forEach(container => {
+    const field = container.querySelector('[data-field]').dataset.field;
+    const tierId = container.querySelector('.edit-trigger').dataset.tierId;
+    const key = `${tierId}-${field}`;
+    const viewValue = container.querySelector('.view-mode').textContent.trim();
+    originalValues[key] = viewValue;
+  });
+
+  // Edit button click handlers
+  document.querySelectorAll('.edit-trigger').forEach(button => {
     button.addEventListener('click', function(e) {
       e.preventDefault();
-      const tierId = this.dataset.id;
-      const row = document.getElementById(`tier-${tierId}`);
+      const tierId = this.dataset.tierId;
+      const field = this.dataset.field;
+      const container = this.closest('.edit-field-container');
+      const key = `${tierId}-${field}`;
 
-      row.querySelectorAll('.view-mode').forEach(el => el.classList.add('hidden'));
-      row.querySelectorAll('.edit-mode').forEach(el => el.classList.remove('hidden'));
+      // Reset input to original database value
+      const input = container.querySelector('.edit-mode [data-field]');
+      const originalValue = originalValues[key];
 
-      this.classList.add('hidden');
-      row.querySelector('.save-btn').classList.remove('hidden');
-      row.querySelector('.cancel-btn').classList.remove('hidden');
+      if (input.tagName === 'TEXTAREA') {
+        input.value = originalValue;
+      } else if (input.type === 'number') {
+        // Remove formatting for number inputs
+        input.value = originalValue.replace(/,/g, '');
+      } else {
+        input.value = originalValue;
+      }
+
+      // Hide view mode and show edit mode
+      container.querySelector('.view-mode').style.display = 'none';
+      container.querySelector('.edit-mode').style.display = 'block';
+
+      // Hide edit button, show save/cancel buttons
+      this.style.display = 'none';
+      container.querySelector('.edit-actions').style.display = 'flex';
+      container.querySelector('.edit-actions').style.gap = '4px';
     });
   });
 
-  document.querySelectorAll('.cancel-btn').forEach(button => {
+  // Cancel button click handlers
+  document.querySelectorAll('.cancel-trigger').forEach(button => {
     button.addEventListener('click', function(e) {
       e.preventDefault();
-      const tierId = this.dataset.id;
-      const row = document.getElementById(`tier-${tierId}`);
+      const container = this.closest('.edit-field-container');
 
-      row.querySelectorAll('.view-mode').forEach(el => el.classList.remove('hidden'));
-      row.querySelectorAll('.edit-mode').forEach(el => el.classList.add('hidden'));
+      // Show view mode and hide edit mode
+      container.querySelector('.view-mode').style.display = 'block';
+      container.querySelector('.edit-mode').style.display = 'none';
 
-      this.classList.add('hidden');
-      row.querySelector('.save-btn').classList.add('hidden');
-      row.querySelector('.edit-btn').classList.remove('hidden');
+      // Show edit button, hide save/cancel buttons
+      container.querySelector('.edit-trigger').style.display = 'inline-block';
+      container.querySelector('.edit-actions').style.display = 'none';
+
+      // Reset input value to original
+      const input = container.querySelector('[data-field]');
+      const originalValue = container.querySelector('.view-mode').textContent.trim();
+      if (input.tagName === 'TEXTAREA') {
+        input.value = originalValue;
+      } else if (input.type === 'number') {
+        // Parse the number from the formatted display
+        input.value = originalValue.replace(/,/g, '');
+      } else {
+        input.value = originalValue;
+      }
     });
   });
 
-  document.querySelectorAll('.save-btn').forEach(button => {
+  // Save button click handlers
+  document.querySelectorAll('.save-trigger').forEach(button => {
     button.addEventListener('click', function(e) {
       e.preventDefault();
-      const tierId = this.dataset.id;
-      const row = document.getElementById(`tier-${tierId}`);
+      const tierId = this.dataset.tierId;
+      const field = this.dataset.field;
+      const container = this.closest('.edit-field-container');
+      const input = container.querySelector('.edit-mode [data-field]');
+      const newValue = input.value;
 
       const data = {
-        pricing_tier: {}
+        pricing_tier: {
+          [field]: newValue
+        }
       };
-
-      row.querySelectorAll('.edit-mode').forEach(input => {
-        const field = input.dataset.field;
-        data.pricing_tier[field] = input.value;
-      });
 
       fetch(`/pricing_tiers/${tierId}`, {
         method: 'PATCH',
@@ -198,30 +459,30 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(response => response.json())
       .then(result => {
         if (result.success) {
-          row.querySelectorAll('.edit-mode').forEach(input => {
-            const field = input.dataset.field;
-            const viewSpan = row.querySelector(`.view-mode`);
-            if (input.dataset.field === 'admission_fee' ||
-                input.dataset.field === 'monthly_fee' ||
-                input.dataset.field === 'renewal_fee') {
-              const parent = input.closest('td');
-              parent.querySelector('.view-mode').textContent = input.value || '0';
-            } else {
-              const parent = input.closest('td');
-              parent.querySelector('.view-mode').textContent = input.value;
-            }
-          });
+          // Update the display value
+          const viewSpan = container.querySelector('.view-mode');
+          if (field === 'admission_fee' || field === 'monthly_fee' || field === 'renewal_fee') {
+            // Format as currency
+            const formatted = parseFloat(newValue || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            viewSpan.textContent = formatted;
+          } else {
+            viewSpan.textContent = newValue;
+          }
 
-          row.querySelectorAll('.view-mode').forEach(el => el.classList.remove('hidden'));
-          row.querySelectorAll('.edit-mode').forEach(el => el.classList.add('hidden'));
+          // Switch back to view mode
+          viewSpan.style.display = 'block';
+          container.querySelector('.edit-mode').style.display = 'none';
+          container.querySelector('.edit-trigger').style.display = 'inline-block';
+          container.querySelector('.edit-actions').style.display = 'none';
 
-          this.classList.add('hidden');
-          row.querySelector('.cancel-btn').classList.add('hidden');
-          row.querySelector('.edit-btn').classList.remove('hidden');
-
-          alert('Pricing tier updated successfully!');
+          // Show success message
+          const successMsg = document.createElement('div');
+          successMsg.textContent = '✓ Saved';
+          successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 12px 20px; border-radius: 6px; z-index: 10000; box-shadow: 0 2px 8px rgba(0,0,0,0.2);';
+          document.body.appendChild(successMsg);
+          setTimeout(() => successMsg.remove(), 2000);
         } else {
-          alert('Error updating pricing tier: ' + result.errors.join(', '));
+          alert('Error updating pricing tier: ' + (result.errors ? result.errors.join(', ') : 'Unknown error'));
         }
       })
       .catch(error => {
