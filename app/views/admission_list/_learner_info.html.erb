@@ -40,8 +40,10 @@
 
 <% edit_mode = params[:edit] == '1' || @learner_info.errors.any? %>
 <% perm = @permission || LearnerInfoPermission.new(current_user, @learner_info) %>
-<% visible_fields = perm.visible_fields.map(&:to_sym) %>
+<% visible_learner_fields = perm.visible_learner_fields.map(&:to_sym) %>
+<% visible_finance_fields = perm.visible_finance_fields.map(&:to_sym) %>
 <% editable_attrs  = edit_mode ? perm.permitted_attributes.map(&:to_sym) : [] %>
+<% finance_editable_attrs = edit_mode ? perm.finance_permitted_attributes.map(&:to_sym) : [] %>
 
 <%# Field presentation hints: type, grid column, rows, choices for selects %>
 <% field_opts = {
@@ -93,18 +95,6 @@
   parent2_id_information: { col: '6' },
   parent2_info_not_to_be_contacted: { type: :text_area, rows: 2, col: '12' },
 
-  deposit: { col: '4' },
-  sponsor: { col: '4' },
-  payment_plan: { col: '4' },
-  monthly_tuition: { col: '4' },
-  discount_mt: { col: '4' },
-  scholarship: { col: '4' },
-  scholarship_percentage: { col: '4' },
-  admission_fee: { col: '4' },
-  discount_af: { col: '4' },
-  billable_fee_per_month: { col: '4' },
-  billable_af: { col: '4' },
-
   registering_school_pt_plus: { col: '6' },
   previous_schooling: { type: :select, col: '6', choices: [
     "Abroad",
@@ -137,106 +127,118 @@
   withdrawal_reason: { type: :text_area, rows: 2, col: '12' }
 } %>
 
-<% render_input = lambda do |f, attr, opts = {}|
-     attr_sym = attr.to_sym
-     next unless visible_fields.include?(attr_sym)
+<% field_opts.merge!({
+  payment_plan: { col: '6' },
+  monthly_fee: { col: '3' },
+  discount_mf: { col: '3' },
+  scholarship: { col: '3' },
+  billable_mf: { col: '3' },
+  admission_fee: { col: '4' },
+  discount_af: { col: '4' },
+  billable_af: { col: '4' },
+  renewal_fee: { col: '4' },
+  discount_rf: { col: '4' },
+  billable_rf: { col: '4' }
+}) %>
 
-     label = opts[:label] || attr.to_s.humanize
-     type  = opts[:type]  || :text
-     col   = opts[:col]   || '12'
-     value = f ? f.object.send(attr) : @learner_info.send(attr)
+<% render_input = lambda do |f, attr, opts = {}, is_finance = false, object = @learner_info| %>
+  <% attr_sym = attr.to_sym %>
+  <% editable_list = is_finance ? finance_editable_attrs : editable_attrs %>
+  <% next unless is_finance ? visible_finance_fields.include?(attr_sym) : visible_learner_fields.include?(attr_sym) %>
 
-     if edit_mode && f
-       disabled_flag = !editable_attrs.include?(attr_sym)
-       input_classes = "form-control"
-       input_classes += " editable-input" unless disabled_flag
+  <% label = opts[:label] || attr.to_s.humanize %>
+  <% type  = opts[:type]  || :text %>
+  <% col   = opts[:col]   || '12' %>
+  <% value = f ? f.object.send(attr) : object.send(attr) %>
 
-      if attr_sym == :institutional_email
-         concat(content_tag(:div, class: "mb-3 col-md-#{opts[:col] || 6}") do
-           concat f.label(:institutional_email, label) # Label still says "Institutional email"
-           concat(content_tag(:div, class: "input-group") do
-             concat f.text_field(:institutional_email_prefix, value: f.object.institutional_email_prefix, class: input_classes, disabled: disabled_flag, placeholder: "name")
-             concat content_tag(:span, "@edubga.com", class: "input-group-text")
-           end)
-         end)
-      else
-       case type
-       when :text_area
-         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
-           concat f.label(attr, label)
-           concat f.text_area(attr, rows: opts[:rows] || 2, class: input_classes, disabled: disabled_flag)
-         end)
-       when :select
-         choices = opts[:choices] || []
-         select_classes = disabled_flag ? "form-select" : "form-select editable-input"
-         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
-           concat f.label(attr, label)
-           concat f.select(attr, choices, { include_blank: opts[:include_blank] || false }, class: select_classes, disabled: disabled_flag)
-         end)
-       when :checkbox
-         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
-           concat(content_tag(:label, class: "form-check") do
-             concat f.check_box(attr, disabled: disabled_flag, class: "form-check-input")
-             concat " "
-             concat content_tag(:span, label, class: "form-check-label")
-           end)
-         end)
-       when :toggle
-        # Label on top like other inputs, switch below (simple)
-        concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
-          # label (same placement as text inputs)
-          concat content_tag(:label, label, class: "toggle-label-top")
-          # switch control (bootstrap form-switch). disabled when not editable.
-          concat(content_tag(:div, class: "mt-1 form-check form-switch") do
-            concat f.check_box(attr, disabled: disabled_flag, class: "form-check-input", id: "switch_#{attr}")
-          end)
-        end)
-       when :date
-         date_classes = disabled_flag ? "form-control" : "form-control editable-input"
-         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
-           concat f.label(attr, label)
-           concat f.date_field(attr, class: date_classes, disabled: disabled_flag)
-         end)
-        when :email
-         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
-           concat f.label(attr, label)
-           concat f.email_field(
-             attr,
-             class: input_classes,
-             disabled: disabled_flag,
-             placeholder: "name@example.com",
-             autocomplete: "email"
-           )
-         end)
-       else
-         concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
-           concat f.label(attr, label)
-           concat f.text_field(attr, class: input_classes, disabled: disabled_flag)
-         end)
-       end
-      end
-     else
-       display_value =
-         case value
-         when TrueClass then "Yes"
-         when FalseClass then "No"
-         when Date, Time, ActiveSupport::TimeWithZone then (value.present? ? value.strftime("%d-%m-%Y") : "-")
-         else value.presence || "-"
-         end
+  <% if edit_mode && f %>
+    <% disabled_flag = !editable_list.include?(attr_sym) %>
+    <% input_classes = "form-control" %>
+    <% input_classes += " editable-input" unless disabled_flag %>
 
-       concat(content_tag(:div, class: "mb-3 col-md-#{col}") do
-         concat label_tag(nil, label, class: "form-label")
-         case type
-         when :text_area
-           concat tag.textarea(display_value, rows: opts[:rows] || 2, class: "form-control", disabled: true)
-         when :email
-           concat tag.input(value: display_value, type: "email", class: "form-control", disabled: true)
-         else
-           concat tag.input(value: display_value, type: "text", class: "form-control", disabled: true)
-         end
-       end)
-     end
-end %>
+    <% if attr_sym == :institutional_email %>
+      <%= content_tag(:div, class: "mb-3 col-md-#{opts[:col] || 6}") do %>
+        <%= f.label(:institutional_email, label) %>
+        <%= content_tag(:div, class: "input-group") do %>
+          <%= f.text_field(:institutional_email_prefix, value: f.object.institutional_email_prefix, class: input_classes, disabled: disabled_flag, placeholder: "name") %>
+          <%= content_tag(:span, "@edubga.com", class: "input-group-text") %>
+        <% end %>
+      <% end %>
+    <% else %>
+      <% case type %>
+      <% when :text_area %>
+        <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
+          <%= f.label(attr, label) %>
+          <%= f.text_area(attr, rows: opts[:rows] || 2, class: input_classes, disabled: disabled_flag) %>
+        <% end %>
+      <% when :select %>
+        <% choices = opts[:choices] || [] %>
+        <% select_classes = disabled_flag ? "form-select" : "form-select editable-input" %>
+        <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
+          <%= f.label(attr, label) %>
+          <%= f.select(attr, choices, { include_blank: opts[:include_blank] || false }, class: select_classes, disabled: disabled_flag) %>
+        <% end %>
+      <% when :checkbox %>
+        <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
+          <%= content_tag(:label, class: "form-check") do %>
+            <%= f.check_box(attr, disabled: disabled_flag, class: "form-check-input") %>
+            <%= " " %>
+            <%= content_tag(:span, label, class: "form-check-label") %>
+          <% end %>
+        <% end %>
+      <% when :toggle %>
+        <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
+          <%= content_tag(:label, label, class: "toggle-label-top") %>
+          <%= content_tag(:div, class: "mt-1 form-check form-switch") do %>
+            <%= f.check_box(attr, disabled: disabled_flag, class: "form-check-input", id: "switch_#{attr}") %>
+          <% end %>
+        <% end %>
+      <% when :date %>
+        <% date_classes = disabled_flag ? "form-control" : "form-control editable-input" %>
+        <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
+          <%= f.label(attr, label) %>
+          <%= f.date_field(attr, class: date_classes, disabled: disabled_flag) %>
+        <% end %>
+      <% when :email %>
+        <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
+          <%= f.label(attr, label) %>
+          <%= f.email_field(
+            attr,
+            class: input_classes,
+            disabled: disabled_flag,
+            placeholder: "name@example.com",
+            autocomplete: "email"
+          ) %>
+        <% end %>
+      <% else %>
+        <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
+          <%= f.label(attr, label) %>
+          <%= f.text_field(attr, class: input_classes, disabled: disabled_flag) %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <% display_value =
+      case value
+      when TrueClass then "Yes"
+      when FalseClass then "No"
+      when Date, Time, ActiveSupport::TimeWithZone then (value.present? ? value.strftime("%d-%m-%Y") : "-")
+      else value.presence || "-"
+      end %>
+
+    <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
+      <%= label_tag(nil, label, class: "form-label") %>
+      <% case type %>
+      <% when :text_area %>
+        <%= tag.textarea(display_value, rows: opts[:rows] || 2, class: "form-control", disabled: true) %>
+      <% when :email %>
+        <%= tag.input(value: display_value, type: "email", class: "form-control", disabled: true) %>
+      <% else %>
+        <%= tag.input(value: display_value, type: "text", class: "form-control", disabled: true) %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
 
 <div class="mb-3 d-flex justify-content-end align-items-start">
   <% if edit_mode %>
@@ -306,22 +308,54 @@ end %>
       </div>
     </div>
 
-    <div class="li-section li-grid">
-      <h4>Financial / Payments</h4>
-      <div class="row gx-3">
-        <% render_input.call(f, :deposit, field_opts[:deposit] || { col: '4' }) %>
-        <% render_input.call(f, :sponsor, field_opts[:sponsor] || { col: '4' }) %>
-        <% render_input.call(f, :payment_plan, field_opts[:payment_plan] || { col: '4' }) %>
-        <% render_input.call(f, :monthly_tuition, field_opts[:monthly_tuition] || { col: '4' }) %>
-        <% render_input.call(f, :discount_mt, field_opts[:discount_mt] || { col: '4' }) %>
-        <% render_input.call(f, :scholarship, field_opts[:scholarship] || { col: '4' }) %>
-        <% render_input.call(f, :scholarship_percentage, field_opts[:scholarship_percentage] || { col: '4' }) %>
-        <% render_input.call(f, :admission_fee, field_opts[:admission_fee] || { col: '4' }) %>
-        <% render_input.call(f, :discount_af, field_opts[:discount_af] || { col: '4' }) %>
-        <% render_input.call(f, :billable_fee_per_month, field_opts[:billable_fee_per_month] || { col: '4' }) %>
-        <% render_input.call(f, :billable_af, field_opts[:billable_af] || { col: '4' }) %>
+    <% if perm.finance_visible? %>
+      <div class="li-section li-grid">
+        <h4>Financial / Payments</h4>
+        <% if edit_mode %>
+          <%= f.fields_for :learner_finance, @learner_finance do |ff| %>
+            <div class="row gx-3">
+              <% render_input.call(ff, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true) %>
+            </div>
+            <div class="row gx-3">
+              <% render_input.call(ff, :monthly_fee, field_opts[:monthly_fee] || { col: '3' }, true) %>
+              <% render_input.call(ff, :discount_mf, field_opts[:discount_mf] || { col: '3' }, true) %>
+              <% render_input.call(ff, :scholarship, field_opts[:scholarship] || { col: '3' }, true) %>
+              <% render_input.call(ff, :billable_mf, field_opts[:billable_mf] || { col: '3' }, true) %>
+            </div>
+            <div class="row gx-3">
+              <% render_input.call(ff, :admission_fee, field_opts[:admission_fee] || { col: '4' }, true) %>
+              <% render_input.call(ff, :discount_af, field_opts[:discount_af] || { col: '4' }, true) %>
+              <% render_input.call(ff, :billable_af, field_opts[:billable_af] || { col: '4' }, true) %>
+            </div>
+            <div class="row gx-3">
+              <% render_input.call(ff, :renewal_fee, field_opts[:renewal_fee] || { col: '4' }, true) %>
+              <% render_input.call(ff, :discount_rf, field_opts[:discount_rf] || { col: '4' }, true) %>
+              <% render_input.call(ff, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true) %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="row gx-3">
+            <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true, @learner_finance) %>
+          </div>
+          <div class="row gx-3">
+            <% render_input.call(nil, :monthly_fee, field_opts[:monthly_fee] || { col: '3' }, true, @learner_finance) %>
+            <% render_input.call(nil, :discount_mf, field_opts[:discount_mf] || { col: '3' }, true, @learner_finance) %>
+            <% render_input.call(nil, :scholarship, field_opts[:scholarship] || { col: '3' }, true, @learner_finance) %>
+            <% render_input.call(nil, :billable_mf, field_opts[:billable_mf] || { col: '3' }, true, @learner_finance) %>
+          </div>
+          <div class="row gx-3">
+            <% render_input.call(nil, :admission_fee, field_opts[:admission_fee] || { col: '4' }, true, @learner_finance) %>
+            <% render_input.call(nil, :discount_af, field_opts[:discount_af] || { col: '4' }, true, @learner_finance) %>
+            <% render_input.call(nil, :billable_af, field_opts[:billable_af] || { col: '4' }, true, @learner_finance) %>
+          </div>
+          <div class="row gx-3">
+            <% render_input.call(nil, :renewal_fee, field_opts[:renewal_fee] || { col: '4' }, true, @learner_finance) %>
+            <% render_input.call(nil, :discount_rf, field_opts[:discount_rf] || { col: '4' }, true, @learner_finance) %>
+            <% render_input.call(nil, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true, @learner_finance) %>
+          </div>
+        <% end %>
       </div>
-    </div>
+    <% end %>
 
     <div class="li-section li-grid">
       <h4>School / Previous education</h4>
@@ -352,88 +386,90 @@ end %>
   <div class="li-section li-grid">
     <h4>Basic information</h4>
     <div class="row gx-3">
-      <% render_input.call(nil, :full_name, field_opts[:full_name] || { col: '6' }) %>
-      <% render_input.call(nil, :preferred_name, field_opts[:preferred_name] || { col: '6' }) %>
-      <% render_input.call(nil, :student_number, field_opts[:student_number] || { col: '6' }) %>
-      <% render_input.call(nil, :start_date, field_opts[:start_date] || { type: :date, col: '6' }) %>
-      <% render_input.call(nil, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }) %>
-      <% render_input.call(nil, :programme, field_opts[:programme] || { col: '6' }) %>
-      <% render_input.call(nil, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }) %>
-      <% render_input.call(nil, :grade_year, field_opts[:grade_year] || { col: '6' }) %>
-      <% render_input.call(nil, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '6' }) %>
-      <% render_input.call(nil, :end_date, field_opts[:end_date] || { type: :date, col: '6' }) %>
-      <% render_input.call(nil, :end_day_communication, field_opts[:end_day_communication] || { col: '6' }) %>
+      <% render_input.call(nil, :full_name, field_opts[:full_name] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :preferred_name, field_opts[:preferred_name] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :student_number, field_opts[:student_number] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :start_date, field_opts[:start_date] || { type: :date, col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :programme, field_opts[:programme] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :grade_year, field_opts[:grade_year] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :end_date, field_opts[:end_date] || { type: :date, col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :end_day_communication, field_opts[:end_day_communication] || { col: '6' }, false, @learner_info) %>
     </div>
   </div>
 
   <div class="li-section li-grid">
     <h4>Contact information</h4>
     <div class="row gx-3">
-      <% render_input.call(nil, :personal_email, field_opts[:personal_email] || { col: '6' }) %>
-      <% render_input.call(nil, :institutional_email, field_opts[:institutional_email] || { col: '6' }) %>
-      <% render_input.call(nil, :phone_number, field_opts[:phone_number] || { col: '6' }) %>
-      <% render_input.call(nil, :home_address, field_opts[:home_address] || { type: :text_area, rows: 2, col: '12' }) %>
-      <% render_input.call(nil, :nationality, field_opts[:nationality] || { col: '6' }) %>
-      <% render_input.call(nil, :gender, field_opts[:gender] || { col: '6' }) %>
-      <% render_input.call(nil, :native_language, field_opts[:native_language] || { col: '6' }) %>
-      <% render_input.call(nil, :english_proficiency, field_opts[:english_proficiency] || { type: :toggle, col: '6' }) %>
+      <% render_input.call(nil, :personal_email, field_opts[:personal_email] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :institutional_email, field_opts[:institutional_email] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :phone_number, field_opts[:phone_number] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :home_address, field_opts[:home_address] || { type: :text_area, rows: 2, col: '12' }, false, @learner_info) %>
+      <% render_input.call(nil, :nationality, field_opts[:nationality] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :gender, field_opts[:gender] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :native_language, field_opts[:native_language] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :english_proficiency, field_opts[:english_proficiency] || { type: :toggle, col: '6' }, false, @learner_info) %>
     </div>
   </div>
 
   <div class="li-section li-grid">
     <h4>Parents / Guardians</h4>
     <div class="row gx-3">
-      <% render_input.call(nil, :parent1_full_name, field_opts[:parent1_full_name] || { col: '6' }) %>
-      <% render_input.call(nil, :parent1_email, field_opts[:parent1_email] || { col: '6' }) %>
-      <% render_input.call(nil, :parent1_phone_number, field_opts[:parent1_phone_number] || { col: '6' }) %>
-      <% render_input.call(nil, :parent1_id_information, field_opts[:parent1_id_information] || { col: '6' }) %>
+      <% render_input.call(nil, :parent1_full_name, field_opts[:parent1_full_name] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :parent1_email, field_opts[:parent1_email] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :parent1_phone_number, field_opts[:parent1_phone_number] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :parent1_id_information, field_opts[:parent1_id_information] || { col: '6' }, false, @learner_info) %>
 
-      <% render_input.call(nil, :parent2_full_name, field_opts[:parent2_full_name] || { col: '6' }) %>
-      <% render_input.call(nil, :parent2_email, field_opts[:parent2_email] || { col: '6' }) %>
-      <% render_input.call(nil, :parent2_phone_number, field_opts[:parent2_phone_number] || { col: '6' }) %>
-      <% render_input.call(nil, :parent2_id_information, field_opts[:parent2_id_information] || { col: '6' }) %>
+      <% render_input.call(nil, :parent2_full_name, field_opts[:parent2_full_name] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :parent2_email, field_opts[:parent2_email] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :parent2_phone_number, field_opts[:parent2_phone_number] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :parent2_id_information, field_opts[:parent2_id_information] || { col: '6' }, false, @learner_info) %>
 
-      <% render_input.call(nil, :parent2_info_not_to_be_contacted, field_opts[:parent2_info_not_to_be_contacted] || { type: :text_area, rows: 2, col: '12' }) %>
+      <% render_input.call(nil, :parent2_info_not_to_be_contacted, field_opts[:parent2_info_not_to_be_contacted] || { type: :text_area, rows: 2, col: '12' }, false, @learner_info) %>
     </div>
   </div>
 
-  <div class="li-section li-grid">
-    <h4>Financial / Payments</h4>
-    <div class="row gx-3">
-      <% render_input.call(nil, :deposit, field_opts[:deposit] || { col: '4' }) %>
-      <% render_input.call(nil, :sponsor, field_opts[:sponsor] || { col: '4' }) %>
-      <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '4' }) %>
-      <% render_input.call(nil, :monthly_tuition, field_opts[:monthly_tuition] || { col: '4' }) %>
-      <% render_input.call(nil, :discount_mt, field_opts[:discount_mt] || { col: '4' }) %>
-      <% render_input.call(nil, :scholarship, field_opts[:scholarship] || { col: '4' }) %>
-      <% render_input.call(nil, :scholarship_percentage, field_opts[:scholarship_percentage] || { col: '4' }) %>
-      <% render_input.call(nil, :admission_fee, field_opts[:admission_fee] || { col: '4' }) %>
-      <% render_input.call(nil, :discount_af, field_opts[:discount_af] || { col: '4' }) %>
-      <% render_input.call(nil, :billable_fee_per_month, field_opts[:billable_fee_per_month] || { col: '4' }) %>
-      <% render_input.call(nil, :billable_af, field_opts[:billable_af] || { col: '4' }) %>
+  <% if perm.finance_visible? %>
+    <div class="li-section li-grid">
+      <h4>Financial / Payments</h4>
+      <div class="row gx-3">
+        <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :monthly_fee, field_opts[:monthly_fee] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :discount_mf, field_opts[:discount_mf] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :scholarship, field_opts[:scholarship] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :billable_mf, field_opts[:billable_mf] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :admission_fee, field_opts[:admission_fee] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :discount_af, field_opts[:discount_af] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :billable_af, field_opts[:billable_af] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :renewal_fee, field_opts[:renewal_fee] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :discount_rf, field_opts[:discount_rf] || { col: '4' }, true, @learner_finance) %>
+        <% render_input.call(nil, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true, @learner_finance) %>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <div class="li-section li-grid">
     <h4>School / Previous education</h4>
     <div class="row gx-3">
-      <% render_input.call(nil, :registering_school_pt_plus, field_opts[:registering_school_pt_plus] || { col: '6' }) %>
-      <% render_input.call(nil, :previous_schooling, field_opts[:previous_schooling] || { col: '6' }) %>
-      <% render_input.call(nil, :previous_school_status, field_opts[:previous_school_status] || { col: '6' }) %>
-      <% render_input.call(nil, :previous_school_name, field_opts[:previous_school_name] || { col: '6' }) %>
-      <% render_input.call(nil, :previous_school_email, field_opts[:previous_school_email] || { col: '6' }) %>
+      <% render_input.call(nil, :registering_school_pt_plus, field_opts[:registering_school_pt_plus] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :previous_schooling, field_opts[:previous_schooling] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :previous_school_status, field_opts[:previous_school_status] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :previous_school_name, field_opts[:previous_school_name] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :previous_school_email, field_opts[:previous_school_email] || { col: '6' }, false, @learner_info) %>
     </div>
   </div>
 
   <div class="li-section li-grid">
     <h4>Administrative</h4>
     <div class="row gx-3">
-      <% render_input.call(nil, :id_information, field_opts[:id_information] || { col: '6' }) %>
-      <% render_input.call(nil, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }) %>
-      <% render_input.call(nil, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }) %>
-      <% render_input.call(nil, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { type: :checkbox, col: '6' }) %>
-      <% render_input.call(nil, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }) %>
-      <% render_input.call(nil, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }) %>
+      <% render_input.call(nil, :id_information, field_opts[:id_information] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { type: :checkbox, col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }, false, @learner_info) %>
     </div>
   </div>
 <% end %>

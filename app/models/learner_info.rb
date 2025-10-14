@@ -2,6 +2,7 @@ class LearnerInfo < ApplicationRecord
   belongs_to :user, optional: true
   has_many :learner_documents, dependent: :destroy
   has_many :learner_info_logs, dependent: :delete_all
+  has_one :learner_finance, dependent: :destroy
 
   # validate user needs to be learner?
 

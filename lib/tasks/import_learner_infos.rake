@@ -231,6 +231,16 @@ def normalize_grade(raw_grade, curriculum)
   raw_grade
 end
 
+def parse_discount(value)
+  return nil if value.nil? || value.to_s.strip.empty?
+  value.to_s.gsub(/[^\d\-]/, '').to_i
+end
+
+def parse_scholarship(value)
+  return nil if value.nil? || value.to_s.strip.empty?
+  value.to_s.gsub(/[^\d\-]/, '').to_i
+end
+
 namespace :admissions do
   desc "Import admissions CSV into learner_infos with curriculum and grade normalization"
   task import_learner_infos: :environment do
@@ -480,6 +490,30 @@ namespace :admissions do
           attrs[:student_number] = nil
         end
 
+        # Split into learner_info_attrs and finance_attrs
+        finance_keys = [:deposit, :sponsor, :payment_plan, :monthly_tuition, :discount_mt, :scholarship, :billable_fee_per_month, :scholarship_percentage, :admission_fee, :discount_af, :billable_af, :registration_renewal]
+        learner_info_attrs = attrs.except(*finance_keys)
+
+        discount_mf = parse_discount(attrs[:discount_mt])
+        scholarship_val = parse_scholarship(attrs[:scholarship]) || attrs[:scholarship_percentage]
+        renewal_fee = attrs[:registration_renewal]
+        discount_rf = 0
+        billable_rf = renewal_fee.to_i - discount_rf
+
+        finance_attrs = {
+          payment_plan: attrs[:payment_plan],
+          monthly_fee: attrs[:monthly_tuition],
+          discount_mf: discount_mf,
+          scholarship: scholarship_val,
+          billable_mf: attrs[:billable_fee_per_month],
+          admission_fee: attrs[:admission_fee],
+          discount_af: attrs[:discount_af],
+          billable_af: attrs[:billable_af],
+          renewal_fee: renewal_fee,
+          discount_rf: discount_rf,
+          billable_rf: billable_rf
+        }
+
         ident = attrs[:institutional_email].presence || "#{attrs[:full_name].to_s[0..40]}|#{attrs[:birthdate].to_s}"
 
         raw_hub_cell = fetch.call(row, 'Hub Location (Section 2)', 'Hub Location', 'Hub')
@@ -506,7 +540,7 @@ namespace :admissions do
         begin
           if found
             diffs = {}
-            attrs.each do |k, v|
+            learner_info_attrs.each do |k, v|
               current = found.send(k)
               cur_s = current.respond_to?(:strftime) ? current.to_s : (current.nil? ? '' : current.to_s)
               new_s = v.respond_to?(:strftime) ? v.to_s : (v.nil? ? '' : v.to_s)
@@ -523,7 +557,7 @@ namespace :admissions do
                 puts "Row #{row_num}: WOULD UPDATE #{ident} - changes: #{diffs.keys.join(', ')}"
                 li_var = found
               else
-                found.assign_attributes(attrs)
+                found.assign_attributes(learner_info_attrs)
                 found.save!
                 updated += 1
                 puts "Row #{row_num}: UPDATED #{ident} (id=#{found.id}) - changes: #{diffs.keys.join(', ')}"
@@ -534,19 +568,20 @@ namespace :admissions do
           else
             if dry_run
               created += 1
-              puts "Row #{row_num}: WOULD CREATE #{ident} student_number=#{attrs[:student_number].inspect}"
+              puts "Row #{row_num}: WOULD CREATE #{ident} student_number=#{learner_info_attrs[:student_number].inspect}"
             else
-              li_var = LearnerInfo.new(attrs)
+              li_var = LearnerInfo.new(learner_info_attrs)
               if attrs[:institutional_email].present?
                 u = User.find_by(email: attrs[:institutional_email])
                 li_var.user = u if u
               end
               li_var.save!(validate: false)
               created += 1
-              puts "Row #{row_num}: CREATED id=#{li_var.id} #{ident} student_number=#{attrs[:student_number].inspect}"
+              puts "Row #{row_num}: CREATED id=#{li_var.id} #{ident} student_number=#{learner_info_attrs[:student_number].inspect}"
             end
           end
 
+          # Handle hub association
           if !dry_run && matched_hub
             user_to_attach = (li_var && li_var.respond_to?(:user) && li_var.user.present?) ? li_var.user : (attrs[:institutional_email].present? ? User.find_by(email: attrs[:institutional_email]) : nil)
 
@@ -577,6 +612,31 @@ namespace :admissions do
           elsif !dry_run && !matched_hub
             maybe_user = (li_var && li_var.user) ? (li_var.user.email.presence || "user##{li_var.user.id}") : (attrs[:institutional_email].presence || "NO_USER")
             puts "Row #{row_num}: couldn't associate the user #{maybe_user} to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\""
+          end
+
+          # Handle learner_finances
+          if dry_run
+            puts "Row #{row_num}: WOULD HANDLE finances for #{ident}"
+          else
+            if li_var
+              lf = li_var.learner_finance || LearnerFinance.new(learner_info: li_var)
+              old_finance_attrs = lf.attributes.slice(*finance_attrs.keys.map(&:to_s))
+              finance_diffs = {}
+              finance_attrs.each do |k, v|
+                current = old_finance_attrs[k.to_s]
+                cur_s = current.nil? ? '' : current.to_s
+                new_s = v.nil? ? '' : v.to_s
+                finance_diffs[k] = { from: cur_s, to: new_s } if cur_s != new_s
+              end
+
+              if finance_diffs.any?
+                lf.assign_attributes(finance_attrs)
+                lf.save!
+                puts "Row #{row_num}: FINANCE UPDATED for #{ident} (id=#{li_var.id}) - changes: #{finance_diffs.keys.join(', ')}"
+              else
+                puts "Row #{row_num}: FINANCE NO CHANGES for #{ident} (id=#{li_var.id})"
+              end
+            end
           end
 
         rescue => e

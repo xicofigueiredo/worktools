@@ -5,10 +5,8 @@ class LearnerInfoPermission
     end_day_communication personal_email phone_number nationality id_information
     fiscal_number home_address gender use_of_image_authorisation
     parent1_phone_number parent1_id_information parent2_email parent2_phone_number
-    parent2_id_information parent2_info_not_to_be_contacted registration_renewal
-    registration_renewal_date deposit sponsor payment_plan monthly_tuition
-    discount_mt scholarship billable_fee_per_month scholarship_percentage admission_fee
-    discount_af billable_af registering_school_pt_plus previous_schooling
+    parent2_id_information parent2_info_not_to_be_contacted registration_renewal_date
+    registering_school_pt_plus previous_schooling
     previous_school_status previous_school_email native_language preferred_name
   ].freeze
 
@@ -18,8 +16,7 @@ class LearnerInfoPermission
     id_information fiscal_number home_address gender use_of_image_authorisation
     emergency_protocol_choice parent1_email parent1_phone_number parent1_id_information
     parent2_email parent2_phone_number parent2_id_information parent2_info_not_to_be_contacted
-    deposit sponsor payment_plan discount_mt scholarship_percentage admission_fee discount_af
-    preferred_name native_language monthly_tuition billable_fee_per_month
+    preferred_name native_language
   ].freeze
 
   def initialize(user, record)
@@ -39,7 +36,11 @@ class LearnerInfoPermission
     admin?
   end
 
-  def visible_fields
+  def finance_visible?
+    admin? || admissions?
+  end
+
+  def visible_learner_fields
     if admin? || admissions?
       LearnerInfo.column_names.map(&:to_sym)
     elsif edu?
@@ -49,11 +50,27 @@ class LearnerInfoPermission
     end
   end
 
+  def visible_finance_fields
+    if finance_visible?
+      LearnerFinance.column_names.map(&:to_sym) - %i[id learner_info_id created_at updated_at]
+    else
+      []
+    end
+  end
+
   def permitted_attributes
-    return visible_fields if admin?
+    return visible_learner_fields if admin?
     return ADMISSIONS_EDITABLE if admissions?
 
     []
+  end
+
+  def finance_permitted_attributes
+    if admin? || admissions?
+      visible_finance_fields
+    else
+      []
+    end
   end
 
   def editable_field?(attr_name)

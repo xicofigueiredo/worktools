@@ -15,11 +15,6 @@
       :parent2_full_name, :parent2_email, :parent2_phone_number, :parent2_id_information,
       :parent2_info_not_to_be_contacted
     ],
-    'Financial / Payments' => [
-      :deposit, :sponsor, :payment_plan, :monthly_tuition, :discount_mt,
-      :scholarship, :scholarship_percentage, :admission_fee, :discount_af,
-      :billable_fee_per_month, :billable_af
-    ],
     'School / Previous Education' => [
       :registering_school_pt_plus, :previous_schooling, :previous_school_status,
       :previous_school_name, :previous_school_email
@@ -32,9 +27,16 @@
 
   # Filter to only show fields the user has permission to see
   visible_categories = field_categories.map do |category_name, fields|
-    visible_fields_in_category = fields.select { |f| @visible_fields.include?(f) }
+    visible_fields_in_category = fields.select { |f| @visible_learner_fields.include?(f) }
     [category_name, visible_fields_in_category] if visible_fields_in_category.any?
   end.compact.to_h
+
+  if @permission.finance_visible?
+    finance_fields = @visible_finance_fields
+    if finance_fields.any?
+      visible_categories['Financial / Payments'] = finance_fields
+    end
+  end
 %>
 
 <style>

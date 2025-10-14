@@ -70,6 +70,8 @@ class AdmissionListController < ApplicationController
     # @learner_info and @permission set by before_action
     head :forbidden and return unless @permission.show?
 
+    @learner_finance = @learner_info.learner_finance
+
     excluded = %w[id user_id created_at updated_at]
     @show_columns = LearnerInfo.column_names - excluded
   end
@@ -205,7 +207,8 @@ class AdmissionListController < ApplicationController
   def export_form
     # Get permission for current user to know which fields they can see
     @permission = LearnerInfoPermission.new(current_user, nil)
-    @visible_fields = @permission.visible_fields
+    @visible_learner_fields = @permission.visible_learner_fields
+    @visible_finance_fields = @permission.visible_finance_fields
 
     @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
     @curricula = LearnerInfo.distinct.pluck(:curriculum_course_option).compact.sort
@@ -219,10 +222,11 @@ class AdmissionListController < ApplicationController
 
   def export_csv
     @permission = LearnerInfoPermission.new(current_user, nil)
-    visible_fields = @permission.visible_fields
+    visible_learner_fields = @permission.visible_learner_fields
+    visible_finance_fields = @permission.visible_finance_fields
 
     # Get selected fields from form
-    selected_fields = params[:fields]&.select { |f| visible_fields.include?(f.to_sym) } || []
+    selected_fields = params[:fields]&.select { |f| visible_learner_fields.include?(f.to_sym) || visible_finance_fields.include?(f.to_sym) } || []
 
     if selected_fields.empty?
       flash[:alert] = "Please select at least one field to export"
@@ -230,7 +234,7 @@ class AdmissionListController < ApplicationController
     end
 
     # Build scope
-    filter_scope = LearnerInfo.all
+    filter_scope = LearnerInfo.includes(:learner_finance)
 
     # Apply multi-select filters
     if params[:status].present? && params[:status].is_a?(Array)
@@ -271,7 +275,17 @@ class AdmissionListController < ApplicationController
 
       # Add data rows
       filter_scope.find_each do |learner|
-        csv << selected_fields.map { |field| learner.send(field) }
+        row = selected_fields.map do |field|
+          field_sym = field.to_sym
+          if visible_learner_fields.include?(field_sym)
+            learner.send(field)
+          elsif visible_finance_fields.include?(field_sym)
+            learner.learner_finance&.send(field)
+          else
+            nil
+          end
+        end
+        csv << row
       end
     end
 

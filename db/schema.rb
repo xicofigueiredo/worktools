@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_13_190642) do
+ActiveRecord::Schema[7.0].define(version: 2025_10_14_175649) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -448,6 +448,24 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_13_190642) do
     t.index ["learner_info_id"], name: "index_learner_documents_on_learner_info_id"
   end
 
+  create_table "learner_finances", force: :cascade do |t|
+    t.bigint "learner_info_id", null: false
+    t.string "payment_plan"
+    t.integer "monthly_fee"
+    t.integer "discount_mf"
+    t.integer "scholarship"
+    t.integer "billable_mf"
+    t.integer "admission_fee"
+    t.integer "discount_af"
+    t.integer "billable_af"
+    t.integer "renewal_fee"
+    t.integer "discount_rf"
+    t.integer "billable_rf"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["learner_info_id"], name: "index_learner_finances_on_learner_info_id"
+  end
+
   create_table "learner_flags", force: :cascade do |t|
     t.boolean "asks_for_help", default: false
     t.boolean "takes_notes", default: false
@@ -508,19 +526,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_13_190642) do
     t.string "parent2_phone_number"
     t.string "parent2_id_information"
     t.text "parent2_info_not_to_be_contacted"
-    t.integer "registration_renewal"
     t.date "registration_renewal_date"
-    t.string "deposit"
-    t.string "sponsor"
-    t.string "payment_plan"
-    t.integer "monthly_tuition"
-    t.string "discount_mt"
-    t.string "scholarship"
-    t.integer "billable_fee_per_month"
-    t.integer "scholarship_percentage"
-    t.integer "admission_fee"
-    t.integer "discount_af"
-    t.integer "billable_af"
     t.string "registering_school_pt_plus"
     t.string "previous_schooling"
     t.string "previous_school_status"
@@ -1140,6 +1146,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_13_190642) do
   add_foreign_key "knowledges", "sprint_goals"
   add_foreign_key "knowledges", "timelines", on_delete: :cascade
   add_foreign_key "learner_documents", "learner_infos"
+  add_foreign_key "learner_finances", "learner_infos"
   add_foreign_key "learner_flags", "users"
   add_foreign_key "learner_infos", "users"
   add_foreign_key "lws_timelines", "users"
