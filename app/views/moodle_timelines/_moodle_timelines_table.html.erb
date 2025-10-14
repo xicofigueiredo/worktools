@@ -150,11 +150,15 @@ document.addEventListener("turbo:before-cache", function() {
   }
 });
 
-// Use Turbo's load event (or DOMContentLoaded if you're not using Turbo)
-document.addEventListener("turbo:load", function() {
+// Function to attach moodle timeline click handlers
+function attachMoodleTimelineHandlers() {
   const tableBody = document.querySelector(".moodle-timelines-table tbody");
   console.log("Moodle timelines table body found:", tableBody);
-  if (tableBody) {
+
+  if (tableBody && !tableBody.dataset.handlerAttached) {
+    // Mark that handler is attached to prevent duplicate listeners
+    tableBody.dataset.handlerAttached = "true";
+
     tableBody.addEventListener("click", function(e) {
       console.log("Click event triggered on moodle timelines table");
       const row = e.target.closest(".clickable");
@@ -227,6 +231,11 @@ document.addEventListener("turbo:load", function() {
       }
     });
   }
+}
+
+// Use Turbo's load event (or DOMContentLoaded if you're not using Turbo)
+document.addEventListener("turbo:load", function() {
+  attachMoodleTimelineHandlers();
 
   // Attach a listener for the modal close button.
   const closeBtn = document.getElementById("closeModal");
@@ -243,6 +252,20 @@ document.addEventListener("turbo:load", function() {
       modal.style.display = "none";
     }
   });
+
+  // Listen for Bootstrap tab shown events to re-attach handlers when moodle-timelines tab is activated
+  const moodleTimelinesTab = document.getElementById('moodle-timelines-tab');
+  if (moodleTimelinesTab) {
+    moodleTimelinesTab.addEventListener('shown.bs.tab', function (e) {
+      console.log("Moodle timelines tab activated, re-attaching handlers");
+      // Reset the handler attached flag and re-attach
+      const tableBody = document.querySelector(".moodle-timelines-table tbody");
+      if (tableBody) {
+        tableBody.dataset.handlerAttached = "";
+      }
+      attachMoodleTimelineHandlers();
+    });
+  }
 });
 </script>
 
