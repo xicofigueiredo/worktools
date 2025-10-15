@@ -311,49 +311,30 @@
     <% if perm.finance_visible? %>
       <div class="li-section li-grid">
         <h4>Financial / Payments</h4>
-        <% if edit_mode %>
           <%= f.fields_for :learner_finance, @learner_finance do |ff| %>
             <div class="row gx-3">
               <% render_input.call(ff, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true) %>
             </div>
+            <h5 style="margin-top: 20px; margin-bottom: 10px;">Monthly Fees</h5>
             <div class="row gx-3">
               <% render_input.call(ff, :monthly_fee, field_opts[:monthly_fee] || { col: '3' }, true) %>
               <% render_input.call(ff, :discount_mf, field_opts[:discount_mf] || { col: '3' }, true) %>
               <% render_input.call(ff, :scholarship, field_opts[:scholarship] || { col: '3' }, true) %>
               <% render_input.call(ff, :billable_mf, field_opts[:billable_mf] || { col: '3' }, true) %>
             </div>
+            <h5 style="margin-top: 20px; margin-bottom: 10px;">Admission Fees</h5>
             <div class="row gx-3">
               <% render_input.call(ff, :admission_fee, field_opts[:admission_fee] || { col: '4' }, true) %>
               <% render_input.call(ff, :discount_af, field_opts[:discount_af] || { col: '4' }, true) %>
               <% render_input.call(ff, :billable_af, field_opts[:billable_af] || { col: '4' }, true) %>
             </div>
+            <h5 style="margin-top: 20px; margin-bottom: 10px;">Renewal Fees</h5>
             <div class="row gx-3">
               <% render_input.call(ff, :renewal_fee, field_opts[:renewal_fee] || { col: '4' }, true) %>
               <% render_input.call(ff, :discount_rf, field_opts[:discount_rf] || { col: '4' }, true) %>
               <% render_input.call(ff, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true) %>
             </div>
           <% end %>
-        <% else %>
-          <div class="row gx-3">
-            <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true, @learner_finance) %>
-          </div>
-          <div class="row gx-3">
-            <% render_input.call(nil, :monthly_fee, field_opts[:monthly_fee] || { col: '3' }, true, @learner_finance) %>
-            <% render_input.call(nil, :discount_mf, field_opts[:discount_mf] || { col: '3' }, true, @learner_finance) %>
-            <% render_input.call(nil, :scholarship, field_opts[:scholarship] || { col: '3' }, true, @learner_finance) %>
-            <% render_input.call(nil, :billable_mf, field_opts[:billable_mf] || { col: '3' }, true, @learner_finance) %>
-          </div>
-          <div class="row gx-3">
-            <% render_input.call(nil, :admission_fee, field_opts[:admission_fee] || { col: '4' }, true, @learner_finance) %>
-            <% render_input.call(nil, :discount_af, field_opts[:discount_af] || { col: '4' }, true, @learner_finance) %>
-            <% render_input.call(nil, :billable_af, field_opts[:billable_af] || { col: '4' }, true, @learner_finance) %>
-          </div>
-          <div class="row gx-3">
-            <% render_input.call(nil, :renewal_fee, field_opts[:renewal_fee] || { col: '4' }, true, @learner_finance) %>
-            <% render_input.call(nil, :discount_rf, field_opts[:discount_rf] || { col: '4' }, true, @learner_finance) %>
-            <% render_input.call(nil, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true, @learner_finance) %>
-          </div>
-        <% end %>
       </div>
     <% end %>
 
