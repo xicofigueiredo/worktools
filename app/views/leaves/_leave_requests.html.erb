@@ -1,7 +1,6 @@
 <div class="card mb-4" data-controller="cancel">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h2 class="h5 mb-0">My Leave Requests</h2>
-    <%# small entitlements summary could go here if you prefer %>
   </div>
 
   <div class="card-body p-0">
@@ -14,7 +13,7 @@
               <th>End Date</th>
               <th>Total Days Used</th>
               <th>Type</th>
-              <th class="text-center">Impediment</th>
+              <th class="text-center">Notes / Impediment</th>
               <th class="text-center">Status</th>
               <th class="text-nowrap">Actions</th>
             </tr>
@@ -28,11 +27,17 @@
                 <td><%= leave.leave_type.capitalize %></td>
 
                 <td class="text-center">
-                  <% if leave.exception_requested && leave.exception_user_messages.any? %>
-                    <% tooltip_lines = leave.exception_user_messages.dup %>
-                    <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
-                    <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
-                  <% else %>
+                  <div class="d-flex justify-content-center gap-1">
+                    <% if leave.exception_requested && leave.exception_user_messages.any? %>
+                      <% tooltip_lines = leave.exception_user_messages.dup %>
+                      <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
+                      <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
+                    <% end %>
+                    <% if leave.notes.present? %>
+                      <span class="badge bg-primary" data-bs-toggle="tooltip" title="Notes: <%= h(leave.notes) %>">i</span>
+                    <% end %>
+                  </div>
+                  <% if !leave.exception_requested && leave.exception_user_messages.empty? && leave.notes.blank? %>
                     -
                   <% end %>
                 </td>
@@ -72,32 +77,58 @@
                 </td>
 
                 <td class="text-center">
-                  <% if leave.user_id == current_user.id && leave.status != 'cancelled' %>
-                    <% if leave.confirmations.pending.where(type: 'CancellationConfirmation').exists? %>
+                  <% pending_cancellation = leave.confirmations.pending.where(type: 'CancellationConfirmation').exists? %>
+                  <% can_cancel = leave.user_id == current_user.id && %w[pending approved].include?(leave.status) &&
+                                  (leave.status == 'pending' || (leave.status == 'approved' && leave.start_date.to_date > Time.zone.today)) %>
+                  <% has_docs = leave.staff_leave_documents.any? %>
+                  <% if can_cancel || has_docs %>
+                    <% if pending_cancellation %>
                       <span class="badge bg-warning text-dark">Cancellation requested</span>
                     <% else %>
                       <div class="d-flex justify-content-center align-items-center gap-2">
-                        <button
-                          type="button"
-                          class="btn btn-sm btn-outline-danger"
-                          title="Cancel leave"
-                          aria-label="Cancel leave"
-                          data-action="click->cancel#start"
-                          data-cancel-leave-id-value="<%= leave.id %>"
-                          data-cancel-start-date-value="<%= leave.start_date %>"
-                          data-cancel-leave-status-value="<%= leave.status %>">
-                          <i class="fa fa-times" aria-hidden="true"></i>
-                        </button>
+                        <% if can_cancel %>
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            title="Cancel leave"
+                            aria-label="Cancel leave"
+                            data-action="click->cancel#start"
+                            data-cancel-leave-id-value="<%= leave.id %>"
+                            data-cancel-start-date-value="<%= leave.start_date %>"
+                            data-cancel-leave-status-value="<%= leave.status %>">
+                            <i class="fa fa-times" aria-hidden="true"></i>
+                          </button>
+                        <% end %>
 
-                        <% if leave.leave_type == 'sick leave' && leave.staff_leave_documents.any? %>
-                          <% doc = leave.staff_leave_documents.first %>
-                          <%= link_to download_document_leafe_path(leave, doc.id),
-                                      class: "btn btn-sm btn-outline-primary",
-                                      title: "Download document",
-                                      aria: { label: "Download document" },
-                                      target: "_blank",
-                                      rel: "noopener" do %>
-                            <i class="fa fa-download" aria-hidden="true"></i>
+                        <% if has_docs %>
+                          <% documents = leave.staff_leave_documents %>
+                          <% if documents.size == 1 %>
+                            <% doc = documents.first %>
+                            <%= link_to download_document_leafe_path(leave, doc.id),
+                                        class: "btn btn-sm btn-outline-primary",
+                                        title: "Download document",
+                                        aria: { label: "Download document" },
+                                        target: "_blank",
+                                        rel: "noopener" do %>
+                              <i class="fa fa-download" aria-hidden="true"></i>
+                            <% end %>
+                          <% else %>
+                            <div class="btn-group" role="group">
+                              <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-download" aria-hidden="true"></i>
+                              </button>
+                              <ul class="dropdown-menu">
+                                <% documents.each_with_index do |doc, index| %>
+                                  <li>
+                                    <%= link_to "Document #{index + 1}",
+                                                download_document_leafe_path(leave, doc.id),
+                                                class: "dropdown-item",
+                                                target: "_blank",
+                                                rel: "noopener" %>
+                                  </li>
+                                <% end %>
+                              </ul>
+                            </div>
                           <% end %>
                         <% end %>
                       </div>
@@ -118,7 +149,6 @@
     <% end %>
   </div>
 
-  <!-- Cancellation modal (same as before) -->
   <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">

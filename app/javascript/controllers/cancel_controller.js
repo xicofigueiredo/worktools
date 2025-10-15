@@ -28,7 +28,7 @@ export default class extends Controller {
 
     // If leave is pending - immediate cancellation after confirmation (no modal)
     if (status && status.toLowerCase() === 'pending') {
-      if (confirm("Cancel this pending request? This will cancel it immediately.")) {
+      if (confirm("Cancel this request? If a manager has already approved it, this will send a cancellation request, otherwise it will cancel immediately.")) {
         this._submitSimpleForm(actionUrl, { exception_requested: false })
       }
       return

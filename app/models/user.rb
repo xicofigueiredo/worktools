@@ -45,7 +45,7 @@ class User < ApplicationRecord
   has_many :managed_departments, class_name: 'Department', foreign_key: 'manager_id'
   has_many :confirmations, foreign_key: 'approver_id'
 
-  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', rm: 'Regional Manager', guardian: 'Parent', cm: 'Course Manager', exams: 'Exams', edu: 'Edu' }
+  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', rm: 'Regional Manager', guardian: 'Parent', cm: 'Course Manager', exams: 'Exams', edu: 'Edu', staff: 'Staff' }
   validate :email_domain_check, on: :create
 
   before_save :ensure_deactivated_if_graduated
