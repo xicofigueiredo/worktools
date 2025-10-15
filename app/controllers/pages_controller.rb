@@ -512,6 +512,15 @@ class PagesController < ApplicationController
     @weekly_goal = @learner.weekly_goals.joins(:week)
                           .find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
     @attendances = @learner.attendances.where(attendance_date: @current_sprint.start_date..@current_sprint.end_date)
+    holiday_attendances = @attendances.where(absence: 'Holiday')
+    @holiday_weeks = []
+
+    if @current_sprint_weeks.present?
+      @current_sprint_weeks.each do |week|
+        days_with_holiday = holiday_attendances.where(attendance_date: week.start_date..week.end_date).distinct.pluck(:attendance_date).count
+        @holiday_weeks << week.id if days_with_holiday >= 3
+      end
+    end
 
     @kda = @learner.kdas.joins(:week)
                           .find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)

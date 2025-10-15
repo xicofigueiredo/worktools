@@ -57,11 +57,14 @@ class MoodleTimelinesController < ApplicationController
   def update
     @moodle_timeline = MoodleTimeline.find(params[:id])
     if @moodle_timeline.update(moodle_timeline_params)
+      relevant_changes = @moodle_timeline.saved_changes.slice('start_date', 'end_date', 'exam_date_id')
+      @moodle_timeline.notify_users(current_user) if relevant_changes.present?
+
       moodle_generate_topic_deadlines(@moodle_timeline)
       @moodle_timeline.save
 
       if current_user.role != @moodle_timeline.user.role
-        redirect_to learner_profile_path(@moodle_timeline.user_id) and return
+        redirect_to learner_profile_path(@moodle_timeline.user_id, active_tab: 'moodle-timelines') and return
       else
         redirect_to moodle_timelines_path, notice: 'Moodle Timeline was successfully updated.' and return
       end

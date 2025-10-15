@@ -102,6 +102,8 @@ class TimelinesController < ApplicationController
     @learner = @timeline.user
 
     if @timeline.update(timeline_params)
+      relevant_changes = @timeline.saved_changes.slice('start_date', 'end_date', 'exam_date_id')
+      @timeline.notify_users(current_user) if relevant_changes.present?
 
       @timeline.save
       # if current_user.hub_ids.include?(147)
@@ -114,7 +116,7 @@ class TimelinesController < ApplicationController
       @timeline.save
 
       if current_user.role != @learner.role
-        redirect_to learner_profile_path(@timeline.user_id)
+        redirect_to learner_profile_path(@timeline.user_id, active_tab: 'timelines')
       else
         redirect_to timelines_path, notice: 'Timeline was successfully updated.'
       end
