@@ -3,18 +3,17 @@ class ExamEnrollsController < ApplicationController
   before_action :set_exam_enroll, only: [:show, :edit, :update, :destroy]
 
   def index
-    # Get the target sprint based on date parameter or default to current sprint
+    # Get the target season based on date parameter or default to current season
     if params[:date].present?
       target_date = Date.parse(params[:date])
-      @sprint = Sprint.where("start_date <= ? AND end_date >= ?", target_date, target_date).first
+      @season = Sprint.find_season_for_date(target_date)
+    else
+      @season = Sprint.current_season
     end
 
-    # Fallback to current sprint if no sprint found
-    @sprint ||= Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
-
-    # Get adjacent sprints for navigation
-    @previous_sprint = Sprint.where("end_date < ?", @sprint.start_date).order(end_date: :desc).first
-    @next_sprint = Sprint.where("start_date > ?", @sprint.end_date).order(start_date: :asc).first
+    # Get adjacent seasons for navigation
+    @previous_season = Sprint.previous_season(@season)
+    @next_season = Sprint.next_season(@season)
 
     @exam_enrolls = ExamEnroll.all
 
@@ -72,8 +71,8 @@ class ExamEnrollsController < ApplicationController
       .left_joins(timeline: [:exam_date, :user])
       .where(
         '(exam_dates.date BETWEEN ? AND ?) OR (exam_enrolls.personalized_exam_date BETWEEN ? AND ?)',
-        @sprint.start_date, @sprint.end_date,
-        @sprint.start_date, @sprint.end_date
+        @season[:start_date], @season[:end_date],
+        @season[:start_date], @season[:end_date]
       )
 
     # Role-based filtering
