@@ -77,13 +77,26 @@ class AdmissionListController < ApplicationController
   end
 
   def update
-    # authorization
     head :forbidden and return unless @permission.update?
 
+    # Proceed with update
     if @learner_info.update(learner_info_params_from_permission)
-      # log the change (pass current_user)
       begin
         @learner_info.log_update(current_user, @learner_info.saved_changes)
+
+        # Log finance changes if any
+        if @learner_info.learner_finance&.saved_changes&.any?
+          finance_changes = @learner_info.learner_finance.saved_changes.except('updated_at')
+          if finance_changes.any?
+            @learner_info.learner_info_logs.create!(
+              user: current_user,
+              action: 'finance_update',
+              changed_fields: finance_changes.keys,
+              changed_data: finance_changes.transform_values { |v| { 'from' => v[0], 'to' => v[1] } },
+              note: "Finance information updated"
+            )
+          end
+        end
       rescue => e
         Rails.logger.error "Failed to create learner_info log: #{e.class}: #{e.message}"
       end
@@ -93,7 +106,32 @@ class AdmissionListController < ApplicationController
     else
       flash.now[:alert] = "There were errors updating the learner: " + @learner_info.errors.full_messages.to_sentence
       @show_attributes = LearnerInfo.column_names - %w[id user_id created_at updated_at]
+      @learner_finance = @learner_info.learner_finance
       render :show, status: :unprocessable_entity
+    end
+  end
+
+  # Update learner_info_params_from_permission to include nested attributes
+  def learner_info_params_from_permission
+    permitted = Array(@permission&.permitted_attributes).map(&:to_sym)
+    finance_permitted = Array(@permission&.finance_permitted_attributes).map(&:to_sym)
+
+    permitted = [] if permitted.blank?
+
+    if params[:learner_info].present?
+      # Build the permit hash
+      permit_hash = permitted.dup
+
+      # Add nested finance attributes if finance permissions exist
+      if finance_permitted.any?
+        # Always include :id for nested attributes to work properly
+        permit_hash << { learner_finance_attributes: [:id] + finance_permitted }
+      end
+
+      Rails.logger.debug "Permitting params: #{permit_hash.inspect}"
+      params.require(:learner_info).permit(permit_hash)
+    else
+      {}
     end
   end
 
@@ -307,10 +345,27 @@ class AdmissionListController < ApplicationController
   # Use permission-defined attributes for strong params
   def learner_info_params_from_permission
     permitted = Array(@permission&.permitted_attributes).map(&:to_sym)
+    finance_permitted = Array(@permission&.finance_permitted_attributes).map(&:to_sym)
     permitted = [] if permitted.blank?
 
     if params[:learner_info].present?
-      params.require(:learner_info).permit(permitted)
+      # Start with base permitted attributes
+      permit_hash = permitted.dup
+
+      # Add virtual attribute if institutional_email is editable
+      if permitted.include?(:institutional_email)
+        permit_hash << :institutional_email_prefix
+      end
+
+      # Add nested learner_finance_attributes if any finance fields are permitted
+      if finance_permitted.any?
+        permit_hash << { learner_finance_attributes: [:id] + finance_permitted }
+      end
+
+      # Optional: Log for debugging
+      Rails.logger.debug "Permitted params: #{permit_hash.inspect}"
+
+      params.require(:learner_info).permit(*permit_hash)
     else
       {}
     end

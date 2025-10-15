@@ -6,6 +6,8 @@ class LearnerInfo < ApplicationRecord
 
   # validate user needs to be learner?
 
+  accepts_nested_attributes_for :learner_finance, update_only: true
+
   EMAIL_FIELDS = %w[
     personal_email
     institutional_email

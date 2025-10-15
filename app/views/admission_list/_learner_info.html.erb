@@ -135,16 +135,16 @@
     "Semi Annual",
     "Quarterly"
   ]},
-  monthly_fee: { col: '3' },
-  discount_mf: { col: '3' },
-  scholarship: { col: '3' },
-  billable_mf: { col: '3' },
-  admission_fee: { col: '4' },
-  discount_af: { col: '4' },
-  billable_af: { col: '4' },
-  renewal_fee: { col: '4' },
-  discount_rf: { col: '4' },
-  billable_rf: { col: '4' }
+  monthly_fee: { type: :number, col: '3', step: 1 },
+  discount_mf: { type: :number, col: '3', step: 1 },
+  scholarship: { type: :number, col: '3', step: 1 },
+  billable_mf: { type: :number, col: '3', step: 1, readonly: true },
+  admission_fee: { type: :number, col: '4', step: 1 },
+  discount_af: { type: :number, col: '4', step: 1 },
+  billable_af: { type: :number, col: '4', step: 1, readonly: true },
+  renewal_fee: { type: :number, col: '4', step: 1 },
+  discount_rf: { type: :number, col: '4', step: 1 },
+  billable_rf: { type: :number, col: '4', step: 1, readonly: true }
 }) %>
 
 <% render_input = lambda do |f, attr, opts = {}, is_finance = false, object = @learner_info| %>
@@ -215,6 +215,34 @@
             placeholder: "name@example.com",
             autocomplete: "email"
           ) %>
+        <% end %>
+      <% when :number %>
+        <% readonly_flag = opts[:readonly] || false %>
+        <% number_classes = disabled_flag ? "form-control" : "form-control editable-input" %>
+        <% number_classes += " bg-light" if readonly_flag && !disabled_flag %>
+        <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
+          <%= f.label(attr, label) %>
+          <% if readonly_flag %>
+            <%= content_tag(:div, class: "input-group") do %>
+              <%= f.number_field(
+                attr,
+                class: number_classes,
+                disabled: disabled_flag,
+                readonly: true,
+                step: opts[:step] || 1,
+                min: 0,
+                style: "background-color: #e9ecef; cursor: not-allowed;"
+              ) %>
+            <% end %>
+          <% else %>
+            <%= f.number_field(
+              attr,
+              class: number_classes,
+              disabled: disabled_flag,
+              step: opts[:step] || 1,
+              min: 0
+            ) %>
+          <% end %>
         <% end %>
       <% else %>
         <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
@@ -476,3 +504,68 @@
     </div>
   </div>
 <% end %>
+
+<script>
+  function setupFinanceCalculations() {
+    // Auto-calculate billable fields
+    function calculateBillable(feeId, discountId, scholarshipId, billableId) {
+      const feeInput = document.getElementById(feeId);
+      const discountInput = document.getElementById(discountId);
+      const scholarshipInput = scholarshipId ? document.getElementById(scholarshipId) : null;
+      const billableInput = document.getElementById(billableId);
+
+      if (!feeInput || !billableInput) return;
+
+      function calculate() {
+        const fee = parseFloat(feeInput.value) || 0;
+        const discount = parseFloat(discountInput?.value) || 0;
+        const scholarship = scholarshipInput ? (parseFloat(scholarshipInput.value) || 0) : 0;
+
+        const billable = fee - discount - scholarship;
+        billableInput.value = Math.max(0, billable);
+      }
+
+      if (feeInput) feeInput.addEventListener('input', calculate);
+      if (discountInput) discountInput.addEventListener('input', calculate);
+      if (scholarshipInput) scholarshipInput.addEventListener('input', calculate);
+
+      calculate(); // Initial calculation
+    }
+
+    // Setup calculations for each fee type
+    calculateBillable(
+      'learner_info_learner_finance_attributes_monthly_fee',
+      'learner_info_learner_finance_attributes_discount_mf',
+      'learner_info_learner_finance_attributes_scholarship',
+      'learner_info_learner_finance_attributes_billable_mf'
+    );
+
+    calculateBillable(
+      'learner_info_learner_finance_attributes_admission_fee',
+      'learner_info_learner_finance_attributes_discount_af',
+      null,
+      'learner_info_learner_finance_attributes_billable_af'
+    );
+
+    calculateBillable(
+      'learner_info_learner_finance_attributes_renewal_fee',
+      'learner_info_learner_finance_attributes_discount_rf',
+      null,
+      'learner_info_learner_finance_attributes_billable_rf'
+    );
+  }
+
+  // Run on page load
+  document.addEventListener('DOMContentLoaded', setupFinanceCalculations);
+
+  // Run on Turbo page loads (if using Turbo)
+  document.addEventListener('turbo:load', setupFinanceCalculations);
+
+  // Run immediately if DOM is already loaded
+  if (document.readyState === 'loading') {
+    // Still loading, wait for DOMContentLoaded
+  } else {
+    // DOM is already ready
+    setupFinanceCalculations();
+  }
+</script>

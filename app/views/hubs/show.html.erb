@@ -373,7 +373,7 @@
 </style>
 
 <div class="hub-container">
-  <% display_type = (@hub.type.presence || 'PW').to_s.upcase %>
+  <% display_type = (@hub.hub_type.presence || 'PW').to_s.upcase %>
 
   <div class="hub-grid">
     <!-- PANEL 1: Hub Info + Capacity + LCs  -->
