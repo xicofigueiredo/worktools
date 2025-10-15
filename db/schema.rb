@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_14_175649) do
+ActiveRecord::Schema[7.0].define(version: 2025_10_15_142220) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -380,13 +380,13 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_14_175649) do
     t.text "google_map_link"
     t.string "city"
     t.string "region"
-    t.string "type"
+    t.string "hub_type"
     t.boolean "exam_center", default: false, null: false
     t.integer "capacity"
     t.text "parents_whatsapp_group"
     t.index ["city"], name: "index_hubs_on_city"
+    t.index ["hub_type"], name: "index_hubs_on_hub_type"
     t.index ["region"], name: "index_hubs_on_region"
-    t.index ["type"], name: "index_hubs_on_type"
   end
 
   create_table "inis", force: :cascade do |t|
