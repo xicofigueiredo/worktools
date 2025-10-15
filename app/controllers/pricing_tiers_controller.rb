@@ -1,4 +1,3 @@
-# app/controllers/pricing_tiers_controller.rb
 class PricingTiersController < ApplicationController
   def index
     @pricing_tiers = PricingTier.all
