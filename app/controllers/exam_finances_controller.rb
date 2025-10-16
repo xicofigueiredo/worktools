@@ -5,7 +5,7 @@ class ExamFinancesController < ApplicationController
     # Load exam finances for learners with Nov 2025 enrollments
     exam_finances = ExamFinance.includes(user: { users_hubs: :hub })
                               .joins(:user)
-                              .where(exam_season: "November 2025")
+                              .where(exam_season: "January 2026")
                               .order('users.full_name ASC')
 
     # Filter to only those with matching exam enrollments
