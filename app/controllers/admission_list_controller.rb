@@ -1,7 +1,7 @@
 require 'csv'
 
 class AdmissionListController < ApplicationController
-  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document]
+  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document, :check_pricing_impact]
 
   def index
     @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
@@ -133,6 +133,75 @@ class AdmissionListController < ApplicationController
     else
       {}
     end
+  end
+
+  def check_pricing_impact
+    head :forbidden and return unless @permission.show?
+
+    curriculum = params[:curriculum]
+    programme = params[:programme]
+    hub_id = params[:hub_id]
+
+    if curriculum.blank? || hub_id.blank?
+      return render json: { error: 'Missing curriculum or hub_id' }, status: :bad_request
+    end
+
+    hub = Hub.find_by(id: hub_id)
+    unless hub
+      return render json: { error: 'Hub not found' }, status: :not_found
+    end
+
+    # Compute model based on programme and hub (same as matcher)
+    model = if programme&.start_with?('Online:')
+      'online'
+    elsif programme&.start_with?('In-Person:')
+      'hybrid'
+    else
+      hub.name.downcase == 'remote' ? 'online' : 'hybrid'
+    end
+
+    # Get new pricing for the selected curriculum and programme
+    new_pricing = PricingTierMatcher.for_learner(@learner_info, curriculum, hub, programme)
+
+    # Get current finance values
+    current_finance = @learner_info.learner_finance || @learner_info.build_learner_finance
+
+    current_pricing = {
+      monthly_fee: current_finance.monthly_fee,
+      admission_fee: current_finance.admission_fee,
+      renewal_fee: current_finance.renewal_fee,
+      discount_mf: current_finance.discount_mf,
+      scholarship: current_finance.scholarship,
+      discount_af: current_finance.discount_af,
+      discount_rf: current_finance.discount_rf
+    }
+
+    if new_pricing.nil?
+      return render json: {
+        requires_confirmation: false,
+        error: 'No pricing tier found for this combination'
+      }
+    end
+
+    # Always require confirmation if pricing tier found (since called on change)
+    render json: {
+      requires_confirmation: true,
+      new_curriculum: curriculum,
+      old_programme: @learner_info.programme,
+      new_programme: programme,
+      pricing_criteria: {
+        model: model.capitalize,
+        country: hub.country,
+        hub_name: hub.name,
+        curriculum: curriculum
+      },
+      current_pricing: current_pricing,
+      new_pricing: {
+        monthly_fee: new_pricing.monthly_fee,
+        admission_fee: new_pricing.admission_fee,
+        renewal_fee: new_pricing.renewal_fee
+      }
+    }
   end
 
   def documents

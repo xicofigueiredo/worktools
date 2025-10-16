@@ -78,6 +78,7 @@ Rails.application.routes.draw do
         get 'documents', action: :documents
         post 'documents', action: :create_document
         delete 'documents/:document_id', action: :destroy_document, as: 'document'
+        get 'check_pricing_impact', action: :check_pricing_impact
       end
     end
 
