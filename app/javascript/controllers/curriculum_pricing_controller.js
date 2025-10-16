@@ -11,9 +11,6 @@ export default class extends Controller {
     "newAdmission",
     "oldRenewal",
     "newRenewal",
-    "monthlyInput",
-    "admissionInput",
-    "renewalInput",
     "discountMfInput",
     "scholarshipInput",
     "discountAfInput",
@@ -100,15 +97,10 @@ export default class extends Controller {
     if (data.new_curriculum !== this.currentCurriculumValue) {
       changesHtml += `Curriculum: ${this.currentCurriculumValue || "N/A"} → ${data.new_curriculum}<br>`;
     }
-    if (data.new_programme !== data.old_programme) {
-      changesHtml += `Programme: ${data.old_programme || "N/A"} → ${data.new_programme}<br>`;
+    if (data.new_programme !== this.currentProgrammeValue) {
+      changesHtml += `Programme: ${this.currentProgrammeValue || "N/A"} → ${data.new_programme}<br>`;
     }
     this.changesDetailsTarget.innerHTML = changesHtml;
-
-    // Add debug message
-    const debugP = document.createElement('p');
-    debugP.textContent = `Debug: curriculum ${data.new_curriculum} and programme ${data.new_programme} and hub with this characteristics (model: ${data.pricing_criteria.model}, country: ${data.pricing_criteria.country}, hub_name: ${data.pricing_criteria.hub_name}) will get the pricing tier: monthly_fee ${data.new_pricing.monthly_fee}, admission_fee ${data.new_pricing.admission_fee}, renewal_fee ${data.new_pricing.renewal_fee}`;
-    this.modalBodyTarget.insertBefore(debugP, this.modalBodyTarget.firstChild);
 
     // Set pricing tier criteria
     document.getElementById('pricing-model').textContent = data.pricing_criteria.model
@@ -121,15 +113,15 @@ export default class extends Controller {
     this.oldAdmissionTarget.textContent = this.formatCurrency(data.current_pricing.admission_fee)
     this.oldRenewalTarget.textContent = this.formatCurrency(data.current_pricing.renewal_fee)
 
+    // Set new fees
+    this.newMonthlyFee = data.new_pricing.monthly_fee || 0;
+    this.newAdmissionFee = data.new_pricing.admission_fee || 0;
+    this.newRenewalFee = data.new_pricing.renewal_fee || 0;
+
     // Set new values in display
     this.newMonthlyTarget.textContent = this.formatCurrency(data.new_pricing.monthly_fee)
     this.newAdmissionTarget.textContent = this.formatCurrency(data.new_pricing.admission_fee)
     this.newRenewalTarget.textContent = this.formatCurrency(data.new_pricing.renewal_fee)
-
-    // Set editable input values
-    this.monthlyInputTarget.value = data.new_pricing.monthly_fee || 0
-    this.admissionInputTarget.value = data.new_pricing.admission_fee || 0
-    this.renewalInputTarget.value = data.new_pricing.renewal_fee || 0
 
     // Set discount/scholarship values (preserve existing or set to 0)
     this.discountMfInputTarget.value = data.current_pricing.discount_mf || 0
@@ -147,34 +139,34 @@ export default class extends Controller {
 
   calculateBillables() {
     // Calculate billable monthly fee
-    const monthlyFee = parseFloat(this.monthlyInputTarget.value) || 0
-    const discountMf = parseFloat(this.discountMfInputTarget.value) || 0
-    const scholarship = parseFloat(this.scholarshipInputTarget.value) || 0
-    const billableMf = Math.max(0, monthlyFee - discountMf - scholarship)
-    document.getElementById('billable-mf').textContent = this.formatCurrency(billableMf)
+    const monthlyFee = parseFloat(this.newMonthlyFee) || 0;
+    const discountMf = parseFloat(this.discountMfInputTarget.value) || 0;
+    const scholarship = parseFloat(this.scholarshipInputTarget.value) || 0;
+    const billableMf = Math.max(0, monthlyFee - discountMf - scholarship);
+    document.getElementById('billable-mf').textContent = this.formatCurrency(billableMf);
 
     // Calculate billable admission fee
-    const admissionFee = parseFloat(this.admissionInputTarget.value) || 0
-    const discountAf = parseFloat(this.discountAfInputTarget.value) || 0
-    const billableAf = Math.max(0, admissionFee - discountAf)
-    document.getElementById('billable-af').textContent = this.formatCurrency(billableAf)
+    const admissionFee = parseFloat(this.newAdmissionFee) || 0;
+    const discountAf = parseFloat(this.discountAfInputTarget.value) || 0;
+    const billableAf = Math.max(0, admissionFee - discountAf);
+    document.getElementById('billable-af').textContent = this.formatCurrency(billableAf);
 
     // Calculate billable renewal fee
-    const renewalFee = parseFloat(this.renewalInputTarget.value) || 0
-    const discountRf = parseFloat(this.discountRfInputTarget.value) || 0
-    const billableRf = Math.max(0, renewalFee - discountRf)
-    document.getElementById('billable-rf').textContent = this.formatCurrency(billableRf)
+    const renewalFee = parseFloat(this.newRenewalFee) || 0;
+    const discountRf = parseFloat(this.discountRfInputTarget.value) || 0;
+    const billableRf = Math.max(0, renewalFee - discountRf);
+    document.getElementById('billable-rf').textContent = this.formatCurrency(billableRf);
   }
 
   confirmChanges() {
     // Get the edited values from the modal
-    const monthlyFee = this.monthlyInputTarget.value
-    const admissionFee = this.admissionInputTarget.value
-    const renewalFee = this.renewalInputTarget.value
-    const discountMf = this.discountMfInputTarget.value
-    const scholarship = this.scholarshipInputTarget.value
-    const discountAf = this.discountAfInputTarget.value
-    const discountRf = this.discountRfInputTarget.value
+    const monthlyFee = this.newMonthlyFee;
+    const admissionFee = this.newAdmissionFee;
+    const renewalFee = this.newRenewalFee;
+    const discountMf = this.discountMfInputTarget.value;
+    const scholarship = this.scholarshipInputTarget.value;
+    const discountAf = this.discountAfInputTarget.value;
+    const discountRf = this.discountRfInputTarget.value;
 
     // Update form data with confirmed values
     this.pendingFormData.set('learner_info[learner_finance_attributes][monthly_fee]', monthlyFee)

@@ -13,17 +13,17 @@ class LearnerFinance < ApplicationRecord
     # Billable MF = Monthly Fee - (Discount MF + Scholarship)
     if monthly_fee.present?
       discount = (discount_mf || 0) + (scholarship || 0)
-      self.billable_mf = monthly_fee - discount
+      self.billable_mf = [monthly_fee - discount, 0].max
     end
 
     # Billable AF = Admission Fee - Discount AF
     if admission_fee.present?
-      self.billable_af = admission_fee - (discount_af || 0)
+      self.billable_af = [admission_fee - (discount_af || 0), 0].max
     end
 
     # Billable RF = Renewal Fee - Discount RF
     if renewal_fee.present?
-      self.billable_rf = renewal_fee - (discount_rf || 0)
+      self.billable_rf = [renewal_fee - (discount_rf || 0), 0].max
     end
   end
 end

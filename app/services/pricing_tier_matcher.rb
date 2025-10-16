@@ -35,8 +35,6 @@ class PricingTierMatcher
       specific_hub: "N/A"
     )
 
-    Rails.logger.info("PRICING: #{pricing}")
-
     # Fallback: try with hub_type if that's set
     if pricing.nil? && target_hub.hub_type.present?
       pricing = PricingTier.find_by(
