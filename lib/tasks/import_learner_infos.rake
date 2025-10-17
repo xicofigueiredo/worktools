@@ -95,7 +95,7 @@ def normalize_curriculum(raw_curriculum)
     'up computing' => 'UP Computing',
     'american curriculum (flvs)' => 'Own Curriculum',
     'up business (bga)' => 'UP Business',
-    'esl course' => 'Own Curriculum',
+    'esl course' => 'ESL Course',
     'portuguese curriculum' => 'Portuguese Curriculum',
     'american curriculum' => 'American Curriculum',
     'up business management' => 'UPx Business',
@@ -114,7 +114,7 @@ def normalize_curriculum(raw_curriculum)
     return 'UPx Business'
   elsif normalized_key.include?('up') && normalized_key.include?('business')
     return 'UP Business'
-  elsif normalized_key.include?('ecampus') || normalized_key.include?('flvs') || normalized_key.include?('esl')
+  elsif normalized_key.include?('ecampus') || normalized_key.include?('flvs')
     return 'Own Curriculum'
   end
 
@@ -142,7 +142,7 @@ def normalize_grade(raw_grade, curriculum)
   when 'British Curriculum'
     if uk_match
       year_num = uk_match[1].to_i
-      return "Year #{year_num}"
+      return "UK Year #{year_num}"
     elsif us_match
       # Convert US to UK using mapping
       us_grade = us_match[1].to_i
@@ -155,15 +155,15 @@ def normalize_grade(raw_grade, curriculum)
                 when 7 then 8
                 else us_grade
                 end
-      return "Year #{uk_year}"
+      return "UK Year #{uk_year}"
     elsif simple_number
-      return "Year #{simple_number}"
+      return "UK Year #{simple_number}"
     end
 
   when 'American Curriculum'
     if us_match
       grade_num = us_match[1].to_i
-      return "Grade #{grade_num}"
+      return "US Year #{grade_num}"
     elsif uk_match
       # Convert UK to US using mapping
       uk_year = uk_match[1].to_i
@@ -176,30 +176,30 @@ def normalize_grade(raw_grade, curriculum)
                  when 8 then 7
                  else uk_year
                  end
-      return "Grade #{us_grade}"
+      return "US Year #{us_grade}"
     elsif simple_number
-      return "Grade #{simple_number}"
+      return "US Year #{simple_number}"
     end
 
   when 'Portuguese Curriculum'
     if pt_match
       year_num = pt_match[1].to_i
-      return "Year #{year_num}"
+      return "PT Year #{year_num}"
     elsif us_match
       # Convert US to PT using mapping (PT follows similar to UK)
       us_grade = us_match[1].to_i
       pt_year = case us_grade
-                when 12 then 12
-                when 11 then 11
-                when 10 then 10
-                when 9 then 9
-                when 8 then 8
-                when 7 then 7
+                when 12 then 13
+                when 11 then 12
+                when 10 then 11
+                when 9 then 10
+                when 8 then 9
+                when 7 then 8
                 else us_grade
                 end
-      return "Year #{pt_year}"
+      return "PT Year #{pt_year}"
     elsif simple_number
-      return "Year #{simple_number}"
+      return "PT Year #{simple_number}"
     end
 
   when 'UP Business', 'UPx Business', 'UP Computing', 'UP Sports Management'
@@ -222,8 +222,8 @@ def normalize_grade(raw_grade, curriculum)
       return "Level #{simple_number}"
     end
 
-  when 'Own Curriculum'
-    # Own Curriculum doesn't have normalized grades
+  when 'Own Curriculum', 'ESL Course'
+    # Own Curriculum and ESL Course don't have normalized grades
     return nil
   end
 
@@ -233,18 +233,18 @@ end
 
 def parse_discount(value)
   return nil if value.nil? || value.to_s.strip.empty?
-  value.to_s.gsub(/[^\d\-]/, '').to_i
+  value.to_s.gsub(/[^\d,\.\-]/, '').gsub(',', '.').to_f
 end
 
 def parse_scholarship(value)
   return nil if value.nil? || value.to_s.strip.empty?
-  value.to_s.gsub(/[^\d\-]/, '').to_i
+  value.to_s.gsub(/[^\d,\.\-]/, '').gsub(',', '.').to_f
 end
 
 namespace :admissions do
   desc "Import admissions CSV into learner_infos with curriculum and grade normalization"
   task import_learner_infos: :environment do
-    csv_file_path = Rails.root.join('lib', 'tasks', 'admissions_list.csv')
+    csv_file_path = Rails.root.join('lib', 'tasks', 'admissions_list_new.csv')
 
     unless File.exist?(csv_file_path)
       puts "CSV file not found at #{csv_file_path}"
@@ -301,6 +301,13 @@ namespace :admissions do
       return nil if nilish.call(v)
       cleaned = v.to_s.gsub(/[^\d\-]/, '')
       cleaned == '' ? nil : cleaned.to_i
+    end
+
+    parse_decimal = ->(v) do
+      return nil if nilish.call(v)
+      s = v.to_s.strip.gsub(/[^\d,\.\-]/, '')
+      s = s.gsub(',', '.')
+      s == '' ? nil : s.to_f
     end
 
     normalize = ->(s) { to_utf8.call(s).to_s.strip.downcase.gsub(/\s+/, ' ') }
@@ -376,8 +383,9 @@ namespace :admissions do
       case key
       when :start_date, :transfer_of_programme_date, :end_date, :birthdate, :registration_renewal_date
         parse_date.call(value)
-      when :monthly_tuition, :billable_fee_per_month, :scholarship_percentage,
-           :admission_fee, :discount_af, :billable_af, :registration_renewal, :fiscal_number
+      when :monthly_tuition, :billable_fee_per_month, :scholarship_percentage, :admission_fee, :discount_af, :billable_af
+        parse_decimal.call(value)
+      when :registration_renewal, :fiscal_number
         parse_int.call(value)
       when :english_proficiency, :use_of_image_authorisation, :emergency_protocol_choice
         v = value.to_s.strip.downcase
@@ -475,7 +483,7 @@ namespace :admissions do
         if attrs[:grade_year].present? && attrs[:curriculum_course_option].present?
           old_grade = attrs[:grade_year]
           normalized_grade = normalize_grade(old_grade, attrs[:curriculum_course_option])
-          if normalized_grade && normalized_grade != old_grade
+          if normalized_grade.nil? || normalized_grade != old_grade
             attrs[:grade_year] = normalized_grade
             puts "Row #{row_num}: NORMALIZED grade - #{old_grade.inspect} -> #{normalized_grade.inspect} (curriculum: #{attrs[:curriculum_course_option]})"
           end
@@ -494,8 +502,31 @@ namespace :admissions do
         finance_keys = [:deposit, :sponsor, :payment_plan, :monthly_tuition, :discount_mt, :scholarship, :billable_fee_per_month, :scholarship_percentage, :admission_fee, :discount_af, :billable_af, :registration_renewal]
         learner_info_attrs = attrs.except(*finance_keys)
 
-        discount_mf = parse_discount(attrs[:discount_mt])
-        scholarship_val = parse_scholarship(attrs[:scholarship]) || attrs[:scholarship_percentage]
+        # Convert absolute discounts and scholarships to percentages
+        monthly_fee = attrs[:monthly_tuition].to_f
+        admission_fee = attrs[:admission_fee].to_f
+
+        discount_mf_absolute = parse_discount(attrs[:discount_mt])
+        discount_mf_percent = if monthly_fee > 0 && discount_mf_absolute.present?
+                                (discount_mf_absolute.to_f / monthly_fee * 100).round(2)
+                              else
+                                0.0
+                              end
+
+        scholarship_absolute = parse_scholarship(attrs[:scholarship])
+        scholarship_percent = if monthly_fee > 0 && scholarship_absolute.present?
+                                (scholarship_absolute.to_f / monthly_fee * 100).round(2)
+                              else
+                                0.0
+                              end
+
+        discount_af_absolute = parse_discount(attrs[:discount_af])
+        discount_af_percent = if admission_fee > 0 && discount_af_absolute.present?
+                                (discount_af_absolute.to_f / admission_fee * 100).round(2)
+                              else
+                                0.0
+                              end
+
         renewal_fee = attrs[:registration_renewal]
         discount_rf = 0
         billable_rf = renewal_fee.to_i - discount_rf
@@ -503,11 +534,11 @@ namespace :admissions do
         finance_attrs = {
           payment_plan: attrs[:payment_plan],
           monthly_fee: attrs[:monthly_tuition],
-          discount_mf: discount_mf,
-          scholarship: scholarship_val,
+          discount_mf: discount_mf_percent,
+          scholarship: scholarship_percent,
           billable_mf: attrs[:billable_fee_per_month],
           admission_fee: attrs[:admission_fee],
-          discount_af: attrs[:discount_af],
+          discount_af: discount_af_percent,
           billable_af: attrs[:billable_af],
           renewal_fee: renewal_fee,
           discount_rf: discount_rf,
@@ -631,7 +662,7 @@ namespace :admissions do
 
               if finance_diffs.any?
                 lf.assign_attributes(finance_attrs)
-                lf.save!
+                lf.save!(validate: false)
                 puts "Row #{row_num}: FINANCE UPDATED for #{ident} (id=#{li_var.id}) - changes: #{finance_diffs.keys.join(', ')}"
               else
                 puts "Row #{row_num}: FINANCE NO CHANGES for #{ident} (id=#{li_var.id})"
