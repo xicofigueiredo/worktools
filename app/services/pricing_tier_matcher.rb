@@ -8,6 +8,16 @@ class PricingTierMatcher
 
     return nil unless target_hub && target_curriculum.present?
 
+    # Curriculum alias mapping for pricing search
+    curriculum_aliases = {
+      "UP Sports Exercise" => "UP Sports & Leisure",
+      "UP Sports Management" => "UP Sports & Leisure",
+      "ESL Course" => "Own Curriculum",
+      "UPx Business" => "UP Business"
+    }
+
+    search_curriculum = curriculum_aliases[target_curriculum] || target_curriculum
+
     # Determine model based on programme (priority) or hub
     model = if programme&.start_with?('Online:')
       'Online'
@@ -17,13 +27,11 @@ class PricingTierMatcher
       target_hub.name.downcase == 'remote' ? 'online' : 'hybrid'
     end
 
-    Rails.logger.info("INFO #{model}, #{target_hub.country}, #{target_curriculum}, #{target_hub.name}")
-
     # Try to find pricing tier with exact match including specific_hub
     pricing = PricingTier.find_by(
       model: model,
       country: target_hub.country,
-      curriculum: target_curriculum,
+      curriculum: search_curriculum,
       specific_hub: target_hub.name
     )
 
@@ -31,7 +39,7 @@ class PricingTierMatcher
     pricing ||= PricingTier.find_by(
       model: model,
       country: target_hub.country,
-      curriculum: target_curriculum,
+      curriculum: search_curriculum,
       specific_hub: "N/A"
     )
 
@@ -40,7 +48,7 @@ class PricingTierMatcher
       pricing = PricingTier.find_by(
         model: model,
         country: target_hub.country,
-        curriculum: target_curriculum,
+        curriculum: search_curriculum,
         hub_type: target_hub.hub_type,
         specific_hub: "N/A"
       )
