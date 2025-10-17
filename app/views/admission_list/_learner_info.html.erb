@@ -135,16 +135,16 @@
     "Semi Annual",
     "Quarterly"
   ]},
-  monthly_fee: { type: :number, col: '3', step: 1 },
-  discount_mf: { type: :number, col: '3', step: 1 },
-  scholarship: { type: :number, col: '3', step: 1 },
-  billable_mf: { type: :number, col: '3', step: 1, readonly: true },
-  admission_fee: { type: :number, col: '4', step: 1 },
-  discount_af: { type: :number, col: '4', step: 1 },
-  billable_af: { type: :number, col: '4', step: 1, readonly: true },
-  renewal_fee: { type: :number, col: '4', step: 1 },
-  discount_rf: { type: :number, col: '4', step: 1 },
-  billable_rf: { type: :number, col: '4', step: 1, readonly: true }
+  monthly_fee: { type: :number, col: '3', step: 1, label: "Monthly Fee (#{@currency_symbol})" },
+  discount_mf: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
+  scholarship: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Scholarship (%)" },
+  billable_mf: { type: :number, col: '3', step: 1, readonly: true, label: "Billable Monthly Fee (#{@currency_symbol})" },
+  admission_fee: { type: :number, col: '4', step: 1, label: "Admission Fee (#{@currency_symbol})" },
+  discount_af: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
+  billable_af: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Admission Fee (#{@currency_symbol})" },
+  renewal_fee: { type: :number, col: '4', step: 1, label: "Renewal Fee (#{@currency_symbol})" },
+  discount_rf: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
+  billable_rf: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Renewal Fee (#{@currency_symbol})" }
 }) %>
 
 <% render_input = lambda do |f, attr, opts = {}, is_finance = false, object = @learner_info| %>
@@ -157,8 +157,15 @@
   <% col   = opts[:col]   || '12' %>
   <% value = f ? f.object.send(attr) : object.send(attr) %>
 
+  <% # Force disable main fees in edit mode for finance %>
+  <% forced_disabled = false %>
+  <% if edit_mode && f && is_finance && ['monthly_fee', 'admission_fee', 'renewal_fee'].include?(attr_sym.to_s) %>
+    <% forced_disabled = true %>
+  <% end %>
+
+  <% disabled_flag = forced_disabled || (!editable_list.include?(attr_sym)) %>
+
   <% if edit_mode && f %>
-    <% disabled_flag = !editable_list.include?(attr_sym) %>
     <% input_classes = "form-control" %>
     <% input_classes += " editable-input" unless disabled_flag %>
 
@@ -219,11 +226,11 @@
         <% end %>
       <% when :number %>
         <% readonly_flag = opts[:readonly] || false %>
-        <% number_classes = disabled_flag ? "form-control" : "form-control editable-input" %>
-        <% number_classes += " bg-light" if readonly_flag && !disabled_flag %>
+        <% is_blocked = disabled_flag || readonly_flag %>
+        <% number_classes = is_blocked ? "form-control bg-light" : "form-control editable-input" %>
         <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
           <%= f.label(attr, label) %>
-          <% if readonly_flag %>
+          <% if is_blocked %>
             <%= content_tag(:div, class: "input-group") do %>
               <%= f.number_field(
                 attr,
@@ -240,8 +247,11 @@
               attr,
               class: number_classes,
               disabled: disabled_flag,
+              readonly: disabled_flag,
               step: opts[:step] || 1,
-              min: 0
+              min: opts[:min] || 0,
+              max: opts[:max],
+              value: value
             ) %>
           <% end %>
         <% end %>
@@ -258,6 +268,13 @@
       when TrueClass then "Yes"
       when FalseClass then "No"
       when Date, Time, ActiveSupport::TimeWithZone then (value.present? ? value.strftime("%d-%m-%Y") : "-")
+      when type == :number && is_finance && value.present?
+        discount_attrs = ['discount_mf', 'scholarship', 'discount_af', 'discount_rf']
+        if discount_attrs.include?(attr_sym.to_s)
+          "#{number_with_precision(value, precision: 2)}%"
+        else
+          "#{@currency_symbol} #{number_with_precision(value, precision: 2)}"
+        end
       else value.presence || "-"
       end %>
 
@@ -269,7 +286,7 @@
       <% when :email %>
         <%= tag.input(value: display_value, type: "email", class: "form-control", disabled: true) %>
       <% else %>
-        <%= tag.input(value: display_value, type: "text", class: "form-control", disabled: true) %>
+        <%= tag.input(value: display_value, type: "text", class: "form-control", disabled: true, readonly: true) %>
       <% end %>
     <% end %>
   <% end %>
@@ -289,16 +306,16 @@
 </div>
 
 <% if edit_mode %>
-  <% main_hub = UsersHub.includes(:hub).find_by(user_id: @learner_info.user_id, main: true)&.hub %>
-  <% if main_hub %>
+  <% if @main_hub %>
   <div data-controller="curriculum-pricing"
-      data-curriculum-pricing-hub-id-value="<%= main_hub.id %>"
+      data-curriculum-pricing-hub-id-value="<%= @main_hub.id %>"
       data-curriculum-pricing-current-curriculum-value="<%= @learner_info.curriculum_course_option %>"
       data-curriculum-pricing-current-programme-value="<%= @learner_info.programme %>"
       data-curriculum-pricing-learner-info-id-value="<%= @learner_info.id %>"
-      data-curriculum-pricing-model-value="<%= main_hub.name.downcase == 'remote' ? 'Online' : 'Hybrid' %>"
-      data-curriculum-pricing-country-value="<%= main_hub.country %>"
-      data-curriculum-pricing-hub-name-value="<%= main_hub.name %>">
+      data-curriculum-pricing-model-value="<%= @main_hub.name.downcase == 'remote' ? 'Online' : 'Hybrid' %>"
+      data-curriculum-pricing-country-value="<%= @main_hub.country %>"
+      data-curriculum-pricing-hub-name-value="<%= @main_hub.name %>"
+      data-curriculum-pricing-currency-symbol-value="<%= @currency_symbol %>">
   <% end %>
 
   <%= form_with model: @learner_info, url: admission_path(@learner_info), method: :patch, local: true, html: { id: 'learner-info-form' } do |f| %>
@@ -580,20 +597,20 @@
             </div>
             <div class="row mb-3">
               <div class="col-md-6">
-                <label class="form-label">Discount</label>
+                <label class="form-label">Discount (%)</label>
                 <input type="number"
                        class="form-control"
                        data-curriculum-pricing-target="discountMfInput"
                        data-action="input->curriculum-pricing#calculateBillables"
-                       step="1" min="0">
+                       step="0.01" min="0" max="100">
               </div>
               <div class="col-md-6">
-                <label class="form-label">Scholarship</label>
+                <label class="form-label">Scholarship (%)</label>
                 <input type="number"
                        class="form-control"
                        data-curriculum-pricing-target="scholarshipInput"
                        data-action="input->curriculum-pricing#calculateBillables"
-                       step="1" min="0">
+                       step="0.01" min="0" max="100">
               </div>
             </div>
             <div class="alert alert-secondary mb-0">
@@ -620,12 +637,12 @@
             </div>
             <div class="row mb-3">
               <div class="col-md-6">
-                <label class="form-label">Discount</label>
+                <label class="form-label">Discount (%)</label>
                 <input type="number"
                        class="form-control"
                        data-curriculum-pricing-target="discountAfInput"
                        data-action="input->curriculum-pricing#calculateBillables"
-                       step="1" min="0">
+                       step="0.01" min="0" max="100">
               </div>
             </div>
             <div class="alert alert-secondary mb-0">
@@ -652,12 +669,12 @@
             </div>
             <div class="row mb-3">
               <div class="col-md-6">
-                <label class="form-label">Discount</label>
+                <label class="form-label">Discount (%)</label>
                 <input type="number"
                        class="form-control"
                        data-curriculum-pricing-target="discountRfInput"
                        data-action="input->curriculum-pricing#calculateBillables"
-                       step="1" min="0">
+                       step="0.01" min="0" max="100">
               </div>
             </div>
             <div class="alert alert-secondary mb-0">
@@ -683,12 +700,12 @@
     </div>
   </div>
 </div>
-<% if main_hub %>
+<% if @main_hub %>
 </div>
 <% end %>
 <script>
   function setupFinanceCalculations() {
-    // Auto-calculate billable fields
+    // Auto-calculate billable fields using percentages
     function calculateBillable(feeId, discountId, scholarshipId, billableId) {
       const feeInput = document.getElementById(feeId);
       const discountInput = document.getElementById(discountId);
@@ -699,11 +716,13 @@
 
       function calculate() {
         const fee = parseFloat(feeInput.value) || 0;
-        const discount = parseFloat(discountInput?.value) || 0;
-        const scholarship = scholarshipInput ? (parseFloat(scholarshipInput.value) || 0) : 0;
-
-        const billable = fee - discount - scholarship;
-        billableInput.value = Math.max(0, billable);
+        let discountTotal = parseFloat(discountInput?.value) || 0;
+        if (scholarshipInput) {
+          discountTotal += parseFloat(scholarshipInput.value) || 0;
+        }
+        const discountPercent = discountTotal / 100;
+        const billable = fee * (1 - discountPercent);
+        billableInput.value = Math.max(0, billable).toFixed(2);
       }
 
       if (feeInput) feeInput.addEventListener('input', calculate);
@@ -736,11 +755,38 @@
     );
   }
 
+  // Handle payment plan change for annual discount
+  function setupPaymentPlanHandler() {
+    const paymentPlanSelect = document.getElementById('learner_info_learner_finance_attributes_payment_plan');
+    const discountMfInput = document.getElementById('learner_info_learner_finance_attributes_discount_mf');
+
+    if (paymentPlanSelect && discountMfInput) {
+      paymentPlanSelect.addEventListener('change', function() {
+        if (this.value === 'Annually') {
+          discountMfInput.value = 3;
+          discountMfInput.dispatchEvent(new Event('input'));
+        }
+      });
+
+      // Initial check
+      if (paymentPlanSelect.value === 'Annually') {
+        discountMfInput.value = 3;
+        discountMfInput.dispatchEvent(new Event('input'));
+      }
+    }
+  }
+
   // Run on page load
-  document.addEventListener('DOMContentLoaded', setupFinanceCalculations);
+  document.addEventListener('DOMContentLoaded', function() {
+    setupFinanceCalculations();
+    setupPaymentPlanHandler();
+  });
 
   // Run on Turbo page loads (if using Turbo)
-  document.addEventListener('turbo:load', setupFinanceCalculations);
+  document.addEventListener('turbo:load', function() {
+    setupFinanceCalculations();
+    setupPaymentPlanHandler();
+  });
 
   // Run immediately if DOM is already loaded
   if (document.readyState === 'loading') {
@@ -748,5 +794,6 @@
   } else {
     // DOM is already ready
     setupFinanceCalculations();
+    setupPaymentPlanHandler();
   }
 </script>

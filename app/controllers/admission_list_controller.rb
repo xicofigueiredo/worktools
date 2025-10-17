@@ -67,10 +67,20 @@ class AdmissionListController < ApplicationController
   end
 
   def show
-    # @learner_info and @permission set by before_action
     head :forbidden and return unless @permission.show?
 
     @learner_finance = @learner_info.learner_finance
+
+    @main_hub = UsersHub.includes(:hub).find_by(user_id: @learner_info.user_id, main: true)&.hub
+    @currency_symbol = '€'
+    if @main_hub
+      # Fetch any pricing tier for the hub's country to extract currency symbol
+      pricing_tier = PricingTier.where(country: @main_hub.country).first
+      if pricing_tier && pricing_tier.currency
+        match = pricing_tier.currency.match(/\(([^)]+)\)/)
+        @currency_symbol = match ? match[1] : '€'
+      end
+    end
 
     excluded = %w[id user_id created_at updated_at]
     @show_columns = LearnerInfo.column_names - excluded

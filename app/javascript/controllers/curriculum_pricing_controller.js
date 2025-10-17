@@ -27,7 +27,8 @@ export default class extends Controller {
     learnerInfoId: Number,
     model: String,
     country: String,
-    hubName: String
+    hubName: String,
+    currencySymbol: String
   }
 
   connect() {
@@ -142,19 +143,22 @@ export default class extends Controller {
     const monthlyFee = parseFloat(this.newMonthlyFee) || 0;
     const discountMf = parseFloat(this.discountMfInputTarget.value) || 0;
     const scholarship = parseFloat(this.scholarshipInputTarget.value) || 0;
-    const billableMf = Math.max(0, monthlyFee - discountMf - scholarship);
+    const discountPercentMf = (discountMf + scholarship) / 100;
+    const billableMf = Math.max(0, monthlyFee * (1 - discountPercentMf));
     document.getElementById('billable-mf').textContent = this.formatCurrency(billableMf);
 
     // Calculate billable admission fee
     const admissionFee = parseFloat(this.newAdmissionFee) || 0;
     const discountAf = parseFloat(this.discountAfInputTarget.value) || 0;
-    const billableAf = Math.max(0, admissionFee - discountAf);
+    const discountPercentAf = discountAf / 100;
+    const billableAf = Math.max(0, admissionFee * (1 - discountPercentAf));
     document.getElementById('billable-af').textContent = this.formatCurrency(billableAf);
 
     // Calculate billable renewal fee
     const renewalFee = parseFloat(this.newRenewalFee) || 0;
     const discountRf = parseFloat(this.discountRfInputTarget.value) || 0;
-    const billableRf = Math.max(0, renewalFee - discountRf);
+    const discountPercentRf = discountRf / 100;
+    const billableRf = Math.max(0, renewalFee * (1 - discountPercentRf));
     document.getElementById('billable-rf').textContent = this.formatCurrency(billableRf);
   }
 
@@ -222,8 +226,8 @@ export default class extends Controller {
 
   formatCurrency(amount) {
     if (amount === null || amount === undefined || amount === '') {
-      return "€0.00"
+      return `${this.currencySymbolValue}0.00`
     }
-    return `€${parseFloat(amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    return `${this.currencySymbolValue}${parseFloat(amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 }
