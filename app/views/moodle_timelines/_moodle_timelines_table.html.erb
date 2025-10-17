@@ -81,7 +81,7 @@
                               data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to archive this timeline?" } do %>
                     <i class="fa-solid fa-box-archive" title="Archive" style="font-size: 17px; color: #808080;"></i>
                   <% end %>
-                  <% if current_user.role == "admin" || current_user.email == "guest@edubga.com" %>
+                  <% if current_user.role == "admin" || current_user.email == "guest@edubga.com" || current_user.email == "tester.cms@edubga.com" %>
                     <%= link_to moodle_timeline_path(timeline.id),
                                 data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this timeline?" } do %>
                       <i class="fa-solid fa-trash" title="Delete" style="font-size: 17px; color: gray;"></i>

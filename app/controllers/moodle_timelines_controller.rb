@@ -110,12 +110,7 @@ class MoodleTimelinesController < ApplicationController
   def archived
     @learner = current_user
     @archived_moodle_timelines = MoodleTimeline.where(user: @learner, hidden: true)
-                                  .includes(subject: :topics)
     @past_holidays = @learner.holidays.where("end_date <= ?", Date.today)
-
-    # Preload all topic IDs from the archived timelines' subjects
-    all_topic_ids = @archived_moodle_timelines.flat_map { |t| t.subject.topics.pluck(:id) }.uniq
-    @user_topics_by_topic = @learner.moodle_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
   end
 
   def sync_moodle
