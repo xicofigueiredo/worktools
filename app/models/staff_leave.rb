@@ -7,20 +7,23 @@ class StaffLeave < ApplicationRecord
 
   ADVANCE_DAYS = 20
   STATUSES = %w[pending approved rejected cancelled].freeze
-  LEAVE_TYPES = ['holiday', 'sick leave'].freeze
+  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].freeze
 
   validates :status, inclusion: { in: STATUSES }
   validates :leave_type, presence: true, inclusion: { in: LEAVE_TYPES }
   validates :start_date, :end_date, presence: true
   validate  :end_on_or_after_start
-  validate  :advance_days_rule, on: :create
-  validate  :user_has_days_left, on: :create
-  validate  :no_overlapping_blocked_periods, on: :create
-  validate  :no_department_overlaps, on: :create
+  validate  :advance_days_rule, on: :create, if: -> { leave_type == 'holiday' }
+  validate  :user_has_days_left, on: :create, if: -> { leave_type == 'holiday' }
+  validate  :no_overlapping_blocked_periods, on: :create, if: -> { leave_type == 'holiday' }
+  validate  :no_department_overlaps, on: :create, if: -> { leave_type == 'holiday' }
   validate  :no_self_overlaps, on: :create
   validate  :exception_reason_if_requested
   validates :days_from_previous_year, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validate  :previous_year_days_allowed, on: :create
+  validate  :paid_leave_minimum_days, on: :create
+  validate  :marriage_leave_max_days, on: :create
+  validate :notes_required_for_other, on: :create
 
   before_validation :calculate_total_days, on: [:create, :update]
   after_create :deduct_entitlement_days
@@ -57,12 +60,24 @@ class StaffLeave < ApplicationRecord
     year_end = [end_date.end_of_year, end_date].min
     return 0 if year_start > year_end
 
+    # Sick leave: consecutive days count (don't skip weekends/holidays)
+    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
+      count = 0
+      (year_start..year_end).each do |d|
+        next unless d.year == target_year
+        count += 1
+      end
+      return count
+    end
+
+    # Holidays: business days excluding public holidays
     hub = user.users_hubs.find_by(main: true)&.hub
     holiday_dates = PublicHoliday.dates_for_range(hub: hub, start_date: year_start, end_date: year_end).to_set
 
     count = 0
     (year_start..year_end).each do |d|
-      next if d.year != target_year || d.saturday? || d.sunday?
+      next if d.saturday? || d.sunday?
+      next if d.year != target_year
       next if holiday_dates.include?(d)
       count += 1
     end
@@ -70,6 +85,34 @@ class StaffLeave < ApplicationRecord
   end
 
   private
+
+  def notes_required_for_other
+    if leave_type == 'other' && notes.blank?
+      errors.add(:notes, "must explain the purpose of the 'other' leave")
+    end
+  end
+
+  def marriage_leave_max_days
+    return unless leave_type == 'marriage leave'
+    return if start_date.blank? || end_date.blank?
+
+    # consecutive days inclusive
+    consecutive_days = (end_date - start_date).to_i + 1
+    if consecutive_days > 15
+      errors.add(:base, "Marriage leave cannot exceed 15 consecutive days")
+    end
+  end
+
+  def paid_leave_minimum_days
+    return unless leave_type == 'paid leave'
+    return if start_date.blank? || end_date.blank?
+
+    # consecutive days inclusive
+    consecutive_days = (end_date - start_date).to_i + 1
+    if consecutive_days < 30
+      errors.add(:base, "Paid leave must be at least 30 consecutive days")
+    end
+  end
 
   def previous_year_days_allowed
     return unless leave_type == 'holiday' && start_date.present? && end_date.present?
@@ -135,13 +178,16 @@ class StaffLeave < ApplicationRecord
     return if start_date.blank? || end_date.blank?
     return if end_date < start_date
 
-    # find user's main hub - adapt if your association is different
-    hub = user.users_hubs.find_by(main: true)&.hub
+    # Sick leaves count consecutive calendar days (include weekends & public holidays)
+    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
+      self.total_days = (end_date - start_date).to_i + 1
+      return
+    end
 
-    # fetch holiday dates (explicit) inside the range
+    # Holidays: business-day logic (Mon-Fri) excluding public holidays
+    hub = user.users_hubs.find_by(main: true)&.hub
     holiday_dates = PublicHoliday.dates_for_range(hub: hub, start_date: start_date, end_date: end_date).to_set
 
-    # count business days (Mon-Fri) excluding public holidays
     count = 0
     (start_date..end_date).each do |d|
       next if d.saturday? || d.sunday?
@@ -231,9 +277,13 @@ class StaffLeave < ApplicationRecord
   def no_self_overlaps
     return if start_date.blank? || end_date.blank? || user.blank?
 
-    if user.staff_leaves.where(status: ['pending', 'approved'], leave_type: leave_type)
-                        .where.not("end_date < ? OR start_date > ?", start_date, end_date).exists?
-      errors.add(:base, "You already have a pending or approved #{leave_type} in this period.")
+    existing = user.staff_leaves.where(status: ['pending', 'approved'])
+                              .where.not(id: id)
+                              .where.not("end_date < ? OR start_date > ?", start_date, end_date)
+    if existing.exists?
+      existing.each do |leave|
+        errors.add(:base, "You already have a pending or approved #{leave.leave_type} in this period from #{leave.start_date} to #{leave.end_date}.")
+      end
     end
   end
 
@@ -248,25 +298,32 @@ class StaffLeave < ApplicationRecord
       next if days_this_year == 0
 
       entitlement = StaffLeaveEntitlement.find_or_create_by!(user: user, year: yr)
-      field = leave_type == 'holiday' ? :holidays_left : :sick_leaves_left
-      to_deduct = days_this_year
 
-      # For next year holiday, apply carry-over first if selected
-      if leave_type == 'holiday' && yr > start_date.year && days_from_previous_year.to_i > 0
-        prev_year = yr - 1
-        prev_ent = StaffLeaveEntitlement.find_or_create_by!(user: user, year: prev_year)
-        actually_carry = [days_from_previous_year.to_i, days_this_year, 5 - entitlement.days_from_previous_year_used.to_i, prev_ent.holidays_left.to_i].min
+      if leave_type == 'holiday'
+        field = :holidays_left
+        to_deduct = days_this_year
 
-        if actually_carry > 0
-          prev_ent.update!(holidays_left: [prev_ent.holidays_left.to_i - actually_carry, 0].max)
-          entitlement.update!(days_from_previous_year_used: entitlement.days_from_previous_year_used.to_i + actually_carry)
-          to_deduct -= actually_carry
+        # For next year holiday, apply carry-over first if selected
+        if yr > start_date.year && days_from_previous_year.to_i > 0
+          prev_year = yr - 1
+          prev_ent = StaffLeaveEntitlement.find_or_create_by!(user: user, year: prev_year)
+          actually_carry = [days_from_previous_year.to_i, days_this_year, 5 - entitlement.days_from_previous_year_used.to_i, prev_ent.holidays_left.to_i].min
+
+          if actually_carry > 0
+            prev_ent.update!(holidays_left: [prev_ent.holidays_left.to_i - actually_carry, 0].max)
+            entitlement.update!(days_from_previous_year_used: entitlement.days_from_previous_year_used.to_i + actually_carry)
+            to_deduct -= actually_carry
+          end
         end
-      end
 
-      # Deduct remainder from this year's entitlement
-      new_left = [entitlement.send(field).to_i - to_deduct, 0].max
-      entitlement.update!(field => new_left)
+        # Deduct remainder from this year's entitlement
+        new_left = [entitlement.send(field).to_i - to_deduct, 0].max
+        entitlement.update!(field => new_left)
+      else
+        # sick leave: increment sick_leaves_used (no hard caps / verification)
+        to_add = days_this_year
+        entitlement.update!(sick_leaves_used: entitlement.sick_leaves_used.to_i + to_add)
+      end
     end
   end
 
@@ -281,24 +338,32 @@ class StaffLeave < ApplicationRecord
       next if days_this_year == 0
 
       entitlement = StaffLeaveEntitlement.find_or_create_by!(user: user, year: yr)
-      field = leave_type == 'holiday' ? :holidays_left : :sick_leaves_left
-      to_return = days_this_year
 
-      # For next year holiday, return carry-over first if used
-      if leave_type == 'holiday' && yr > start_date.year && days_from_previous_year.to_i > 0
-        prev_year = yr - 1
-        prev_ent = StaffLeaveEntitlement.find_or_create_by!(user: user, year: prev_year)
-        actually_carry = [days_from_previous_year.to_i, days_this_year, entitlement.days_from_previous_year_used.to_i].min
+      if leave_type == 'holiday'
+        field = :holidays_left
+        to_return = days_this_year
 
-        if actually_carry > 0
-          prev_ent.update!(holidays_left: prev_ent.holidays_left.to_i + actually_carry)
-          entitlement.update!(days_from_previous_year_used: [entitlement.days_from_previous_year_used.to_i - actually_carry, 0].max)
-          to_return -= actually_carry
+        # For next year holiday, return carry-over first if used
+        if yr > start_date.year && days_from_previous_year.to_i > 0
+          prev_year = yr - 1
+          prev_ent = StaffLeaveEntitlement.find_or_create_by!(user: user, year: prev_year)
+          actually_carry = [days_from_previous_year.to_i, days_this_year, entitlement.days_from_previous_year_used.to_i].min
+
+          if actually_carry > 0
+            prev_ent.update!(holidays_left: prev_ent.holidays_left.to_i + actually_carry)
+            entitlement.update!(days_from_previous_year_used: [entitlement.days_from_previous_year_used.to_i - actually_carry, 0].max)
+            to_return -= actually_carry
+          end
         end
-      end
 
-      # Return remainder to this year's entitlement
-      entitlement.update!(field => entitlement.send(field).to_i + to_return)
+        # Return remainder to this year's entitlement
+        entitlement.update!(field => entitlement.send(field).to_i + to_return)
+      else
+        # sick leave: subtract from sick_leaves_used (but never go below zero)
+        to_return = days_this_year
+        new_used = [entitlement.sick_leaves_used.to_i - to_return, 0].max
+        entitlement.update!(sick_leaves_used: new_used)
+      end
     end
   end
 

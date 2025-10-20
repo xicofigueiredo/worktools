@@ -1,12 +1,12 @@
 require './app/controllers/concerns/working_days_and_holidays'
 require './app/controllers/concerns/generate_topic_deadlines'
 # lib/tasks/simulate_update.rake
+include GenerateTopicDeadlines
 
 namespace :timelines do
   desc "Update timelines that have exam season nil"
   task simulate_update: :environment do
-    # Get timelines that have no exam date set
-    timelines = Timeline.where(exam_date: nil, hidden: false, end_date: Date.today..Date.today + 3.year)
+    timelines = Timeline.where(hidden: false, end_date: Date.today..Date.today + 3.year)
     array_of_timelines = timelines.to_a
 
     successful_updates = 0
@@ -19,13 +19,14 @@ namespace :timelines do
       next if timeline.user.deactivate == true
       begin
         puts "🔄 Processing Timeline ID #{timeline.id}..."
+        generate_topic_deadlines(timeline)
 
         # Find an appropriate exam date for this timeline's subject
         # Look for exam dates that are after the timeline's end date
-        suitable_exam_date = ExamDate.where(subject_id: timeline.subject_id)
-                                    .where('date > ?', timeline.end_date)
-                                    .order(:date)
-                                    .first
+        # suitable_exam_date = ExamDate.where(subject_id: timeline.subject_id)
+        #                             .where('date > ?', timeline.end_date)
+        #                             .order(:date)
+        #                             .first
 
         # if suitable_exam_date
         #   timeline.exam_date = suitable_exam_date
@@ -65,15 +66,14 @@ namespace :timelines do
       end
     end
 
-    puts "Timelines that have no exam date set:"
-    count = 0
-    timelines.each do |timeline|
-      next if timeline.user.deactivate == true
-      next if timeline.subject.category.in?(['lws7', 'lws8', 'lws9', 'up', 'other'])  # Skip lower secondary
-      puts " #{timeline.end_date} - #{timeline.subject&.name} (#{timeline.user&.email})"
-      count += 1
-    end
+    # puts "Timelines that have no exam date set:"
+    # count = 0
+    # timelines.each do |timeline|
+    #   next if timeline.user.deactivate == true
+    #   next if timeline.subject.category.in?(['lws7', 'lws8', 'lws9', 'up', 'other'])  # Skip lower secondary
+    #   puts " #{timeline.end_date} - #{timeline.subject&.name} (#{timeline.user&.email})"
+    #   count += 1
+    # end
     puts "Total: #{count}"
   end
 end
-

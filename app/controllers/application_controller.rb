@@ -4,11 +4,12 @@ class ApplicationController < ActionController::Base
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :check_browser
   before_action :count_notifications
+  before_action :count_pending_confirmations
   before_action :set_current_role
 
   # Method to switch roles (only for admins)
   def switch_role
-    if current_user.role == 'admin' && params[:role].in?(['admin', 'learner', 'lc', 'cm', 'exams', 'parent'])
+    if current_user.role == 'admin' && params[:role].in?(['admin', 'learner', 'lc', 'cm', 'exams', 'parent', 'staff'])
       session[:viewing_role] = params[:role]
       redirect_back(fallback_location: root_path)
     else
@@ -26,6 +27,10 @@ class ApplicationController < ActionController::Base
   def count_notifications
     @notification_count = current_user&.notifications&.unread&.count || 0
     @unread_notifications = current_user&.notifications&.where(read: false)&.order(created_at: :desc) || []
+  end
+
+  def count_pending_confirmations
+    @pending_confirmations_count = current_user ? Confirmation.pending.where(approver: current_user).count : 0
   end
 
   def check_browser
@@ -46,7 +51,7 @@ class ApplicationController < ActionController::Base
     # Admins ALWAYS see the switcher, regardless of current viewing role
     if current_user&.role == 'admin'
       @current_viewing_role = session[:viewing_role] || 'admin'
-      @available_roles = ['admin', 'learner', 'lc', 'cm', 'exams', 'parent']
+      @available_roles = ['admin', 'learner', 'lc', 'cm', 'exams', 'parent', 'staff']
     else
       # Non-admins see their actual role
       @current_viewing_role = determine_user_role(current_user)

@@ -19,7 +19,6 @@ module GenerateTopicDeadlines
   end
 
   def moodle_generate_topic_deadlines(timeline)
-    subject = timeline.subject
     # Preload all topics in order and their corresponding user_topics for the current user.
     moodle_topics = timeline.moodle_topics.order(:id)
 
@@ -60,7 +59,7 @@ module GenerateTopicDeadlines
     # Handle NaN or invalid values
     return working_days.first if working_days.empty?
     return working_days.last if !time_per_topic.finite? || !index.finite?
-    
+
     # Calculate the final index (convert to integer for array indexing)
     final_index = (index + time_per_topic).to_i
     working_days[final_index] || working_days.last

@@ -20,11 +20,11 @@
             </h5>
             <div>
               <% if moodle_timeline.hidden %>
-                <%= link_to toggle_archive_timeline_path(timeline), data: { turbo_method: :patch, turbo_confirm: "Reactivate #{moodle_timeline.subject.name}?" } do %>
+                <%= link_to toggle_archive_moodle_timeline_path(moodle_timeline), data: { turbo_method: :patch, turbo_confirm: "Reactivate #{moodle_timeline.subject.name}?" } do %>
                   <i class="fa-solid fa-trash-can-arrow-up" title="Unarchive" style="font-size: 20px; color: #808080;"></i>
                 <% end %>
               <% else %>
-                <%= link_to toggle_archive_timeline_path(timeline), data: { turbo_method: :patch, turbo_confirm: "Archive #{moodle_timeline.subject.name}?" } do %>
+                <%= link_to toggle_archive_timeline_path(moodle_timeline), data: { turbo_method: :patch, turbo_confirm: "Archive #{moodle_timeline.subject.name}?" } do %>
                   <i class="fa-solid fa-box-archive" title="Archive" style="font-size: 20px; color: #808080;"></i>
                 <% end %>
               <% end %>
@@ -52,66 +52,4 @@
       </div>
     </div>
   </h2>
-  <div id="collapse<%= index %>" class="accordion-collapse collapse" aria-labelledby="heading<%= index %>" data-bs-parent="#parentAccordion">
-    <div class="accordion-body p-2">
-      <div class="card shadow-sm px-2" style="border-radius: 10px;">
-        <table class="table">
-          <thead>
-            <tr>
-              <th><%= is_lws ? 'Project' : 'Unit' %></th>
-              <th>Topic</th>
-              <% unless is_lws %>
-                <th>Hours</th>
-                <th width="120px">Date</th>
-              <% end %>
-              <th>Done</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% previous_unit = nil %>
-            <% moodle_timeline.subject.topics.order(:order, :id).each do |topic| %>
-              <%# Use the preloaded user_topics hash to avoid N+1 queries %>
-              <% user_topic = user_topics_by_topic[topic.id] || current_user.user_topics.build(topic: topic) %>
-              <%# Use a helper or inline logic for row background; example inline below: %>
-              <% background_color = if user_topic && !user_topic.done && user_topic.deadline.present? && user_topic.deadline < Date.today && !['lws7','lws8','lws9'].include?(moodle_timeline.subject.category)
-                                      'background-color: lightcoral;'
-                                    elsif user_topic && !user_topic.done && user_topic.deadline.present? && Date.today.monday? && user_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7','lws8','lws9'].include?(moodle_timeline.subject.category)
-                                      'background-color: lightgrey;'
-                                    elsif user_topic && user_topic.done
-                                      'background-color: lightgreen;'
-                                    else
-                                      ''
-                                    end %>
-              <tr style="<%= background_color %>">
-                <td>
-                  <% if topic.unit != previous_unit %>
-                    <%= topic.unit %>
-                    <% previous_unit = topic.unit %>
-                  <% end %>
-                </td>
-                <td style="<%= background_color %>"><%= topic.name %></td>
-                <% if user_topic.deadline.present? %>
-                  <% unless is_lws %>
-                    <td style="<%= background_color %>"><%= topic.time %></td>
-                    <td style="<%= background_color %>"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
-                  <% end %>
-                <% else %>
-                  <td style="<%= background_color %>">Update Dates</td>
-                <% end %>
-                <td style="<%= background_color %>">
-                  <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
-                    <%= form_with model: user_topic, url: timeline_path(timeline), method: :patch, local: true do |form| %>
-                      <div class="form-check">
-                        <%= form.check_box :done, class: "form-check-input", data: { action: "change->toggle-done#toggle", toggle_done_target: "checkbox", user_topic_id: user_topic.id, timeline_id: moodle_timeline.id } %>
-                      </div>
-                    <% end %>
-                  </div>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 </div>

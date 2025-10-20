@@ -1,0 +1,97 @@
+country,hub,name,date,recurring
+Portugal,Porto Anje,São João,2025-06-24,true
+Portugal,Aveiro,Santa Joana Princesa,2025-05-12,true
+Portugal,Braga,São João,2025-06-24,true
+Portugal,Caldas da Rainha,Nossa Senhora do Pópulo,2025-05-15,true
+Portugal,Coimbra (Espinhal),Rainha Santa Isabel,2025-07-04,true
+Portugal,Funchal,Dia da Cidade do Funchal,2025-08-21,true
+Portugal,Fundão,Santa Luzia,2025-09-15,true
+Portugal,Ofir,Dia do Município,2025-08-19,true
+Portugal,Santarém,São José,2025-03-19,true
+Portugal,Cascais Baía 1,Santo António,2025-06-13,true
+Portugal,Cascais Baía 2,Santo António,2025-06-13,true
+Portugal,Campolide,Santo António,2025-06-13,true
+Portugal,Cascais 1,Santo António,2025-06-13,true
+Portugal,Parede,Santo António,2025-06-13,true
+Portugal,Cascais 2,Dia do Município,2025-06-13,true
+Portugal,CCB,Santo António (Lisboa),2025-06-13,true
+Portugal,Ericeira,Quinta-feira da Ascensão,2025-05-29,false
+Portugal,Expo,Santo António (Lisboa),2025-06-13,true
+Portugal,Guincho,Dia do Município (Cascais),2025-06-13,true
+Portugal,Lagoa,Nossa Senhora da Luz,2025-09-08,true
+Portugal,Lagos 1,São Gonçalo de Lagos,2025-10-27,true
+Portugal,Lagos 2,São Gonçalo de Lagos,2025-10-27,true
+Portugal,Leiria,Dia do Municipio,2025-10-27,true
+Portugal,Loulé,Dia do Município,2025-05-29,true
+Portugal,Restelo,Santo António,2025-06-13,true
+Portugal,Setúbal,Dia de Bocage e da Cidade,2025-09-15,true
+Portugal,Tavira,Dia da Cidade - São João,2025-06-24,true
+Portugal,Vila Sol,Dia do Município (Loulé),2025-05-29,true
+Portugal,,Ano Novo,2025-01-01,true
+Portugal,,Sexta-feira santa,2025-04-18,false
+Portugal,,Páscoa,2025-04-20,false
+Portugal,,Dia da Liberdade,2025-04-25,true
+Portugal,,Dia do Trabalhador,2025-05-01,true
+Portugal,,Dia de Portugal,2025-06-10,true
+Portugal,,Corpo de Deus,2025-06-19,false
+Portugal,,Assunção de Maria,2025-08-15,true
+Portugal,,Implantação da República,2025-10-05,true
+Portugal,,Todos os Santos,2025-11-01,true
+Portugal,,Restauração da Independência,2025-12-01,true
+Portugal,,Imaculada Conceição,2025-12-08,true
+Portugal,,Natal,2025-12-25,true
+Africa do Sul,,New Year's Day,2025-01-01,true
+Africa do Sul,,Human Rights Day,2025-03-21,true
+Africa do Sul,,Good Friday,2025-04-18,false
+Africa do Sul,,Family Day,2025-04-21,false
+Africa do Sul,,Freedom Day,2025-04-27,true
+Africa do Sul,,Workers' Day,2025-05-01,true
+Africa do Sul,,Youth Day,2025-06-16,true
+Africa do Sul,,National Women’s Day,2025-08-09,true
+Africa do Sul,,Heritage Day,2025-09-24,true
+Africa do Sul,,Day of Reconciliation,2025-12-16,true
+Africa do Sul,,Christmas Day,2025-12-25,true
+Africa do Sul,,Day of Goodwill,2025-12-26,true
+Spain,,Ano Novo,2025-01-01,true
+Spain,,Reyes,2025-01-06,true
+Spain,,Viernes Santo,2025-04-18,false
+Spain,,Día del trabajador,2025-05-01,true
+Spain,,Ascensión de la Vírgen,2025-08-15,true
+Spain,,Fiesta Nacional de Espana,2025-10-12,true
+Spain,,Todos os Santos,2025-11-01,true
+Spain,,Día de la Constitución,2025-12-06,true
+Spain,,Día de la Imaculada Concepción,2025-12-08,true
+Spain,,Navidad,2025-12-25,true
+Spain,Valencia,S. Vicente Mártir,2025-01-22,true
+Spain,Valencia,San José,2025-03-19,true
+Spain,Valencia,Pascua,2025-04-21,false
+Spain,Valencia,S. Vicente Ferrer,2025-04-28,false
+Spain,Valencia,San Juan,2025-06-24,true
+Spain,Valencia,Día de la Comunidad Valenciana,2025-10-09,true
+Spain,Marbella,Dia de Andalucia,2025-02-28,true
+Spain,Marbella,San Bernabe,2025-06-11,true
+Spain,Marbella,San Pedro de Alcántara (padroeiro local),2025-10-20,true
+Namibia,,New Year's Day,2025-01-01,true
+Namibia,,Dia da Independência,2025-03-21,true
+Namibia,,Good Friday,2025-04-18,false
+Namibia,,Easter Monday,2025-04-21,false
+Namibia,,Workers' Day,2025-05-01,true
+Namibia,,Cassinga Day,2025-05-04,true
+Namibia,,Africa Day,2025-05-25,true
+Namibia,,Genocide Remembrance Day,2025-05-28,true
+Namibia,,Ascension Day,2025-05-29,false
+Namibia,,Heroes' Day,2025-08-26,true
+Namibia,,Human Rights / Women's Day,2025-12-10,true
+Namibia,,Christmas Day,2025-12-25,true
+Namibia,,Family Day,2025-12-26,true
+Mozambique,,New Year's Day,2025-01-01,true
+Mozambique,,Mozambican Heroes' Day,2025-02-03,true
+Mozambique,,Mozambican Women's Day,2025-04-07,true
+Mozambique,,International Workers' Day,2025-05-01,true
+Mozambique,,Independence Day,2025-06-25,true
+Mozambique,,Victory Day,2025-09-07,true
+Mozambique,,Armed Forces Day,2025-09-25,true
+Mozambique,,Peace and Reconciliation Day,2025-10-04,true
+Mozambique,,Family Day,2025-12-25,true
+Mozambique,Maputo,City Day,2025-11-10,true
+Mozambique,Tofo,Province Day,2025-08-12,true

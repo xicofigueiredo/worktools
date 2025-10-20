@@ -8,6 +8,79 @@ class Sprint < ApplicationRecord
   has_many :reports, dependent: :destroy
   has_many :consents, dependent: :nullify
 
+  # Season-related class methods
+  def self.current_season
+    find_season_for_date(Date.current)
+  end
+
+  def self.find_season_for_date(date)
+    year = date.year
+
+    # Define the 3 seasons for the year
+    seasons = [
+      { name: "January #{year}", start_date: Date.new(year, 1, 1), end_date: Date.new(year, 1, 31) },
+      { name: "May/June #{year}", start_date: Date.new(year, 5, 1), end_date: Date.new(year, 6, 30) },
+      { name: "Oct/Nov #{year}", start_date: Date.new(year, 10, 1), end_date: Date.new(year, 11, 30) }
+    ]
+
+    # Find which season the date falls into
+    current_season = seasons.find { |season| date >= season[:start_date] && date <= season[:end_date] }
+
+    # If no season found in current year, check if it's late December (should be January of next year)
+    if current_season.nil? && date.month == 12
+      next_year = year + 1
+      current_season = { name: "January #{next_year}", start_date: Date.new(next_year, 1, 1), end_date: Date.new(next_year, 1, 31) }
+    end
+
+    # If still no season, default to the closest upcoming season
+    if current_season.nil?
+      if date.month < 5
+        current_season = seasons[1] # May/June
+      elsif date.month < 10
+        current_season = seasons[2] # Oct/Nov
+      else
+        next_year = year + 1
+        current_season = { name: "January #{next_year}", start_date: Date.new(next_year, 1, 1), end_date: Date.new(next_year, 1, 31) }
+      end
+    end
+
+    current_season
+  end
+
+  def self.previous_season(current_season_data)
+    current_start = current_season_data[:start_date]
+    year = current_start.year
+
+    if current_start.month == 1 # January season
+      # Previous is Oct/Nov of previous year
+      prev_year = year - 1
+      { name: "Oct/Nov #{prev_year}", start_date: Date.new(prev_year, 10, 1), end_date: Date.new(prev_year, 11, 30) }
+    elsif current_start.month == 5 # May/June season
+      # Previous is January of same year
+      { name: "January #{year}", start_date: Date.new(year, 1, 1), end_date: Date.new(year, 1, 31) }
+    elsif current_start.month == 10 # Oct/Nov season
+      # Previous is May/June of same year
+      { name: "May/June #{year}", start_date: Date.new(year, 5, 1), end_date: Date.new(year, 6, 30) }
+    end
+  end
+
+  def self.next_season(current_season_data)
+    current_start = current_season_data[:start_date]
+    year = current_start.year
+
+    if current_start.month == 1 # January season
+      # Next is May/June of same year
+      { name: "May/June #{year}", start_date: Date.new(year, 5, 1), end_date: Date.new(year, 6, 30) }
+    elsif current_start.month == 5 # May/June season
+      # Next is Oct/Nov of same year
+      { name: "Oct/Nov #{year}", start_date: Date.new(year, 10, 1), end_date: Date.new(year, 11, 30) }
+    elsif current_start.month == 10 # Oct/Nov season
+      # Next is January of next year
+      next_year = year + 1
+      { name: "January #{next_year}", start_date: Date.new(next_year, 1, 1), end_date: Date.new(next_year, 1, 31) }
+    end
+  end
+
   def count_absences(user)
     date_range = start_date..end_date
 

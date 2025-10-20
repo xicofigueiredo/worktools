@@ -81,7 +81,7 @@
                               data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to archive this timeline?" } do %>
                     <i class="fa-solid fa-box-archive" title="Archive" style="font-size: 17px; color: #808080;"></i>
                   <% end %>
-                  <% if current_user.role == "admin" || current_user.email == "guest@edubga.com" %>
+                  <% if current_user.role == "admin" || current_user.email == "guest@edubga.com" || current_user.email == "tester.cms@edubga.com" %>
                     <%= link_to moodle_timeline_path(timeline.id),
                                 data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this timeline?" } do %>
                       <i class="fa-solid fa-trash" title="Delete" style="font-size: 17px; color: gray;"></i>
@@ -110,11 +110,24 @@
                            aria-valuenow="<%= timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
                         <%= timeline.progress %>%
                       </div>
-                      <!-- Red segment for shortfall -->
-                      <div class="progress-bar bg-danger d-flex align-items-center justify-content-center" role="progressbar" style="width: <%= timeline.expected_progress - timeline.progress %>%;opacity: 0.8;"
-                           aria-valuenow="<%= timeline.expected_progress - timeline.progress %>" aria-valuemin="0" aria-valuemax="100">
-                        <%= timeline.expected_progress - timeline.progress %>%
-                      </div>
+                      <!-- Red or yellow segment for shortfall -->
+                      <% shortfall = (timeline.expected_progress - timeline.progress).to_i %>
+                      <% shortfall = 0 if shortfall < 0 %>
+                      <% if shortfall <= 10 %>
+                        <div class="progress-bar bg-warning d-flex align-items-center justify-content-center"
+                            role="progressbar"
+                            style="width: <%= shortfall %>%; opacity: 0.8;"
+                            aria-valuenow="<%= shortfall %>" aria-valuemin="0" aria-valuemax="100">
+                          <%= shortfall %>%
+                        </div>
+                      <% else %>
+                        <div class="progress-bar bg-danger d-flex align-items-center justify-content-center"
+                            role="progressbar"
+                            style="width: <%= shortfall %>%; opacity: 0.8;"
+                            aria-valuenow="<%= shortfall %>" aria-valuemin="0" aria-valuemax="100">
+                          <%= shortfall %>%
+                        </div>
+                      <% end %>
                     <% end %>
                   </div>
                 </td>
@@ -150,11 +163,15 @@ document.addEventListener("turbo:before-cache", function() {
   }
 });
 
-// Use Turbo's load event (or DOMContentLoaded if you're not using Turbo)
-document.addEventListener("turbo:load", function() {
+// Function to attach moodle timeline click handlers
+function attachMoodleTimelineHandlers() {
   const tableBody = document.querySelector(".moodle-timelines-table tbody");
   console.log("Moodle timelines table body found:", tableBody);
-  if (tableBody) {
+
+  if (tableBody && !tableBody.dataset.handlerAttached) {
+    // Mark that handler is attached to prevent duplicate listeners
+    tableBody.dataset.handlerAttached = "true";
+
     tableBody.addEventListener("click", function(e) {
       console.log("Click event triggered on moodle timelines table");
       const row = e.target.closest(".clickable");
@@ -227,6 +244,11 @@ document.addEventListener("turbo:load", function() {
       }
     });
   }
+}
+
+// Use Turbo's load event (or DOMContentLoaded if you're not using Turbo)
+document.addEventListener("turbo:load", function() {
+  attachMoodleTimelineHandlers();
 
   // Attach a listener for the modal close button.
   const closeBtn = document.getElementById("closeModal");
@@ -243,6 +265,20 @@ document.addEventListener("turbo:load", function() {
       modal.style.display = "none";
     }
   });
+
+  // Listen for Bootstrap tab shown events to re-attach handlers when moodle-timelines tab is activated
+  const moodleTimelinesTab = document.getElementById('moodle-timelines-tab');
+  if (moodleTimelinesTab) {
+    moodleTimelinesTab.addEventListener('shown.bs.tab', function (e) {
+      console.log("Moodle timelines tab activated, re-attaching handlers");
+      // Reset the handler attached flag and re-attach
+      const tableBody = document.querySelector(".moodle-timelines-table tbody");
+      if (tableBody) {
+        tableBody.dataset.handlerAttached = "";
+      }
+      attachMoodleTimelineHandlers();
+    });
+  }
 });
 </script>
 

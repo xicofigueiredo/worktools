@@ -57,11 +57,14 @@ class MoodleTimelinesController < ApplicationController
   def update
     @moodle_timeline = MoodleTimeline.find(params[:id])
     if @moodle_timeline.update(moodle_timeline_params)
+      relevant_changes = @moodle_timeline.saved_changes.slice('start_date', 'end_date', 'exam_date_id')
+      @moodle_timeline.notify_users(current_user) if relevant_changes.present?
+
       moodle_generate_topic_deadlines(@moodle_timeline)
       @moodle_timeline.save
 
       if current_user.role != @moodle_timeline.user.role
-        redirect_to learner_profile_path(@moodle_timeline.user_id) and return
+        redirect_to learner_profile_path(@moodle_timeline.user_id, active_tab: 'moodle-timelines') and return
       else
         redirect_to moodle_timelines_path, notice: 'Moodle Timeline was successfully updated.' and return
       end
@@ -107,12 +110,7 @@ class MoodleTimelinesController < ApplicationController
   def archived
     @learner = current_user
     @archived_moodle_timelines = MoodleTimeline.where(user: @learner, hidden: true)
-                                  .includes(subject: :topics)
     @past_holidays = @learner.holidays.where("end_date <= ?", Date.today)
-
-    # Preload all topic IDs from the archived timelines' subjects
-    all_topic_ids = @archived_moodle_timelines.flat_map { |t| t.subject.topics.pluck(:id) }.uniq
-    @user_topics_by_topic = @learner.moodle_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
   end
 
   def sync_moodle
