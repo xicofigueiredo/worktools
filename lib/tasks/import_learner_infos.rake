@@ -34,49 +34,98 @@ def levenshtein(a, b)
   v1[b.length]
 end
 
+def resolve_hub_ambiguity(raw_fragment, frag_norm, candidates)
+  puts "\nAmbiguous match for hub fragment: #{raw_fragment} (normalized: #{frag_norm})"
+  puts "Candidates:"
+  candidates.each_with_index do |h, i|
+    puts "#{i+1}. #{h.name} (id: #{h.id})"
+  end
+  puts "0. None (skip)"
+  print "Choose the correct hub (0-#{candidates.size}): "
+  choice = gets.chomp.to_i
+  if choice == 0 || choice > candidates.size
+    @hub_mappings[frag_norm] = nil
+    return nil
+  else
+    selected = candidates[choice - 1]
+    @hub_mappings[frag_norm] = selected
+    return selected
+  end
+end
+
 def find_best_hub_match(raw_hub_fragment)
   return nil if raw_hub_fragment.nil? || raw_hub_fragment.strip == ''
 
   frag_norm = normalize_name_for_match(raw_hub_fragment)
   @cached_hubs ||= Hub.all.map { |h| [h, normalize_name_for_match(h.name)] }
+  @hub_mappings ||= {}
+
+  if @hub_mappings.has_key?(frag_norm)
+    return @hub_mappings[frag_norm]
+  end
 
   # 1) exact normalized match
   @cached_hubs.each do |h, name_norm|
-    return h if name_norm == frag_norm
+    if name_norm == frag_norm
+      @hub_mappings[frag_norm] = h
+      return h
+    end
   end
 
   # 2) ends_with or contains
   @cached_hubs.each do |h, name_norm|
-    return h if frag_norm.end_with?(name_norm) || name_norm.end_with?(frag_norm)
-    return h if frag_norm.include?(name_norm) || name_norm.include?(frag_norm)
+    if frag_norm.end_with?(name_norm) || name_norm.end_with?(frag_norm) || frag_norm.include?(name_norm) || name_norm.include?(frag_norm)
+      @hub_mappings[frag_norm] = h
+      return h
+    end
   end
 
   # 3) token overlap
   frag_tokens = Set.new(frag_norm.split)
-  best = nil
-  best_score = -1
+  candidates = []
+  best_score = 0.0
   @cached_hubs.each do |h, name_norm|
     tokens = Set.new(name_norm.split)
-    common = (frag_tokens & tokens).size
-    score = common.to_f / [tokens.size, frag_tokens.size].max
+    common = (frag_tokens & tokens).size.to_f
+    score = common / [tokens.size, frag_tokens.size].max
     if score > best_score
       best_score = score
-      best = h
+      candidates = [h]
+    elsif score == best_score
+      candidates << h
     end
   end
-  return best if best_score >= 0.6
+  if best_score >= 0.6
+    if candidates.size == 1
+      @hub_mappings[frag_norm] = candidates.first
+      return candidates.first
+    else
+      return resolve_hub_ambiguity(raw_hub_fragment, frag_norm, candidates)
+    end
+  end
 
   # 4) Levenshtein fallback
-  distances = @cached_hubs.map do |h, name_norm|
+  distances = []
+  @cached_hubs.each do |h, name_norm|
     d = levenshtein(frag_norm, name_norm)
-    [h, name_norm, d]
+    distances << [h, name_norm, d]
   end
-  distances.sort_by! { |_,_,d| d }
-  top_h, top_name_norm, top_d = distances.first
-  if top_d <= 3 || top_d.to_f <= ([frag_norm.length, top_name_norm.length].max * 0.25)
-    return top_h
+  distances.sort_by! { |arr| arr[2] }
+  min_d = distances[0][2]
+  top = distances.select { |arr| arr[2] == min_d }
+  top_candidates = top.map { |arr| arr[0] }
+  top_name_norm = top[0][1]
+  if top_candidates.size > 1
+    return resolve_hub_ambiguity(raw_hub_fragment, frag_norm, top_candidates)
+  else
+    top_h = top_candidates.first
+    if min_d <= 3 || min_d.to_f <= ([frag_norm.length, top_name_norm.length].max * 0.25)
+      @hub_mappings[frag_norm] = top_h
+      return top_h
+    end
   end
 
+  @hub_mappings[frag_norm] = nil
   nil
 end
 
@@ -244,7 +293,7 @@ end
 namespace :admissions do
   desc "Import admissions CSV into learner_infos with curriculum and grade normalization"
   task import_learner_infos: :environment do
-    csv_file_path = Rails.root.join('lib', 'tasks', 'admissions_list_new.csv')
+    csv_file_path = Rails.root.join('lib', 'tasks', 'admissions_list.csv')
 
     unless File.exist?(csv_file_path)
       puts "CSV file not found at #{csv_file_path}"
@@ -252,6 +301,7 @@ namespace :admissions do
     end
 
     dry_run = ENV['DRY_RUN'].to_s.downcase == 'true'
+    ARGV.clear
     puts "Starting verbose import (DRY_RUN=#{dry_run})"
     puts "CSV: #{csv_file_path}"
     puts
