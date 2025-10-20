@@ -45,6 +45,20 @@
 <% editable_attrs  = edit_mode ? perm.permitted_attributes.map(&:to_sym) : [] %>
 <% finance_editable_attrs = edit_mode ? perm.finance_permitted_attributes.map(&:to_sym) : [] %>
 
+<%# Grade/Year options per curriculum %>
+<% grades_per_curriculum = {
+  "British Curriculum" => ["UK Year 13", "UK Year 12", "UK Year 11", "UK Year 10", "UK Year 9", "UK Year 8"],
+  "American Curriculum" => ["US Year 12", "US Year 11", "US Year 10", "US Year 9", "US Year 8", "US Year 7", "US Year 6", "US Year 5"],
+  "Portuguese Curriculum" => ["PT Year 12", "PT Year 11", "PT Year 10", "PT Year 9", "PT Year 8", "PT Year 7"],
+  "Own Curriculum" => ["N/A"],
+  "ESL Course" => ["N/A"],
+  "UP Business" => ["Level 3", "Level 4", "Level 5", "Level 6"],
+  "UPx Business" => ["Level 3", "Level 4", "Level 5", "Level 6"],
+  "UP Sports Management" => ["Level 3", "Level 4", "Level 5", "Level 6"],
+  "UP Sports Exercise" => ["Level 3", "Level 4", "Level 5", "Level 6"],
+  "UP Computing" => ["Level 3", "Level 4", "Level 5", "Level 6"]
+} %>
+
 <%# Field presentation hints: type, grid column, rows, choices for selects %>
 <% field_opts = {
   programme: { type: :select, col: '6', choices: [
@@ -70,7 +84,7 @@
     "UP Sports Exercise",
     "UP Computing"
   ]},
-  grade_year: { col: '6' },
+  grade_year: { type: :select, col: '6', choices: grades_per_curriculum[@learner_info.curriculum_course_option] || [], prompt: 'Select Grade/Year' },
   start_date: { type: :date, col: '4' },
   birthdate: { type: :date, col: '4' },
   transfer_of_programme_date: { type: :date, col: '4' },
@@ -190,9 +204,13 @@
         <% choices = opts[:choices] || [] %>
         <% select_classes = disabled_flag ? "form-select" : "form-select editable-input" %>
         <% stimulus_attrs = {} %>
+        <% html_options = stimulus_attrs.merge(class: select_classes, disabled: disabled_flag) %>
+        <% if attr == :grade_year %>
+          <% html_options[:required] = !disabled_flag %>
+        <% end %>
         <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
           <%= f.label(attr, label) %>
-          <%= f.select(attr, choices, { include_blank: opts[:include_blank] || false }, stimulus_attrs.merge(class: select_classes, disabled: disabled_flag)) %>
+          <%= f.select(attr, choices, { prompt: opts[:prompt] || opts[:include_blank] || false }, html_options) %>
         <% end %>
       <% when :checkbox %>
         <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
@@ -778,16 +796,42 @@
     }
   }
 
+  function setupGradeYearHandler() {
+    const curriculumSelect = document.getElementById('learner_info_curriculum_course_option');
+    const gradeSelect = document.getElementById('learner_info_grade_year');
+    const gradesPerCurriculum = <%= grades_per_curriculum.to_json.html_safe %>;
+
+    if (curriculumSelect && gradeSelect) {
+      curriculumSelect.addEventListener('change', function() {
+        const options = gradesPerCurriculum[this.value] || [];
+        gradeSelect.innerHTML = '';
+        const promptOption = document.createElement('option');
+        promptOption.value = '';
+        promptOption.text = 'Select Grade/Year';
+        gradeSelect.add(promptOption);
+        options.forEach(function(opt) {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.text = opt;
+          gradeSelect.add(option);
+        });
+        gradeSelect.value = ''; // Reset to prompt, requiring user to select new value
+      });
+    }
+  }
+
   // Run on page load
   document.addEventListener('DOMContentLoaded', function() {
     setupFinanceCalculations();
     setupPaymentPlanHandler();
+    setupGradeYearHandler();
   });
 
   // Run on Turbo page loads (if using Turbo)
   document.addEventListener('turbo:load', function() {
     setupFinanceCalculations();
     setupPaymentPlanHandler();
+    setupGradeYearHandler();
   });
 
   // Run immediately if DOM is already loaded
@@ -797,5 +841,6 @@
     // DOM is already ready
     setupFinanceCalculations();
     setupPaymentPlanHandler();
+    setupGradeYearHandler();
   }
 </script>
