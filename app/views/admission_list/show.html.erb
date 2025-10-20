@@ -38,17 +38,18 @@
 
 <script>
   function activateLearnerTab() {
-    // read active_tab param (expected values: "general-info" or "documents")
     const urlParams = new URLSearchParams(window.location.search);
     const activeTab = urlParams.get('active_tab');
 
     if (activeTab) {
+      // Hide all tabs first
+      document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('show', 'active');
+      });
+
       document.querySelectorAll('.nav-link').forEach(tab => {
         tab.classList.remove('active');
         tab.setAttribute('aria-selected', 'false');
-      });
-      document.querySelectorAll('.tab-pane').forEach(pane => {
-        pane.classList.remove('show', 'active');
       });
 
       const targetTab = document.querySelector(`#${activeTab}-tab`);
@@ -59,24 +60,31 @@
         targetTab.setAttribute('aria-selected', 'true');
         targetPane.classList.add('show', 'active');
       }
+    } else {
+      // Ensure only first tab is active by default
+      document.querySelectorAll('.tab-pane').forEach((pane, index) => {
+        if (index === 0) {
+          pane.classList.add('show', 'active');
+        } else {
+          pane.classList.remove('show', 'active');
+        }
+      });
     }
   }
 
   document.addEventListener('DOMContentLoaded', activateLearnerTab);
-
-  document.addEventListener('turbo:load', function() {
-    if (typeof activateLearnerTab === 'function') {
-      try { activateLearnerTab(); } catch (e) { console.error('activateLearnerTab error', e); }
-    }
-
-    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-      tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el) });
-    }
-  });
+  document.addEventListener('turbo:load', activateLearnerTab);
 </script>
 
 <style>
   .nav-tabs .nav-link.active { color: #000 !important; }
   .nav-tabs .nav-link { color: lightgrey !important; }
+
+  .tab-pane {
+    display: none;
+  }
+
+  .tab-pane.active {
+    display: block !important;
+  }
 </style>
