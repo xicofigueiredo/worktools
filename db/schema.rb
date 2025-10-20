@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_15_142220) do
+ActiveRecord::Schema[7.0].define(version: 2025_10_20_110951) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -145,16 +145,18 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_15_142220) do
 
   create_table "confirmations", force: :cascade do |t|
     t.string "type", null: false
-    t.bigint "staff_leave_id", null: false
+    t.bigint "staff_leave_id"
     t.bigint "approver_id", null: false
     t.datetime "validated_at"
     t.string "status", default: "pending", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.text "rejection_reason"
+    t.bigint "confirmable_id", null: false
+    t.string "confirmable_type", null: false
     t.index ["approver_id"], name: "index_confirmations_on_approver_id"
-    t.index ["staff_leave_id", "approver_id"], name: "index_confirmations_on_staff_leave_id_and_approver_id"
-    t.index ["staff_leave_id"], name: "index_confirmations_on_staff_leave_id"
+    t.index ["confirmable_type", "confirmable_id", "approver_id"], name: "index_confirmations_on_confirmable_and_approver_id"
+    t.index ["confirmable_type", "confirmable_id"], name: "index_confirmations_on_confirmable_type_and_confirmable_id"
   end
 
   create_table "consent_activities", force: :cascade do |t|
