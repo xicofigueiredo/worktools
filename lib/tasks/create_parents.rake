@@ -37,6 +37,9 @@ namespace :db do
           # Find LC with less than 3 hubs linked to the kid's hub
           lcs = kid.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').select { |lc| lc.hubs.count < 3 }
 
+          # Temporarily skip email domain validation for this rake task
+          parent.define_singleton_method(:email_domain_check) { true }
+
           if parent.save
             puts "Parent account for #{email} created successfully."
             UserMailer.welcome_parent(parent, password, lcs).deliver_now
