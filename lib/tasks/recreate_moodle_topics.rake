@@ -7,8 +7,12 @@ namespace :moodle do
     initial_count = MoodleTopic.count
     puts "Found #{initial_count} existing moodle topics"
 
-    # Get all moodle timelines to recreate topics (excluding hidden ones)
-    timelines = MoodleTimeline.includes(:user, :subject).where(hidden: false)
+    # Get all moodle timelines to recreate topics (excluding hidden ones and deactivated/graduated users)
+    timelines = MoodleTimeline.includes(:user, :subject)
+                              .where(hidden: false)
+                              .joins(:user)
+                              .where(users: { deactivate: [false, nil] })
+                              .where(users: { graduated_at: nil })
     puts "Found #{timelines.count} moodle timelines to process"
     puts "Processing each timeline individually for safe interruption...\n"
 
