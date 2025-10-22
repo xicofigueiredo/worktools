@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_20_110951) do
+ActiveRecord::Schema[7.0].define(version: 2025_10_22_111657) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -465,6 +465,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_20_110951) do
     t.integer "billable_rf"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "financial_responsibility"
     t.index ["learner_info_id"], name: "index_learner_finances_on_learner_info_id"
   end
 
@@ -518,7 +519,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_20_110951) do
     t.text "home_address"
     t.string "gender"
     t.boolean "use_of_image_authorisation"
-    t.boolean "emergency_protocol_choice"
+    t.string "emergency_protocol_choice"
     t.string "parent1_full_name"
     t.string "parent1_email"
     t.string "parent1_phone_number"
@@ -540,6 +541,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_20_110951) do
     t.datetime "updated_at", null: false
     t.string "preferred_name"
     t.string "native_language"
+    t.string "previous_school_grade_year"
     t.index ["institutional_email"], name: "index_learner_infos_on_institutional_email"
     t.index ["start_date"], name: "index_learner_infos_on_start_date"
     t.index ["student_number"], name: "index_learner_infos_on_student_number_unique", unique: true, where: "(student_number IS NOT NULL)"

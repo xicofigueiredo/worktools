@@ -6,7 +6,8 @@
     margin-bottom: 18px;
     background: #fff;
   }
-  .li-section h4 { margin-top: 0; margin-bottom: 12px; font-weight: 600; }
+  .li-section h4 { margin-top: 0; margin-bottom: 12px; font-weight: 600;
+  }
 
   .editable-input,
   .editable-input:enabled {
@@ -42,7 +43,7 @@
 <% perm = @permission || LearnerInfoPermission.new(current_user, @learner_info) %>
 <% visible_learner_fields = perm.visible_learner_fields.map(&:to_sym) %>
 <% visible_finance_fields = perm.visible_finance_fields.map(&:to_sym) %>
-<% editable_attrs  = edit_mode ? perm.permitted_attributes.map(&:to_sym) : [] %>
+<% editable_attrs = edit_mode ? perm.permitted_attributes.map(&:to_sym) : [] %>
 <% finance_editable_attrs = edit_mode ? perm.finance_permitted_attributes.map(&:to_sym) : [] %>
 
 <%# Grade/Year options per curriculum %>
@@ -72,6 +73,7 @@
   preferred_name: { col: '6' },
   full_name: { col: '6' },
   student_number: { col: '6' },
+  status: { col: '6' }, # NEW FIELD ADDED - was in Basic Info
   curriculum_course_option: { type: :select, col: '6', choices: [
     "British Curriculum",
     "American Curriculum",
@@ -85,12 +87,12 @@
     "UP Computing"
   ]},
   grade_year: { type: :select, col: '6', choices: grades_per_curriculum[@learner_info.curriculum_course_option] || [], prompt: 'Select Grade/Year' },
-  start_date: { type: :date, col: '4' },
+  # MOVED TO ADMINISTRATIVE SECTION
+  start_date: { type: :date, col: '3' },
   birthdate: { type: :date, col: '4' },
-  transfer_of_programme_date: { type: :date, col: '4' },
-  end_date: { type: :date, col: '4' },
-  end_day_communication: { col: '4' },
-
+  transfer_of_programme_date: { type: :date, col: '3' },
+  end_date: { type: :date, col: '3' },
+  end_day_communication: { col: '3' },
   personal_email: { type: :email, col: '6' },
   institutional_email: { type: :email, col: '6' },
   phone_number: { col: '6' },
@@ -98,47 +100,46 @@
   nationality: { col: '6' },
   gender: { type: :select, col: '6', choices: ['Male', 'Female', 'Other'] },
   native_language: { col: '6' },
-  english_proficiency: { type: :toggle, col: '6' },
-
+ english_proficiency: { type: :toggle, col: '6' },
   parent1_full_name: { col: '6' },
   parent1_email: { type: :email, col: '6' },
   parent1_phone_number: { col: '6' },
   parent1_id_information: { col: '6' },
-
   parent2_full_name: { col: '6' },
   parent2_email: { type: :email, col: '6' },
   parent2_phone_number: { col: '6' },
   parent2_id_information: { col: '6' },
   parent2_info_not_to_be_contacted: { type: :text_area, rows: 2, col: '12' },
-
   registering_school_pt_plus: { col: '6' },
   previous_schooling: { type: :select, col: '6', choices: [
     "Abroad",
     "National Private",
     "National Public",
-    "Homeschooled"
+  "Homeschooled"
   ]},
   previous_school_status: { col: '6' },
   previous_school_name: { col: '6' },
   previous_school_email: { type: :email, col: '6' },
-
+  current_school_grade_year: { col: '6' }, # NEW FIELD ADDED to be rendered in School section
   id_information: { col: '6' },
   fiscal_number: { col: '6' },
+  # NOTE: 'use_of_image_authorisation' is left as checkbox for consistency in form submission,
+  # but its display logic must be fixed below.
   use_of_image_authorisation: { type: :checkbox, col: '6' },
-  emergency_protocol_choice: { type: :checkbox, col: '6' },
-
+  # NOTE: 'emergency_protocol_choice' is now a string, so change to text input.
+  emergency_protocol_choice: { col: '6' },
   withdrawal_category: { type: :select, col: '6', choices: [
     "Moved abroad",
     "Balencing Studies",
     "No adaptation - Back to traditional",
     "No adaptation - Back to online",
     "Lack of Support or Guidance",
-    "Lack of Social aspects",
+ "Lack of Social aspects",
     "Accreditation",
     "Expelled",
     "Learning Dificulties",
     "Changed Curriculum",
-    "Graduaded"
+    "Graduated"
   ]},
   withdrawal_reason: { type: :text_area, rows: 2, col: '12' }
 } %>
@@ -151,6 +152,7 @@
     "Semi Annual",
     "Quarterly"
   ]},
+  financial_responsibility: { type: :text_area, rows: 2, col: '12' }, # NEW FIELD ADDED
   monthly_fee: { type: :number, col: '3', step: 1, label: "Monthly Fee (#{@currency_symbol})" },
   discount_mf: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   scholarship: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Scholarship (%)" },
@@ -159,7 +161,7 @@
   discount_af: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   billable_af: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Admission Fee (#{@currency_symbol})" },
   renewal_fee: { type: :number, col: '4', step: 1, label: "Renewal Fee (#{@currency_symbol})" },
-  discount_rf: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
+ discount_rf: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   billable_rf: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Renewal Fee (#{@currency_symbol})" }
 }) %>
 
@@ -169,8 +171,8 @@
   <% next unless is_finance ? visible_finance_fields.include?(attr_sym) : visible_learner_fields.include?(attr_sym) %>
 
   <% label = opts[:label] || attr.to_s.humanize %>
-  <% type  = opts[:type]  || :text %>
-  <% col   = opts[:col]   || '12' %>
+  <% type = opts[:type] || :text %>
+  <% col = opts[:col] || '12' %>
   <% value = f ? f.object.send(attr) : object.send(attr) %>
 
   <% # Force disable main fees in edit mode for finance %>
@@ -236,13 +238,7 @@
       <% when :email %>
         <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
           <%= f.label(attr, label) %>
-          <%= f.email_field(
-            attr,
-            class: input_classes,
-            disabled: disabled_flag,
-            placeholder: "name@example.com",
-            autocomplete: "email"
-          ) %>
+          <%= f.email_field(attr, class: input_classes, disabled: disabled_flag, placeholder: "name@example.com", autocomplete: "email") %>
         <% end %>
       <% when :number %>
         <% readonly_flag = opts[:readonly] || false %>
@@ -252,27 +248,10 @@
           <%= f.label(attr, label) %>
           <% if is_blocked %>
             <%= content_tag(:div, class: "input-group") do %>
-              <%= f.number_field(
-                attr,
-                class: number_classes,
-                disabled: disabled_flag,
-                readonly: true,
-                step: opts[:step] || 1,
-                min: 0,
-                style: "background-color: #e9ecef; cursor: not-allowed;"
-              ) %>
+              <%= f.number_field(attr, class: number_classes, disabled: disabled_flag, readonly: true, step: opts[:step] || 1, min: 0, style: "background-color: #e9ecef; cursor: not-allowed;") %>
             <% end %>
           <% else %>
-            <%= f.number_field(
-              attr,
-              class: number_classes,
-              disabled: disabled_flag,
-              readonly: disabled_flag,
-              step: opts[:step] || 1,
-              min: opts[:min] || 0,
-              max: opts[:max],
-              value: value
-            ) %>
+            <%= f.number_field(attr, class: number_classes, disabled: disabled_flag, readonly: disabled_flag, step: opts[:step] || 1, min: opts[:min] || 0, max: opts[:max], value: value) %>
           <% end %>
         <% end %>
       <% else %>
@@ -283,8 +262,9 @@
       <% end %>
     <% end %>
   <% else %>
-    <% display_value =
-      case value
+    <% display_value = case attr_sym
+      when :use_of_image_authorisation then (value.to_s.downcase == 'true' || value.to_s.downcase == 'i consent to the above mentioned conditions'.downcase ? "Yes (Consent Given)" : "No (Consent Denied)")
+      when :emergency_protocol_choice then value.presence || "-" # FIX: Display raw string instead of Yes/No boolean check
       when TrueClass then "Yes"
       when FalseClass then "No"
       when Date, Time, ActiveSupport::TimeWithZone then (value.present? ? value.strftime("%d-%m-%Y") : "-")
@@ -350,14 +330,11 @@
         <% render_input.call(f, :full_name, field_opts[:full_name] || { col: '6' }) %>
         <% render_input.call(f, :preferred_name, field_opts[:preferred_name] || { col: '6' }) %>
         <% render_input.call(f, :student_number, field_opts[:student_number] || { col: '6' }) %>
-        <% render_input.call(f, :start_date, field_opts[:start_date] || { type: :date, col: '6' }) %>
+        <% render_input.call(f, :status, field_opts[:status] || { col: '6' }) %> <%# MOVED: Status field added where start_date was %>
         <% render_input.call(f, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }) %>
         <% render_input.call(f, :programme, field_opts[:programme] || { col: '6' }) %>
         <% render_input.call(f, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }) %>
         <% render_input.call(f, :grade_year, field_opts[:grade_year] || { col: '6' }) %>
-        <% render_input.call(f, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '6' }) %>
-        <% render_input.call(f, :end_date, field_opts[:end_date] || { type: :date, col: '6' }) %>
-        <% render_input.call(f, :end_day_communication, field_opts[:end_day_communication] || { col: '6' }) %>
       </div>
     </div>
 
@@ -382,12 +359,10 @@
         <% render_input.call(f, :parent1_email, field_opts[:parent1_email] || { col: '6' }) %>
         <% render_input.call(f, :parent1_phone_number, field_opts[:parent1_phone_number] || { col: '6' }) %>
         <% render_input.call(f, :parent1_id_information, field_opts[:parent1_id_information] || { col: '6' }) %>
-
         <% render_input.call(f, :parent2_full_name, field_opts[:parent2_full_name] || { col: '6' }) %>
         <% render_input.call(f, :parent2_email, field_opts[:parent2_email] || { col: '6' }) %>
         <% render_input.call(f, :parent2_phone_number, field_opts[:parent2_phone_number] || { col: '6' }) %>
         <% render_input.call(f, :parent2_id_information, field_opts[:parent2_id_information] || { col: '6' }) %>
-
         <% render_input.call(f, :parent2_info_not_to_be_contacted, field_opts[:parent2_info_not_to_be_contacted] || { type: :text_area, rows: 2, col: '12' }) %>
       </div>
     </div>
@@ -398,6 +373,7 @@
         <%= f.fields_for :learner_finance, @learner_finance do |ff| %>
           <div class="row gx-3">
             <% render_input.call(ff, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true) %>
+            <% render_input.call(ff, :financial_responsibility, field_opts[:financial_responsibility] || { type: :text_area, rows: 2, col: '12' }, true) %> <%# NEW FIELD ADDED %>
           </div>
 
           <h5 style="margin-top: 20px; margin-bottom: 10px;">Monthly Fees</h5>
@@ -429,10 +405,11 @@
       <h4>School / Previous education</h4>
       <div class="row gx-3">
         <% render_input.call(f, :registering_school_pt_plus, field_opts[:registering_school_pt_plus] || { col: '6' }) %>
-        <% render_input.call(f, :previous_schooling, field_opts[:previous_schooling] || { col: '6' }) %>
+        <% render_input.call(f, :previous_schooling, field_opts[:previous_schooling] || { col: '6' }) %> <%# MOVED: previous_schooling moved to this section %>
         <% render_input.call(f, :previous_school_status, field_opts[:previous_school_status] || { col: '6' }) %>
         <% render_input.call(f, :previous_school_name, field_opts[:previous_school_name] || { col: '6' }) %>
         <% render_input.call(f, :previous_school_email, field_opts[:previous_school_email] || { col: '6' }) %>
+        <% render_input.call(f, :current_school_grade_year, field_opts[:current_school_grade_year] || { col: '6' }) %> <%# NEW FIELD ADDED %>
       </div>
     </div>
 
@@ -441,8 +418,12 @@
       <div class="row gx-3">
         <% render_input.call(f, :id_information, field_opts[:id_information] || { col: '6' }) %>
         <% render_input.call(f, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }) %>
+        <% render_input.call(f, :start_date, field_opts[:start_date] || { type: :date, col: '3' }) %> <%# MOVED FROM BASIC INFO %>
+        <% render_input.call(f, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '3' }) %> <%# MOVED FROM BASIC INFO %>
+        <% render_input.call(f, :end_date, field_opts[:end_date] || { type: :date, col: '3' }) %> <%# MOVED FROM BASIC INFO %>
+        <% render_input.call(f, :end_day_communication, field_opts[:end_day_communication] || { col: '3' }) %> <%# MOVED FROM BASIC INFO %>
         <% render_input.call(f, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }) %>
-        <% render_input.call(f, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { type: :checkbox, col: '6' }) %>
+        <% render_input.call(f, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { col: '6' }) %>
         <% render_input.call(f, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }) %>
         <% render_input.call(f, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }) %>
       </div>
@@ -457,14 +438,11 @@
       <% render_input.call(nil, :full_name, field_opts[:full_name] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :preferred_name, field_opts[:preferred_name] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :student_number, field_opts[:student_number] || { col: '6' }, false, @learner_info) %>
-      <% render_input.call(nil, :start_date, field_opts[:start_date] || { type: :date, col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :status, field_opts[:status] || { col: '6' }, false, @learner_info) %> <%# MOVED: Status field added where start_date was %>
       <% render_input.call(nil, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :programme, field_opts[:programme] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :grade_year, field_opts[:grade_year] || { col: '6' }, false, @learner_info) %>
-      <% render_input.call(nil, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '6' }, false, @learner_info) %>
-      <% render_input.call(nil, :end_date, field_opts[:end_date] || { type: :date, col: '6' }, false, @learner_info) %>
-      <% render_input.call(nil, :end_day_communication, field_opts[:end_day_communication] || { col: '6' }, false, @learner_info) %>
     </div>
   </div>
 
@@ -489,12 +467,10 @@
       <% render_input.call(nil, :parent1_email, field_opts[:parent1_email] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :parent1_phone_number, field_opts[:parent1_phone_number] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :parent1_id_information, field_opts[:parent1_id_information] || { col: '6' }, false, @learner_info) %>
-
       <% render_input.call(nil, :parent2_full_name, field_opts[:parent2_full_name] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :parent2_email, field_opts[:parent2_email] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :parent2_phone_number, field_opts[:parent2_phone_number] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :parent2_id_information, field_opts[:parent2_id_information] || { col: '6' }, false, @learner_info) %>
-
       <% render_input.call(nil, :parent2_info_not_to_be_contacted, field_opts[:parent2_info_not_to_be_contacted] || { type: :text_area, rows: 2, col: '12' }, false, @learner_info) %>
     </div>
   </div>
@@ -502,9 +478,9 @@
   <% if perm.finance_visible? %>
     <div class="li-section li-grid">
       <h4>Financial / Payments</h4>
-
       <div class="row gx-3">
         <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true, @learner_finance) %>
+        <% render_input.call(nil, :financial_responsibility, field_opts[:financial_responsibility] || { type: :text_area, rows: 2, col: '12' }, true, @learner_finance) %> <%# NEW FIELD ADDED %>
       </div>
 
       <h5 style="margin-top: 20px; margin-bottom: 10px;">Monthly Fees</h5>
@@ -539,6 +515,7 @@
       <% render_input.call(nil, :previous_school_status, field_opts[:previous_school_status] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :previous_school_name, field_opts[:previous_school_name] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :previous_school_email, field_opts[:previous_school_email] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :current_school_grade_year, field_opts[:current_school_grade_year] || { col: '6' }, false, @learner_info) %>
     </div>
   </div>
 
@@ -547,8 +524,12 @@
     <div class="row gx-3">
       <% render_input.call(nil, :id_information, field_opts[:id_information] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :start_date, field_opts[:start_date] || { type: :date, col: '3' }, false, @learner_info) %> <%# MOVED FROM BASIC INFO %>
+      <% render_input.call(nil, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '3' }, false, @learner_info) %> <%# MOVED FROM BASIC INFO %>
+      <% render_input.call(nil, :end_date, field_opts[:end_date] || { type: :date, col: '3' }, false, @learner_info) %> <%# MOVED FROM BASIC INFO %>
+      <% render_input.call(nil, :end_day_communication, field_opts[:end_day_communication] || { col: '3' }, false, @learner_info) %> <%# MOVED FROM BASIC INFO %>
       <% render_input.call(nil, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }, false, @learner_info) %>
-      <% render_input.call(nil, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { type: :checkbox, col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }, false, @learner_info) %>
     </div>
@@ -556,11 +537,7 @@
 <% end %>
 
 <%# Pricing Confirmation Modal %>
-<div class="modal fade"
-     id="pricingConfirmationModal"
-     tabindex="-1"
-     aria-hidden="true"
-     data-curriculum-pricing-target="modal">
+<div class="modal fade" id="pricingConfirmationModal" tabindex="-1" aria-hidden="true" data-curriculum-pricing-target="modal">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -618,19 +595,11 @@
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Discount (%)</label>
-                <input type="number"
-                       class="form-control"
-                       data-curriculum-pricing-target="discountMfInput"
-                       data-action="input->curriculum-pricing#calculateBillables"
-                       step="0.01" min="0" max="100">
+                <input type="number" class="form-control" data-curriculum-pricing-target="discountMfInput" data-action="input->curriculum-pricing#calculateBillables" step="0.01" min="0" max="100">
               </div>
               <div class="col-md-6">
                 <label class="form-label">Scholarship (%)</label>
-                <input type="number"
-                       class="form-control"
-                       data-curriculum-pricing-target="scholarshipInput"
-                       data-action="input->curriculum-pricing#calculateBillables"
-                       step="0.01" min="0" max="100">
+                <input type="number" class="form-control" data-curriculum-pricing-target="scholarshipInput" data-action="input->curriculum-pricing#calculateBillables" step="0.01" min="0" max="100">
               </div>
             </div>
             <div class="alert alert-secondary mb-0">
@@ -658,11 +627,7 @@
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Discount (%)</label>
-                <input type="number"
-                       class="form-control"
-                       data-curriculum-pricing-target="discountAfInput"
-                       data-action="input->curriculum-pricing#calculateBillables"
-                       step="0.01" min="0" max="100">
+                <input type="number" class="form-control" data-curriculum-pricing-target="discountAfInput" data-action="input->curriculum-pricing#calculateBillables" step="0.01" min="0" max="100">
               </div>
             </div>
             <div class="alert alert-secondary mb-0">
@@ -690,11 +655,7 @@
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Discount (%)</label>
-                <input type="number"
-                       class="form-control"
-                       data-curriculum-pricing-target="discountRfInput"
-                       data-action="input->curriculum-pricing#calculateBillables"
-                       step="0.01" min="0" max="100">
+                <input type="number" class="form-control" data-curriculum-pricing-target="discountRfInput" data-action="input->curriculum-pricing#calculateBillables" step="0.01" min="0" max="100">
               </div>
             </div>
             <div class="alert alert-secondary mb-0">
@@ -705,15 +666,10 @@
 
       </div>
       <div class="modal-footer">
-        <button type="button"
-                class="btn btn-secondary"
-                data-action="click->curriculum-pricing#cancelChanges">
+        <button type="button" class="btn btn-secondary" data-action="click->curriculum-pricing#cancelChanges">
           Cancel
         </button>
-        <button type="button"
-                class="btn btn-primary"
-                data-curriculum-pricing-target="confirmButton"
-                data-action="click->curriculum-pricing#confirmChanges">
+        <button type="button" class="btn btn-primary" data-curriculum-pricing-target="confirmButton" data-action="click->curriculum-pricing#confirmChanges">
           Confirm & Save Changes
         </button>
       </div>
@@ -731,7 +687,6 @@
       const discountInput = document.getElementById(discountId);
       const scholarshipInput = scholarshipId ? document.getElementById(scholarshipId) : null;
       const billableInput = document.getElementById(billableId);
-
       if (!feeInput || !billableInput) return;
 
       function calculate() {
@@ -759,14 +714,12 @@
       'learner_info_learner_finance_attributes_scholarship',
       'learner_info_learner_finance_attributes_billable_mf'
     );
-
     calculateBillable(
       'learner_info_learner_finance_attributes_admission_fee',
       'learner_info_learner_finance_attributes_discount_af',
       null,
       'learner_info_learner_finance_attributes_billable_af'
     );
-
     calculateBillable(
       'learner_info_learner_finance_attributes_renewal_fee',
       'learner_info_learner_finance_attributes_discount_rf',
@@ -787,8 +740,7 @@
           discountMfInput.dispatchEvent(new Event('input'));
         }
       });
-
-      // Initial check
+ // Initial check
       if (paymentPlanSelect.value === 'Annually') {
         discountMfInput.value = 3;
         discountMfInput.dispatchEvent(new Event('input'));
@@ -800,7 +752,6 @@
     const curriculumSelect = document.getElementById('learner_info_curriculum_course_option');
     const gradeSelect = document.getElementById('learner_info_grade_year');
     const gradesPerCurriculum = <%= grades_per_curriculum.to_json.html_safe %>;
-
     if (curriculumSelect && gradeSelect) {
       curriculumSelect.addEventListener('change', function() {
         const options = gradesPerCurriculum[this.value] || [];
@@ -826,15 +777,13 @@
     setupPaymentPlanHandler();
     setupGradeYearHandler();
   });
-
-  // Run on Turbo page loads (if using Turbo)
+ // Run on Turbo page loads (if using Turbo)
   document.addEventListener('turbo:load', function() {
     setupFinanceCalculations();
     setupPaymentPlanHandler();
     setupGradeYearHandler();
   });
-
-  // Run immediately if DOM is already loaded
+ // Run immediately if DOM is already loaded
   if (document.readyState === 'loading') {
     // Still loading, wait for DOMContentLoaded
   } else {
