@@ -15,19 +15,19 @@
             <%# <%= link_to "Subjects", subjects_path, class: "nav-link" %>
           <%# </li> %>
 
-          <li class="nav-item">
+          <%# <li class="nav-item">
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(leaves_path) %>">
-              <%= link_to leaves_path, class: 'nav-link d-inline-flex align-items-center' do %>
-                Leaves
+              <%# <%= link_to leaves_path, class: 'nav-link d-inline-flex align-items-center' do %>
+                <%# Leaves
                 <% if @pending_confirmations_count.to_i.positive? %>
-                  <span class="badge rounded-pill bg-danger ms-0" style="font-size:0.65rem; line-height:1; padding:0.22rem 0.45rem; transform: translateY(-7px);">
+                  <%# <span class="badge rounded-pill bg-danger ms-0" style="font-size:0.65rem; line-height:1; padding:0.22rem 0.45rem; transform: translateY(-7px);">
                     <%= @pending_confirmations_count %>
-                    <span class="visually-hidden">pending confirmations</span>
+                    <%# <span class="visually-hidden">pending confirmations</span>
                   </span>
                 <% end %>
-              <% end %>
-            </div>
-          </li>
+              <%# <% end %>
+            <%# </div>
+          </li> %>
 
           <li class="nav-item">
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(attendance_path)%>">
