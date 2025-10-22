@@ -117,7 +117,7 @@
               <% end %>
               <!-- Submit Buttons -->
               <div class="d-flex justify-content-center gap-2 mt-3">
-                <%= link_to "Back", timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+                <%= link_to "Back", request.referer || moodle_timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
                 <% if @edit %>
                   <%= form.submit 'Update Timeline', class: 'btn btn-primary',
                         style: 'border-radius: 10px;',
