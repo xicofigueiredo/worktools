@@ -17,18 +17,15 @@ class HubspotService
     end
 
     data = JSON.parse(response.body)
-
-    data['results'].each do |submission|
-      process_submission(submission)
-    end
+    data['results'].each { |submission| process_submission(submission) }
 
     Rails.logger.info "Successfully processed #{data['results'].count} new submissions."
-    return true
+    true
   end
 
   def self.process_submission(submission_data)
     fields = submission_data['values'].map { |v| [v['name'].to_sym, v['value']] }.to_h
-    email = fields[:learner_s_personal_email_address]
+    email  = fields[:learner_s_personal_email_address]
 
     Rails.logger.info("All submission fields: #{fields.inspect}")
     Rails.logger.info("Processing submission for email: #{email} at #{Time.zone.at(submission_data['submittedAt']/1000.0)}")
@@ -39,12 +36,30 @@ class HubspotService
       return
     end
 
-    # Define the field mapping
+    learner_info = create_learner_info(fields)
+    unless learner_info
+      Rails.logger.error("Failed to create LearnerInfo for submission with email #{email}")
+      return
+    end
+
+    begin
+      create_learner_finances(learner_info, fields)
+    rescue => e
+      Rails.logger.error("Error creating finances for LearnerInfo ID=#{learner_info.id}: #{e.message}")
+    end
+
+    begin
+      attach_files_for_learner(learner_info, fields)
+    rescue => e
+      Rails.logger.error("Error attaching files for LearnerInfo ID=#{learner_info.id}: #{e.message}")
+    end
+  end
+
+  def self.create_learner_info(fields)
     learner_info_mapping = {
       :learning_model                    => :programme,
-      # :hub_interest_portugal             => :hub_interest,
       :curriculum_option__2_             => :curriculum_course_option,
-      :current_school_grade_year        => :previous_school_grade_year,
+      :current_school_grade_year         => :previous_school_grade_year,
       :previous_school_status            => :previous_school_status,
       :previous_school_s_name            => :previous_school_name,
       :previous_school_s_email           => :previous_school_email,
@@ -67,74 +82,113 @@ class HubspotService
       :emergency_protocol                => :emergency_protocol_choice,
     }
 
-    learner_info_attrs = {}
-    learner_info_mapping.each do |hubspot_key, model_column|
-      next unless fields[hubspot_key].present?
-
-      value = (model_column == :birthdate) ? (Date.parse(fields[hubspot_key]) rescue fields[hubspot_key]) : fields[hubspot_key]
-      learner_info_attrs[model_column] = value
+    attrs = {}
+    learner_info_mapping.each do |hub_key, model_col|
+      next unless fields[hub_key].present?
+      val = fields[hub_key]
+      val = (Date.parse(val) rescue val) if model_col == :birthdate
+      attrs[model_col] = val
     end
 
-    # Image Authorization (Boolean)
+    # Image consent boolean
     consent_string = "I consent to the above mentioned conditions"
-    image_consent = fields[:use_of_image_authorization].to_s == consent_string
-    learner_info_attrs[:use_of_image_authorisation] = image_consent
+    attrs[:use_of_image_authorisation] = (fields[:use_of_image_authorization].to_s == consent_string)
 
-    # Grade calculation using model's class method
-    curriculum = learner_info_attrs[:curriculum_course_option]
-    raw_grade_string = fields[:grade_year]
-
-    if curriculum.present? && raw_grade_string.present?
-      calculated_grade = LearnerInfo.calculate_grade_from_hubspot(raw_grade_string, curriculum)
-      learner_info_attrs[:grade_year] = calculated_grade if calculated_grade.present?
+    # Grade calculation if present
+    curriculum = attrs[:curriculum_course_option]
+    raw_grade  = fields[:grade_year]
+    if curriculum.present? && raw_grade.present?
+      calculated_grade = LearnerInfo.calculate_grade_from_hubspot(raw_grade, curriculum)
+      attrs[:grade_year] = calculated_grade if calculated_grade.present?
     end
 
     # Address combination
     address_keys = [:address, :city, :zip, :country]
     if address_keys.any? { |k| fields[k].present? }
-      address_parts = address_keys.map { |k| fields[k] }.compact.join(', ')
-      learner_info_attrs[:home_address] = address_parts
+      attrs[:home_address] = address_keys.map { |k| fields[k] }.compact.join(', ')
     end
 
-    # Create the new LearnerInfo record
-    learner_info = LearnerInfo.new(learner_info_attrs)
+    learner_info = LearnerInfo.new(attrs)
     learner_info.status = 'New Lead'
 
     if learner_info.save
       Rails.logger.info("Successfully created NEW LearnerInfo for #{learner_info.full_name} (ID: #{learner_info.id})")
+      learner_info
+    else
+      Rails.logger.error("FATAL ERROR: Failed to create LearnerInfo for #{attrs[:full_name]}: #{learner_info.errors.full_messages.join(', ')}")
+      nil
+    end
+  end
 
-      # Process LearnerFinances
-      payment_plan             = fields[:payment_plan]
-      financial_responsibility = fields[:financial_responsibility]
+  def self.create_learner_finances(learner_info, fields)
+    payment_plan             = fields[:payment_plan]
+    financial_responsibility = fields[:financial_responsibility]
 
-      finance_record = learner_info.build_learner_finance(
-        payment_plan: payment_plan,
-        financial_responsibility: financial_responsibility
-      )
+    finance_record = learner_info.build_learner_finance(
+      payment_plan: payment_plan,
+      financial_responsibility: financial_responsibility
+    )
 
-      if fields[:learner_s_id_document_picture].present?
-        url = fields[:learner_s_id_document_picture]
-        file_id = extract_file_id_from_url(url)
-        if file_id
-          download_url = get_download_url_for_file(file_id)
-          if download_url
-            download_and_attach(learner_info, download_url, 'learner_id')
-          else
-            Rails.logger.error("Could not get download_url for file_id #{file_id}")
+    if finance_record.save
+      Rails.logger.info("Successfully created LearnerFinances for LearnerInfo ID: #{learner_info.id}")
+    else
+      Rails.logger.error("Failed to save LearnerFinances for #{learner_info.full_name}: #{finance_record.errors.full_messages.join(', ')}")
+    end
+
+    finance_record
+  end
+
+  def self.attach_files_for_learner(learner_info, fields)
+    file_field_mapping = {
+      previous_school_transcripts:   'last_term_report',
+      special_education_form:        'special_needs',
+      learner_s_id_document_picture: 'learner_id',
+      letter_of_interest:            'letter_of_interest',
+      picture:                       'picture',
+      medical_form:                  'medical_form',
+      parent_1_id_document_picture:  'parent_id',
+      parent_2_id_document_photo:    'parent_id'
+    }
+
+    file_field_mapping.each do |hub_key, doc_type|
+      next unless fields[hub_key].present?
+
+      raw = fields[hub_key]
+      values = raw.is_a?(Array) ? raw : [raw]
+
+      values.each_with_index do |value, idx|
+        begin
+          if value.blank?
+            Rails.logger.warn("Empty value for file field #{hub_key}, skipping.")
+            next
           end
-        else
-          Rails.logger.error("Could not extract file_id from url: #{url}")
+
+          unless value.is_a?(String)
+            Rails.logger.error("Unexpected value type for #{hub_key}: #{value.class}. Expected signed-url string.")
+            next
+          end
+
+          file_id = extract_file_id_from_url(value)
+          unless file_id
+            Rails.logger.error("Could not extract file_id from HubSpot value for #{hub_key}: #{value.inspect}")
+            next
+          end
+
+          download_url = get_download_url_for_file(file_id)
+          unless download_url
+            Rails.logger.error("Could not obtain download URL for file_id #{file_id} (field #{hub_key})")
+            next
+          end
+
+          description = (values.size > 1) ? "#{hub_key.to_s.humanize} (#{idx + 1})" : hub_key.to_s.humanize
+
+          download_and_attach(learner_info, download_url, doc_type, description)
+          Rails.logger.info("Attached #{doc_type} for LearnerInfo ID=#{learner_info.id} from field #{hub_key}")
+
+        rescue => e
+          Rails.logger.error("Error processing file field #{hub_key} for learner #{learner_info.id}: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
         end
       end
-
-      if finance_record.save
-        Rails.logger.info("Successfully created LearnerFinances for LearnerInfo ID: #{learner_info.id}")
-      else
-        Rails.logger.error("Failed to save LearnerFinances for #{learner_info.full_name}: #{finance_record.errors.full_messages.join(', ')}")
-      end
-
-    else
-      Rails.logger.error("FATAL ERROR: Failed to create LearnerInfo for #{learner_info_attrs[:full_name]}: #{learner_info.errors.full_messages.join(', ')}")
     end
   end
 
@@ -191,5 +245,7 @@ class HubspotService
     unless doc.save
       Rails.logger.error("Failed to save LearnerDocument: #{doc.errors.full_messages.join(', ')}")
     end
+  rescue Down::Error => e
+    Rails.logger.error("Failed to download file from #{download_url}: #{e.message}")
   end
 end

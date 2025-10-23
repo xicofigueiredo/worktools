@@ -7,6 +7,8 @@ class LearnerDocument < ApplicationRecord
     learner_id
     parent_id
     medical_form
+    letter_of_interest
+    picture
   ].freeze
 
   belongs_to :learner_info
