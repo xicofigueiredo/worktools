@@ -290,22 +290,43 @@ class MoodleTimeline < ApplicationRecord
         end
         next unless moodle_topic
 
+        # Check for mock result changes before updating
+        mock50_changed = moodle_topic.mock50 != (activity[:mock50].to_i == 1)
+        mock100_changed = moodle_topic.mock100 != (activity[:mock100].to_i == 1)
+
         # Only update the done flag to avoid touching other fields
         update_attrs = {
           submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
           number_attempts: activity[:number_attempts],
           grade: activity[:grade].present? ? activity[:grade].round(2) : nil,
           done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),
-          time: activity[:ect]
+          time: activity[:ect],
+          mock50: activity[:mock50].to_i == 1,
+          mock100: activity[:mock100].to_i == 1
         }
 
-        topics_to_update << { topic: moodle_topic, attrs: update_attrs }
+        topics_to_update << {
+          topic: moodle_topic,
+          attrs: update_attrs,
+          mock50_changed: mock50_changed,
+          mock100_changed: mock100_changed
+        }
       end
 
       # Perform bulk updates with error handling
       topics_to_update.each do |update_data|
         begin
           update_data[:topic].update!(update_data[:attrs])
+
+          # Create notifications for mock result changes
+          if update_data[:mock50_changed] && update_data[:topic].mock50
+            create_mock_notification(update_data[:topic], "Mock 50% result received")
+          end
+
+          if update_data[:mock100_changed] && update_data[:topic].mock100
+            create_mock_notification(update_data[:topic], "Mock 100% result received")
+          end
+
         rescue => e
           Rails.logger.error "Failed to update moodle_topic #{update_data[:topic].id}: #{e.message}"
         end
@@ -676,5 +697,23 @@ class MoodleTimeline < ApplicationRecord
       Rails.logger.warn "Warning: Invalid timestamp: #{timestamp}"
       nil
     end
+  end
+
+  def create_mock_notification(topic, message)
+    return unless user.present?
+
+    # Find LCs associated with this user's hub (only those with less than 3 hubs)
+    lcs = user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc', deactivate: false).select { |lc| lc.hubs.count < 4 }
+
+    return unless lcs.present?
+
+    lcs.each do |lc|
+      Notification.create!(
+        user: lc,
+        message: "#{message} - #{topic.subject.name} - #{user.full_name}"
+      )
+    end
+  rescue => e
+    Rails.logger.error "Failed to create mock notification: #{e.message}"
   end
 end
