@@ -230,7 +230,7 @@ class MoodleTimeline < ApplicationRecord
           unit: activity[:section_name],  # Store section name as unit
           order: index + 1,  # Use index to maintain order
           grade: activity[:grade].present? ? activity[:grade].round(2) : nil,  # Grade is already a number from the API
-          done: activity[:completiondata] == 1,  # Mark as done if completed
+          done: activity[:completiondata].to_i >= 1,  # Mark as done if completed
           completion_date: begin
             if activity[:evaluation_date].present?
               DateTime.parse(activity[:evaluation_date])

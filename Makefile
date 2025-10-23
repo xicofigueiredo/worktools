@@ -117,3 +117,6 @@ sync_moodle_users:
 
 recreate_moodle_topics: ## Delete all moodle topics and recreate them from API
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake moodle:recreate_topics"
+
+recreate_moodle_timelines_by_id:
+docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake moodle:recreate_topics_by_ids"
