@@ -86,7 +86,11 @@ class HubspotService
     learner_info_mapping.each do |hub_key, model_col|
       next unless fields[hub_key].present?
       val = fields[hub_key]
-      val = (Date.parse(val) rescue val) if model_col == :birthdate
+      if model_col == :birthdate
+          timestamp_seconds = val.to_i / 1000
+          val = Time.at(timestamp_seconds).to_date
+          val = (Date.parse(val) rescue val)
+      end
       attrs[model_col] = val
     end
 
