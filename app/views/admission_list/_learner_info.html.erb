@@ -120,7 +120,7 @@
   previous_school_status: { col: '6' },
   previous_school_name: { col: '6' },
   previous_school_email: { type: :email, col: '6' },
-  current_school_grade_year: { col: '6' }, # NEW FIELD ADDED to be rendered in School section
+  previous_school_grade_year: { col: '6' }, # NEW FIELD ADDED to be rendered in School section
   id_information: { col: '6' },
   fiscal_number: { col: '6' },
   # NOTE: 'use_of_image_authorisation' is left as checkbox for consistency in form submission,
@@ -409,7 +409,7 @@
         <% render_input.call(f, :previous_school_status, field_opts[:previous_school_status] || { col: '6' }) %>
         <% render_input.call(f, :previous_school_name, field_opts[:previous_school_name] || { col: '6' }) %>
         <% render_input.call(f, :previous_school_email, field_opts[:previous_school_email] || { col: '6' }) %>
-        <% render_input.call(f, :current_school_grade_year, field_opts[:current_school_grade_year] || { col: '6' }) %> <%# NEW FIELD ADDED %>
+        <% render_input.call(f, :previous_school_grade_year, field_opts[:previous_school_grade_year] || { col: '6' }) %> <%# NEW FIELD ADDED %>
       </div>
     </div>
 
@@ -515,7 +515,7 @@
       <% render_input.call(nil, :previous_school_status, field_opts[:previous_school_status] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :previous_school_name, field_opts[:previous_school_name] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :previous_school_email, field_opts[:previous_school_email] || { col: '6' }, false, @learner_info) %>
-      <% render_input.call(nil, :current_school_grade_year, field_opts[:current_school_grade_year] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :previous_school_grade_year, field_opts[:previous_school_grade_year] || { col: '6' }, false, @learner_info) %>
     </div>
   </div>
 
