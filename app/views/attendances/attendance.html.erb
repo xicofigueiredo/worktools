@@ -1,5 +1,6 @@
 <div class="mx-5 mt-3">
   <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+    <%= @learners.count %><%= @today %> <%= @week_before.name %> <%= @week.name %>
 
     <div class="d-flex">
       <h3><%= @current_date.strftime("%A, %B %e") %></h3>

@@ -8,10 +8,13 @@ class AttendancesController < ApplicationController
     @prev_date = calculate_prev_date(@current_date, 'daily')
     @next_date = calculate_next_date(@current_date, 'daily')
     @attendances = fetch_daily_attendances(@current_date).sort_by { |attendance| attendance.user.full_name.downcase }
-    @has_learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.find_by(main: true)&.hub_id }, role: 'learner').exists?
+    @learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.find_by(main: true)&.hub_id }, role: 'learner')
+    @has_learners = @learners.exists?
     return unless @has_learners == true
 
     @is_today = @attendances ? @attendances&.first&.attendance_date == Date.today : false
+
+    create_weekly_goals_notifications(@learners) if (1..5).include?(Date.today.wday)
   end
 
   def index
@@ -178,6 +181,37 @@ class AttendancesController < ApplicationController
       next_date
     else
       current_date
+    end
+  end
+
+  def create_weekly_goals_notifications(learners)
+
+    @today = Date.today
+    @week = Week.where("start_date <= ? AND end_date >= ?", @today, @today).first
+   @week_before = Week.where("start_date <= ? AND end_date >= ?", @today - 7.days, @today - 7.days).first
+
+    return unless @week && @week_before
+
+    lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc', deactivate: false).select { |lc| lc.hubs.count < 4 }
+    dcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'dc', deactivate: false)
+
+    learners.each do |learner|
+      # Check if learner has weekly goals for current week
+      current_week_has_goals = @week.weekly_goals.where(user: learner).exists?
+
+      # Check if learner has weekly goals for previous week
+      previous_week_has_goals = @week_before.weekly_goals.where(user: learner).exists?
+
+      # If learner has no goals for both weeks, notify LCs
+      unless current_week_has_goals && previous_week_has_goals
+        lcs.each do |lc|
+          Notification.find_or_create_by(
+            user: lc,
+            message: "Your learner #{learner.full_name} has not completed weekly goals for 2 consecutive weeks (#{@week_before.name} and #{@week.name}). Please follow up with them to ensure they stay on track.",
+            link: learner_profile_path(learner)
+          )
+        end
+      end
     end
   end
 
