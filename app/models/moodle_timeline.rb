@@ -230,7 +230,7 @@ class MoodleTimeline < ApplicationRecord
           unit: activity[:section_name],  # Store section name as unit
           order: index + 1,  # Use index to maintain order
           grade: activity[:grade].present? ? activity[:grade].round(2) : nil,  # Grade is already a number from the API
-          done: activity[:completiondata].to_i >= 1,  # Mark as done if completed
+          done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),  # Mark as done if completed
           completion_date: begin
             if activity[:evaluation_date].present?
               DateTime.parse(activity[:evaluation_date])
@@ -249,7 +249,6 @@ class MoodleTimeline < ApplicationRecord
           number_attempts: activity[:number_attempts],
           submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
           evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
-          completion_data: Time.at(activity[:completiondata].to_i).strftime("%d/%m/%Y %H:%M"),
           as1: as1,
           as2: as2
         )
@@ -296,7 +295,8 @@ class MoodleTimeline < ApplicationRecord
           submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
           number_attempts: activity[:number_attempts],
           grade: activity[:grade].present? ? activity[:grade].round(2) : nil,
-          done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2)
+          done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),
+          time: activity[:ect]
         }
 
         topics_to_update << { topic: moodle_topic, attrs: update_attrs }

@@ -71,7 +71,8 @@ class MoodleApiService
           number_attempts: activity['number_attempts'],
           submission_date: activity['submission_date'],
           evaluation_date: activity['evaluation_date'],
-          grade: activity['grade']
+          grade: activity['grade'],
+          ect: activity['ect']
 
         }
       end
@@ -622,7 +623,6 @@ class MoodleApiService
 
 
   def update_course_topics_for_learner(user, timeline)
-    raise
     count = 0
     course_id = timeline.subject.moodle_id
     return { error: "No Moodle ID for subject!" } if course_id.nil?
@@ -652,7 +652,7 @@ class MoodleApiService
       if mt
         begin
           updated_attributes = {
-            done: activity[:completiondata].to_i == 1,
+            done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),
             grade: activity[:grade],
             completion_date: begin
               ed = activity[:evaluation_date]
@@ -685,7 +685,7 @@ class MoodleApiService
             count += 1
             updated_topics << {
               name: activity[:name],
-              done: activity[:completiondata].to_i == 1,
+              done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),
               ect: activity[:ect]
             }
           end
