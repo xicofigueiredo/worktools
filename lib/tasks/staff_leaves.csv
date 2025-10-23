@@ -1,4 +1,4 @@
-Name,Country,Location,Employee Email,Start Date,End Date,Total days
+﻿Name,Country,Location,Employee Email,Start Date,End Date,Total days
 Amanda Dias de Oliveira,Portugal,Central,amanda@bravegenerationacademy.com,6/16/2025,6/20/2025,4
 Amanda Dias de Oliveira,Portugal,Central,amanda@bravegenerationacademy.com,8/11/2025,8/14/2025,4
 Amanda Dias de Oliveira,Portugal,Central,amanda@bravegenerationacademy.com,8/25/2025,8/27/2025,3
@@ -14,10 +14,12 @@ Francisco Aguiar Branco Figueiredo,Portugal,Central,francisco@bravegenerationaca
 Francisco Aguiar Branco Figueiredo,Portugal,Central,francisco@bravegenerationacademy.com ,8/29/2025,8/29/2025,1
 Francisco Aguiar Branco Figueiredo,Portugal,Central,francisco@bravegenerationacademy.com ,9/2/2025,9/10/2025,7
 Francisco Aguiar Branco Figueiredo,Portugal,Central,francisco@bravegenerationacademy.com ,11/3/2025,11/7/2025,5
-Princess Carmela Salvana T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,7/15/2025,7/15/2025,1
-Princess Carmela Salvana T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,8/18/2025,8/18/2025,1
-Princess Carmela Salvana T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,8/26/2025,8/29/2025,4
-Princess Carmela Salvana T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,9/1/2025,9/16/2025,12
+Princess Carmela Salvaña T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,7/15/2025,7/15/2025,1
+Princess Carmela Salvaña T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,8/18/2025,8/18/2025,1
+Princess Carmela Salvaña T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,8/26/2025,8/29/2025,4
+Princess Carmela Salvaña T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,9/1/2025,9/16/2025,12
+Princess Carmela Salvaña T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,12/2/2025,12/5/2025,4
+Princess Carmela Salvaña T?ut,Portugal,Central,princess.carmela@bravegenerationacademy.com ,12/9/2025,12/10/2025,2
 Samita Thakuri,Portugal,Central, samita.thakuri@bravegenerationacademy.com,3/5/2025,3/5/2025,1
 Samita Thakuri,Portugal,Central, samita.thakuri@bravegenerationacademy.com,3/31/2025,4/4/2025,5
 Samita Thakuri,Portugal,Central, samita.thakuri@bravegenerationacademy.com,6/11/2025,6/12/2025,2
@@ -27,10 +29,15 @@ Keily Meyer,Portugal,Central,keily@bravegenerationacademy.com,4/10/2025,4/11/202
 Keily Meyer,Portugal,Central,keily@bravegenerationacademy.com,7/23/2025,7/25/2025,3
 Keily Meyer,Portugal,Central,keily@bravegenerationacademy.com,9/22/2025,9/26/2025,5
 Keily Meyer,Portugal,Central,keily@bravegenerationacademy.com,12/22/2025,12/29/2025,5
+Keily Meyer,Portugal,Central,keily@bravegenerationacademy.com,12/10/2025,12/12/2025,3
+Keily Meyer,Portugal,Central,keily@bravegenerationacademy.com,12/15/2025,12/19/2025,5
+Keily Meyer,Portugal,Central,keily@bravegenerationacademy.com,12/30/2025,12/31/2025,2
 Sancho Daniel de Matos Drago Sampaio,Portugal,Central,sancho@bravegenerationacademy.com ,3/6/2025,3/11/2025,4
 Sancho Daniel de Matos Drago Sampaio,Portugal,Central,sancho@bravegenerationacademy.com ,5/5/2025,5/12/2025,6
 Sancho Daniel de Matos Drago Sampaio,Portugal,Central,sancho@bravegenerationacademy.com ,5/14/2025,5/14/2025,1
 Sancho Daniel de Matos Drago Sampaio,Portugal,Central,sancho@bravegenerationacademy.com ,8/11/2025,8/22/2025,9
+Sancho Daniel de Matos Drago Sampaio,Portugal,Central,sancho@bravegenerationacademy.com ,12/22/2025,10/31/2025,7
+Sancho Daniel de Matos Drago Sampaio,Portugal,Central,sancho@bravegenerationacademy.com ,11/7/2025,11/10/2025,2
 Maria Toscano Pessoa Correia da Silva da Silveira Montenegro,Portugal,Central,maria.m@bravegenerationacademy.com ,1/8/2025,1/8/2025,1
 Maria Toscano Pessoa Correia da Silva da Silveira Montenegro,Portugal,Central,maria.m@bravegenerationacademy.com ,1/15/2025,1/15/2025,1
 Maria Toscano Pessoa Correia da Silva da Silveira Montenegro,Portugal,Central,maria.m@bravegenerationacademy.com ,1/22/2025,1/22/2025,1
@@ -55,6 +62,7 @@ Bruna Causo de Carvalho Zambelli,Portugal,Central,bruna@bravegenerationacademy.c
 Bruna Causo de Carvalho Zambelli,Portugal,Central,bruna@bravegenerationacademy.com,9/9/2025,9/17/2025,7
 Bruna Causo de Carvalho Zambelli,Portugal,Central,bruna@bravegenerationacademy.com,10/3/2025,10/6/2025,2
 Bruna Causo de Carvalho Zambelli,Portugal,Central,bruna@bravegenerationacademy.com,10/15/2025,10/20/2025,4
+Bruna Causo de Carvalho Zambelli,Portugal,Central,bruna@bravegenerationacademy.com,10/7/2025,10/7/2025,1
 Kendall Ferreira,Portugal,Central,kendall@bravegenerationacademy.com ,1/27/2025,1/27/2025,1
 Kendall Ferreira,Portugal,Central,kendall@bravegenerationacademy.com ,3/25/2025,4/1/2025,6
 Kendall Ferreira,Portugal,Central,kendall@bravegenerationacademy.com ,6/9/2025,6/20/2025,7
@@ -70,14 +78,17 @@ Michelle Ramos Correia,Portugal,Central,Michelle@bravegenerationacademy.com,11/1
 Michelle Ramos Correia,Portugal,Central,Michelle@bravegenerationacademy.com,12/15/2025,12/31/2025,12
 Lorne Douglas King,Portugal,Central,lorne@bravegenerationacademy.com ,4/1/2025,4/11/2025,9
 Lorne Douglas King,Portugal,Central,lorne@bravegenerationacademy.com ,8/1/2025,8/8/2025,6
-Daniell� Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,1/3/2025,1/6/2025,2
-Daniell� Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,1/24/2025,1/27/2025,2
-Daniell� Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,3/3/2025,3/3/2025,1
-Daniell� Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,4/21/2025,4/24/2025,4
-Daniell� Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,6/9/2025,6/18/2025,6
-Daniell� Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,8/14/2025,8/14/2025,1
-Daniell� Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,9/18/2025,9/19/2025,2
-Daniell� Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,10/3/2025,10/3/2025,1
+Lorne Douglas King,Portugal,Central,lorne@bravegenerationacademy.com ,10/10/2025,10/10/2025,1
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,1/3/2025,1/6/2025,2
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,1/24/2025,1/27/2025,2
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,3/3/2025,3/3/2025,1
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,4/21/2025,4/24/2025,4
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,6/9/2025,6/18/2025,6
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,8/14/2025,8/14/2025,1
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,9/18/2025,9/19/2025,2
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,10/3/2025,10/3/2025,1
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,11/28/2025,11/28/2025,1
+Daniellé Roodt ,Portugal,Central,danielle@bravegenerationacademy.com,12/19/2025,1/2/2026,9
 Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com ,1/13/2025,1/13/2025,1
 Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com ,2/14/2025,2/14/2025,1
 Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com ,4/14/2025,4/14/2025,1
@@ -88,22 +99,23 @@ Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com
 Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com ,6/27/2025,6/27/2025,1
 Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com ,8/8/2025,8/8/2025,1
 Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com ,10/6/2025,10/10/2025,5
+Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com ,12/15/2025,12/19/2025,5
+Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com ,12/22/2025,12/24/2025,3
+Esther Ruth Oliveira da Silva,Portugal,Central,esther@bravegenerationacademy.com ,12/26/2025,10/26/2025,1
 Luis Maria Rooke Magalhaes de Brito e Faro,Portugal,Central,luis@bravegenerationacademy.com ,4/4/2025,4/4/2025,1
 Luis Maria Rooke Magalhaes de Brito e Faro,Portugal,Central,luis@bravegenerationacademy.com ,4/21/2025,4/30/2025,7
 Luis Maria Rooke Magalhaes de Brito e Faro,Portugal,Central,luis@bravegenerationacademy.com ,5/2/2025,5/7/2025,4
 Luis Maria Rooke Magalhaes de Brito e Faro,Portugal,Central,luis@bravegenerationacademy.com ,5/23/2025,5/23/2025,1
 Luis Maria Rooke Magalhaes de Brito e Faro,Portugal,Central,luis@bravegenerationacademy.com ,8/4/2025,8/8/2025,5
 Luis Maria Rooke Magalhaes de Brito e Faro,Portugal,Central,luis@bravegenerationacademy.com ,10/8/2025,10/17/2025,8
-Nico le Roux,Portugal,Central,nico@bravegenerationacademy.com,3/20/2025,3/25/2025,4
-Nico le Roux,Portugal,Central,nico@bravegenerationacademy.com,6/27/2025,6/30/2025,2
 Manuel da Silva,Portugal,Central,manuel@bravegenerationacademy.com ,1/3/2025,1/17/2025,11
 Manuel da Silva,Portugal,Central,manuel@bravegenerationacademy.com ,1/31/2025,1/31/2025,1
 Manuel da Silva,Portugal,Central,manuel@bravegenerationacademy.com ,7/7/2025,7/18/2025,10
 Manuel da Silva,Portugal,Central,manuel@bravegenerationacademy.com ,10/15/2025,10/20/2025,4
 Miriam Eunice Vieira da Silva,Portugal,Central,miriam@bravegenerationacademy.com,7/21/2025,8/1/2025,10
 Miriam Eunice Vieira da Silva,Portugal,Central,miriam@bravegenerationacademy.com,10/14/2025,10/14/2025,1
-Maria Jo�o Paes da Cruz Loureiro,Portugal,Central,mjpaes@bravegenerationacademy.com ,8/18/2025,8/22/2025,5
-Paulo S�rgio Crist�v�o Dinis,Portugal,Central,paulo@bravegenerationacademy.com ,6/23/2025,6/30/2025,6
+Maria João Paes da Cruz Loureiro,Portugal,Central,mjpaes@bravegenerationacademy.com ,8/18/2025,8/22/2025,5
+Paulo Sérgio Cristóvão Dinis,Portugal,Central,paulo@bravegenerationacademy.com ,6/23/2025,6/30/2025,6
 Marcela Medina Nacif,Portugal,Central,marcela@bravegenerationacademy.com ,1/27/2025,1/31/2025,5
 Marcela Medina Nacif,Portugal,Central,marcela@bravegenerationacademy.com ,3/31/2025,4/2/2025,3
 Marcela Medina Nacif,Portugal,Central,marcela@bravegenerationacademy.com ,4/16/2025,4/23/2025,4
@@ -135,12 +147,12 @@ Daniela Andrade da Silva,Portugal,Course Manager,Daniela.Silva@edubga.com,6/20/2
 Daniela Andrade da Silva,Portugal,Course Manager,Daniela.Silva@edubga.com,7/21/2025,8/2/2025,10
 Daniela Andrade da Silva,Portugal,Course Manager,Daniela.Silva@edubga.com,9/15/2025,9/19/2025,5
 Daniela Andrade da Silva,Portugal,Course Manager,Daniela.Silva@edubga.com,12/22/2025,1/2/2026,8
-Joana Eul�lia da Cruz Mar�alo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,1/2/2025,1/3/2025,2
-Joana Eul�lia da Cruz Mar�alo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,2/7/2025,2/7/2025,1
-Joana Eul�lia da Cruz Mar�alo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,4/14/2025,4/17/2025,4
-Joana Eul�lia da Cruz Mar�alo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,6/11/2025,6/12/2025,2
-Joana Eul�lia da Cruz Mar�alo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,8/1/2025,8/14/2025,10
-Joana Eul�lia da Cruz Mar�alo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,12/22/2025,1/2/2026,8
+Joana Eulália da Cruz Marçalo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,1/2/2025,1/3/2025,2
+Joana Eulália da Cruz Marçalo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,2/7/2025,2/7/2025,1
+Joana Eulália da Cruz Marçalo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,4/14/2025,4/17/2025,4
+Joana Eulália da Cruz Marçalo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,6/11/2025,6/12/2025,2
+Joana Eulália da Cruz Marçalo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,8/1/2025,8/14/2025,10
+Joana Eulália da Cruz Marçalo de Andrade,Portugal,Course Manager,joana.andrade@edubga.com,12/22/2025,1/2/2026,8
 Shane Miguel Lennon Beato,Portugal,Course Manager,Shane.beato@edubga.com ,1/2/2025,1/3/2025,2
 Shane Miguel Lennon Beato,Portugal,Course Manager,Shane.beato@edubga.com ,3/31/2025,4/11/2025,10
 Shane Miguel Lennon Beato,Portugal,Course Manager,Shane.beato@edubga.com ,9/1/2025,9/11/2025,9
@@ -158,9 +170,11 @@ Fernanda Gomes Lima da Rocha,Portugal,Course Manager,Fernanda.Gomes@edubga.com,4
 Fernanda Gomes Lima da Rocha,Portugal,Course Manager,Fernanda.Gomes@edubga.com,5/13/2025,5/19/2025,5
 Fernanda Gomes Lima da Rocha,Portugal,Course Manager,Fernanda.Gomes@edubga.com,8/21/2025,9/3/2025,10
 Fernanda Gomes Lima da Rocha,Portugal,Course Manager,Fernanda.Gomes@edubga.com,12/22/2025,1/2/2026,8
-Gon�alo Pinto Ferreira Borregana Meireles,Portugal,Course Manager,Goncalo.Meireles@edubga.com,7/10/2025,7/11/2025,2
-Gon�alo Pinto Ferreira Borregana Meireles,Portugal,Course Manager,Goncalo.Meireles@edubga.com,8/14/2025,8/22/2025,6
-Gon�alo Pinto Ferreira Borregana Meireles,Portugal,Course Manager,Goncalo.Meireles@edubga.com,12/22/2025,1/2/2026,8
+Fernanda Gomes Lima da Rocha,Portugal,Course Manager,Fernanda.Gomes@edubga.com,11/4/2025,11/7/2025,4
+Fernanda Gomes Lima da Rocha,Portugal,Course Manager,Fernanda.Gomes@edubga.com,11/11/2025,11/11/2025,1
+Gonçalo Pinto Ferreira Borregana Meireles,Portugal,Course Manager,Goncalo.Meireles@edubga.com,7/10/2025,7/11/2025,2
+Gonçalo Pinto Ferreira Borregana Meireles,Portugal,Course Manager,Goncalo.Meireles@edubga.com,8/14/2025,8/22/2025,6
+Gonçalo Pinto Ferreira Borregana Meireles,Portugal,Course Manager,Goncalo.Meireles@edubga.com,12/22/2025,1/2/2026,8
 Geraldine Pauline Bhoyroo,Spain,Course Manager,geraldine.bhoyroo@edubga.com,1/2/2025,1/3/2025,2
 Geraldine Pauline Bhoyroo,Spain,Course Manager,geraldine.bhoyroo@edubga.com,1/14/2025,2/28/2025,34
 Geraldine Pauline Bhoyroo,Spain,Course Manager,geraldine.bhoyroo@edubga.com,4/14/2025,4/17/2025,4
@@ -202,13 +216,6 @@ Tatiana Valentim Fernandes,Portugal,Course Manager,Tatiana.Fernandes@edubga.com 
 Gargie Valerie Kejriwal,Portugal,Course Manager,gargie.kej@edubga.com,4/14/2025,4/17/2025,4
 Gargie Valerie Kejriwal,Portugal,Course Manager,gargie.kej@edubga.com,11/3/2025,11/11/2025,7
 Gargie Valerie Kejriwal,Portugal,Course Manager,gargie.kej@edubga.com,12/22/2025,1/2/2026,8
-Jos� Rodrigo Vidal Esteves Ferreira,Portugal,Aveiro,Rodrigo.Ferreira@edubga.com,1/2/2025,1/3/2025,2
-Jos� Rodrigo Vidal Esteves Ferreira,Portugal,Aveiro,Rodrigo.Ferreira@edubga.com,4/14/2025,4/17/2025,4
-Jos� Rodrigo Vidal Esteves Ferreira,Portugal,Aveiro,Rodrigo.Ferreira@edubga.com,5/26/2025,5/26/2025,1
-Jos� Rodrigo Vidal Esteves Ferreira,Portugal,Aveiro,Rodrigo.Ferreira@edubga.com,6/5/2025,6/6/2025,2
-Jos� Rodrigo Vidal Esteves Ferreira,Portugal,Aveiro,Rodrigo.Ferreira@edubga.com,7/25/2025,7/25/2025,1
-Jos� Rodrigo Vidal Esteves Ferreira,Portugal,Aveiro,Rodrigo.Ferreira@edubga.com,8/18/2025,8/29/2025,10
-Jos� Rodrigo Vidal Esteves Ferreira,Portugal,Aveiro,Rodrigo.Ferreira@edubga.com,12/22/2025,1/2/2026,8
 Shannen Vorster,Portugal,Aveiro,Shannen.Vorster@edubga.com,1/2/2025,1/3/2025,2
 Shannen Vorster,Portugal,Aveiro,Shannen.Vorster@edubga.com,3/17/2025,3/21/2025,5
 Shannen Vorster,Portugal,Aveiro,Shannen.Vorster@edubga.com,4/14/2025,4/24/2025,8
@@ -224,11 +231,385 @@ Rita Isabel Castro Sampaio,Portugal,Braga,Rita.Sampaio@edubga.com,4/14/2025,4/17
 Rita Isabel Castro Sampaio,Portugal,Braga,Rita.Sampaio@edubga.com,5/23/2025,5/26/2025,2
 Rita Isabel Castro Sampaio,Portugal,Braga,Rita.Sampaio@edubga.com,8/11/2025,8/22/2025,9
 Rita Isabel Castro Sampaio,Portugal,Braga,Rita.Sampaio@edubga.com,12/22/2025,1/2/2026,8
-Rita Isabel Pardal Castel�o ,Portugal,Fund�o,rita.castelao@edubga.com,1/2/2025,1/3/2025,2
-Rita Isabel Pardal Castel�o ,Portugal,Fund�o,rita.castelao@edubga.com,1/16/2025,1/17/2025,2
-Rita Isabel Pardal Castel�o ,Portugal,Fund�o,rita.castelao@edubga.com,2/18/2025,2/21/2025,4
-Rita Isabel Pardal Castel�o ,Portugal,Fund�o,rita.castelao@edubga.com,4/14/2025,4/17/2025,4
-Rita Isabel Pardal Castel�o ,Portugal,Fund�o,rita.castelao@edubga.com,5/22/2025,5/23/2025,2
-Rita Isabel Pardal Castel�o ,Portugal,Fund�o,rita.castelao@edubga.com,6/30/2025,7/4/2025,5
-Rita Isabel Pardal Castel�o ,Portugal,Fund�o,rita.castelao@edubga.com,7/28/2025,7/30/2025,3
-Rita Isabel Pardal Castel�o ,Portugal,Fund�o,rita.castelao@edubga.com,12/22/2025,1/2/2026,8
+Rita Isabel Pardal Castelão ,Portugal,Fundão,rita.castelao@edubga.com,1/2/2025,1/3/2025,2
+Rita Isabel Pardal Castelão ,Portugal,Fundão,rita.castelao@edubga.com,1/16/2025,1/17/2025,2
+Rita Isabel Pardal Castelão ,Portugal,Fundão,rita.castelao@edubga.com,2/18/2025,2/21/2025,4
+Rita Isabel Pardal Castelão ,Portugal,Fundão,rita.castelao@edubga.com,4/14/2025,4/17/2025,4
+Rita Isabel Pardal Castelão ,Portugal,Fundão,rita.castelao@edubga.com,5/22/2025,5/23/2025,2
+Rita Isabel Pardal Castelão ,Portugal,Fundão,rita.castelao@edubga.com,6/30/2025,7/4/2025,5
+Rita Isabel Pardal Castelão ,Portugal,Fundão,rita.castelao@edubga.com,7/28/2025,7/30/2025,3
+Rita Isabel Pardal Castelão ,Portugal,Fundão,rita.castelao@edubga.com,12/22/2025,1/2/2026,8
+Luis Filipe Paula Araújo,Portugal,Caldas da Rainha,filipe.araujo@edubga.com,1/2/2025,1/2/2025,2
+Luis Filipe Paula Araújo,Portugal,Caldas da Rainha,filipe.araujo@edubga.com,2/10/2025,2/10/2025,1
+Luis Filipe Paula Araújo,Portugal,Caldas da Rainha,filipe.araujo@edubga.com,4/14/2025,4/29/2025,10
+Luis Filipe Paula Araújo,Portugal,Caldas da Rainha,filipe.araujo@edubga.com,7/18/2025,8/4/2025,12
+Luis Filipe Paula Araújo,Portugal,Caldas da Rainha,filipe.araujo@edubga.com,12/22/2025,1/2/2026,8
+Gabriella Fuhri Marques,Portugal,Caldas da Rainha,gabriela.fuhri@edubga.com,4/14/2025,4/17/2025,4
+Gabriella Fuhri Marques,Portugal,Caldas da Rainha,gabriela.fuhri@edubga.com,8/12/2025,8/13/2025,2
+Gabriella Fuhri Marques,Portugal,Caldas da Rainha,gabriela.fuhri@edubga.com,8/18/2025,8/20/2025,3
+Gabriella Fuhri Marques,Portugal,Caldas da Rainha,gabriela.fuhri@edubga.com,8/25/2025,8/26/2025,2
+Gabriella Fuhri Marques,Portugal,Caldas da Rainha,gabriela.fuhri@edubga.com,12/22/2025,1/2/2026,8
+Emelie Julia Bertrand Bral,Portugal,Lagoa,emelie.bral@edubga.com,1/2/2025,1/3/2025,2
+Emelie Julia Bertrand Bral,Portugal,Lagoa,emelie.bral@edubga.com,4/3/2025,4/4/2025,2
+Emelie Julia Bertrand Bral,Portugal,Lagoa,emelie.bral@edubga.com,6/30/2025,7/9/2025,8
+Emelie Julia Bertrand Bral,Portugal,Lagoa,emelie.bral@edubga.com,8/22/2025,8/22/2025,1
+Emelie Julia Bertrand Bral,Portugal,Lagoa,emelie.bral@edubga.com,9/3/2025,9/3/2025,1
+Emelie Julia Bertrand Bral,Portugal,Lagoa,emelie.bral@edubga.com,9/25/2025,9/29/2025,3
+Emelie Julia Bertrand Bral,Portugal,Lagoa,emelie.bral@edubga.com,12/22/2025,1/2/2026,8
+Daniel da Silva Azevedo,Portugal,Lagos 2 ,Daniel.Azevedo@edubga.com,7/25/2025,7/25/2025,1
+Daniel da Silva Azevedo,Portugal,Lagos 2 ,Daniel.Azevedo@edubga.com,8/25/2025,8/29/2025,5
+Daniel da Silva Azevedo,Portugal,Lagos 2 ,Daniel.Azevedo@edubga.com,12/22/2025,1/2/2026,8
+Lyrissa Tap,Portugal,Tavira,lyrissa.tap@edubga.com ,1/2/2025,1/3/2025,2
+Lyrissa Tap,Portugal,Tavira,lyrissa.tap@edubga.com ,2/5/2025,2/5/2025,1
+Lyrissa Tap,Portugal,Tavira,lyrissa.tap@edubga.com ,3/6/2025,3/7/2025,2
+Lyrissa Tap,Portugal,Tavira,lyrissa.tap@edubga.com ,3/13/2025,3/14/2025,2
+Lyrissa Tap,Portugal,Tavira,lyrissa.tap@edubga.com ,7/28/2025,7/28/2025,1
+Lyrissa Tap,Portugal,Tavira,lyrissa.tap@edubga.com ,7/30/2025,7/30/2025,1
+Lyrissa Tap,Portugal,Tavira,lyrissa.tap@edubga.com ,8/18/2025,8/22/2025,5
+Lyrissa Tap,Portugal,Tavira,lyrissa.tap@edubga.com ,9/19/2025,9/22/2025,2
+Lyrissa Tap,Portugal,Tavira,lyrissa.tap@edubga.com ,12/17/2025,1/2/2026,11
+Ricardo Cortehola Rodrigues Crista,Portugal,Tavira,Ricardo.Crista@edubga.com,1/2/2025,1/3/2025,2
+Ricardo Cortehola Rodrigues Crista,Portugal,Tavira,Ricardo.Crista@edubga.com,3/17/2025,3/18/2025,2
+Ricardo Cortehola Rodrigues Crista,Portugal,Tavira,Ricardo.Crista@edubga.com,6/20/2025,6/20/2025,1
+Ricardo Cortehola Rodrigues Crista,Portugal,Tavira,Ricardo.Crista@edubga.com,8/11/2025,8/14/2025,4
+Ricardo Cortehola Rodrigues Crista,Portugal,Tavira,Ricardo.Crista@edubga.com,10/1/2025,10/3/2025,3
+Ricardo Cortehola Rodrigues Crista,Portugal,Tavira,Ricardo.Crista@edubga.com,11/21/2025,11/24/2025,2
+Ricardo Cortehola Rodrigues Crista,Portugal,Tavira,Ricardo.Crista@edubga.com,12/22/2025,1/2/2026,8
+Audra Yvonne Kloppers,Portugal,Vila Sol,Audra.Kloppers@edubga.com,1/2/2025,1/3/2025,2
+Audra Yvonne Kloppers,Portugal,Vila Sol,Audra.Kloppers@edubga.com,3/10/2025,3/14/2025,5
+Audra Yvonne Kloppers,Portugal,Vila Sol,Audra.Kloppers@edubga.com,4/7/2025,4/17/2025,8
+Audra Yvonne Kloppers,Portugal,Vila Sol,Audra.Kloppers@edubga.com,5/5/2025,5/9/2025,5
+Audra Yvonne Kloppers,Portugal,Vila Sol,Audra.Kloppers@edubga.com,8/11/2025,8/13/2025,3
+Audra Yvonne Kloppers,Portugal,Vila Sol,Audra.Kloppers@edubga.com,10/6/2025,10/10/2025,5
+Audra Yvonne Kloppers,Portugal,Vila Sol,Audra.Kloppers@edubga.com,12/22/2025,1/2/2026,8
+Bridget Pombo Canada Faria,Portugal,Vila Sol,Bridget.Faria@edubga.com,1/2/2025,1/3/2025,2
+Bridget Pombo Canada Faria,Portugal,Vila Sol,Bridget.Faria@edubga.com,2/21/2025,2/21/2025,1
+Bridget Pombo Canada Faria,Portugal,Vila Sol,Bridget.Faria@edubga.com,4/14/2025,4/24/2025,8
+Bridget Pombo Canada Faria,Portugal,Vila Sol,Bridget.Faria@edubga.com,8/4/2025,8/8/2025,5
+Bridget Pombo Canada Faria,Portugal,Vila Sol,Bridget.Faria@edubga.com,8/18/2025,8/22/2025,5
+Bridget Pombo Canada Faria,Portugal,Vila Sol,Bridget.Faria@edubga.com,9/12/2025,9/12/2025,1
+Bridget Pombo Canada Faria,Portugal,Vila Sol,Bridget.Faria@edubga.com,12/22/2025,1/2/2026,8
+Bridget Pombo Canada Faria,Portugal,Vila Sol,Bridget.Faria@edubga.com,1/26/2026,1/30/2026,5
+Raquel Costa de Jesus,Portugal,Ericeira,raquel.jesus@edubga.com,4/14/2025,4/17/2024,4
+Raquel Costa de Jesus,Portugal,Ericeira,raquel.jesus@edubga.com,8/8/2025,8/8/2025,1
+Raquel Costa de Jesus,Portugal,Ericeira,raquel.jesus@edubga.com,8/25/2025,8/29/2025,5
+Raquel Costa de Jesus,Portugal,Ericeira,raquel.jesus@edubga.com,9/22/2025,9/22/2025,1
+Raquel Costa de Jesus,Portugal,Ericeira,raquel.jesus@edubga.com,12/2/2025,12/9/2025,5
+Raquel Costa de Jesus,Portugal,Ericeira,raquel.jesus@edubga.com,12/22/2025,1/2/2026,8
+Margarida Fouto de Gois,Portugal,Ericeira,margarida.gois@edubga.com,1/2/2025,1/3/2025,2
+Margarida Fouto de Gois,Portugal,Ericeira,margarida.gois@edubga.com,4/14/2025,4/17/2025,4
+Margarida Fouto de Gois,Portugal,Ericeira,margarida.gois@edubga.com,7/21/2025,8/1/2025,10
+Margarida Fouto de Gois,Portugal,Ericeira,margarida.gois@edubga.com,9/29/2025,10/3/2025,5
+Margarida Fouto de Gois,Portugal,Ericeira,margarida.gois@edubga.com,11/27/2025,11/27/2025,1
+Margarida Fouto de Gois,Portugal,Ericeira,margarida.gois@edubga.com,12/22/2025,1/2/2026,8
+Bruna Mirelle da Cunha Silva,Portugal,Ericeira,Bruna.Silva@edubga.com,1/2/2025,1/17/2025,12
+Bruna Mirelle da Cunha Silva,Portugal,Ericeira,Bruna.Silva@edubga.com,3/3/2025,3/4/2025,2
+Bruna Mirelle da Cunha Silva,Portugal,Ericeira,Bruna.Silva@edubga.com,4/14/2025,4/17/2025,4
+Bruna Mirelle da Cunha Silva,Portugal,Ericeira,Bruna.Silva@edubga.com,8/12/2025,8/14/2025,3
+Bruna Mirelle da Cunha Silva,Portugal,Ericeira,Bruna.Silva@edubga.com,12/22/2025,1/2/2026,8
+Nadia Prinsloo ,Portugal,Ericeira,Nadia.Prinsloo@edubga.com,1/2/2025,1/3/2025,2
+Nadia Prinsloo ,Portugal,Ericeira,Nadia.Prinsloo@edubga.com,4/14/2025,4/17/2025,4
+Nadia Prinsloo ,Portugal,Ericeira,Nadia.Prinsloo@edubga.com,8/26/2025,8/29/2025,4
+Nadia Prinsloo ,Portugal,Ericeira,Nadia.Prinsloo@edubga.com,9/17/2025,9/19/2025,3
+Nadia Prinsloo ,Portugal,Ericeira,Nadia.Prinsloo@edubga.com,12/9/2025,1/2/2026,17
+Catarina Ferreira Pacheco,Portugal,Setúbal,Catarina.Pacheco@edubga.com ,1/2/2025,1/3/2025,2
+Catarina Ferreira Pacheco,Portugal,Setúbal,Catarina.Pacheco@edubga.com ,2/21/2025,2/24/2025,2
+Catarina Ferreira Pacheco,Portugal,Setúbal,Catarina.Pacheco@edubga.com ,4/14/2025,4/17/2025,4
+Catarina Ferreira Pacheco,Portugal,Setúbal,Catarina.Pacheco@edubga.com ,6/5/2025,6/5/2025,1
+Catarina Ferreira Pacheco,Portugal,Setúbal,Catarina.Pacheco@edubga.com ,7/11/2025,7/11/2025,1
+Catarina Ferreira Pacheco,Portugal,Setúbal,Catarina.Pacheco@edubga.com ,8/4/2025,8/14/2025,8
+Catarina Ferreira Pacheco,Portugal,Setúbal,Catarina.Pacheco@edubga.com ,10/27/2025,10/31/2025,5
+Catarina Ferreira Pacheco,Portugal,Setúbal,Catarina.Pacheco@edubga.com ,12/22/2025,1/2/2026,8
+Ana Rita Ribeiro de Sousa Cunha,Portugal,Setúbal,Rita.Cunha@edubga.com,1/2/2025,1/3/2025,2
+Ana Rita Ribeiro de Sousa Cunha,Portugal,Setúbal,Rita.Cunha@edubga.com,4/14/2025,4/24/2025,8
+Ana Rita Ribeiro de Sousa Cunha,Portugal,Setúbal,Rita.Cunha@edubga.com,5/20/2025,5/20/2025,1
+Ana Rita Ribeiro de Sousa Cunha,Portugal,Setúbal,Rita.Cunha@edubga.com,7/14/2025,7/25/2025,10
+Ana Rita Ribeiro de Sousa Cunha,Portugal,Setúbal,Rita.Cunha@edubga.com,11/21/2025,11/21/2025,1
+Ana Rita Ribeiro de Sousa Cunha,Portugal,Setúbal,Rita.Cunha@edubga.com,12/9/2025,12/11/2025,3
+Ana Rita Ribeiro de Sousa Cunha,Portugal,Setúbal,Rita.Cunha@edubga.com,12/22/2025,1/2/2026,8
+Byron Franco Persello,Portugal,Leiria,Byron.Persello@edubga.com,1/2/2025,1/3/2025,2
+Byron Franco Persello,Portugal,Leiria,Byron.Persello@edubga.com,7/14/2025,4/24/2025,8
+Byron Franco Persello,Portugal,Leiria,Byron.Persello@edubga.com,8/1/2025,8/4/2025,2
+Byron Franco Persello,Portugal,Leiria,Byron.Persello@edubga.com,8/8/2025,8/14/2025,5
+Byron Franco Persello,Portugal,Leiria,Byron.Persello@edubga.com,12/22/2025,1/2/2026,8
+Byron Franco Persello,Portugal,Leiria,Byron.Persello@edubga.com,12/17/2025,12/19/2025,3
+Laura Alves Ferreira,Portugal,Leiria,laura.alves@edubga.com,4/14/2025,4/17/2025,4
+Laura Alves Ferreira,Portugal,Leiria,laura.alves@edubga.com,6/20/2025,6/20/2025,1
+Laura Alves Ferreira,Portugal,Leiria,laura.alves@edubga.com,7/21/2025,7/25/2025,5
+Laura Alves Ferreira,Portugal,Leiria,laura.alves@edubga.com,12/22/2025,1/2/2026,8
+Ricardo Alexandre Madeira Machado,Portugal,Santarém,ricardo.machado@edubga.com,1/2/2025,1/3/2025,2
+Ricardo Alexandre Madeira Machado,Portugal,Santarém,ricardo.machado@edubga.com,4/14/2025,4/17/2025,4
+Ricardo Alexandre Madeira Machado,Portugal,Santarém,ricardo.machado@edubga.com,6/9/2025,6/13/2025,4
+Ricardo Alexandre Madeira Machado,Portugal,Santarém,ricardo.machado@edubga.com,8/12/2025,8/22/2025,8
+Ricardo Alexandre Madeira Machado,Portugal,Santarém,ricardo.machado@edubga.com,12/22/2025,1/2/2026,8
+Ricardo Alexandre Madeira Machado,Portugal,Santarém,ricardo.machado@edubga.com,10/13/2025,10/14/2025,2
+Cristiana Almeida Valente da Silva,Portugal,Loulé,cristiana.valente@edubga.com,4/14/2025,4/17/2025,4
+Cristiana Almeida Valente da Silva,Portugal,Loulé,cristiana.valente@edubga.com,8/18/2025,9/5/2025,15
+Cristiana Almeida Valente da Silva,Portugal,Loulé,cristiana.valente@edubga.com,12/22/2025,1/2/2026,8
+Keagan Manuel da Silva,Portugal,Loulé,keagan.silva@edubga.com,1/2/2025,1/3/2025,2
+Keagan Manuel da Silva,Portugal,Loulé,keagan.silva@edubga.com,4/14/2025,4/17/2025,4
+Keagan Manuel da Silva,Portugal,Loulé,keagan.silva@edubga.com,8/5/2025,8/5/2025,1
+Keagan Manuel da Silva,Portugal,Loulé,keagan.silva@edubga.com,10/6/2025,10/10/2025,5
+Keagan Manuel da Silva,Portugal,Loulé,keagan.silva@edubga.com,11/3/2025,11/7/2025,5
+Keagan Manuel da Silva,Portugal,Loulé,keagan.silva@edubga.com,12/22/2025,1/2/2026,8
+Gabriella Deacon Marques,Portugal,Campolide  ,gabriella.marques@edubga.com,1/2/2025,1/3/2025,2
+Gabriella Deacon Marques,Portugal,Campolide  ,gabriella.marques@edubga.com,4/14/2025,4/17/2025,4
+Gabriella Deacon Marques,Portugal,Campolide  ,gabriella.marques@edubga.com,5/2/2025,5/2/2025,1
+Gabriella Deacon Marques,Portugal,Campolide  ,gabriella.marques@edubga.com,8/8/2025,8/8/2025,1
+Gabriella Deacon Marques,Portugal,Campolide  ,gabriella.marques@edubga.com,9/22/2025,9/23/2025,2
+Gabriella Deacon Marques,Portugal,Campolide  ,gabriella.marques@edubga.com,12/9/2025,12/7/2025,20
+Saskia Lee Camacho,Portugal,Campolide  ,saskia.camacho@edubga.com ,1/2/2025,1/3/2025,2
+Saskia Lee Camacho,Portugal,Campolide  ,saskia.camacho@edubga.com ,1/31/2025,1/31/2025,1
+Saskia Lee Camacho,Portugal,Campolide  ,saskia.camacho@edubga.com ,4/14/2025,4/17/2025,4
+Saskia Lee Camacho,Portugal,Campolide  ,saskia.camacho@edubga.com ,5/2/2025,5/16/2025,11
+Saskia Lee Camacho,Portugal,Campolide  ,saskia.camacho@edubga.com ,6/20/2025,6/20/2025,1
+Saskia Lee Camacho,Portugal,Campolide  ,saskia.camacho@edubga.com ,7/18/2025,7/18/2025,1
+Saskia Lee Camacho,Portugal,Campolide  ,saskia.camacho@edubga.com ,8/14/2025,8/14/2025,1
+Saskia Lee Camacho,Portugal,Campolide  ,saskia.camacho@edubga.com ,9/26/2025,9/26/2025,1
+Saskia Lee Camacho,Portugal,Campolide  ,saskia.camacho@edubga.com ,12/22/2025,1/2/2026,8
+David Moreira Cardoso,Portugal,Cascais 2,David.Cardoso@edubga.com ,1/2/2025,1/3/2025,2
+David Moreira Cardoso,Portugal,Cascais 2,David.Cardoso@edubga.com ,1/20/2025,1/29/2025,8
+David Moreira Cardoso,Portugal,Cascais 2,David.Cardoso@edubga.com ,7/4/2025,7/4/2025,1
+David Moreira Cardoso,Portugal,Cascais 2,David.Cardoso@edubga.com ,7/14/2025,7/14/2025,1
+David Moreira Cardoso,Portugal,Cascais 2,David.Cardoso@edubga.com ,8/14/2025,8/18/2025,2
+David Moreira Cardoso,Portugal,Cascais 2,David.Cardoso@edubga.com ,12/22/2025,1/2/2026,8
+David Moreira Cardoso,Portugal,Cascais 2,David.Cardoso@edubga.com ,10/30/2025,11/3/2025,3
+David Moreira Cardoso,Portugal,Cascais 2,David.Cardoso@edubga.com ,11/28/2025,11/28/2025,1
+David Moreira Cardoso,Portugal,Cascais 2,David.Cardoso@edubga.com ,12/9/2025,12/9/2025,1
+Maria de Sousa Bernardes,Portugal,Cascais 2,Maria.Bernardes@edubga.com,1/2/2025,1/6/2025,3
+Maria de Sousa Bernardes,Portugal,Cascais 2,Maria.Bernardes@edubga.com,2/6/2025,2/7/2025,2
+Maria de Sousa Bernardes,Portugal,Cascais 2,Maria.Bernardes@edubga.com,3/6/2025,3/10/2025,3
+Maria de Sousa Bernardes,Portugal,Cascais 2,Maria.Bernardes@edubga.com,4/14/2025,5/2/2025,12
+Maria de Sousa Bernardes,Portugal,Cascais 2,Maria.Bernardes@edubga.com,7/28/2025,7/30/2025,3
+Maria de Sousa Bernardes,Portugal,Cascais 2,Maria.Bernardes@edubga.com,9/29/2025,9/29/2025,1
+Maria de Sousa Bernardes,Portugal,Cascais 2,Maria.Bernardes@edubga.com,10/3/2025,10/7/2025,3
+Maria de Sousa Bernardes,Portugal,Cascais 2,Maria.Bernardes@edubga.com,12/22/2025,1/2/2026,8
+Marta Carvalho Dias Pelejao Marques,Portugal,Cascais 1,marta.marques@edubga.com,1/2/2025,1/3/2025,2
+Marta Carvalho Dias Pelejao Marques,Portugal,Cascais 1,marta.marques@edubga.com,3/10/2025,3/10/2025,1
+Marta Carvalho Dias Pelejao Marques,Portugal,Cascais 1,marta.marques@edubga.com,3/14/2025,3/17/2025,2
+Marta Carvalho Dias Pelejao Marques,Portugal,Cascais 1,marta.marques@edubga.com,4/14/2025,4/17/2025,
+Marta Carvalho Dias Pelejao Marques,Portugal,Cascais 1,marta.marques@edubga.com,8/1/2025,8/20/2025,18
+Marta Carvalho Dias Pelejao Marques,Portugal,Cascais 1,marta.marques@edubga.com,8/22/2025,8/22/2025,1
+Marta Carvalho Dias Pelejao Marques,Portugal,Cascais 1,marta.marques@edubga.com,11/14/2025,11/14/2025,1
+Marta Carvalho Dias Pelejao Marques,Portugal,Cascais 1,marta.marques@edubga.com,12/22/2025,1/2/2026,8
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,1/2/2025,1/3/2025,2
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,1/14/2025,1/14/2025,1
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,2/14/2025,2/14/2025,1
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,2/24/2025,2/24/2025,1
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,4/14/2025,4/17/2025,4
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,7/14/2025,7/18/2025,4
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,8/19/2025,8/19/2025,1
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,9/15/2025,9/15/2025,1
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,9/23/2025,9/23/2025,1
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,10/10/2025,10/10/2025,1
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,11/3/2025,11/3/2025,1
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,12/15/2025,1/2/2026,13
+Mayara Stéfanny Ramos Albuquerque Silva,Portugal,Guincho,mayara.silva@edubga.com,10/10/2025,10/10/2025,1
+Cristiane Martins Carvalho,Portugal,Cascais Baía 1,Cristiane.Carvalho@edubga.com,4/10/2025,4/10/2025,1
+Cristiane Martins Carvalho,Portugal,Cascais Baía 1,Cristiane.Carvalho@edubga.com,4/14/2025,4/17/2025,4
+Cristiane Martins Carvalho,Portugal,Cascais Baía 1,Cristiane.Carvalho@edubga.com,5/9/2025,5/9/2025,1
+Cristiane Martins Carvalho,Portugal,Cascais Baía 1,Cristiane.Carvalho@edubga.com,5/14/2025,5/14/2025,1
+Cristiane Martins Carvalho,Portugal,Cascais Baía 1,Cristiane.Carvalho@edubga.com,6/16/2025,6/17/2025,2
+Cristiane Martins Carvalho,Portugal,Cascais Baía 1,Cristiane.Carvalho@edubga.com,7/4/2025,7/4/2025,1
+Cristiane Martins Carvalho,Portugal,Cascais Baía 1,Cristiane.Carvalho@edubga.com,7/21/2025,7/25/2025,5
+Cristiane Martins Carvalho,Portugal,Cascais Baía 1,Cristiane.Carvalho@edubga.com,12/22/2025,1/2/2026,8
+Katia Filipa da Silva de Barros Pinheiro,Portugal,Cascais Baía 1,katia.Pinheiro@edubga.com,1/2/2025,1/10/2025,7
+Katia Filipa da Silva de Barros Pinheiro,Portugal,Cascais Baía 1,katia.Pinheiro@edubga.com,4/14/2025,4/17/2025,4
+Katia Filipa da Silva de Barros Pinheiro,Portugal,Cascais Baía 1,katia.Pinheiro@edubga.com,5/2/2025,5/2/2025,1
+Katia Filipa da Silva de Barros Pinheiro,Portugal,Cascais Baía 1,katia.Pinheiro@edubga.com,6/9/2025,6/12/2025,3
+Katia Filipa da Silva de Barros Pinheiro,Portugal,Cascais Baía 1,katia.Pinheiro@edubga.com,8/18/2025,8/18/2025,1
+Katia Filipa da Silva de Barros Pinheiro,Portugal,Cascais Baía 1,katia.Pinheiro@edubga.com,12/15/2025,1/6/2026,15
+Renata Bucair Guimaraes,Portugal,Cascais Baía 2,Renata.Guimaraes@edubga.com ,1/2/2025,1/15/2025,10
+Renata Bucair Guimaraes,Portugal,Cascais Baía 2,Renata.Guimaraes@edubga.com ,4/14/2025,4/17/2025,4
+Renata Bucair Guimaraes,Portugal,Cascais Baía 2,Renata.Guimaraes@edubga.com ,6/16/2025,6/20/2025,4
+Renata Bucair Guimaraes,Portugal,Cascais Baía 2,Renata.Guimaraes@edubga.com ,7/10/2025,7/10/2025,1
+Renata Bucair Guimaraes,Portugal,Cascais Baía 2,Renata.Guimaraes@edubga.com ,8/22/2025,8/22/2025,1
+Renata Bucair Guimaraes,Portugal,Cascais Baía 2,Renata.Guimaraes@edubga.com ,9/12/2025,9/12/2025,1
+Renata Bucair Guimaraes,Portugal,Cascais Baía 2,Renata.Guimaraes@edubga.com ,10/17/2025,10/24/2025,6
+Renata Bucair Guimaraes,Portugal,Cascais Baía 2,Renata.Guimaraes@edubga.com ,10/29/2025,10/29/2025,1
+Renata Bucair Guimaraes,Portugal,Cascais Baía 2,Renata.Guimaraes@edubga.com ,12/22/2025,1/2/2026,8
+Lygia Mansoldo Dainesi ,Portugal,Cascais Baía 2,lygia.dainesi@edubga.com,1/2/2025,1/10/2025,7
+Lygia Mansoldo Dainesi ,Portugal,Cascais Baía 2,lygia.dainesi@edubga.com,4/14/2025,4/14/2025,4
+Lygia Mansoldo Dainesi ,Portugal,Cascais Baía 2,lygia.dainesi@edubga.com,6/11/2025,6/12/2025,2
+Lygia Mansoldo Dainesi ,Portugal,Cascais Baía 2,lygia.dainesi@edubga.com,7/7/2025,7/11/2025,5
+Lygia Mansoldo Dainesi ,Portugal,Cascais Baía 2,lygia.dainesi@edubga.com,12/22/2025,1/2/2026,8
+Lygia Mansoldo Dainesi ,Portugal,Cascais Baía 2,lygia.dainesi@edubga.com,10/2/2025,10/2/2025,1
+Rodrigo Maria Magro da Costa Pereira,Portugal,CCB,rodrigo@bravegenerationacademy.com ,1/10/2025,1/10/2025,1
+Rodrigo Maria Magro da Costa Pereira,Portugal,CCB,rodrigo@bravegenerationacademy.com ,3/5/2025,3/12/2025,6
+Rodrigo Maria Magro da Costa Pereira,Portugal,CCB,rodrigo@bravegenerationacademy.com ,6/16/2025,7/4/2025,14
+Rodrigo Maria Magro da Costa Pereira,Portugal,CCB,rodrigo@bravegenerationacademy.com ,7/18/2025,7/18/2025,1
+Rodrigo Maria Magro da Costa Pereira,Portugal,CCB,rodrigo@bravegenerationacademy.com ,12/22/2025,1/2/2026,8
+Rodrigo Maria Magro da Costa Pereira,Portugal,CCB,rodrigo@bravegenerationacademy.com ,10/14/2025,10/17/2025,4
+Sarah Maria Barreto,Portugal,CCB,Sarah.Barreto@edubga.com ,1/2/2025,1/3/2025,2
+Sarah Maria Barreto,Portugal,CCB,Sarah.Barreto@edubga.com ,1/23/2025,1/24/2025,2
+Sarah Maria Barreto,Portugal,CCB,Sarah.Barreto@edubga.com ,3/28/2025,3/28/2025,1
+Sarah Maria Barreto,Portugal,CCB,Sarah.Barreto@edubga.com ,4/14/2025,5/2/2025,12
+Sarah Maria Barreto,Portugal,CCB,Sarah.Barreto@edubga.com ,8/11/2025,8/14/2025,4
+Sarah Maria Barreto,Portugal,CCB,Sarah.Barreto@edubga.com ,10/24/2025,10/24/2025,1
+Sarah Maria Barreto,Portugal,CCB,Sarah.Barreto@edubga.com ,12/22/2025,1/2/2026,8
+Alexandre Cabral Pires,Portugal,Expo,alexandre.pires@edubga.com,1/2/2025,1/3/2025,2
+Alexandre Cabral Pires,Portugal,Expo,alexandre.pires@edubga.com,4/14/2025,4/21/2025,5
+Alexandre Cabral Pires,Portugal,Expo,alexandre.pires@edubga.com,6/9/2025,6/12/2025,3
+Alexandre Cabral Pires,Portugal,Expo,alexandre.pires@edubga.com,6/30/2025,7/11/2025,10
+Alexandre Cabral Pires,Portugal,Expo,alexandre.pires@edubga.com,8/13/2025,8/14/2025,2
+Alexandre Cabral Pires,Portugal,Expo,alexandre.pires@edubga.com,9/26/2025,9/26/2025,1
+Alexandre Cabral Pires,Portugal,Expo,alexandre.pires@edubga.com,12/22/2025,1/2/2026,8
+Maria João da Costa Catalo Fernandes,Portugal,Expo,Maria.joao.catalo@edubga.com,1/2/2025,1/3/2025,2
+Maria João da Costa Catalo Fernandes,Portugal,Expo,Maria.joao.catalo@edubga.com,4/14/2025,4/17/2025,4
+Maria João da Costa Catalo Fernandes,Portugal,Expo,Maria.joao.catalo@edubga.com,8/11/2025,8/29/2025,14
+Maria João da Costa Catalo Fernandes,Portugal,Expo,Maria.joao.catalo@edubga.com,12/22/2025,1/2/2026,8
+Ana Catarina Morgado do Nascimento Matos,Portugal,Parede,catarina.matos@edubga.com ,1/2/2025,1/3/2025,2
+Ana Catarina Morgado do Nascimento Matos,Portugal,Parede,catarina.matos@edubga.com ,1/8/2025,1/8/2025,1
+Ana Catarina Morgado do Nascimento Matos,Portugal,Parede,catarina.matos@edubga.com ,4/14/2025,4/24/2025,8
+Ana Catarina Morgado do Nascimento Matos,Portugal,Parede,catarina.matos@edubga.com ,5/3/2025,5/3/2025,1
+Ana Catarina Morgado do Nascimento Matos,Portugal,Parede,catarina.matos@edubga.com ,6/20/2025,6/20/2025,1
+Ana Catarina Morgado do Nascimento Matos,Portugal,Parede,catarina.matos@edubga.com ,7/31/2025,8/14/2025,11
+Ana Catarina Morgado do Nascimento Matos,Portugal,Parede,catarina.matos@edubga.com ,12/22/2025,1/2/2026,8
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,1/2/2025,1/3/2025,2
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,4/14/2025,4/17/2025,4
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,5/12/2025,5/14/2025,5
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,6/14/2025,6/17/2025,2
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,7/18/2025,7/18/2025,1
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,8/25/2025,8/29/2025,5
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,10/10/2025,10/13/2025,2
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,12/22/2025,1/2/2026,8
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,10/10/2025,10/10/2025,1
+Kylah-Jaide Wilcken,Portugal,Parede,kylah.wilcken@edubga.com,10/13/2025,10/13/2025,1
+Beatriz Maria Oliveira Cristóvão,Portugal,Restelo,Beatriz.Cristovao@edubga.com,1/2/2025,1/3/2025,2
+Beatriz Maria Oliveira Cristóvão,Portugal,Restelo,Beatriz.Cristovao@edubga.com,2/24/2025,2/25/2025,2
+Beatriz Maria Oliveira Cristóvão,Portugal,Restelo,Beatriz.Cristovao@edubga.com,4/14/2025,4/17/2025,4
+Beatriz Maria Oliveira Cristóvão,Portugal,Restelo,Beatriz.Cristovao@edubga.com,5/2/2025,5/2/2025,1
+Beatriz Maria Oliveira Cristóvão,Portugal,Restelo,Beatriz.Cristovao@edubga.com,6/9/2025,6/12/2025,3
+Beatriz Maria Oliveira Cristóvão,Portugal,Restelo,Beatriz.Cristovao@edubga.com,8/25/2025,8/27/2025,3
+Beatriz Maria Oliveira Cristóvão,Portugal,Restelo,Beatriz.Cristovao@edubga.com,10/20/2025,10/29/2025,8
+Beatriz Maria Oliveira Cristóvão,Portugal,Restelo,Beatriz.Cristovao@edubga.com,11/28/2025,11/28/2025,1
+Beatriz Maria Oliveira Cristóvão,Portugal,Restelo,Beatriz.Cristovao@edubga.com,12/22/2025,1/2/2026,8
+Ana Carolina Ornelas Flor,Portugal,Porto,ana.flor@edubga.com ,1/2/2025,1/3/2025,2
+Ana Carolina Ornelas Flor,Portugal,Porto,ana.flor@edubga.com ,4/14/2025,4/30/2025,11
+Ana Carolina Ornelas Flor,Portugal,Porto,ana.flor@edubga.com ,6/13/2025,6/13/2025,1
+Ana Carolina Ornelas Flor,Portugal,Porto,ana.flor@edubga.com ,6/20/2025,6/20/2025,1
+Ana Carolina Ornelas Flor,Portugal,Porto,ana.flor@edubga.com ,7/18/2025,7/18/2025,1
+Ana Carolina Ornelas Flor,Portugal,Porto,ana.flor@edubga.com ,8/18/2025,8/19/2025,2
+Ana Carolina Ornelas Flor,Portugal,Porto,ana.flor@edubga.com ,10/17/2025,10/17/2025,1
+Ana Carolina Ornelas Flor,Portugal,Porto,ana.flor@edubga.com ,11/14/2025,11/14/2025,1
+Ana Carolina Ornelas Flor,Portugal,Porto,ana.flor@edubga.com ,12/22/2025,1/2/2026,8
+Mariana Oliveira Monteiro Goncalves Vasquez,Portugal,Porto,mariana.vasquez@edubga.com,1/2/2025,1/3/2025,2
+Mariana Oliveira Monteiro Goncalves Vasquez,Portugal,Porto,mariana.vasquez@edubga.com,4/14/2025,4/17/2025,4
+Mariana Oliveira Monteiro Goncalves Vasquez,Portugal,Porto,mariana.vasquez@edubga.com,5/13/2025,5/13/2025,1
+Mariana Oliveira Monteiro Goncalves Vasquez,Portugal,Porto,mariana.vasquez@edubga.com,7/28/2025,7/31/2025,4
+Mariana Oliveira Monteiro Goncalves Vasquez,Portugal,Porto,mariana.vasquez@edubga.com,10/10/2025,10/13/2025,2
+Mariana Oliveira Monteiro Goncalves Vasquez,Portugal,Porto,mariana.vasquez@edubga.com,12/22/2025,1/2/2026,8
+Mariana Oliveira Monteiro Goncalves Vasquez,Portugal,Porto,mariana.vasquez@edubga.com,11/13/2025,11/14/2025,2
+Rui Mário Silva,Portugal,Porto,rui.silva@edubga.com ,1/2/2025,1/3/2025,2
+Rui Mário Silva,Portugal,Porto,rui.silva@edubga.com ,4/7/2025,4/17/2025,8
+Rui Mário Silva,Portugal,Porto,rui.silva@edubga.com ,7/28/2025,8/8/2025,10
+Rui Mário Silva,Portugal,Porto,rui.silva@edubga.com ,12/22/2025,1/2/2026,8
+Hidetaka Yasuda,Portugal,Funchal,hidetaka.yasuda@edubga.com,1/2/2025,1/30/2025,21
+Hidetaka Yasuda,Portugal,Funchal,hidetaka.yasuda@edubga.com,4/14/2025,4/17/2025,4
+Hidetaka Yasuda,Portugal,Funchal,hidetaka.yasuda@edubga.com,8/12/2025,8/13/2025,2
+Hidetaka Yasuda,Portugal,Funchal,hidetaka.yasuda@edubga.com,12/22/2025,1/2/2026,8
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,1/2/2025,1/3/2025,2
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,2/11/2025,2/13/2025,3
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,4/14/2025,4/17/2025,4
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,6/30/2025,7/3/2025,3
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,7/7/2025,7/10/2025,4
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,7/14/2025,7/14/2025,1
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,8/5/2025,8/5/2025,1
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,8/26/2025,8/26/2025,1
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,9/8/2025,9/8/2025,1
+Luca Berényi-Péterffy,Portugal,Funchal,Luca.Peterffy@edubga.com,12/22/2025,1/2/2026,8
+Rafael Fernandes Pinto,Portugal,Ofir,rafael.pinto@edubga.com,1/2/2025,1/3/2025,2
+Rafael Fernandes Pinto,Portugal,Ofir,rafael.pinto@edubga.com,3/6/2025,3/11/2025,4
+Rafael Fernandes Pinto,Portugal,Ofir,rafael.pinto@edubga.com,4/14/2025,4/17/2025,4
+Rafael Fernandes Pinto,Portugal,Ofir,rafael.pinto@edubga.com,7/4/2025,7/18/2025,11
+Rafael Fernandes Pinto,Portugal,Ofir,rafael.pinto@edubga.com,8/8/2025,8/11/2025,2
+Rafael Fernandes Pinto,Portugal,Ofir,rafael.pinto@edubga.com,12/22/2025,1/2/2026,8
+Rafael Fernandes Pinto,Portugal,Ofir,rafael.pinto@edubga.com,10/7/2025,10/14/2025,6
+David William Newton Reid,Spain,Valencia,david.reid@edubga.com,4/11/2025,4/17/2025,5
+David William Newton Reid,Spain,Valencia,david.reid@edubga.com,6/23/2025,6/23/2025,1
+David William Newton Reid,Spain,Valencia,david.reid@edubga.com,7/11/2025,7/11/2025,1
+David William Newton Reid,Spain,Valencia,david.reid@edubga.com,7/16/2025,7/16/2025,1
+David William Newton Reid,Spain,Valencia,david.reid@edubga.com,8/1/2025,8/14/2025,10
+David William Newton Reid,Spain,Valencia,david.reid@edubga.com,12/22/2025,1/2/2026,8
+Fabio Castiglia,Spain,Valencia,fabio.castiglia@edubga.com,4/14/2025,4/17/2025,4
+Fabio Castiglia,Spain,Valencia,fabio.castiglia@edubga.com,6/2/2025,6/3/2025,2
+Fabio Castiglia,Spain,Valencia,fabio.castiglia@edubga.com,8/11/2025,8/22/2025,9
+Fabio Castiglia,Spain,Valencia,fabio.castiglia@edubga.com,9/19/2025,9/22/2025,2
+Fabio Castiglia,Spain,Valencia,fabio.castiglia@edubga.com,11/14/2025,11/17/2025,2
+Fabio Castiglia,Spain,Valencia,fabio.castiglia@edubga.com,11/9/2025,11/10/2025,2
+Fabio Castiglia,Spain,Valencia,fabio.castiglia@edubga.com,12/22/2025,1/2/2026,8
+John Carlo Azares Bunsay,Spain,Marbella,john.bunsay@edubga.com,1/2/2025,1/3/2025,2
+John Carlo Azares Bunsay,Spain,Marbella,john.bunsay@edubga.com,3/24/2025,3/24/2025,1
+John Carlo Azares Bunsay,Spain,Marbella,john.bunsay@edubga.com,4/14/2025,4/30/2025,12
+John Carlo Azares Bunsay,Spain,Marbella,john.bunsay@edubga.com,5/21/2025,5/21/2025,1
+John Carlo Azares Bunsay,Spain,Marbella,john.bunsay@edubga.com,8/13/2025,8/14/2025,2
+John Carlo Azares Bunsay,Spain,Marbella,john.bunsay@edubga.com,9/22/2025,9/22/2025,1
+John Carlo Azares Bunsay,Spain,Marbella,john.bunsay@edubga.com,12/22/2025,1/2/2026,8
+Aoife Caitriona Kelly,Spain,Marbella,aoife.caitriona@edubga.com,7/22/2025,7/23/2025,2
+Aoife Caitriona Kelly,Spain,Marbella,aoife.caitriona@edubga.com,8/22/2025,8/22/2025,1
+Aoife Caitriona Kelly,Spain,Marbella,aoife.caitriona@edubga.com,9/19/2025,9/19/2025,1
+Aoife Caitriona Kelly,Spain,Marbella,aoife.caitriona@edubga.com,10/14/2025,10/15/2025,2
+Aoife Caitriona Kelly,Spain,Marbella,aoife.caitriona@edubga.com,12/22/2025,1/2/2026,8
+Aoife Caitriona Kelly,Spain,Marbella,aoife.caitriona@edubga.com,11/12/2025,11/13/2025,2
+Aoife Caitriona Kelly,Spain,Marbella,aoife.caitriona@edubga.com,11/14/2025,11/14/2025,1
+Luís Miguel Beleza Pinto Pereira,Portugal,Regional Manager,luis.pereira@edubga.com,3/4/2025,3/5/2025,2
+Luís Miguel Beleza Pinto Pereira,Portugal,Regional Manager,luis.pereira@edubga.com,4/21/2025,4/24/2025,4
+Luís Miguel Beleza Pinto Pereira,Portugal,Regional Manager,luis.pereira@edubga.com,5/28/2025,5/30/2025,3
+Luís Miguel Beleza Pinto Pereira,Portugal,Regional Manager,luis.pereira@edubga.com,8/5/2025,8/21/2025,12
+Luís Miguel Beleza Pinto Pereira,Portugal,Regional Manager,luis.pereira@edubga.com,10/28/2025,10/31/2025,4
+Silvia Alexandra da Rocha Navega,Portugal,Regional Manager,silvia.navega@edubga.com ,2/21/2025,2/21/2025,1
+Silvia Alexandra da Rocha Navega,Portugal,Regional Manager,silvia.navega@edubga.com ,4/10/2025,4/30/2025,13
+Silvia Alexandra da Rocha Navega,Portugal,Regional Manager,silvia.navega@edubga.com ,6/9/2025,6/9/2025,1
+Silvia Alexandra da Rocha Navega,Portugal,Regional Manager,silvia.navega@edubga.com ,8/12/2025,8/22/2025,8
+Silvia Alexandra da Rocha Navega,Portugal,Regional Manager,silvia.navega@edubga.com ,10/10/2025,10/10/2025,1
+Silvia Alexandra da Rocha Navega,Portugal,Regional Manager,silvia.navega@edubga.com ,10/17/2025,10/17/2025,1
+Silvia Alexandra da Rocha Navega,Portugal,Regional Manager,silvia.navega@edubga.com ,10/13/2025,10/13/2025,1
+Aida Joaquina Virgílio Simango,Mozambique,Tofo ,aida.simango@edubga.com ,1/2/2025,1/3/2025,2
+Aida Joaquina Virgílio Simango,Mozambique,Tofo ,aida.simango@edubga.com ,4/14/2025,4/18/2025,5
+Aida Joaquina Virgílio Simango,Mozambique,Tofo ,aida.simango@edubga.com ,4/22/2025,4/22/2025,1
+Aida Joaquina Virgílio Simango,Mozambique,Tofo ,aida.simango@edubga.com ,6/2/2025,6/6/2025,5
+Aida Joaquina Virgílio Simango,Mozambique,Tofo ,aida.simango@edubga.com ,7/28/2025,8/3/2025,5
+Aida Joaquina Virgílio Simango,Mozambique,Tofo ,aida.simango@edubga.com ,9/26/2025,10/6/2025,7
+Aida Joaquina Virgílio Simango,Mozambique,Tofo ,aida.simango@edubga.com ,12/16/2025,1/2/2026,12
+Aida Joaquina Virgílio Simango,Mozambique,Tofo ,aida.simango@edubga.com ,12/12/2025,12/15/2025,2
+Joana Paulino Pereira De Sousa,Mozambique,Regional Manager,joana.mazuze@edubga.com,1/2/2025,1/3/2025,2
+Joana Paulino Pereira De Sousa,Mozambique,Regional Manager,joana.mazuze@edubga.com,2/18/2025,2/21/2025,4
+Joana Paulino Pereira De Sousa,Mozambique,Regional Manager,joana.mazuze@edubga.com,4/14/2025,4/18/2025,5
+Joana Paulino Pereira De Sousa,Mozambique,Regional Manager,joana.mazuze@edubga.com,6/9/2025,6/9/2025,1
+Joana Paulino Pereira De Sousa,Mozambique,Regional Manager,joana.mazuze@edubga.com,9/22/2025,9/29/2025,4
+Joana Paulino Pereira De Sousa,Mozambique,Regional Manager,joana.mazuze@edubga.com,11/27/2025,11/28/2025,2
+Joana Paulino Pereira De Sousa,Mozambique,Regional Manager,joana.mazuze@edubga.com,12/22/2025,1/2/2026,8
+Mavis Carla Bernardo Cherinda ,Mozambique,Sommerschield ,mavis.cherinda@edubga.com,1/2/2025,1/3/2025,2
+Mavis Carla Bernardo Cherinda ,Mozambique,Sommerschield ,mavis.cherinda@edubga.com,3/21/2025,3/21/2025,1
+Mavis Carla Bernardo Cherinda ,Mozambique,Sommerschield ,mavis.cherinda@edubga.com,3/28/2025,3/31/2025,2
+Mavis Carla Bernardo Cherinda ,Mozambique,Sommerschield ,mavis.cherinda@edubga.com,4/14/2025,4/18/2025,5
+Mavis Carla Bernardo Cherinda ,Mozambique,Sommerschield ,mavis.cherinda@edubga.com,5/7/2025,5/8/2025,2
+Mavis Carla Bernardo Cherinda ,Mozambique,Sommerschield ,mavis.cherinda@edubga.com,8/15/2025,8/15/2025,1
+Mavis Carla Bernardo Cherinda ,Mozambique,Sommerschield ,mavis.cherinda@edubga.com,12/22/2025,1/2/2026,8
+Mavis Carla Bernardo Cherinda ,Mozambique,Sommerschield ,mavis.cherinda@edubga.com,11/17/2025,11/17/2025,1
+Mavis Carla Bernardo Cherinda ,Mozambique,Sommerschield ,mavis.cherinda@edubga.com,12/17/2025,12/19/2025,3
+Merciana Alberto Uamba,Mozambique,Sommerschield ,merciana.uamba@edubga.com ,1/2/2025,1/3/2025,2
+Merciana Alberto Uamba,Mozambique,Sommerschield ,merciana.uamba@edubga.com ,4/14/2025,4/18/2025,5
+Merciana Alberto Uamba,Mozambique,Sommerschield ,merciana.uamba@edubga.com ,5/2/2025,5/2/2025,1
+Merciana Alberto Uamba,Mozambique,Sommerschield ,merciana.uamba@edubga.com ,9/29/2025,10/7/2025,7
+Merciana Alberto Uamba,Mozambique,Sommerschield ,merciana.uamba@edubga.com ,12/22/2025,1/2/2026,8
+Lena Bauleth,Namibia,Windhoek,lena.bauleth@edubga.com,1/2/2025,1/3/2025,2
+Lena Bauleth,Namibia,Windhoek,lena.bauleth@edubga.com,4/14/2025,4/17/2025,4
+Lena Bauleth,Namibia,Windhoek,lena.bauleth@edubga.com,12/22/2025,1/2/2026,7
+Lena Bauleth,Namibia,Windhoek,lena.bauleth@edubga.com,10/6/2025,10/9/2025,4
+Martin Haifiku,Namibia,Windhoek,martin@edubga.com,1/2/2025,1/3/2025,2
+Martin Haifiku,Namibia,Windhoek,martin@edubga.com,4/14/2025,5/2/2025,11
+Martin Haifiku,Namibia,Windhoek,martin@edubga.com,12/22/2025,1/2/2026,7
+Johanna Awene,Namibia,Walvis Bay,johanna.awene@edubga.com,1/2/2025,1/3/2025,2
+Johanna Awene,Namibia,Walvis Bay,johanna.awene@edubga.com,3/10/2025,3/20/2025,9
+Johanna Awene,Namibia,Walvis Bay,johanna.awene@edubga.com,4/14/2025,4/17/2025,4
+Johanna Awene,Namibia,Walvis Bay,johanna.awene@edubga.com,9/1/2025,9/5/2025,5
+Johanna Awene,Namibia,Walvis Bay,johanna.awene@edubga.com,12/22/2025,1/2/2026,7
+Johanna Awene,Namibia,Walvis Bay,johanna.awene@edubga.com,11/12/2025,11/14/2025,3
+Patience Shafodino,Namibia,Walvis Bay,patienceshafodino@gmail.com,4/14/2025,4/17/2025,4
+Patience Shafodino,Namibia,Walvis Bay,patienceshafodino@gmail.com,10/6/2025,10/13/2025,6
+Patience Shafodino,Namibia,Walvis Bay,patienceshafodino@gmail.com,12/22/2025,1/2/2026,7
+Trishke Roos,South Africa,Nelspruit,trishke.roos@edubga.com,1/2/2025,1/3/2025,2
+Trishke Roos,South Africa,Nelspruit,trishke.roos@edubga.com,4/14/2025,4/17/2025,4
+Trishke Roos,South Africa,Nelspruit,trishke.roos@edubga.com,5/3/2025,5/3/2025,1
+Trishke Roos,South Africa,Nelspruit,trishke.roos@edubga.com,12/15/2025,1/2/2026,11
