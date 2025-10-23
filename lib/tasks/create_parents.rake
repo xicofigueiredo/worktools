@@ -34,8 +34,8 @@ namespace :db do
             kids: [kid.id]
             )
 
-          # Find LC with less than 3 hubs linked to the kid's hub
-          lcs = kid.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').select { |lc| lc.hubs.count < 3 }
+          # Find LC with less than 3 hubs linked to the kid's hub (only non-deactivated LCs)
+          lcs = kid.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc', deactivate: false).select { |lc| lc.hubs.count < 3 }
 
           # Temporarily skip email domain validation for this rake task
           parent.define_singleton_method(:email_domain_check) { true }
@@ -86,8 +86,8 @@ namespace :db do
           end
 
           # Create or update the second parent if present
-          if row['Parent 2 - Full Name (Section 6)'].present? && row['Parent 2 - Email (6)'].present?
-            parent2_name = row['Parent 2 - Full Name (Section 6)'].strip
+          if row['Parent 2 - Full Name (6)'].present? && row['Parent 2 - Email (6)'].present?
+            parent2_name = row['Parent 2 - Full Name (6)'].strip
             parent2_email = row['Parent 2 - Email (6)'].strip.downcase
             parent2_password = SecureRandom.hex(8)
             create_parent_method.call(parent2_name, parent2_email, parent2_password, kid_email)
