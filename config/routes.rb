@@ -73,6 +73,7 @@ Rails.application.routes.draw do
       collection do
         get 'export', action: :export_form
         post 'export', action: :export_csv
+        post 'fetch_from_hubspot', action: :fetch_from_hubspot
       end
       member do
         get 'documents', action: :documents

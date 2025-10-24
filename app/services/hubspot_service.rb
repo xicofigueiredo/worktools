@@ -31,7 +31,7 @@ class HubspotService
     Rails.logger.info("Processing submission for email: #{email} at #{Time.zone.at(submission_data['submittedAt']/1000.0)}")
 
     # Skip existing leads
-    if LearnerInfo.find_by(personal_email: email).present?
+    if LearnerInfo.find_by(personal_email: email.strip.presence&.downcase).present?
       Rails.logger.warn("Skipping submission: LearnerInfo with email #{email} already exists.")
       return
     end
@@ -120,6 +120,11 @@ class HubspotService
           val = (Date.parse(val) rescue val)
       end
       attrs[model_col] = val
+    end
+
+    # Special handling for UP Programme
+    if attrs[:programme] == "UP Programme (Higher Education)" && fields[:level].present?
+      attrs[:curriculum_course_option] = fields[:level]
     end
 
     # Image consent boolean
@@ -212,6 +217,7 @@ class HubspotService
   def self.attach_files_for_learner(learner_info, fields)
     file_field_mapping = {
       previous_school_transcripts:   'last_term_report',
+      current_academic_qualifications__up_: 'last_term_report',
       special_education_form:        'special_needs',
       learner_s_id_document_picture: 'learner_id',
       letter_of_interest:            'letter_of_interest',

@@ -411,6 +411,35 @@ class AdmissionListController < ApplicationController
       disposition: 'attachment'
   end
 
+  def fetch_from_hubspot
+    begin
+      # 1. Get the count of records BEFORE the sync
+      initial_count = LearnerInfo.count
+
+      # Call the service. This method should handle the actual creation/update of LearnerInfo records.
+      HubspotService.fetch_new_submissions # The result of this is now ignored for the count
+
+      # 2. Get the count of records AFTER the sync
+      final_count = LearnerInfo.count
+
+      # 3. Calculate the new count based on the difference
+      new_count = final_count - initial_count
+
+      message =
+        if new_count.to_i > 0
+          "Fetched #{new_count} new learner#{'s' if new_count.to_i != 1} from HubSpot."
+        else
+          "Already up to date."
+        end
+
+      # The controller sends the accurate 'message' string
+      render json: { success: true, new_count: new_count.to_i, message: message }
+    rescue => e
+      Rails.logger.error "[fetch_from_hubspot] Error fetching from HubSpot: #{e.class}: #{e.message}\n#{e.backtrace.first(10).join("\n")}"
+      render json: { success: false, error: "Failed to fetch from HubSpot: #{e.message}" }, status: :internal_server_error
+    end
+  end
+
   private
 
   def set_learner_info

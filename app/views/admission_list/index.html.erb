@@ -131,6 +131,14 @@
           <%= link_to "Clear All", admissions_path,
               style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
 
+          <button id="fetchHubspotBtn"
+                  type="button"
+                  onclick="fetchFromHubspot()"
+                  style="padding:7px 12px; border-radius:6px; background:#6f42c1; color:white; border:1px solid #6f42c1; display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <i class="fa fa-sync" aria-hidden="true" style="font-size:14px;"></i>
+            Sync HubSpot
+          </button>
+
           <button type="button"
                   onclick="openExportModal()"
                   style="padding:7px 12px; border-radius:6px; background:#28a745; color:white; border:1px solid #28a745; display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -300,6 +308,16 @@
 
 </div>
 
+<div id="hubspotMessageModal"
+  style="display:none; position: fixed; left: 50%; top: 18%; transform: translateX(-50%); z-index: 10000; background: white; border-radius: 8px; padding: 18px 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); **position: relative; min-width: 250px;**">
+  <button onclick="closeHubspotMessage()"
+    style="position: absolute; top: 8px; right: 12px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #aaa;"
+    aria-label="Close message">
+    &times;
+    </button>
+  <div id="hubspotMessageText" style="font-size: 1rem; color: #222; margin-right: 25px;">...</div>
+</div>
+
 <!-- Export Modal -->
 <div id="exportModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; overflow: auto;">
   <div style="position: relative; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
@@ -415,5 +433,120 @@
     checkboxes.forEach(cb => {
       cb.checked = !allChecked;
     });
+  }
+
+  function getCsrfToken() {
+    var el = document.querySelector('meta[name="csrf-token"]');
+    return el ? el.content : '';
+  }
+
+  let hubspotMessageTimeout;
+
+  function showHubspotMessage(text) {
+    // Clear any existing timeout
+    clearTimeout(hubspotMessageTimeout);
+
+    var modal = document.getElementById('hubspotMessageModal');
+    var textEl = document.getElementById('hubspotMessageText');
+
+    textEl.textContent = text;
+    modal.style.display = 'block';
+
+    // Set new timeout for 5 seconds (5000 milliseconds)
+    hubspotMessageTimeout = setTimeout(() => {
+      closeHubspotMessage();
+    }, 5000);
+  }
+
+  function closeHubspotMessage() {
+    // Clear the timeout when closing manually
+    clearTimeout(hubspotMessageTimeout);
+
+    var modal = document.getElementById('hubspotMessageModal');
+    if (modal) {
+      // Use a proper fade-out or simply hide after the delay
+      // For simplicity here, we'll just hide it.
+      modal.style.display = 'none';
+    }
+  }
+
+  function disableFetchBtn(disabled) {
+    var btn = document.getElementById('fetchHubspotBtn');
+    if (!btn) return;
+    btn.disabled = disabled;
+    btn.style.opacity = disabled ? 0.6 : 1;
+    btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+  }
+
+  function fetchFromHubspot() {
+    const url = '<%= fetch_from_hubspot_admissions_path %>';
+    disableFetchBtn(true);
+
+    // show temporary feedback (inline spinner)
+    var originalHtml = document.getElementById('fetchHubspotBtn').innerHTML;
+    document.getElementById('fetchHubspotBtn').innerHTML = '<span class="spinner-border" role="status" aria-hidden="true" style="width:16px;height:16px;display:inline-block;border-radius:50%;border:2px solid rgba(255,255,255,0.3);border-top-color:white;margin-right:8px;"></span> Syncing...';
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-Token': getCsrfToken()
+      },
+      body: JSON.stringify({})
+    })
+    .then(response => response.json().then(body => ({ status: response.status, body: body })))
+    .then(({ status, body }) => {
+      if (status >= 200 && status < 300 && body && body.success) {
+
+        // FIX: Directly use the message string prepared by the controller
+        const message = body.message || 'Sync completed.';
+
+        showHubspotMessage(message);
+        refreshLearnerInfosFrame();
+
+      } else {
+        const err = (body && (body.error || body.message)) ? (body.error || body.message) : 'Unknown error';
+        showHubspotMessage('Error: ' + err);
+      }
+    })
+    .catch(err => {
+      console.error('fetchFromHubspot error', err);
+      showHubspotMessage('Error communicating with server.');
+    })
+    .finally(() => {
+      disableFetchBtn(false);
+      document.getElementById('fetchHubspotBtn').innerHTML = originalHtml;
+    });
+  }
+
+  function refreshLearnerInfosFrame() {
+    // Try to fetch the page and replace the turbo-frame content to avoid a full reload
+    // Fallback to full reload if anything unexpected happens.
+    try {
+      const url = window.location.pathname + window.location.search;
+      fetch(url, { headers: { 'Accept': 'text/html' } })
+        .then(r => {
+          if (!r.ok) throw new Error('Failed to fetch page');
+          return r.text();
+        })
+        .then(html => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const newFrame = doc.querySelector('turbo-frame#learner_infos');
+          const currentFrame = document.querySelector('turbo-frame#learner_infos');
+          if (newFrame && currentFrame) {
+            currentFrame.innerHTML = newFrame.innerHTML;
+          } else {
+            // If turbo frame not found, reload full page
+            window.location.reload();
+          }
+        })
+        .catch(() => {
+          window.location.reload();
+        });
+    } catch (e) {
+      window.location.reload();
+    }
   }
 </script>
