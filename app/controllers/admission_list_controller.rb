@@ -31,8 +31,8 @@ class AdmissionListController < ApplicationController
       hub = Hub.find_by(name: params[:hub])
       if hub
         filter_scope = filter_scope.where(
-          "EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id = ? AND uh.main = TRUE)",
-          hub.id
+          "(learner_infos.hub_id = :hub_id) OR (learner_infos.hub_id IS NULL AND EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id = :hub_id AND uh.main = TRUE))",
+          hub_id: hub.id
         )
       else
         filter_scope = filter_scope.where("1 = 0")
@@ -44,23 +44,21 @@ class AdmissionListController < ApplicationController
     @filtered_count = filter_scope.count
 
     hub_name_subquery = <<~SQL.squish
-      (SELECT hubs.name
-      FROM hubs
-      JOIN users_hubs uh ON uh.hub_id = hubs.id
-      WHERE uh.user_id = learner_infos.user_id AND uh.main = TRUE
-      LIMIT 1) AS hub_name
+      CASE
+        WHEN learner_infos.hub_id IS NOT NULL THEN (SELECT name FROM hubs WHERE id = learner_infos.hub_id LIMIT 1)
+        ELSE (SELECT hubs.name FROM hubs JOIN users_hubs uh ON uh.hub_id = hubs.id WHERE uh.user_id = learner_infos.user_id AND uh.main = TRUE LIMIT 1)
+      END AS hub_name
     SQL
 
     hub_id_subquery = <<~SQL.squish
-      (SELECT hubs.id
-      FROM hubs
-      JOIN users_hubs uh ON uh.hub_id = hubs.id
-      WHERE uh.user_id = learner_infos.user_id AND uh.main = TRUE
-      LIMIT 1) AS hub_id
+      CASE
+        WHEN learner_infos.hub_id IS NOT NULL THEN learner_infos.hub_id
+        ELSE (SELECT hubs.id FROM hubs JOIN users_hubs uh ON uh.hub_id = hubs.id WHERE uh.user_id = learner_infos.user_id AND uh.main = TRUE LIMIT 1)
+      END AS hub_id
     SQL
 
     # final scope used to render table (add select/order as you had before)
-    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme,Arel.sql(hub_id_subquery), Arel.sql(hub_name_subquery))
+    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme, Arel.sql(hub_id_subquery), Arel.sql(hub_name_subquery))
     scope = scope.order(Arel.sql("COALESCE(student_number, 99999999), id"))
 
     @learner_infos = scope

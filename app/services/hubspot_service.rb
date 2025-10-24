@@ -43,6 +43,12 @@ class HubspotService
     end
 
     begin
+      associate_hub(learner_info, fields)
+    rescue => e
+      Rails.logger.error("Error associating hub for LearnerInfo ID=#{learner_info.id}: #{e.message}")
+    end
+
+    begin
       create_learner_finances(learner_info, fields)
     rescue => e
       Rails.logger.error("Error creating finances for LearnerInfo ID=#{learner_info.id}: #{e.message}")
@@ -52,6 +58,28 @@ class HubspotService
       attach_files_for_learner(learner_info, fields)
     rescue => e
       Rails.logger.error("Error attaching files for LearnerInfo ID=#{learner_info.id}: #{e.message}")
+    end
+  end
+
+  def self.associate_hub(learner_info, fields)
+    hubspot_key = fields[:hub_interest_portugal]
+
+    if hubspot_key.present?
+      hub = Hub.find_by(hubspot_key: hubspot_key)
+      if hub
+        learner_info.update!(hub_id: hub.id)
+        Rails.logger.info("Associated hub '#{hub.name}' (ID: #{hub.id}) with LearnerInfo ID: #{learner_info.id}")
+      else
+        Rails.logger.warn("No hub found for hubspot_key: #{hubspot_key} - LearnerInfo ID: #{learner_info.id} remains without hub association.")
+      end
+    else
+      online_hub = Hub.find_by(name: "Online")
+      if online_hub
+        learner_info.update!(hub_id: online_hub.id)
+        Rails.logger.info("Associated 'Online' hub (ID: #{online_hub.id}) with LearnerInfo ID: #{learner_info.id} (no hub_interest_portugal provided).")
+      else
+        Rails.logger.warn("No 'Online' hub found - LearnerInfo ID: #{learner_info.id} remains without hub association.")
+      end
     end
   end
 
@@ -251,5 +279,49 @@ class HubspotService
     end
   rescue Down::Error => e
     Rails.logger.error("Failed to download file from #{download_url}: #{e.message}")
+  end
+
+  def self.fetch_hub_submission_values
+    headers = {
+      'Authorization' => "Bearer #{HUBSPOT_ACCESS_TOKEN}",
+      'Content-Type'  => 'application/json'
+    }
+
+    Rails.logger.info("Fetching form definition from HubSpot API...")
+    response = HTTParty.get("https://api.hubapi.com/forms/v2/forms/#{FORM_GUID}", headers: headers)
+
+    unless response.success?
+      Rails.logger.error "HubSpot Form Definition API Error: #{response.code} - #{response.body}"
+      return []
+    end
+
+    form_definition = JSON.parse(response.body)
+    field_name = 'hub_interest_portugal'
+
+    # Find the specific field within the form definition structure
+    hub_field = form_definition['formFieldGroups']
+                  .flat_map { |group| group['fields'] }
+                  .find { |field| field['name'] == field_name }
+
+    unless hub_field
+      Rails.logger.error "HubSpot field '#{field_name}' not found in form definition."
+      return []
+    end
+
+    options = hub_field.dig('options')
+
+    if options.present?
+      # 🚨 The key part: Return the 'value' property, not the 'label'.
+      # The 'value' is what HubSpot stores and sends in the submission.
+      submission_values = options.map { |option| option['value'] }.compact.uniq
+      Rails.logger.info("Successfully fetched #{submission_values.count} submission values for #{field_name}.")
+      return submission_values
+    else
+      Rails.logger.warn "HubSpot field '#{field_name}' does not appear to have options."
+      return []
+    end
+  rescue => e
+    Rails.logger.error "Error fetching HubSpot form options: #{e.message}"
+    return []
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_22_111657) do
+ActiveRecord::Schema[7.0].define(version: 2025_10_24_092151) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -386,8 +386,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_22_111657) do
     t.boolean "exam_center", default: false, null: false
     t.integer "capacity"
     t.text "parents_whatsapp_group"
+    t.string "hubspot_key"
     t.index ["city"], name: "index_hubs_on_city"
     t.index ["hub_type"], name: "index_hubs_on_hub_type"
+    t.index ["hubspot_key"], name: "index_hubs_on_hubspot_key", unique: true
     t.index ["region"], name: "index_hubs_on_region"
   end
 
@@ -542,6 +544,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_22_111657) do
     t.string "preferred_name"
     t.string "native_language"
     t.string "previous_school_grade_year"
+    t.bigint "hub_id"
+    t.index ["hub_id"], name: "index_learner_infos_on_hub_id"
     t.index ["institutional_email"], name: "index_learner_infos_on_institutional_email"
     t.index ["start_date"], name: "index_learner_infos_on_start_date"
     t.index ["student_number"], name: "index_learner_infos_on_student_number_unique", unique: true, where: "(student_number IS NOT NULL)"
@@ -1152,6 +1156,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_22_111657) do
   add_foreign_key "learner_documents", "learner_infos"
   add_foreign_key "learner_finances", "learner_infos"
   add_foreign_key "learner_flags", "users"
+  add_foreign_key "learner_infos", "hubs"
   add_foreign_key "learner_infos", "users"
   add_foreign_key "lws_timelines", "users"
   add_foreign_key "monday_slots", "users", column: "lc_id"

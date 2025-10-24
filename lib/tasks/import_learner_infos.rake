@@ -35,7 +35,12 @@ def levenshtein(a, b)
 end
 
 def resolve_hub_ambiguity(raw_fragment, frag_norm, candidates)
-  puts "\nAmbiguous match for hub fragment: #{raw_fragment} (normalized: #{frag_norm})"
+  @num_all_hubs ||= @cached_hubs.size
+  is_ambiguous = candidates.size < @num_all_hubs
+
+  candidates = candidates.sort_by(&:name)
+
+  puts "\n#{is_ambiguous ? 'Ambiguous match' : 'No match found'} for hub fragment: #{raw_fragment} (normalized: #{frag_norm})"
   puts "Candidates:"
   candidates.each_with_index do |h, i|
     puts "#{i+1}. #{h.name} (id: #{h.id})"
@@ -125,8 +130,9 @@ def find_best_hub_match(raw_hub_fragment)
     end
   end
 
-  @hub_mappings[frag_norm] = nil
-  nil
+  # No match: prompt from all hubs
+  all_candidates = @cached_hubs.map(&:first)
+  resolve_hub_ambiguity(raw_hub_fragment, frag_norm, all_candidates)
 end
 
 # Curriculum normalization mapping
@@ -663,36 +669,15 @@ namespace :admissions do
           end
 
           # Handle hub association
-          if !dry_run && matched_hub
-            user_to_attach = (li_var && li_var.respond_to?(:user) && li_var.user.present?) ? li_var.user : (attrs[:institutional_email].present? ? User.find_by(email: attrs[:institutional_email]) : nil)
-
-            if user_to_attach
-              ActiveRecord::Base.transaction do
-                if user_to_attach.respond_to?(:users_hubs)
-                  user_to_attach.users_hubs.where(main: true).update_all(main: false)
-                  user_to_attach.users_hubs.create!(hub: matched_hub, main: true)
-                else
-                  UsersHub.where(user_id: user_to_attach.id, main: true).update_all(main: false)
-                  UsersHub.create!(user_id: user_to_attach.id, hub_id: matched_hub.id, main: true)
-                end
-              end
-
-              user_ident = if user_to_attach.respond_to?(:email) && user_to_attach.email.present?
-                            user_to_attach.email
-                          elsif user_to_attach.respond_to?(:name) && user_to_attach.name.present?
-                            user_to_attach.name
-                          else
-                            "user##{user_to_attach.id}"
-                          end
-              puts "Row #{row_num}: associated #{user_ident} in #{matched_hub.name}"
-            else
-              maybe_user = attrs[:institutional_email].presence || "NO_USER"
-              puts "Row #{row_num}: couldn't associate the user #{maybe_user} to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\" (no user found)"
-            end
-
-          elsif !dry_run && !matched_hub
-            maybe_user = (li_var && li_var.user) ? (li_var.user.email.presence || "user##{li_var.user.id}") : (attrs[:institutional_email].presence || "NO_USER")
-            puts "Row #{row_num}: couldn't associate the user #{maybe_user} to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\""
+          if !dry_run && li_var && matched_hub
+            li_var.update!(hub_id: matched_hub.id)
+            puts "Row #{row_num}: associated #{ident} (id=#{li_var.id}) to hub #{matched_hub.name} (id=#{matched_hub.id})"
+          elsif !dry_run && li_var && !matched_hub
+            puts "Row #{row_num}: couldn't associate #{ident} (id=#{li_var.id}) to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\""
+          elsif dry_run && matched_hub
+            puts "Row #{row_num}: WOULD associate #{ident} to hub #{matched_hub.name} (id=#{matched_hub.id})"
+          elsif dry_run && !matched_hub
+            puts "Row #{row_num}: WOULD NOT associate #{ident} to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\""
           end
 
           # Handle learner_finances
