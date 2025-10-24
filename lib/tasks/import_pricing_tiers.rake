@@ -10,6 +10,15 @@ namespace :pricing do
       exit
     end
 
+    # Mapping for specific_hub to correct hub names
+    hub_mapping = {
+      "Maputo" => "Sommerschield",
+      "Tofo" => "Tofo",
+      "Durban High School" => "DHS",
+      "Hugenot High School" => "HHS",
+      "N/A" => nil
+    }
+
     # Group rows by unique combination
     grouped_data = {}
 
@@ -27,12 +36,16 @@ namespace :pricing do
         row['Curriculum']
       ].map(&:to_s).join('|')
 
+      # Map the specific_hub to the correct name
+      original_specific_hub = row['Specific Hub']
+      mapped_specific_hub = hub_mapping[original_specific_hub] || original_specific_hub
+
       grouped_data[key] ||= {
         model: row['Model'],
         country: row['Country'],
         currency: row['Currency'],
         hub_type: row['Hub Type'],
-        specific_hub: row['Specific Hub'],
+        specific_hub: mapped_specific_hub,
         curriculum: row['Curriculum'],
         admission_fee: nil,
         monthly_fee: nil,
