@@ -48,6 +48,22 @@ class HubspotService
       Rails.logger.error("Error associating hub for LearnerInfo ID=#{learner_info.id}: #{e.message}")
     end
 
+    # New logic: Set status based on hub capacity after association
+    if learner_info.hub_id.present?
+      hub = learner_info.hub
+      active_count = LearnerInfo.where(hub_id: hub.id).where.not(id: learner_info.id).where.not(status: ['Inactive', 'Graduated']).count
+
+      if active_count < hub.capacity
+        learner_info.update!(status: 'In progress')
+        Rails.logger.info("Set status to 'In progress' for LearnerInfo ID: #{learner_info.id} (hub has capacity)")
+      else
+        learner_info.update!(status: 'Waitlist')
+        Rails.logger.info("Set status to 'Waitlist' for LearnerInfo ID: #{learner_info.id} (hub at capacity)")
+      end
+    else
+      Rails.logger.warn("No hub associated for LearnerInfo ID: #{learner_info.id} - Status remains 'New Lead'")
+    end
+
     begin
       create_learner_finances(learner_info, fields)
     rescue => e
@@ -146,7 +162,6 @@ class HubspotService
     end
 
     learner_info = LearnerInfo.new(attrs)
-    learner_info.status = 'New Lead'
 
     if learner_info.save
       Rails.logger.info("Successfully created NEW LearnerInfo for #{learner_info.full_name} (ID: #{learner_info.id})")
