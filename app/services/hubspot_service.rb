@@ -171,7 +171,7 @@ class HubspotService
       program = (hub.name == "Online") ? "Online" : "Hybrid"
       country = hub.country
       hub_type = hub.hub_type
-      specific_hub = (hub.name in ["Sommerschield", "Tofo", "DHS", "HHS"]) ? hub.name : "N/A"
+      specific_hub = ["Sommerschield", "Tofo", "DHS", "HHS"].include?(hub.name) ? hub.name : "N/A"
       curriculum = learner_info.curriculum_course_option
 
       if country && hub_type && curriculum
