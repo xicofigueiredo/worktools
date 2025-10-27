@@ -398,6 +398,13 @@ class ExamEnrollsController < ApplicationController
         ]
       }
     end
+
+    User.where(role: "exams").each do |user|
+      Notification.create(
+        user_id: user.id,
+        message: "#{@exam_enroll.subject_name} - #{@exam_enroll.timeline.exam_date.date.strftime('%d %b %Y') || @exam_enroll.personalized_exam_date} - Exam enrollment for #{@exam_enroll.learner_name} was deleted.",
+      )
+    end
   end
 
   def remove_lc

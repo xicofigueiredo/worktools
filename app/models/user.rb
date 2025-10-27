@@ -71,6 +71,23 @@ class User < ApplicationRecord
     joins(:timelines).where(timelines: { hidden: false, subject: level })
   }
 
+  # Scope to find parents whose children are all deactivated
+  scope :parents_with_all_deactivated_children, -> {
+    where(role: 'guardian')
+      .where.not(kids: [])
+      .select { |parent| parent.all_children_deactivated? }
+  }
+
+  # Scope to find deactivated learners
+  scope :deactivated_learners, -> {
+    where(role: 'learner', deactivate: true)
+  }
+
+  # Scope to find active learners
+  scope :active_learners, -> {
+    where(role: 'learner', deactivate: false)
+  }
+
   def subjects_without_timeline
     Subject.left_outer_joins(:timelines).where(timelines: { user_id: nil })
   end
@@ -85,6 +102,38 @@ class User < ApplicationRecord
 
   def subject_records
     Subject.where(id: subjects)
+  end
+
+  # Get children (learners) associated with this parent
+  def children
+    return User.none unless guardian? && kids.present?
+    User.where(id: kids)
+  end
+
+  # Check if all children are deactivated
+  def all_children_deactivated?
+    return false unless guardian? && kids.present?
+    children.all?(&:deactivate)
+  end
+
+  # Check if parent should have access (has at least one active child)
+  def parent_has_access?
+    return true unless guardian?
+    return false if kids.blank?
+    !all_children_deactivated?
+  end
+
+  # Check if learner should have access (not deactivated)
+  def learner_has_access?
+    return true unless learner?
+    !deactivate
+  end
+
+  # Check if user should have access based on their role
+  def has_access?
+    return parent_has_access? if guardian?
+    return learner_has_access? if learner?
+    true # Other roles (admin, lc, cm, etc.) always have access unless explicitly restricted
   end
 
   private

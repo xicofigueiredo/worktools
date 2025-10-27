@@ -101,6 +101,27 @@
                     <%= form.label :as2, class: 'form-check-label' %>
                   </div>
                 </div>
+              <% elsif @moodle_timeline.category == 35 %>
+                <div class="d-flex justify-content-center gap-4 mt-3">
+                  <div class="form-check">
+                    <%= form.check_box :ano10,
+                        class: 'form-check-input',
+                        checked: @moodle_timeline.ano10 %>
+                    <%= form.label :ano10, class: 'form-check-label' %>
+                  </div>
+                  <div class="form-check">
+                    <%= form.check_box :ano11,
+                        class: 'form-check-input',
+                        checked: @moodle_timeline.ano11 %>
+                    <%= form.label :ano11, class: 'form-check-label' %>
+                  </div>
+                  <div class="form-check">
+                    <%= form.check_box :ano12,
+                        class: 'form-check-input',
+                        checked: @moodle_timeline.ano12 %>
+                    <%= form.label :ano12, class: 'form-check-label' %>
+                  </div>
+                </div>
               <% elsif @moodle_timeline.subject_id == 80 %>
                 <div class="d-flex justify-content-center gap-4 mt-3">
                   <% block_labels = ["Pure Maths AS", "Statistics", "Pure Maths AL", "Mechanics"] %>
@@ -117,7 +138,7 @@
               <% end %>
               <!-- Submit Buttons -->
               <div class="d-flex justify-content-center gap-2 mt-3">
-                <%= link_to "Back", timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
+                <%= link_to "Back", request.referer || moodle_timelines_path, class: "btn btn-secondary", style: 'border-radius: 10px;' %>
                 <% if @edit %>
                   <%= form.submit 'Update Timeline', class: 'btn btn-primary',
                         style: 'border-radius: 10px;',

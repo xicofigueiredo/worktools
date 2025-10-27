@@ -11,6 +11,17 @@ module Users
 
     def create
       super do |resource|
+        # Check access for guardians and learners
+        unless resource.has_access?
+          sign_out resource
+          if resource.guardian?
+            set_flash_message! :alert, :parent_access_denied
+          elsif resource.learner?
+            set_flash_message! :alert, :learner_access_denied
+          end
+          redirect_to new_user_session_path and return
+        end
+
         # Check if this is the first login (when last_login_at is nil)
         is_first_login = resource.last_login_at.nil?
 

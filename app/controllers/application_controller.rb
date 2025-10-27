@@ -1,6 +1,7 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
   before_action :authenticate_user!
+  before_action :check_user_access
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :check_browser
   before_action :count_notifications
@@ -18,6 +19,21 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  def check_user_access
+    return unless user_signed_in? # Only check if user is signed in
+    return if devise_controller? # Skip during authentication flows
+    return unless current_user.guardian? || current_user.learner? # Only check for parents/guardians and learners
+
+    unless current_user.has_access?
+      sign_out current_user
+      if current_user.guardian?
+        redirect_to new_user_session_path, alert: "Access denied. All associated learners have been deactivated."
+      elsif current_user.learner?
+        redirect_to new_user_session_path, alert: "Access denied. Your account has been deactivated."
+      end
+    end
+  end
 
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up, keys: [:first_name, :last_name, :phone_number, :hub_ids => []])

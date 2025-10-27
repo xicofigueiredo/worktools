@@ -168,7 +168,7 @@ class MoodleTimelinesController < ApplicationController
 
   def moodle_timeline_params
     permitted = params.require(:moodle_timeline).permit(:user_id, :start_date, :end_date, :total_time, :exam_date_id,
-    :mock100, :mock50, :personalized_name, :hidden, :updated_at, :as1, :as2)
+    :mock100, :mock50, :personalized_name, :hidden, :updated_at, :as1, :as2, :ano10, :ano11, :ano12)
 
 
     if params[:moodle_timeline][:blocks].present?

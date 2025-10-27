@@ -1,32 +1,53 @@
 namespace :moodle do
-  desc "Delete all moodle topics and recreate them"
-  task recreate_topics: :environment do
-    puts "Starting moodle topics recreation..."
+  desc "Delete and recreate moodle topics for specific timeline IDs"
+  task recreate_topics_by_ids: :environment do
+    # Define the array of moodle timeline IDs here
+    timeline_ids = [
+      17467, 18674
+    ]
+
+    if timeline_ids.empty?
+      puts "❌ No timeline IDs provided. Please add timeline IDs to the timeline_ids array in the rake task."
+      exit 1
+    end
+
+    puts "Starting moodle topics recreation for specific timelines..."
+    puts "Timeline IDs to process: #{timeline_ids.join(', ')}"
 
     # Count existing topics before processing
     initial_count = MoodleTopic.count
     puts "Found #{initial_count} existing moodle topics"
 
-    # Get all moodle timelines to recreate topics (excluding hidden ones and deactivated/graduated users)
+    # Get the specific moodle timelines
     timelines = MoodleTimeline.includes(:user, :subject)
+                              .where(id: timeline_ids)
                               .where(hidden: false)
                               .joins(:user)
                               .where(users: { deactivate: [false, nil] })
                               .where(users: { graduated_at: nil })
-    puts "Found #{timelines.count} moodle timelines to process"
+
+    found_timelines = timelines.count
+    puts "Found #{found_timelines} valid moodle timelines to process"
+
+    if found_timelines == 0
+      puts "❌ No valid timelines found for the provided IDs"
+      exit 1
+    end
+
     puts "Processing each timeline individually for safe interruption...\n"
 
     processed_count = 0
     error_count = 0
     total_deleted = 0
     total_created = 0
+    error_timeline_ids = []
 
     timelines.find_each.with_index do |timeline, index|
       begin
         user_name = timeline.user&.full_name || "Unknown User"
         subject_name = timeline.subject&.name || "Unknown Subject"
 
-        puts "[#{index + 1}/#{timelines.count}] Processing timeline #{timeline.id} (User: #{user_name}, Subject: #{subject_name})"
+        puts "[#{index + 1}/#{found_timelines}] Processing timeline #{timeline.id} (User: #{user_name}, Subject: #{subject_name})"
 
         # Process each timeline in a transaction for consistency
         ActiveRecord::Base.transaction do
@@ -56,13 +77,14 @@ namespace :moodle do
 
       rescue => e
         error_count += 1
+        error_timeline_ids << timeline.id
         puts "  ✗ Error processing timeline #{timeline.id}: #{e.message}"
         puts "    Rolling back changes for this timeline and continuing..."
       end
 
-      # Show progress every 10 timelines or at the end
-      if (index + 1) % 10 == 0 || (index + 1) == timelines.count
-        puts "  Progress: #{processed_count}/#{timelines.count} completed, #{error_count} errors\n"
+      # Show progress every 5 timelines or at the end
+      if (index + 1) % 5 == 0 || (index + 1) == found_timelines
+        puts "  Progress: #{processed_count}/#{found_timelines} completed, #{error_count} errors\n"
       end
     end
 
@@ -70,7 +92,7 @@ namespace :moodle do
     final_count = MoodleTopic.count
     puts "="*60
     puts "Recreation completed!"
-    puts "Timelines processed: #{processed_count}/#{timelines.count}"
+    puts "Timelines processed: #{processed_count}/#{found_timelines}"
     puts "Errors encountered: #{error_count}"
     puts "Topics deleted: #{total_deleted}"
     puts "Topics created: #{total_created}"
@@ -79,8 +101,9 @@ namespace :moodle do
     puts "Net change: #{final_count - initial_count > 0 ? '+' : ''}#{final_count - initial_count}"
 
     if error_count > 0
-      puts "\n⚠️  Some timelines had errors. Successfully processed timelines"
-      puts "   remain in a consistent state and can be safely resumed."
+      puts "\n⚠️  Some timelines had errors:"
+      puts "   Failed timeline IDs: #{error_timeline_ids.join(', ')}"
+      puts "   Successfully processed timelines remain in a consistent state."
     else
       puts "\n✅ All timelines processed successfully!"
     end
