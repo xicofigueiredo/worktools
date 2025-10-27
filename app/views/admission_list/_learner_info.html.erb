@@ -120,13 +120,10 @@
   previous_school_status: { col: '6' },
   previous_school_name: { col: '6' },
   previous_school_email: { type: :email, col: '6' },
-  previous_school_grade_year: { col: '6' }, # NEW FIELD ADDED to be rendered in School section
+  previous_school_grade_year: { col: '6' },
   id_information: { col: '6' },
   fiscal_number: { col: '6' },
-  # NOTE: 'use_of_image_authorisation' is left as checkbox for consistency in form submission,
-  # but its display logic must be fixed below.
   use_of_image_authorisation: { type: :checkbox, col: '6' },
-  # NOTE: 'emergency_protocol_choice' is now a string, so change to text input.
   emergency_protocol_choice: { col: '6' },
   withdrawal_category: { type: :select, col: '6', choices: [
     "Moved abroad",
@@ -405,11 +402,11 @@
       <h4>School / Previous education</h4>
       <div class="row gx-3">
         <% render_input.call(f, :registering_school_pt_plus, field_opts[:registering_school_pt_plus] || { col: '6' }) %>
-        <% render_input.call(f, :previous_schooling, field_opts[:previous_schooling] || { col: '6' }) %> <%# MOVED: previous_schooling moved to this section %>
+        <% render_input.call(f, :previous_schooling, field_opts[:previous_schooling] || { col: '6' }) %>
         <% render_input.call(f, :previous_school_status, field_opts[:previous_school_status] || { col: '6' }) %>
         <% render_input.call(f, :previous_school_name, field_opts[:previous_school_name] || { col: '6' }) %>
         <% render_input.call(f, :previous_school_email, field_opts[:previous_school_email] || { col: '6' }) %>
-        <% render_input.call(f, :previous_school_grade_year, field_opts[:previous_school_grade_year] || { col: '6' }) %> <%# NEW FIELD ADDED %>
+        <% render_input.call(f, :previous_school_grade_year, field_opts[:previous_school_grade_year] || { col: '6' }) %>
       </div>
     </div>
 
@@ -418,10 +415,10 @@
       <div class="row gx-3">
         <% render_input.call(f, :id_information, field_opts[:id_information] || { col: '6' }) %>
         <% render_input.call(f, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }) %>
-        <% render_input.call(f, :start_date, field_opts[:start_date] || { type: :date, col: '3' }) %> <%# MOVED FROM BASIC INFO %>
-        <% render_input.call(f, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '3' }) %> <%# MOVED FROM BASIC INFO %>
-        <% render_input.call(f, :end_date, field_opts[:end_date] || { type: :date, col: '3' }) %> <%# MOVED FROM BASIC INFO %>
-        <% render_input.call(f, :end_day_communication, field_opts[:end_day_communication] || { col: '3' }) %> <%# MOVED FROM BASIC INFO %>
+        <% render_input.call(f, :start_date, field_opts[:start_date] || { type: :date, col: '3' }) %>
+        <% render_input.call(f, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '3' }) %>
+        <% render_input.call(f, :end_date, field_opts[:end_date] || { type: :date, col: '3' }) %>
+        <% render_input.call(f, :end_day_communication, field_opts[:end_day_communication] || { col: '3' }) %>
         <% render_input.call(f, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }) %>
         <% render_input.call(f, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { col: '6' }) %>
         <% render_input.call(f, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }) %>
@@ -438,7 +435,7 @@
       <% render_input.call(nil, :full_name, field_opts[:full_name] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :preferred_name, field_opts[:preferred_name] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :student_number, field_opts[:student_number] || { col: '6' }, false, @learner_info) %>
-      <% render_input.call(nil, :status, field_opts[:status] || { col: '6' }, false, @learner_info) %> <%# MOVED: Status field added where start_date was %>
+      <% render_input.call(nil, :status, field_opts[:status] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :programme, field_opts[:programme] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }, false, @learner_info) %>
@@ -480,7 +477,7 @@
       <h4>Financial / Payments</h4>
       <div class="row gx-3">
         <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true, @learner_finance) %>
-        <% render_input.call(nil, :financial_responsibility, field_opts[:financial_responsibility] || { type: :text_area, rows: 2, col: '12' }, true, @learner_finance) %> <%# NEW FIELD ADDED %>
+        <% render_input.call(nil, :financial_responsibility, field_opts[:financial_responsibility] || { type: :text_area, rows: 2, col: '12' }, true, @learner_finance) %>
       </div>
 
       <h5 style="margin-top: 20px; margin-bottom: 10px;">Monthly Fees</h5>
@@ -524,10 +521,10 @@
     <div class="row gx-3">
       <% render_input.call(nil, :id_information, field_opts[:id_information] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }, false, @learner_info) %>
-      <% render_input.call(nil, :start_date, field_opts[:start_date] || { type: :date, col: '3' }, false, @learner_info) %> <%# MOVED FROM BASIC INFO %>
-      <% render_input.call(nil, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '3' }, false, @learner_info) %> <%# MOVED FROM BASIC INFO %>
-      <% render_input.call(nil, :end_date, field_opts[:end_date] || { type: :date, col: '3' }, false, @learner_info) %> <%# MOVED FROM BASIC INFO %>
-      <% render_input.call(nil, :end_day_communication, field_opts[:end_day_communication] || { col: '3' }, false, @learner_info) %> <%# MOVED FROM BASIC INFO %>
+      <% render_input.call(nil, :start_date, field_opts[:start_date] || { type: :date, col: '3' }, false, @learner_info) %>
+      <% render_input.call(nil, :transfer_of_programme_date, field_opts[:transfer_of_programme_date] || { type: :date, col: '3' }, false, @learner_info) %>
+      <% render_input.call(nil, :end_date, field_opts[:end_date] || { type: :date, col: '3' }, false, @learner_info) %>
+      <% render_input.call(nil, :end_day_communication, field_opts[:end_day_communication] || { col: '3' }, false, @learner_info) %>
       <% render_input.call(nil, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }, false, @learner_info) %>
