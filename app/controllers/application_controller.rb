@@ -89,6 +89,10 @@ class ApplicationController < ActionController::Base
       'cm'
     when 'exams'
       'exams'
+    when 'staff'
+      'staff'
+    when 'edu'
+      'edu'
     else
       'learner'  # Default for regular users/learners
     end
