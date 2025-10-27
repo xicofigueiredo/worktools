@@ -475,6 +475,89 @@ class MoodleTimeline < ApplicationRecord
     elsif self.as2 == true && self.as1 == false
       self.moodle_topics.where(as2: false).destroy_all
     end
+
+    # Handle ano10, ano11, ano12 fields
+    if self.ano10 == false
+      self.moodle_topics.where("unit LIKE ?", "10°%").destroy_all
+    elsif self.ano10 == true && saved_change_to_ano10?
+      # Recreate topics for ano10 if it changed from false to true
+      recreate_topics_for_year("10°")
+    end
+
+    if self.ano11 == false
+      self.moodle_topics.where("unit LIKE ?", "11°%").destroy_all
+    elsif self.ano11 == true && saved_change_to_ano11?
+      # Recreate topics for ano11 if it changed from false to true
+      recreate_topics_for_year("11°")
+    end
+
+    if self.ano12 == false
+      self.moodle_topics.where("unit LIKE ?", "12°%").destroy_all
+    elsif self.ano12 == true && saved_change_to_ano12?
+      # Recreate topics for ano12 if it changed from false to true
+      recreate_topics_for_year("12°")
+    end
+
+  end
+
+  def recreate_topics_for_year(year_prefix)
+    return unless self.category == 35
+
+    # Get all activities from Moodle API
+    user_id = self.user.moodle_id
+    course_id = self.moodle_id
+
+    if self.subject.board == "Portuguese Curriculum" || self.subject.board == "UP"
+      user_id = 2617
+    end
+
+    begin
+      completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
+
+      # Filter activities for the specific year
+      year_activities = completed_activities.select do |activity|
+        activity[:section_name]&.start_with?(year_prefix)
+      end
+
+      # Create topics for this year
+      year_activities.each_with_index do |activity, index|
+        next if activity[:section_visible] == 0
+
+        MoodleTopic.find_or_create_by!(
+          moodle_timeline_id: self.id,
+          name: activity[:name],
+          unit: activity[:section_name],
+          moodle_id: activity[:id]
+        ) do |topic|
+          topic.time = activity[:ect] || 0.001
+          topic.order = index + 1
+          topic.grade = activity[:grade].present? ? activity[:grade].round(2) : nil
+          topic.done = (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2)
+          topic.completion_date = begin
+            if activity[:evaluation_date].present?
+              DateTime.parse(activity[:evaluation_date])
+            else
+              nil
+            end
+          rescue Date::Error
+            nil
+          end
+          topic.deadline = Date.today + 1.year
+          topic.percentage = index * 0.001
+          topic.mock50 = activity[:mock50].to_i == 1
+          topic.mock100 = activity[:mock100].to_i == 1
+          topic.number_attempts = activity[:number_attempts]
+          topic.submission_date = Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M")
+          topic.evaluation_date = Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M")
+        end
+      end
+
+      # Regenerate deadlines for the new topics
+      moodle_generate_topic_deadlines(self)
+
+    rescue => e
+      Rails.logger.error "Failed to recreate topics for year #{year_prefix}: #{e.message}"
+    end
   end
 
   def start_date_before_end_date
@@ -702,7 +785,7 @@ class MoodleTimeline < ApplicationRecord
   def create_mock_notification(topic, message)
     return unless user.present?
 
-    # Find LCs associated with this user's hub (only those with less than 3 hubs)
+    # Find LCs associated with this user's hub (only those with less than 4 hubs)
     lcs = user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc', deactivate: false).select { |lc| lc.hubs.count < 4 }
 
     return unless lcs.present?

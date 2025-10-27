@@ -193,10 +193,17 @@ class MoodleApiService
 
       as1 = nil
       as2 = nil
+      ano10 = nil
+      ano11 = nil
+      ano12 = nil
 
       if category == 4
         as1 = true
         as2 = true
+      elsif category == 35
+        ano10 = true
+        ano11 = true
+        ano12 = true
       elsif category == 19 # Year 7
         moodle_timeline = MoodleTimeline.find_or_create_by(
           user_id: user_id,
