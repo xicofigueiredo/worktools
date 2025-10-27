@@ -13,7 +13,7 @@ module ExamEnrollsHelper
        'extension_cm_approval',
        'extension_cm_comment']
     when 'lc'
-      if current_user.hubs.count > 5 || current_user.id == 247
+      if current_user.hubs.count > 5 || current_user.id == 247 || current_user.id == 99
       ['pre_registration_exception_dc_approval',
        'pre_registration_exception_dc_comment',
        'failed_mock_exception_dc_approval',
