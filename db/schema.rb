@@ -601,6 +601,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_24_092151) do
     t.boolean "as1"
     t.boolean "as2"
     t.boolean "blocks", default: [false, false, false, false], array: true
+    t.boolean "ano10"
+    t.boolean "ano11"
+    t.boolean "ano12"
     t.index ["exam_date_id"], name: "index_moodle_timelines_on_exam_date_id"
     t.index ["subject_id"], name: "index_moodle_timelines_on_subject_id"
     t.index ["user_id", "subject_id"], name: "index_moodle_timelines_on_user_and_subject", unique: true

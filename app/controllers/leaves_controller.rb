@@ -269,17 +269,6 @@ class LeavesController < ApplicationController
       end
     end
 
-    if leave_type == 'marriage leave'
-      if staff_leave.total_days.to_i > 15
-        overlapping_conflict = true
-        overlapping_conflict_messages << "Marriage leave cannot exceed 15 consecutive days."
-      end
-      if current_user.staff_leaves.where(leave_type: 'marriage leave', status: ['pending', 'approved']).exists?
-        overlapping_conflict = true
-        overlapping_conflict_messages << "You have already requested or taken marriage leave."
-      end
-    end
-
     sum_entitlements = entitlements_by_year.values.sum
     sum_possible_carry = jan_mar_segments.map { |s| s[:previous_year_carry].to_i }.sum
     total_available_including_possible_carry = sum_entitlements + sum_possible_carry
@@ -420,6 +409,24 @@ class LeavesController < ApplicationController
     redirect_to leaves_path(active_tab: 'manager'), alert: 'Confirmation not found or you are not authorized.'
   rescue ActiveRecord::RecordInvalid => e
     redirect_to leaves_path(active_tab: 'manager'), alert: "Could not reject confirmation: #{e.record.errors.full_messages.to_sentence}"
+  end
+
+  def update_entitlement
+    unless current_user.email == 'humanresources@bravegenerationacademy.com'
+      redirect_to leaves_path, alert: "You do not have permission to edit entitlements." and return
+    end
+
+    user = User.find(params[:user_id])
+    year = Date.current.year
+
+    entitlement = StaffLeaveEntitlement.find_or_initialize_by(user: user, year: year)
+    entitlement.holidays_left = params[:holidays_left].to_i
+
+    if entitlement.save
+      redirect_to leaves_path(active_tab: 'manager'), notice: "Entitlement updated for #{user.full_name}."
+    else
+      redirect_to leaves_path(active_tab: 'manager'), alert: "Failed to update entitlement: #{entitlement.errors.full_messages.to_sentence}"
+    end
   end
 
   private

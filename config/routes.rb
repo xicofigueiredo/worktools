@@ -90,6 +90,7 @@ Rails.application.routes.draw do
     resources :leaves, only: [:index, :new, :create, :show] do
       collection do
         post :preview
+        patch :update_entitlement
       end
 
       member do

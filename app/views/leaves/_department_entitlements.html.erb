@@ -37,13 +37,16 @@
           <th>Booked</th>
           <th>Pending</th>
           <th>Left</th>
+          <% if current_user&.email == 'humanresources@bravegenerationacademy.com' %>
+            <th>Actions</th>
+          <% end %>
         </tr>
       </thead>
 
       <tbody>
         <% if @rows.blank? %>
           <tr>
-            <td colspan="6" class="text-center text-muted py-3">No users found for the selected departments.</td>
+            <td colspan="<%= current_user&.email == 'humanresources@bravegenerationacademy.com' ? 7 : 6 %>" class="text-center text-muted py-3">No users found for the selected departments.</td>
           </tr>
         <% else %>
           <% grouped = @rows.group_by do |r|
@@ -71,6 +74,18 @@
                   <% end %>
                 </td>
                 <td><%= r[:holidays_left] %></td>
+                <% if current_user&.email == 'humanresources@bravegenerationacademy.com' %>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary edit-entitlement-btn"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editEntitlementModal"
+                            data-user-id="<%= r[:user].id %>"
+                            data-full-name="<%= r[:user].full_name %>"
+                            data-holidays-left="<%= r[:holidays_left] %>">
+                      Edit
+                    </button>
+                  </td>
+                <% end %>
               </tr>
             <% end %>
           <% end %>
@@ -80,7 +95,35 @@
   </div>
 </div>
 
-<!-- Inline scripts: filter + client-side XLSX export (SheetJS) -->
+<% if current_user&.email == 'humanresources@bravegenerationacademy.com' %>
+  <!-- Edit Entitlement Modal -->
+  <div class="modal fade" id="editEntitlementModal" tabindex="-1" aria-labelledby="editEntitlementLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editEntitlementLabel">Edit Holidays Left</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <%= form_with url: update_entitlement_leaves_path, method: :patch, id: "edit-entitlement-form" do |f| %>
+            <div class="mb-3">
+              <label class="form-label">User</label>
+              <input type="text" class="form-control" id="edit-user-name" readonly>
+              <input type="hidden" name="user_id" id="edit-user-id">
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="holidays_left">Holidays Left</label>
+              <input type="number" class="form-control" name="holidays_left" id="edit-holidays-left" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Inline scripts: filter + client-side XLSX export (SheetJS) + modal handling -->
 <script>
   document.addEventListener('turbo:load', function () {
     var clientFilter = document.getElementById('client-dept-filter');
@@ -130,6 +173,10 @@
       var table = document.getElementById('dept-entitlements-table');
       if (!table) { alert('Table not found'); return; }
 
+      var theadRow = table.querySelector('thead tr');
+      var allHeaders = Array.from(theadRow.querySelectorAll('th')).map(th => th.innerText.trim());
+      var header = allHeaders[allHeaders.length - 1] === 'Actions' ? allHeaders.slice(0, -1) : allHeaders;
+
       var tbodyRows = Array.from(table.querySelectorAll('tbody tr'));
       var visibleData = [];
 
@@ -142,8 +189,8 @@
         var cols = Array.from(row.querySelectorAll('td'));
         if (cols.length === 0) return;
 
-        // Extract text content and trim
-        var cells = cols.map(function (td) {
+        // Extract text content and trim (up to header length to skip actions if present)
+        var cells = cols.slice(0, header.length).map(function (td) {
           return (td.innerText || '').trim();
         });
         visibleData.push(cells);
@@ -154,8 +201,6 @@
         return;
       }
 
-      // Header row
-      var header = ['Department', 'Name', 'Total', 'Booked', 'Pending', 'Left'];
       var aoa = [header].concat(visibleData);
 
       // Use SheetJS to create workbook
@@ -196,6 +241,23 @@
     if (exportBtn) {
       exportBtn.addEventListener('click', function () {
         ensureXLSX(function () { exportVisibleRowsXLSX(); });
+      });
+    }
+
+    // Handle edit entitlement buttons
+    const editBtns = document.querySelectorAll('.edit-entitlement-btn');
+    const modal = document.getElementById('editEntitlementModal');
+    if (modal) {
+      editBtns.forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const userId = btn.dataset.userId;
+          const fullName = btn.dataset.fullName;
+          const holidaysLeft = btn.dataset.holidaysLeft;
+          document.getElementById('edit-user-name').value = fullName;
+          document.getElementById('edit-user-id').value = userId;
+          document.getElementById('edit-holidays-left').value = holidaysLeft;
+        });
       });
     }
   });

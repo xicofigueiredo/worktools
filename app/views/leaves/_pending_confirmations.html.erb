@@ -30,8 +30,8 @@
                 <tr id="confirmation-<%= conf.id %>">
                   <td><%= leave.user.departments.first&.name || '—' %></td>
                   <td><%= leave.user.full_name %></td>
-                  <td><%= leave.start_date %></td>
-                  <td><%= leave.end_date %></td>
+                  <td><%= leave.start_date.strftime("%d/%m/%Y") %></td>
+                  <td><%= leave.end_date.strftime("%d/%m/%Y") %></td>
                   <td><%= leave.total_days %></td>
                   <td><%= leave.leave_type.capitalize %></td>
 
