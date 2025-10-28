@@ -20,20 +20,20 @@
 #   database: worktools_test
 
 
-# # development_prod:
-#   # adapter: postgresql
-#   # encoding: unicode
-#   # host: localhost
-#   # port: 5434
-#   # database: worktoolsdb_production
-#   # username: <%= ENV["POSTGRES_USER"] %>
-#   # password: <%= ENV["POSTGRES_PASSWORD"] %>
+# development_prod:
+  # adapter: postgresql
+  # encoding: unicode
+  # host: localhost
+  # port: 5434
+  # database: worktoolsdb_production
+  # username: <%= ENV["POSTGRES_USER"] %>
+  # password: <%= ENV["POSTGRES_PASSWORD"] %>
 
-#   #test:
-#   # <<: *default
-#   # database: worktoolsdb_production
-#   # username: <%= ENV["POSTGRES_USER"] %>
-#   # password: <%= ENV["POSTGRES_PASSWORD"] %>
+  #test:
+  # <<: *default
+  # database: worktoolsdb_production
+  # username: <%= ENV["POSTGRES_USER"] %>
+  # password: <%= ENV["POSTGRES_PASSWORD"] %>
 
 # production:
 #   <<: *default

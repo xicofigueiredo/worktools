@@ -140,9 +140,13 @@ class LeavesController < ApplicationController
       days_by_year[yr] = staff_leave.days_in_year(yr)
 
       ent = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
+      if ent.new_record?
+        ent.annual_holidays = 25
+        ent.holidays_left = 25
+      end
 
       if leave_type == 'holiday'
-        entitlements_by_year[yr] = ent.persisted? ? ent.holidays_left.to_i : 25
+        entitlements_by_year[yr] = ent.holidays_left.to_i
       else
         entitlements_by_year[yr] = 0
       end
@@ -163,10 +167,18 @@ class LeavesController < ApplicationController
 
       prev_year = yr - 1
       prev_ent = StaffLeaveEntitlement.find_by(user: current_user, year: prev_year)
-      prev_holidays_left = prev_ent ? prev_ent.holidays_left.to_i : 0
+      if prev_ent.nil?
+        prev_holidays_left = 25
+      else
+        prev_holidays_left = prev_ent.holidays_left.to_i
+      end
 
       entitlement_for_this_year = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
-      days_from_previous_used = entitlement_for_this_year.persisted? ? entitlement_for_this_year.days_from_previous_year_used.to_i : 0
+      if entitlement_for_this_year.new_record?
+        entitlement_for_this_year.annual_holidays = 25
+        entitlement_for_this_year.holidays_left = 25
+      end
+      days_from_previous_used = entitlement_for_this_year.days_from_previous_year_used.to_i
 
       previous_year_carry = [[5 - days_from_previous_used, prev_holidays_left].min, eligible_carry_days].min
       previous_year_carry = [previous_year_carry, 0].max
@@ -412,20 +424,30 @@ class LeavesController < ApplicationController
   end
 
   def update_entitlement
-    unless current_user.email == 'humanresources@bravegenerationacademy.com'
-      redirect_to leaves_path, alert: "You do not have permission to edit entitlements." and return
+    user_id = params[:user_id]
+    year = params[:year].to_i
+    annual_total = [params[:annual_total].to_i, 0].max
+    new_holidays_left = [params[:new_holidays_left].to_i, 0].max
+
+    user = User.find(user_id)
+
+    # Authorize: check if user is in managed departments' subtree
+    authorized = current_user.managed_departments.any? do |d|
+      user.departments.any? { |ud| d.subtree_ids.include?(ud.id) }
     end
 
-    user = User.find(params[:user_id])
-    year = Date.current.year
+    unless authorized
+      render json: { error: 'Unauthorized' }, status: :unauthorized
+      return
+    end
 
     entitlement = StaffLeaveEntitlement.find_or_initialize_by(user: user, year: year)
-    entitlement.holidays_left = params[:holidays_left].to_i
-
+    entitlement.annual_holidays = annual_total
+    entitlement.holidays_left = new_holidays_left
     if entitlement.save
-      redirect_to leaves_path(active_tab: 'manager'), notice: "Entitlement updated for #{user.full_name}."
+      render json: { success: true }
     else
-      redirect_to leaves_path(active_tab: 'manager'), alert: "Failed to update entitlement: #{entitlement.errors.full_messages.to_sentence}"
+      render json: { error: entitlement.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
   end
 
@@ -487,8 +509,8 @@ class LeavesController < ApplicationController
 
     @rows = @dept_users.map do |u|
       entitlement = entitlements_by_user[u.id]
-      holidays_left = entitlement&.holidays_left || 25
 
+      total_holidays = entitlement&.annual_holidays || 25
       pc = pending_current[u.id] || 0
       bc = booked_current[u.id]  || 0
       pco = pending_carry[u.id]  || 0
@@ -496,7 +518,12 @@ class LeavesController < ApplicationController
 
       pending_holiday = pc + pco
       booked_holiday  = bc + bco
-      total_holidays  = holidays_left + booked_holiday + pending_holiday
+
+      if entitlement
+        holidays_left = [entitlement.holidays_left || total_holidays - booked_holiday, 0].max
+      else
+        holidays_left = [total_holidays - booked_holiday, 0].max
+      end
 
       primary_dept = u.departments.first # choose a "primary" department - change as appropriate
 
