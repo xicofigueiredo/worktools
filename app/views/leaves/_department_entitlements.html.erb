@@ -295,7 +295,7 @@
           }
         }).then(function (response) {
           if (response.ok) {
-            location.reload();
+            window.location.href = '/leaves?active_tab=manager';
           } else {
             alert('Failed to update entitlement.');
           }
