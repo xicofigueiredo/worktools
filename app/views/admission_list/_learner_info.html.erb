@@ -100,7 +100,7 @@
   nationality: { col: '6' },
   gender: { type: :select, col: '6', choices: ['Male', 'Female', 'Other'] },
   native_language: { col: '6' },
- english_proficiency: { type: :toggle, col: '6' },
+  english_proficiency: { type: :toggle, col: '6' },
   parent1_full_name: { col: '6' },
   parent1_email: { type: :email, col: '6' },
   parent1_phone_number: { col: '6' },
@@ -115,7 +115,7 @@
     "Abroad",
     "National Private",
     "National Public",
-  "Homeschooled"
+    "Homeschooled"
   ]},
   previous_school_status: { col: '6' },
   previous_school_name: { col: '6' },
@@ -138,7 +138,8 @@
     "Changed Curriculum",
     "Graduated"
   ]},
-  withdrawal_reason: { type: :text_area, rows: 2, col: '12' }
+  withdrawal_reason: { type: :text_area, rows: 2, col: '12' },
+  onboarding_meeting_notes: { type: :text_area, rows: 4, col: '12' } # NEW: Added field options for onboarding notes
 } %>
 
 <% field_opts.merge!({
@@ -158,7 +159,7 @@
   discount_af: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   billable_af: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Admission Fee (#{@currency_symbol})" },
   renewal_fee: { type: :number, col: '4', step: 1, label: "Renewal Fee (#{@currency_symbol})" },
- discount_rf: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
+  discount_rf: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   billable_rf: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Renewal Fee (#{@currency_symbol})" }
 }) %>
 
@@ -423,6 +424,7 @@
         <% render_input.call(f, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { col: '6' }) %>
         <% render_input.call(f, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }) %>
         <% render_input.call(f, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }) %>
+        <% render_input.call(f, :onboarding_meeting_notes, field_opts[:onboarding_meeting_notes] || { type: :text_area, rows: 4, col: '12' }) %> <%# NEW: Added render for onboarding notes %>
       </div>
     </div>
 
@@ -529,6 +531,7 @@
       <% render_input.call(nil, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }, false, @learner_info) %>
+      <% render_input.call(nil, :onboarding_meeting_notes, field_opts[:onboarding_meeting_notes] || { type: :text_area, rows: 4, col: '12' }, false, @learner_info) %> <%# NEW: Added render for onboarding notes %>
     </div>
   </div>
 <% end %>
@@ -737,7 +740,7 @@
           discountMfInput.dispatchEvent(new Event('input'));
         }
       });
- // Initial check
+      // Initial check
       if (paymentPlanSelect.value === 'Annually') {
         discountMfInput.value = 3;
         discountMfInput.dispatchEvent(new Event('input'));
@@ -774,13 +777,13 @@
     setupPaymentPlanHandler();
     setupGradeYearHandler();
   });
- // Run on Turbo page loads (if using Turbo)
+  // Run on Turbo page loads (if using Turbo)
   document.addEventListener('turbo:load', function() {
     setupFinanceCalculations();
     setupPaymentPlanHandler();
     setupGradeYearHandler();
   });
- // Run immediately if DOM is already loaded
+  // Run immediately if DOM is already loaded
   if (document.readyState === 'loading') {
     // Still loading, wait for DOMContentLoaded
   } else {

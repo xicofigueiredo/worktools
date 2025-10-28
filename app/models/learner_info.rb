@@ -67,6 +67,7 @@ class LearnerInfo < ApplicationRecord
   before_validation :normalize_emails
   before_validation :normalize_curriculum
   before_validation :normalize_grade
+  before_save :update_status_based_on_notes
 
   VALID_EMAIL_REGEX = URI::MailTo::EMAIL_REGEXP
 
@@ -271,6 +272,26 @@ class LearnerInfo < ApplicationRecord
     if normalized != old_value
       self.grade_year = normalized
       Rails.logger.info("Normalized grade: #{old_value.inspect} -> #{normalized.inspect} (curriculum: #{curriculum_course_option})")
+    end
+  end
+
+  def update_status_based_on_notes
+    if onboarding_meeting_notes_changed?
+      if onboarding_meeting_notes_was.blank? && onboarding_meeting_notes.present?
+        case status
+        when "Waitlist"
+          self.status = "Waitlist - ok"
+        when "In progress"
+          self.status = "In progress - ok"
+        end
+      elsif onboarding_meeting_notes_was.present? && onboarding_meeting_notes.blank?
+        case status
+        when "Waitlist - ok"
+          self.status = "Waitlist"
+        when "In progress - ok"
+          self.status = "In progress"
+        end
+      end
     end
   end
 end
