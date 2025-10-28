@@ -11,7 +11,7 @@ class LeavesController < ApplicationController
 
     if current_user.managed_departments.present?
       prepare_manager_entitlements if current_user&.managed_departments&.present?
-      @pending_confirmations = current_user.confirmations.pending
+      @pending_confirmations = current_user.confirmations.pending.includes(:confirmable)
 
       depts = current_user.managed_departments
       is_top = depts.all? { |d| d.superior.nil? }
@@ -140,9 +140,13 @@ class LeavesController < ApplicationController
       days_by_year[yr] = staff_leave.days_in_year(yr)
 
       ent = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
+      if ent.new_record?
+        ent.annual_holidays = 25
+        ent.holidays_left = 25
+      end
 
       if leave_type == 'holiday'
-        entitlements_by_year[yr] = ent.persisted? ? ent.holidays_left.to_i : 25
+        entitlements_by_year[yr] = ent.holidays_left.to_i
       else
         entitlements_by_year[yr] = 0
       end
@@ -163,10 +167,18 @@ class LeavesController < ApplicationController
 
       prev_year = yr - 1
       prev_ent = StaffLeaveEntitlement.find_by(user: current_user, year: prev_year)
-      prev_holidays_left = prev_ent ? prev_ent.holidays_left.to_i : 0
+      if prev_ent.nil?
+        prev_holidays_left = 25
+      else
+        prev_holidays_left = prev_ent.holidays_left.to_i
+      end
 
       entitlement_for_this_year = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
-      days_from_previous_used = entitlement_for_this_year.persisted? ? entitlement_for_this_year.days_from_previous_year_used.to_i : 0
+      if entitlement_for_this_year.new_record?
+        entitlement_for_this_year.annual_holidays = 25
+        entitlement_for_this_year.holidays_left = 25
+      end
+      days_from_previous_used = entitlement_for_this_year.days_from_previous_year_used.to_i
 
       previous_year_carry = [[5 - days_from_previous_used, prev_holidays_left].min, eligible_carry_days].min
       previous_year_carry = [previous_year_carry, 0].max
@@ -258,17 +270,6 @@ class LeavesController < ApplicationController
     end
 
     # Additional checks for marriage leave (lifetime unique, even non-overlapping)
-    if leave_type == 'marriage leave'
-      if staff_leave.total_days.to_i > 15
-        overlapping_conflict = true
-        overlapping_conflict_messages << "Marriage leave cannot exceed 15 consecutive days."
-      end
-      if current_user.staff_leaves.where(leave_type: 'marriage leave', status: ['pending', 'approved']).exists?
-        overlapping_conflict = true
-        overlapping_conflict_messages << "You have already requested or taken marriage leave."
-      end
-    end
-
     if leave_type == 'marriage leave'
       if staff_leave.total_days.to_i > 15
         overlapping_conflict = true
@@ -422,6 +423,34 @@ class LeavesController < ApplicationController
     redirect_to leaves_path(active_tab: 'manager'), alert: "Could not reject confirmation: #{e.record.errors.full_messages.to_sentence}"
   end
 
+  def update_entitlement
+    user_id = params[:user_id]
+    year = params[:year].to_i
+    annual_total = [params[:annual_total].to_i, 0].max
+    new_holidays_left = [params[:new_holidays_left].to_i, 0].max
+
+    user = User.find(user_id)
+
+    # Authorize: check if user is in managed departments' subtree
+    authorized = current_user.managed_departments.any? do |d|
+      user.departments.any? { |ud| d.subtree_ids.include?(ud.id) }
+    end
+
+    unless authorized
+      render json: { error: 'Unauthorized' }, status: :unauthorized
+      return
+    end
+
+    entitlement = StaffLeaveEntitlement.find_or_initialize_by(user: user, year: year)
+    entitlement.annual_holidays = annual_total
+    entitlement.holidays_left = new_holidays_left
+    if entitlement.save
+      render json: { success: true }
+    else
+      render json: { error: entitlement.errors.full_messages.to_sentence }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def staff_leave_params
@@ -480,8 +509,8 @@ class LeavesController < ApplicationController
 
     @rows = @dept_users.map do |u|
       entitlement = entitlements_by_user[u.id]
-      holidays_left = entitlement&.holidays_left || 25
 
+      total_holidays = entitlement&.annual_holidays || 25
       pc = pending_current[u.id] || 0
       bc = booked_current[u.id]  || 0
       pco = pending_carry[u.id]  || 0
@@ -489,7 +518,12 @@ class LeavesController < ApplicationController
 
       pending_holiday = pc + pco
       booked_holiday  = bc + bco
-      total_holidays  = holidays_left + booked_holiday + pending_holiday
+
+      if entitlement
+        holidays_left = [entitlement.holidays_left || total_holidays - booked_holiday, 0].max
+      else
+        holidays_left = [total_holidays - booked_holiday, 0].max
+      end
 
       primary_dept = u.departments.first # choose a "primary" department - change as appropriate
 
