@@ -17,6 +17,9 @@ class LearnerDocument < ApplicationRecord
   validates :document_type, presence: true, inclusion: { in: DOCUMENT_TYPES }
   validate :file_attached
 
+  after_create :update_learner_status_if_relevant
+  after_destroy :update_learner_status_if_relevant
+
   def human_type
     document_type.tr('_', ' ').titleize.gsub(/\bId\b/, 'ID')
   end
@@ -25,5 +28,11 @@ class LearnerDocument < ApplicationRecord
 
   def file_attached
     errors.add(:file, "must be attached") unless file.attached?
+  end
+
+  def update_learner_status_if_relevant
+    if ['contract', 'proof_of_payment'].include?(document_type)
+      learner_info.check_and_update_validated_status
+    end
   end
 end

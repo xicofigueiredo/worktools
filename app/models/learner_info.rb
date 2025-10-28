@@ -241,6 +241,19 @@ class LearnerInfo < ApplicationRecord
     self.institutional_email = prefix.present? ? "#{prefix.strip.downcase}@edubga.com" : nil
   end
 
+  def check_and_update_validated_status
+    has_contract = learner_documents.exists?(document_type: 'contract')
+    has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
+
+    if status == "In progress - ok" && has_contract && has_proof
+      update(status: "Validated")
+      log_update(nil, { 'status' => ["In progress - ok", "Validated"] }, note: "Automated status update to Validated after required documents present")
+    elsif status == "Validated" && (!has_contract || !has_proof)
+      update(status: "In progress - ok")
+      log_update(nil, { 'status' => ["Validated", "In progress - ok"] }, note: "Reverted status to In progress - ok after required document removed")
+    end
+  end
+
   private
 
   def normalize_emails
