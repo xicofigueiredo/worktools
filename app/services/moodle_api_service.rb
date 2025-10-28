@@ -386,6 +386,66 @@ class MoodleApiService
               puts "Found existing timeline for user #{user_id} and subject #{subject.id}"
             end
           end
+        else
+          # Check if timeline exists and verify topic count matches activity count
+          puts "Timeline #{moodle_timeline.subject.name} already exists, checking topic count..."
+
+          # Get count of activities from Moodle API
+          begin
+            activities = get_all_course_activities(course_id, moodle_user_id)
+            activity_count = activities.is_a?(Array) ? activities.length : 0
+
+            # Get count of existing MoodleTopic records
+            existing_topic_count = moodle_timeline.moodle_topics.count
+
+            puts "Activity count: #{activity_count}, Existing topic count: #{existing_topic_count}"
+
+            # If counts don't match, delete existing topics and recreate
+            if activity_count != existing_topic_count
+              puts "Counts don't match! Deleting existing topics and recreating..."
+
+              # Delete all existing moodle_topics for this timeline
+              moodle_timeline.moodle_topics.destroy_all
+
+              # Recreate topics from activities
+              activities.each_with_index do |activity, index|
+                next if activity[:section_visible] == 0
+
+                MoodleTopic.create!(
+                  moodle_timeline_id: moodle_timeline.id,
+                  name: activity[:name],
+                  unit: activity[:section_name],
+                  moodle_id: activity[:id],
+                  time: activity[:ect] || 0.001,
+                  order: index + 1,
+                  grade: activity[:grade].present? ? activity[:grade].round(2) : nil,
+                  done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),
+                  completion_date: begin
+                    if activity[:evaluation_date].present?
+                      DateTime.parse(activity[:evaluation_date])
+                    else
+                      nil
+                    end
+                  rescue Date::Error
+                    nil
+                  end,
+                  deadline: moodle_timeline.end_date,
+                  percentage: 0.0, # Will be calculated later
+                  mock50: activity[:mock50].to_i == 1,
+                  mock100: activity[:mock100].to_i == 1,
+                  number_attempts: activity[:number_attempts],
+                  submission_date: activity[:submission_date].present? ? Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M") : nil,
+                  evaluation_date: activity[:evaluation_date].present? ? Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M") : nil
+                )
+              end
+
+              puts "Recreated #{moodle_timeline.moodle_topics.count} topics for timeline"
+            else
+              puts "Topic count matches activity count, no action needed"
+            end
+          rescue => e
+            puts "Error checking topic count for timeline: #{e.message}"
+          end
         end
 
         created_timelines << moodle_timeline
