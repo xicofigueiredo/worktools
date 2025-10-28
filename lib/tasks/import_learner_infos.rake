@@ -156,7 +156,8 @@ def normalize_curriculum(raw_curriculum)
     'up business management' => 'UPx Business',
     'own curriculum' => 'Own Curriculum',
     'upx business management' => 'UPx Business',
-    'up business ; upx business management' => 'UPx Business'
+    'up business ; upx business management' => 'UPx Business',
+    'up business (genex)' => 'UP Business (GENEX)'
   }
 
   normalized_key = raw_curriculum.to_s.strip.downcase
