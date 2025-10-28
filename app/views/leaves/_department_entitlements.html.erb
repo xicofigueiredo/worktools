@@ -1,4 +1,5 @@
 <% year_now = Date.current.year %>
+<% show_actions = current_user.email == 'humanresources@bravegenerationacademy.com' %>
 
 <div class="card mb-4">
   <div class="card-header d-flex justify-content-between align-items-center">
@@ -37,13 +38,16 @@
           <th>Booked</th>
           <th>Pending</th>
           <th>Left</th>
+          <% if show_actions %>
+            <th>Actions</th>
+          <% end %>
         </tr>
       </thead>
 
       <tbody>
         <% if @rows.blank? %>
           <tr>
-            <td colspan="6" class="text-center text-muted py-3">No users found for the selected departments.</td>
+            <td colspan="<%= show_actions ? 7 : 6 %>" class="text-center text-muted py-3">No users found for the selected departments.</td>
           </tr>
         <% else %>
           <% grouped = @rows.group_by do |r|
@@ -71,12 +75,56 @@
                   <% end %>
                 </td>
                 <td><%= r[:holidays_left] %></td>
+                <% if show_actions %>
+                  <td>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary edit-entitlement"
+                            data-user-id="<%= r[:user].id %>"
+                            data-year="<%= year_now %>"
+                            data-current-total="<%= r[:total_holidays] %>"
+                            data-current-booked="<%= r[:booked_holiday] %>"
+                            data-current-pending="<%= r[:pending_holiday] %>"
+                            data-current-left="<%= r[:holidays_left] %>">Edit</button>
+                  </td>
+                <% end %>
               </tr>
             <% end %>
           <% end %>
         <% end %>
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- Edit Entitlement Modal -->
+<div class="modal fade" id="edit-entitlement-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Entitlement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-entitlement-form">
+          <input type="hidden" name="user_id" id="edit-user-id">
+          <input type="hidden" name="year" id="edit-year">
+          <div class="mb-3">
+            <label for="annual-total" class="form-label">Total (Annual Allowance)</label>
+            <input type="number" class="form-control" id="annual-total" name="annual_total" min="0">
+          </div>
+          <div class="mb-3">
+            <label for="remaining-left" class="form-label">Left (Remaining Days)</label>
+            <input type="number" class="form-control" id="remaining-left" name="new_holidays_left" min="0">
+          </div>
+          <p>Current Booked: <span id="current-booked"></span></p>
+          <p>Current Pending: <span id="current-pending"></span></p>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="save-entitlement">Save changes</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -142,8 +190,8 @@
         var cols = Array.from(row.querySelectorAll('td'));
         if (cols.length === 0) return;
 
-        // Extract text content and trim
-        var cells = cols.map(function (td) {
+        // Extract text content and trim, exclude actions column
+        var cells = cols.slice(0, 6).map(function (td) {
           return (td.innerText || '').trim();
         });
         visibleData.push(cells);
@@ -196,6 +244,64 @@
     if (exportBtn) {
       exportBtn.addEventListener('click', function () {
         ensureXLSX(function () { exportVisibleRowsXLSX(); });
+      });
+    }
+
+    // Edit entitlement JS
+    document.querySelectorAll('.edit-entitlement').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var userId = btn.dataset.userId;
+        var year = btn.dataset.year;
+        var currentTotal = parseInt(btn.dataset.currentTotal) || 0;
+        var currentBooked = parseInt(btn.dataset.currentBooked) || 0;
+        var currentPending = parseInt(btn.dataset.currentPending) || 0;
+        var currentLeft = parseInt(btn.dataset.currentLeft) || 0;
+
+        document.getElementById('edit-user-id').value = userId;
+        document.getElementById('edit-year').value = year;
+        var totalInput = document.getElementById('annual-total');
+        var leftInput = document.getElementById('remaining-left');
+        totalInput.value = currentTotal;
+        leftInput.value = currentLeft;
+        document.getElementById('current-booked').innerText = currentBooked;
+        document.getElementById('current-pending').innerText = currentPending;
+
+        // Enforce non-negative
+        totalInput.addEventListener('input', function () {
+          var val = parseInt(this.value);
+          if (isNaN(val) || val < 0) this.value = 0;
+        });
+        leftInput.addEventListener('input', function () {
+          var val = parseInt(this.value);
+          if (isNaN(val) || val < 0) this.value = 0;
+        });
+
+        var modal = new bootstrap.Modal(document.getElementById('edit-entitlement-modal'));
+        modal.show();
+      });
+    });
+
+    var saveBtn = document.getElementById('save-entitlement');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function () {
+        var form = document.getElementById('edit-entitlement-form');
+        var data = new FormData(form);
+
+        fetch('/leaves/update_entitlement', {
+          method: 'POST',
+          body: data,
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          }
+        }).then(function (response) {
+          if (response.ok) {
+            window.location.href = '/leaves?active_tab=manager';
+          } else {
+            alert('Failed to update entitlement.');
+          }
+        }).catch(function (err) {
+          alert('Error: ' + err.message);
+        });
       });
     }
   });
