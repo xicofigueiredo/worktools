@@ -147,10 +147,11 @@ class PagesController < ApplicationController
       @learner_flag = @learner.learner_flag
       @timelines = @learner.timelines.where(hidden: false)
       @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
-      @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
+      @current_sprint_weeks = @current_sprint.weeks.includes(:weekly_goals).order(:start_date)
 
-      # Precompute time spent for each week
+      # Precompute time spent and expected hours for each week
       @time_spent = {}
+      @expected_hours = {}
       @current_sprint_weeks.each do |week|
         week_attendances = @learner.attendances.where(week_id: week.id)
         total_seconds = 0
@@ -159,6 +160,10 @@ class PagesController < ApplicationController
           total_seconds += (attendance.end_time - attendance.start_time).to_i
         end
         @time_spent[week.id] = total_seconds
+
+        # Get expected hours from weekly goal
+        weekly_goal = week.weekly_goals.find { |wg| wg.user_id == @learner.id }
+        @expected_hours[week.id] = weekly_goal&.expected_hours
       end
 
       @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
@@ -487,16 +492,18 @@ class PagesController < ApplicationController
     @moodle_timelines = @learner.moodle_timelines.where(hidden: false)
 
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
-    @current_sprint_weeks = @current_sprint.weeks.order(:start_date) if @current_sprint
+    @current_sprint_weeks = @current_sprint.weeks.includes(:weekly_goals).order(:start_date) if @current_sprint
 
     # Precompute weekly goals, KDAs, absences, and time spent for each week
     @weekly_goals_status = {}
     @kda_status = {}
     @absences_count = {}
     @time_spent = {}
+    @expected_hours = {}
 
     @current_sprint_weeks.each do |week|
-      @weekly_goals_status[week.id] = week.weekly_goals.where(user: @learner).exists?
+      weekly_goal = week.weekly_goals.find { |wg| wg.user_id == @learner.id }
+      @weekly_goals_status[week.id] = weekly_goal.present?
       @kda_status[week.id] = week.kdas.where(user: @learner).exists?
       @absences_count[week.id] = week.start_date <= today ? week.count_absences(@learner) : nil
 
@@ -508,6 +515,9 @@ class PagesController < ApplicationController
         total_seconds += (attendance.end_time - attendance.start_time).to_i
       end
       @time_spent[week.id] = total_seconds
+
+      # Get expected hours from weekly goal
+      @expected_hours[week.id] = weekly_goal&.expected_hours
     end
 
     # Use a single query for sprint goal based on today's date

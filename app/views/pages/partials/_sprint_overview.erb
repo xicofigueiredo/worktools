@@ -91,6 +91,16 @@
               <% end %>
             <% end %>
           </tr>
+          <tr>
+            <td style="text-align: left;">Expected Hours</td>
+            <% @current_sprint_weeks.each do |week| %>
+              <% if week.start_date <= Date.today %>
+                <td><%= @expected_hours[week.id] ? "#{@expected_hours[week.id].round(1)}h" : "-" %></td>
+              <% else %>
+                <td></td>
+              <% end %>
+            <% end %>
+          </tr>
         </tbody>
       </table>
     </div>
