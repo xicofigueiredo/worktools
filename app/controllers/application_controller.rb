@@ -23,13 +23,15 @@ class ApplicationController < ActionController::Base
   def check_user_access
     return unless user_signed_in? # Only check if user is signed in
     return if devise_controller? # Skip during authentication flows
-    return unless current_user.guardian? || current_user.learner? # Only check for parents/guardians and learners
+    return unless current_user&.guardian? || current_user&.learner? # Only check for parents/guardians and learners
 
     unless current_user.has_access?
+      was_guardian = current_user.guardian?
+      was_learner = current_user.learner?
       sign_out current_user
-      if current_user.guardian?
+      if was_guardian
         redirect_to new_user_session_path, alert: "Access denied. All associated learners have been deactivated."
-      elsif current_user.learner?
+      elsif was_learner
         redirect_to new_user_session_path, alert: "Access denied. Your account has been deactivated."
       end
     end

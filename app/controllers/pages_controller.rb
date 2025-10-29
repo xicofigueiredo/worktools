@@ -141,6 +141,8 @@ class PagesController < ApplicationController
   end
 
   def profile
+    return redirect_to new_user_session_path unless user_signed_in?
+
     kids = current_user.kids.map { |kid| User.find_by(id: kid) }
     if current_user.role == "learner" || current_user.role == "admin"
       @learner = current_user

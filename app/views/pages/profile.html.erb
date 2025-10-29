@@ -148,7 +148,7 @@
               <td><%= @current_sprint.count_absences(@learner) %></td>
             </tr>
             <tr>
-              <td>Time at the Hub</td>
+              <td>Time@Hub</td>
               <% @current_sprint_weeks.each do |week| %>
                 <% if week.start_date <= Date.today %>
                   <td><%= format_time_spent((@time_spent[week.id] || 0).to_i) %></td>
@@ -160,7 +160,7 @@
               <td><%= format_time_spent(total_time) %></td>
             </tr>
             <tr>
-              <td>Expected Hours</td>
+              <td>Expected Work</td>
               <% @current_sprint_weeks.each do |week| %>
                 <% if week.start_date <= Date.today %>
                   <td><%= @expected_hours[week.id] ? "#{@expected_hours[week.id].round(1)}h" : "-" %></td>
@@ -188,7 +188,7 @@
                 <%# </td>
               <% end %>
               <%# <td><%= @current_sprint.count_weekly_progress_average(@learner)%</td> %>
-            <%# </tr> %> 
+            <%# </tr> %>
           </tbody>
         </table>
       </div>

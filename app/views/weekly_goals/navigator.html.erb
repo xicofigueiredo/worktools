@@ -70,7 +70,9 @@
                     </div>
                     <div class="col-md-4">
                       <div class="form-group text-center">
-                        <strong>Expected Hours:</strong> <%= @weekly_goal.expected_hours ? "#{@weekly_goal.expected_hours.round(1)}h" : "-" %>
+                        <% if @weekly_goal.expected_hours.present? %>
+                          <strong>Expected Work:</strong> <%= @weekly_goal.expected_hours.round(1) %>h
+                        <% end %>
                       </div>
                     </div>
                     <div class="col-md-4">
