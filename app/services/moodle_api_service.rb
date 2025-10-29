@@ -416,7 +416,7 @@ class MoodleApiService
                   name: activity[:name],
                   unit: activity[:section_name],
                   moodle_id: activity[:id],
-                  time: activity[:ect] || 0.001,
+                  time: activity[:ect] || 0,
                   order: index + 1,
                   grade: activity[:grade].present? ? activity[:grade].round(2) : nil,
                   done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),

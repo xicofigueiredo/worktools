@@ -181,7 +181,7 @@ class MoodleTimeline < ApplicationRecord
       user_id = self.user.moodle_id
       course_id = self.moodle_id
 
-      if self.subject.board == "Portuguese Curriculum" || self.subject.board == "UP"
+      if self.subject.board == "Portuguese Curriculum" || self.subject.board == "UP" || self.subject.category == 0 || self.subject.category == 1 || self.subject.category == 2
         user_id = 2617
       end
 
@@ -225,7 +225,7 @@ class MoodleTimeline < ApplicationRecord
 
         MoodleTopic.create!(
           moodle_timeline_id: self.id,
-          time: activity[:ect] || 0.001,  # Default to 1 if ect is nil or 0
+          time: activity[:ect] || 0,  # Default to 1 if ect is nil or 0
           name: activity[:name],
           unit: activity[:section_name],  # Store section name as unit
           order: index + 1,  # Use index to maintain order
@@ -436,7 +436,7 @@ class MoodleTimeline < ApplicationRecord
 
     completed_activities.each do |activity|
       section = activity[:section_name]
-      time_val = activity[:ect].to_f > 0 ? activity[:ect].to_f : 0.001
+      time_val = activity[:ect].to_f > 0 ? activity[:ect].to_f : 0
       submission_str = activity[:submission_date].to_s
       submission_date = submission_str.empty? ? nil : Time.at(submission_str.to_i).strftime("%d/%m/%Y %H:%M")
 
@@ -529,7 +529,7 @@ class MoodleTimeline < ApplicationRecord
           unit: activity[:section_name],
           moodle_id: activity[:id]
         ) do |topic|
-          topic.time = activity[:ect] || 0.001
+          topic.time = activity[:ect] || 0
           topic.order = index + 1
           topic.grade = activity[:grade].present? ? activity[:grade].round(2) : nil
           topic.done = (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2)

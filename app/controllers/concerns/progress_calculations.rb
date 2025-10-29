@@ -74,9 +74,9 @@ module ProgressCalculations
 
       topics.each do |topic|
         # Update balance based on deadline and done state
-        if topic.done && topic.deadline && topic.deadline >= Date.today
+        if topic.done && topic.deadline && topic.deadline >= Date.today && (topic.time.positive? || timeline.subject.category == 0 || timeline.subject.category == 1 || timeline.subject.category == 2)
           balance += 1
-        elsif !topic.done && topic.deadline && topic.deadline < Date.today
+        elsif !topic.done && topic.deadline && topic.deadline < Date.today && (topic.time.positive? || timeline.subject.category == 0 || timeline.subject.category == 1 || timeline.subject.category == 2)
           balance -= 1
         end
         percentage = topic.time / total_time if topic.time.positive? && total_time.positive?
