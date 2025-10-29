@@ -476,15 +476,25 @@ class PagesController < ApplicationController
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
     @current_sprint_weeks = @current_sprint.weeks.order(:start_date) if @current_sprint
 
-    # Precompute weekly goals, KDAs, and absences for each week
+    # Precompute weekly goals, KDAs, absences, and time spent for each week
     @weekly_goals_status = {}
     @kda_status = {}
     @absences_count = {}
+    @time_spent = {}
 
     @current_sprint_weeks.each do |week|
       @weekly_goals_status[week.id] = week.weekly_goals.where(user: @learner).exists?
       @kda_status[week.id] = week.kdas.where(user: @learner).exists?
       @absences_count[week.id] = week.start_date <= today ? week.count_absences(@learner) : nil
+
+      # Calculate time spent for this week using attendances bound to this week
+      week_attendances = @learner.attendances.where(week_id: week.id)
+      total_seconds = 0
+      week_attendances.each do |attendance|
+        next unless attendance.start_time && attendance.end_time
+        total_seconds += (attendance.end_time - attendance.start_time).to_i
+      end
+      @time_spent[week.id] = total_seconds
     end
 
     # Use a single query for sprint goal based on today's date

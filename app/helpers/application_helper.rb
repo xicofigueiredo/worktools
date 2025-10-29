@@ -23,4 +23,19 @@ module ApplicationHelper
       'fas fa-user'
     end
   end
+
+  def format_time_spent(seconds)
+    return "0h" if seconds.nil? || seconds == 0
+
+    hours = seconds / 3600
+    minutes = (seconds % 3600) / 60
+
+    if hours > 0 && minutes > 0
+      "#{hours}h #{minutes}m"
+    elsif hours > 0
+      "#{hours}h"
+    else
+      "#{minutes}m"
+    end
+  end
 end
