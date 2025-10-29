@@ -14,7 +14,7 @@ class AttendancesController < ApplicationController
 
     @is_today = @attendances ? @attendances&.first&.attendance_date == Date.today : false
 
-    create_weekly_goals_notifications(@learners) if (1..5).include?(Date.today.wday)
+    # create_weekly_goals_notifications(@learners) if (1..5).include?(Date.today.wday)
   end
 
   def index
