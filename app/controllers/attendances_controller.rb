@@ -4,6 +4,7 @@ class AttendancesController < ApplicationController
   def attendance
     create_daily_attendance
     @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @today = Date.today
     @isweekend = @current_date.saturday? || @current_date.sunday?
     @prev_date = calculate_prev_date(@current_date, 'daily')
     @next_date = calculate_next_date(@current_date, 'daily')
@@ -13,6 +14,10 @@ class AttendancesController < ApplicationController
     return unless @has_learners == true
 
     @is_today = @attendances ? @attendances&.first&.attendance_date == Date.today : false
+
+    # Set week variables for the view
+    @week = Week.where("start_date <= ? AND end_date >= ?", @current_date, @current_date).first
+    @week_before = Week.where("start_date <= ? AND end_date >= ?", @current_date - 7.days, @current_date - 7.days).first
 
     # create_weekly_goals_notifications(@learners) if (1..5).include?(Date.today.wday)
   end
