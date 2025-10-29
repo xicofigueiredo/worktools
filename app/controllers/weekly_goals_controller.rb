@@ -12,7 +12,7 @@ class WeeklyGoalsController < ApplicationController
                                                                   @current_date, @current_date)
     @weekly_slots = @weekly_goal&.weekly_slots
     @current_week = Week.find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
-    
+
     # Get both regular timelines and moodle timelines
     @timelines = current_user.timelines.where(hidden: false)
     @moodle_timelines = current_user.moodle_timelines
@@ -125,7 +125,7 @@ class WeeklyGoalsController < ApplicationController
     @name = @weekly_goal.user.full_name
     @is_edit = true
     @weekly_slots = @weekly_goal&.weekly_slots
-    
+
     # Get both timeline types for the user
     @timelines = @weekly_goal.user.timelines.where(hidden: false)
     @moodle_timelines = @weekly_goal.user.moodle_timelines
@@ -138,7 +138,7 @@ class WeeklyGoalsController < ApplicationController
       @subjects.append(subject) if subject
     end
 
-    # Add subjects from moodle timelines  
+    # Add subjects from moodle timelines
     @moodle_timelines.each do |moodle_timeline|
       if moodle_timeline.subject
         @subjects.append(moodle_timeline.subject)
@@ -213,15 +213,15 @@ class WeeklyGoalsController < ApplicationController
     # Get subject names from regular timelines
     @subject_names = current_user.timelines.where(hidden: false).map(&:subject).uniq.pluck(:name)
     personalized_names = current_user.timelines.where(subject_id: 666, hidden: false).map(&:personalized_name)
-    
+
     # Get subject names from moodle timelines
-    moodle_subject_names = current_user.moodle_timelines.map(&:subject).compact.uniq.pluck(:name)
+    moodle_subject_names = current_user.moodle_timelines.where(hidden: false).map(&:subject).compact.uniq.pluck(:name)
     moodle_personalized_names = current_user.moodle_timelines.where(subject: nil).map(&:personalized_name).compact
-    
+
     # Combine all subject names
     all_subject_names = (@subject_names + moodle_subject_names).reject { |name| name.blank? }.uniq
     all_personalized_names = (personalized_names + moodle_personalized_names).reject { |name| name.blank? }.uniq
-    
+
     current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     skill_names = current_sprint.sprint_goals.where(user: current_user).map(&:skills).flatten.uniq.pluck(:extracurricular).reject(&:blank?).map(&:capitalize)
     communities_names = current_sprint.sprint_goals.where(user: current_user).map(&:communities).flatten.uniq.pluck(:involved).reject(&:blank?).map(&:capitalize)
