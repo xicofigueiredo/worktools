@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_28_141455) do
+ActiveRecord::Schema[7.0].define(version: 2025_10_29_134835) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -546,6 +546,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_28_141455) do
     t.string "previous_school_grade_year"
     t.bigint "hub_id"
     t.text "onboarding_meeting_notes"
+    t.boolean "data_validated", default: false
     t.index ["hub_id"], name: "index_learner_infos_on_hub_id"
     t.index ["institutional_email"], name: "index_learner_infos_on_institutional_email"
     t.index ["start_date"], name: "index_learner_infos_on_start_date"

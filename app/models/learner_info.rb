@@ -67,7 +67,8 @@ class LearnerInfo < ApplicationRecord
   before_validation :normalize_emails
   before_validation :normalize_curriculum
   before_validation :normalize_grade
-  before_save :update_status_based_on_notes
+
+  after_commit :check_status_updates, on: [:create, :update]
 
   VALID_EMAIL_REGEX = URI::MailTo::EMAIL_REGEXP
 
@@ -241,20 +242,120 @@ class LearnerInfo < ApplicationRecord
     self.institutional_email = prefix.present? ? "#{prefix.strip.downcase}@edubga.com" : nil
   end
 
-  def check_and_update_validated_status
+  def check_status_updates
+    new_status = calculate_status
+    return if new_status == status
+
+    old_status = status
+    if new_status == "Onboarded" && student_number.blank?
+      gen_number = generate_student_number
+      update_columns(status: new_status, student_number: gen_number)
+      log_update(nil, { 'status' => [old_status, new_status], 'student_number' => [nil, gen_number] }, note: "Automated status update to #{new_status} with student number generation")
+    else
+      update_column(:status, new_status)
+      log_update(nil, { 'status' => [old_status, new_status] }, note: "Automated status update to #{new_status}")
+    end
+
+    send_status_notification(new_status)
+  end
+
+  def calculate_status
+    learner_documents.reload
+
+    has_notes = onboarding_meeting_notes.present?
     has_contract = learner_documents.exists?(document_type: 'contract')
     has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
+    has_documents = has_contract && has_proof
+    has_start_date = start_date.present?
+    has_active_account = user.present? && !user.deactivate
+    end_date_passed = end_date.present? && end_date < Date.today
 
-    if status == "In progress - ok" && has_contract && has_proof
-      update(status: "Validated")
-      log_update(nil, { 'status' => ["In progress - ok", "Validated"] }, note: "Automated status update to Validated after required documents present")
-    elsif status == "Validated" && (!has_contract || !has_proof)
-      update(status: "In progress - ok")
-      log_update(nil, { 'status' => ["Validated", "In progress - ok"] }, note: "Reverted status to In progress - ok after required document removed")
+    case status
+    when "Inactive"
+      "Inactive"
+    when "Active"
+      end_date_passed ? "Inactive" : "Active"
+    when "Onboarded"
+      if has_active_account
+        "Active"
+      elsif !has_start_date
+        "Validated"
+      else
+        "Onboarded"
+      end
+    when "Validated"
+      if has_start_date
+        "Onboarded"
+      elsif !has_documents
+        status_was_waitlist_ok? ? "Waitlist - ok" : "In progress - ok"
+      else
+        "Validated"
+      end
+    when "In progress - ok"
+      if !has_notes
+        "In progress"
+      elsif has_documents
+        "Validated"
+      else
+        "In progress - ok"
+      end
+    when "Waitlist - ok"
+      if !has_notes
+        "Waitlist"
+      elsif has_documents
+        "Validated"
+      else
+        "Waitlist - ok"
+      end
+    when "In progress"
+      if !data_validated
+        "In progress conditional"
+      elsif has_notes
+        "In progress - ok"
+      else
+        "In progress"
+      end
+    when "In progress conditional"
+      data_validated ? "In progress" : "In progress conditional"
+    when "Waitlist"
+      has_notes ? "Waitlist - ok" : "Waitlist"
+    else
+      status # Fallback for new or unknown
     end
   end
 
   private
+
+  def status_was_waitlist_ok?
+    # Helper to infer path for revert; can be improved with a persisted path flag if needed
+    previous_changes[:status]&.first&.include?("Waitlist") || false
+  end
+
+  def generate_student_number
+    # Placeholder: Customize as needed (e.g., include hub code, year, sequence)
+    "ST-#{Time.current.year}-#{id.to_s.rjust(4, '0')}"
+  end
+
+  def send_status_notification(new_status)
+    # Placeholder: Expand to send emails/notifications per status
+    # e.g., UserMailer.status_update(self, new_status).deliver_later
+    # or NotificationService.notify(user, "Status changed to #{new_status}")
+    case new_status
+    when "In progress"
+      # Send "data validated" email
+    when "In progress - ok"
+      # Send onboarding notes confirmation
+    when "Validated"
+      # Send documents approved notification
+    when "Onboarded"
+      # Send welcome/onboarding email
+    when "Active"
+      # Send account activation notice
+    when "Inactive"
+      # Send deactivation email
+    # Add more as needed
+    end
+  end
 
   def normalize_emails
     EMAIL_FIELDS.each do |attr|
@@ -285,26 +386,6 @@ class LearnerInfo < ApplicationRecord
     if normalized != old_value
       self.grade_year = normalized
       Rails.logger.info("Normalized grade: #{old_value.inspect} -> #{normalized.inspect} (curriculum: #{curriculum_course_option})")
-    end
-  end
-
-  def update_status_based_on_notes
-    if onboarding_meeting_notes_changed?
-      if onboarding_meeting_notes_was.blank? && onboarding_meeting_notes.present?
-        case status
-        when "Waitlist"
-          self.status = "Waitlist - ok"
-        when "In progress"
-          self.status = "In progress - ok"
-        end
-      elsif onboarding_meeting_notes_was.present? && onboarding_meeting_notes.blank?
-        case status
-        when "Waitlist - ok"
-          self.status = "Waitlist"
-        when "In progress - ok"
-          self.status = "In progress"
-        end
-      end
     end
   end
 end

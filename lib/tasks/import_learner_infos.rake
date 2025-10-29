@@ -1,7 +1,6 @@
 require 'csv'
 require 'set'
 require 'i18n' unless defined?(I18n)
-
 def normalize_name_for_match(s)
   return "" if s.nil?
   t = s.to_s.dup
@@ -11,7 +10,6 @@ def normalize_name_for_match(s)
   t = t.gsub(/\s+/, ' ').strip
   t
 end
-
 def levenshtein(a, b)
   a = a.to_s
   b = b.to_s
@@ -33,13 +31,10 @@ def levenshtein(a, b)
   end
   v1[b.length]
 end
-
 def resolve_hub_ambiguity(raw_fragment, frag_norm, candidates)
   @num_all_hubs ||= @cached_hubs.size
   is_ambiguous = candidates.size < @num_all_hubs
-
   candidates = candidates.sort_by(&:name)
-
   puts "\n#{is_ambiguous ? 'Ambiguous match' : 'No match found'} for hub fragment: #{raw_fragment} (normalized: #{frag_norm})"
   puts "Candidates:"
   candidates.each_with_index do |h, i|
@@ -57,18 +52,14 @@ def resolve_hub_ambiguity(raw_fragment, frag_norm, candidates)
     return selected
   end
 end
-
 def find_best_hub_match(raw_hub_fragment)
   return nil if raw_hub_fragment.nil? || raw_hub_fragment.strip == ''
-
   frag_norm = normalize_name_for_match(raw_hub_fragment)
   @cached_hubs ||= Hub.all.map { |h| [h, normalize_name_for_match(h.name)] }
   @hub_mappings ||= {}
-
   if @hub_mappings.has_key?(frag_norm)
     return @hub_mappings[frag_norm]
   end
-
   # 1) exact normalized match
   @cached_hubs.each do |h, name_norm|
     if name_norm == frag_norm
@@ -76,7 +67,6 @@ def find_best_hub_match(raw_hub_fragment)
       return h
     end
   end
-
   # 2) ends_with or contains
   @cached_hubs.each do |h, name_norm|
     if frag_norm.end_with?(name_norm) || name_norm.end_with?(frag_norm) || frag_norm.include?(name_norm) || name_norm.include?(frag_norm)
@@ -84,7 +74,6 @@ def find_best_hub_match(raw_hub_fragment)
       return h
     end
   end
-
   # 3) token overlap
   frag_tokens = Set.new(frag_norm.split)
   candidates = []
@@ -108,7 +97,6 @@ def find_best_hub_match(raw_hub_fragment)
       return resolve_hub_ambiguity(raw_hub_fragment, frag_norm, candidates)
     end
   end
-
   # 4) Levenshtein fallback
   distances = []
   @cached_hubs.each do |h, name_norm|
@@ -129,16 +117,13 @@ def find_best_hub_match(raw_hub_fragment)
       return top_h
     end
   end
-
   # No match: prompt from all hubs
   all_candidates = @cached_hubs.map(&:first)
   resolve_hub_ambiguity(raw_hub_fragment, frag_norm, all_candidates)
 end
-
 # Curriculum normalization mapping
 def normalize_curriculum(raw_curriculum)
   return nil if raw_curriculum.nil? || raw_curriculum.to_s.strip.empty?
-
   curriculum_map = {
     'american curriculum (fia)' => 'American Curriculum',
     'british curriculum' => 'British Curriculum',
@@ -159,12 +144,9 @@ def normalize_curriculum(raw_curriculum)
     'up business ; upx business management' => 'UPx Business',
     'up business (genex)' => 'UP Business (GENEX)'
   }
-
   normalized_key = raw_curriculum.to_s.strip.downcase
   mapped = curriculum_map[normalized_key]
-
   return mapped if mapped || curriculum_map.key?(normalized_key)
-
   # Fallback: if it contains "up business" variations
   if normalized_key.include?('upx') && normalized_key.include?('business')
     return 'UPx Business'
@@ -173,27 +155,21 @@ def normalize_curriculum(raw_curriculum)
   elsif normalized_key.include?('ecampus') || normalized_key.include?('flvs')
     return 'Own Curriculum'
   end
-
   # Return original if no mapping found
   raw_curriculum.to_s.strip
 end
-
 # Grade normalization based on curriculum
 def normalize_grade(raw_grade, curriculum)
   return nil if raw_grade.nil? || raw_grade.to_s.strip.empty?
   return nil if curriculum.nil?
-
   grade_str = raw_grade.to_s.strip
-
   # Extract year/grade number from strings like "US Grade 12 (UK Year 13)"
   # Try to match the pattern and extract both US and UK values
   us_match = grade_str.match(/US\s+(?:Grade|Year)\s+(\d+)/i)
   uk_match = grade_str.match(/UK\s+Year\s+(\d+)/i)
   pt_match = grade_str.match(/PT\s+Year\s+(\d+)/i)
-
   # Also handle simple numeric grades
   simple_number = grade_str.match(/^\d+$/) ? grade_str.to_i : nil
-
   case curriculum
   when 'British Curriculum'
     if uk_match
@@ -215,7 +191,6 @@ def normalize_grade(raw_grade, curriculum)
     elsif simple_number
       return "UK Year #{simple_number}"
     end
-
   when 'American Curriculum'
     if us_match
       grade_num = us_match[1].to_i
@@ -236,7 +211,6 @@ def normalize_grade(raw_grade, curriculum)
     elsif simple_number
       return "US Year #{simple_number}"
     end
-
   when 'Portuguese Curriculum'
     if pt_match
       year_num = pt_match[1].to_i
@@ -257,7 +231,6 @@ def normalize_grade(raw_grade, curriculum)
     elsif simple_number
       return "PT Year #{simple_number}"
     end
-
   when 'UP Business', 'UPx Business', 'UP Computing', 'UP Sports Management'
     # UP programs use Level system
     if grade_str.match(/Level\s+(\d+)/i)
@@ -277,47 +250,38 @@ def normalize_grade(raw_grade, curriculum)
     elsif simple_number && simple_number >= 3 && simple_number <= 6
       return "Level #{simple_number}"
     end
-
   when 'Own Curriculum', 'ESL Course'
-    # Own Curriculum and ESL Course don't have normalized grades
+    # Own Curriculum and ESL don't have normalized grades
     return nil
   end
-
   # If no mapping found, return original
   raw_grade
 end
-
 def parse_discount(value)
   return nil if value.nil? || value.to_s.strip.empty?
   value.to_s.gsub(/[^\d,\.\-]/, '').gsub(',', '.').to_f
 end
-
 def parse_scholarship(value)
   return nil if value.nil? || value.to_s.strip.empty?
   value.to_s.gsub(/[^\d,\.\-]/, '').gsub(',', '.').to_f
 end
-
 namespace :admissions do
   desc "Import admissions CSV into learner_infos with curriculum and grade normalization"
   task import_learner_infos: :environment do
     csv_file_path = Rails.root.join('lib', 'tasks', 'admissions_list.csv')
-
     unless File.exist?(csv_file_path)
       puts "CSV file not found at #{csv_file_path}"
       exit 1
     end
-
     dry_run = ENV['DRY_RUN'].to_s.downcase == 'true'
     ARGV.clear
     puts "Starting verbose import (DRY_RUN=#{dry_run})"
     puts "CSV: #{csv_file_path}"
     puts
-
     to_utf8 = lambda do |val|
       return nil if val.nil?
       s = val.is_a?(String) ? val.dup : val.to_s
       return s if s.encoding == Encoding::UTF_8 && s.valid_encoding?
-
       encodings_to_try = ['UTF-8', 'Windows-1252', 'ISO-8859-1', 'ISO-8859-15']
       encodings_to_try.each do |enc|
         begin
@@ -327,16 +291,13 @@ namespace :admissions do
           next
         end
       end
-
       begin
         return s.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
       rescue
         return s.force_encoding('BINARY').encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
       end
     end
-
     nilish = ->(v) { v.nil? || v.to_s.strip == '' || %w[n/a na null].include?(v.to_s.strip.downcase) }
-
     parse_date = ->(v) do
       return nil if nilish.call(v)
       s = v.to_s.strip
@@ -353,22 +314,18 @@ namespace :admissions do
         end
       end
     end
-
     parse_int = ->(v) do
       return nil if nilish.call(v)
       cleaned = v.to_s.gsub(/[^\d\-]/, '')
       cleaned == '' ? nil : cleaned.to_i
     end
-
     parse_decimal = ->(v) do
       return nil if nilish.call(v)
       s = v.to_s.strip.gsub(/[^\d,\.\-]/, '')
       s = s.gsub(',', '.')
       s == '' ? nil : s.to_f
     end
-
     normalize = ->(s) { to_utf8.call(s).to_s.strip.downcase.gsub(/\s+/, ' ') }
-
     fetch = lambda do |row, *candidates|
       headers_norm = row.headers.map { |h| [normalize.call(h), h] }.to_h
       candidates.each do |cand|
@@ -381,7 +338,6 @@ namespace :admissions do
       end
       nil
     end
-
     FIELD_MAP = {
       status: ['Status'],
       programme: ['Programme (Section 2)', 'Programme'],
@@ -434,7 +390,6 @@ namespace :admissions do
       withdrawal_category: ['Withdrawal Category'],
       withdrawal_reason: ['Withdrawal Reason'],
     }.freeze
-
     parse_field = lambda do |value, key|
       return nil if nilish.call(value)
       case key
@@ -453,60 +408,49 @@ namespace :admissions do
         to_utf8.call(value).to_s.strip
       end
     end
-
     generate_student_number = lambda do |year, max_retries = 5|
       raise ArgumentError, "invalid year #{year}" unless year.is_a?(Integer) && year > 0
-
       attempt = 0
       begin
         attempt += 1
         student_number = nil
-
         ActiveRecord::Base.transaction(requires_new: true) do
           year_min = year * 10_000
           year_max = year_min + 9_999
-
           max_sn = LearnerInfo.where(student_number: year_min..year_max).maximum(:student_number)
           seq = max_sn.nil? ? 1 : (max_sn % 10_000) + 1
           raise "year #{year} exhausted" if seq > 9_999
-
           candidate = year_min + seq
           if LearnerInfo.exists?(student_number: candidate)
             raise ActiveRecord::RecordNotUnique, "student_number #{candidate} exists"
           end
           student_number = candidate
         end
-
         return student_number
       rescue ActiveRecord::RecordNotUnique, ActiveRecord::StatementInvalid
         retry if attempt < max_retries
         raise
       end
     end
-
     total = 0
     created = 0
     updated = 0
     no_changes = 0
     errors = 0
-
     sample_table = CSV.read(csv_file_path, headers: true, encoding: 'bom|utf-8')
     puts "Detected CSV headers (#{sample_table.headers.size}):"
     sample_table.headers.each_with_index { |h, i| puts "  #{i + 1}. #{to_utf8.call(h).inspect}" }
     puts
-
     CSV.foreach(csv_file_path, headers: true, encoding: 'bom|utf-8') do |row|
       total += 1
       row_num = total + 1
       begin
         attrs = {}
-
         FIELD_MAP.each do |attr, header_candidates|
           raw = fetch.call(row, *header_candidates)
           parsed = parse_field.call(raw, attr)
           attrs[attr] = parsed
         end
-
         # Programme normalization
         if attrs[:programme].present?
           long_to_short = {
@@ -517,7 +461,6 @@ namespace :admissions do
             normalize.call('BAS Programme (Academy of Sports)') => 'BAS Programme',
             normalize.call('In-person (with Hub access): Own Curriculum') => 'Own Curriculum'
           }
-
           incoming_key = normalize.call(attrs[:programme])
           if long_to_short.key?(incoming_key)
             old = attrs[:programme]
@@ -525,7 +468,6 @@ namespace :admissions do
             puts "Row #{row_num}: NORMALIZED programme - #{old.inspect} -> #{attrs[:programme].inspect}"
           end
         end
-
         # Curriculum normalization
         if attrs[:curriculum_course_option].present?
           old_curriculum = attrs[:curriculum_course_option]
@@ -535,7 +477,6 @@ namespace :admissions do
             puts "Row #{row_num}: NORMALIZED curriculum - #{old_curriculum.inspect} -> #{normalized_curriculum.inspect}"
           end
         end
-
         # Grade normalization based on curriculum
         if attrs[:grade_year].present? && attrs[:curriculum_course_option].present?
           old_grade = attrs[:grade_year]
@@ -545,7 +486,6 @@ namespace :admissions do
             puts "Row #{row_num}: NORMALIZED grade - #{old_grade.inspect} -> #{normalized_grade.inspect} (curriculum: #{attrs[:curriculum_course_option]})"
           end
         end
-
         start_date = attrs[:start_date]
         if start_date.present?
           year = start_date.year
@@ -554,40 +494,33 @@ namespace :admissions do
         else
           attrs[:student_number] = nil
         end
-
         # Split into learner_info_attrs and finance_attrs
         finance_keys = [:deposit, :sponsor, :payment_plan, :monthly_tuition, :discount_mt, :scholarship, :billable_fee_per_month, :scholarship_percentage, :admission_fee, :discount_af, :billable_af, :registration_renewal]
         learner_info_attrs = attrs.except(*finance_keys)
-
         # Convert absolute discounts and scholarships to percentages
         monthly_fee = attrs[:monthly_tuition].to_f
         admission_fee = attrs[:admission_fee].to_f
-
         discount_mf_absolute = parse_discount(attrs[:discount_mt])
         discount_mf_percent = if monthly_fee > 0 && discount_mf_absolute.present?
                                 (discount_mf_absolute.to_f / monthly_fee * 100).round(2)
                               else
                                 0.0
                               end
-
         scholarship_absolute = parse_scholarship(attrs[:scholarship])
         scholarship_percent = if monthly_fee > 0 && scholarship_absolute.present?
                                 (scholarship_absolute.to_f / monthly_fee * 100).round(2)
                               else
                                 0.0
                               end
-
         discount_af_absolute = parse_discount(attrs[:discount_af])
         discount_af_percent = if admission_fee > 0 && discount_af_absolute.present?
                                 (discount_af_absolute.to_f / admission_fee * 100).round(2)
                               else
                                 0.0
                               end
-
         renewal_fee = attrs[:registration_renewal]
         discount_rf = 0
         billable_rf = renewal_fee.to_i - discount_rf
-
         finance_attrs = {
           payment_plan: attrs[:payment_plan],
           monthly_fee: attrs[:monthly_tuition],
@@ -601,20 +534,15 @@ namespace :admissions do
           discount_rf: discount_rf,
           billable_rf: billable_rf
         }
-
         ident = attrs[:institutional_email].presence || "#{attrs[:full_name].to_s[0..40]}|#{attrs[:birthdate].to_s}"
-
         raw_hub_cell = fetch.call(row, 'Hub Location (Section 2)', 'Hub Location', 'Hub')
         raw_hub_for_logging = to_utf8.call(raw_hub_cell).to_s.strip
-
         hub_fragment = nil
         if raw_hub_cell.present?
           s = raw_hub_cell.to_s
           hub_fragment = s.include?('-') ? s.split('-', 2).last.to_s.strip : s.strip
         end
-
         matched_hub = find_best_hub_match(hub_fragment)
-
         found = nil
         if attrs[:institutional_email].present?
           found = LearnerInfo.find_by(institutional_email: attrs[:institutional_email])
@@ -622,9 +550,7 @@ namespace :admissions do
         if found.nil? && attrs[:full_name].present? && attrs[:birthdate].present?
           found = LearnerInfo.find_by(full_name: attrs[:full_name], birthdate: attrs[:birthdate])
         end
-
         li_var = nil
-
         begin
           if found
             diffs = {}
@@ -634,7 +560,6 @@ namespace :admissions do
               new_s = v.respond_to?(:strftime) ? v.to_s : (v.nil? ? '' : v.to_s)
               diffs[k] = { from: cur_s, to: new_s } if cur_s != new_s
             end
-
             if diffs.empty?
               no_changes += 1
               puts "Row #{row_num}: NO CHANGES for #{ident}"
@@ -652,23 +577,22 @@ namespace :admissions do
                 li_var = found
               end
             end
-
           else
             if dry_run
               created += 1
               puts "Row #{row_num}: WOULD CREATE #{ident} student_number=#{learner_info_attrs[:student_number].inspect}"
             else
               li_var = LearnerInfo.new(learner_info_attrs)
+              li_var.data_validated = (attrs[:status] != "In progress") # NEW: Set data_validated based on status for new entries
               if attrs[:institutional_email].present?
                 u = User.find_by(email: attrs[:institutional_email])
                 li_var.user = u if u
               end
               li_var.save!(validate: false)
               created += 1
-              puts "Row #{row_num}: CREATED id=#{li_var.id} #{ident} student_number=#{learner_info_attrs[:student_number].inspect}"
+              puts "Row #{row_num}: CREATED id=#{li_var.id} #{ident} student_number=#{learner_info_attrs[:student_number].inspect} data_validated=#{li_var.data_validated}"
             end
           end
-
           # Handle hub association
           if !dry_run && li_var && matched_hub
             li_var.update!(hub_id: matched_hub.id)
@@ -680,7 +604,6 @@ namespace :admissions do
           elsif dry_run && !matched_hub
             puts "Row #{row_num}: WOULD NOT associate #{ident} to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\""
           end
-
           # Handle learner_finances
           if dry_run
             puts "Row #{row_num}: WOULD HANDLE finances for #{ident}"
@@ -695,7 +618,6 @@ namespace :admissions do
                 new_s = v.nil? ? '' : v.to_s
                 finance_diffs[k] = { from: cur_s, to: new_s } if cur_s != new_s
               end
-
               if finance_diffs.any?
                 lf.assign_attributes(finance_attrs)
                 lf.save!(validate: false)
@@ -705,7 +627,6 @@ namespace :admissions do
               end
             end
           end
-
         rescue => e
           errors += 1
           puts "Row #{row_num}: ERROR for #{ident} -> #{e.class}: #{e.message}"
@@ -714,7 +635,6 @@ namespace :admissions do
         end
       end
     end
-
     puts
     puts "Import finished."
     puts "Total rows processed: #{total}"

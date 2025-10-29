@@ -17,8 +17,7 @@ class LearnerDocument < ApplicationRecord
   validates :document_type, presence: true, inclusion: { in: DOCUMENT_TYPES }
   validate :file_attached
 
-  after_create :update_learner_status_if_relevant
-  after_destroy :update_learner_status_if_relevant
+  after_commit :update_learner_status_if_relevant, on: [:create, :destroy]
 
   def human_type
     document_type.tr('_', ' ').titleize.gsub(/\bId\b/, 'ID')
@@ -32,7 +31,7 @@ class LearnerDocument < ApplicationRecord
 
   def update_learner_status_if_relevant
     if ['contract', 'proof_of_payment'].include?(document_type)
-      learner_info.check_and_update_validated_status
+      learner_info.touch
     end
   end
 end

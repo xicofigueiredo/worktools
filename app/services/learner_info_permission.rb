@@ -16,7 +16,7 @@ class LearnerInfoPermission
     id_information fiscal_number home_address gender use_of_image_authorisation
     emergency_protocol_choice parent1_email parent1_phone_number parent1_id_information
     parent2_email parent2_phone_number parent2_id_information parent2_info_not_to_be_contacted
-    preferred_name native_language onboarding_meeting_notes # NEW: Added to allow admissions to edit
+    preferred_name native_language onboarding_meeting_notes data_validated # NEW: Added to allow admissions to edit
   ].freeze
 
   def initialize(user, record)

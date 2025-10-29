@@ -100,6 +100,7 @@
   gender: { type: :select, col: '6', choices: ['Male', 'Female', 'Other'] },
   native_language: { col: '6' },
   english_proficiency: { type: :toggle, col: '6' },
+  data_validated: { type: :toggle, col: '6' }, # NEW: Added toggle for data_validated
   parent1_full_name: { col: '6' },
   parent1_email: { type: :email, col: '6' },
   parent1_phone_number: { col: '6' },
@@ -259,6 +260,7 @@
     <% display_value = case attr_sym
       when :use_of_image_authorisation then (value.to_s.downcase == 'true' || value.to_s.downcase == 'i consent to the above mentioned conditions'.downcase ? "Yes (Consent Given)" : "No (Consent Denied)")
       when :emergency_protocol_choice then value.presence || "-" # FIX: Display raw string instead of Yes/No boolean check
+      when :data_validated then value ? "Yes" : "No" # NEW: Display Yes/No for data_validated
       when TrueClass then "Yes"
       when FalseClass then "No"
       when Date, Time, ActiveSupport::TimeWithZone then (value.present? ? value.strftime("%d-%m-%Y") : "-")
@@ -418,6 +420,7 @@
         <% render_input.call(f, :end_day_communication, field_opts[:end_day_communication] || { col: '3' }) %>
         <% render_input.call(f, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }) %>
         <% render_input.call(f, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { col: '6' }) %>
+        <% render_input.call(f, :data_validated, field_opts[:data_validated] || { type: :toggle, col: '6' }) %> <%# NEW: Added render for data_validated %>
         <% render_input.call(f, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }) %>
         <% render_input.call(f, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }) %>
         <% render_input.call(f, :onboarding_meeting_notes, field_opts[:onboarding_meeting_notes] || { type: :text_area, rows: 4, col: '12' }) %> <%# NEW: Added render for onboarding notes %>
@@ -525,6 +528,7 @@
       <% render_input.call(nil, :end_day_communication, field_opts[:end_day_communication] || { col: '3' }, false, @learner_info) %>
       <% render_input.call(nil, :use_of_image_authorisation, field_opts[:use_of_image_authorisation] || { type: :checkbox, col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :emergency_protocol_choice, field_opts[:emergency_protocol_choice] || { col: '6' }, false, @learner_info) %>
+      <% render_input.call(nil, :data_validated, field_opts[:data_validated] || { type: :toggle, col: '6' }, false, @learner_info) %> <%# NEW: Added render for data_validated %>
       <% render_input.call(nil, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }, false, @learner_info) %>
       <% render_input.call(nil, :onboarding_meeting_notes, field_opts[:onboarding_meeting_notes] || { type: :text_area, rows: 4, col: '12' }, false, @learner_info) %> <%# NEW: Added render for onboarding notes %>
