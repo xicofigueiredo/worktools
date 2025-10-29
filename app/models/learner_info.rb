@@ -332,8 +332,15 @@ class LearnerInfo < ApplicationRecord
   end
 
   def generate_student_number
-    # Placeholder: Customize as needed (e.g., include hub code, year, sequence)
-    "ST-#{Time.current.year}-#{id.to_s.rjust(4, '0')}"
+    year = Time.current.year
+    min_sn = year * 10000
+    max_sn = min_sn + 9999
+    max_existing = LearnerInfo.where(student_number: min_sn..max_sn).maximum(:student_number)
+    if max_existing.nil?
+      min_sn + 1
+    else
+      max_existing + 1
+    end
   end
 
   def send_status_notification(new_status)
