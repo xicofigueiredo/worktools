@@ -148,6 +148,18 @@
               <td><%= @current_sprint.count_absences(@learner) %></td>
             </tr>
             <tr>
+              <td>Time at the Hub</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <% if week.start_date <= Date.today %>
+                  <td><%= format_time_spent((@time_spent[week.id] || 0).to_i) %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+              <% end %>
+              <% total_time = @time_spent.values.sum %>
+              <td><%= format_time_spent(total_time) %></td>
+            </tr>
+            <tr>
               <td>Weekly Progress</td>
               <% @current_sprint_weeks.each do |week| %>
                 <td>

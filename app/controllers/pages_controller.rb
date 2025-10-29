@@ -148,6 +148,19 @@ class PagesController < ApplicationController
       @timelines = @learner.timelines.where(hidden: false)
       @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
       @current_sprint_weeks = @current_sprint.weeks.order(:start_date)
+
+      # Precompute time spent for each week
+      @time_spent = {}
+      @current_sprint_weeks.each do |week|
+        week_attendances = @learner.attendances.where(week_id: week.id)
+        total_seconds = 0
+        week_attendances.each do |attendance|
+          next unless attendance.start_time && attendance.end_time
+          total_seconds += (attendance.end_time - attendance.start_time).to_i
+        end
+        @time_spent[week.id] = total_seconds
+      end
+
       @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
       @skills = @sprint_goals&.skills
       @communities = @sprint_goals&.communities
