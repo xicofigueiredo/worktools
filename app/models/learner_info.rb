@@ -256,6 +256,10 @@ class LearnerInfo < ApplicationRecord
       log_update(nil, { 'status' => [old_status, new_status] }, note: "Automated status update to #{new_status}")
     end
 
+    if new_status == "In progress" && old_status == "In progress conditional"
+      create_institutional_user_if_needed
+    end
+
     send_status_notification(new_status)
   end
 
@@ -341,6 +345,41 @@ class LearnerInfo < ApplicationRecord
     else
       max_existing + 1
     end
+  end
+
+  def create_institutional_user_if_needed
+    return if institutional_email.present? || user.present?
+
+    # Generate institutional_email: firstname.lastname@edubga.com using first and last name only
+    names = full_name.to_s.strip.split(/\s+/)
+    return unless names.size >= 2
+
+    first_name = I18n.transliterate(names.first).downcase
+    last_name = I18n.transliterate(names.last).downcase
+    generated_email = "#{first_name}.#{last_name}@edubga.com"
+    counter = 1
+    while User.exists?(email: generated_email)
+      generated_email = "#{first_name}.#{last_name}#{counter}@edubga.com"
+      counter += 1
+    end
+
+    # Update institutional_email
+    update_column(:institutional_email, generated_email)
+
+    # Create User
+    new_user = User.create!(
+      email: generated_email,
+      password: "123456",
+      password_confirmation: "123456",
+      role: 'learner',
+      deactivate: true
+    )
+
+    # Associate user
+    update_column(:user_id, new_user.id)
+
+    # Log the creation
+    log_update(nil, { 'institutional_email' => [nil, generated_email], 'user_id' => [nil, new_user.id] }, note: "Created institutional user on data validation")
   end
 
   def send_status_notification(new_status)
