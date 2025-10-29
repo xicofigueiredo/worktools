@@ -73,7 +73,7 @@
   preferred_name: { col: '6' },
   full_name: { col: '6' },
   student_number: { col: '6' },
-  status: { col: '6' }, # NEW FIELD ADDED - was in Basic Info
+  status: { col: '6' },
   curriculum_course_option: { type: :select, col: '6', choices: [
     "British Curriculum",
     "American Curriculum",
@@ -87,7 +87,6 @@
     "UP Computing"
   ]},
   grade_year: { type: :select, col: '6', choices: grades_per_curriculum[@learner_info.curriculum_course_option] || [], prompt: 'Select Grade/Year' },
-  # MOVED TO ADMINISTRATIVE SECTION
   start_date: { type: :date, col: '3' },
   birthdate: { type: :date, col: '4' },
   transfer_of_programme_date: { type: :date, col: '3' },
@@ -139,7 +138,7 @@
     "Graduated"
   ], include_blank: true },
   withdrawal_reason: { type: :text_area, rows: 2, col: '12' },
-  onboarding_meeting_notes: { type: :text_area, rows: 4, col: '12' } # NEW: Added field options for onboarding notes
+  onboarding_meeting_notes: { type: :text_area, rows: 4, col: '12' }
 } %>
 
 <% field_opts.merge!({
@@ -150,7 +149,7 @@
     "Semi Annual",
     "Quarterly"
   ]},
-  financial_responsibility: { type: :text_area, rows: 2, col: '12' }, # NEW FIELD ADDED
+  financial_responsibility: { type: :text_area, rows: 2, col: '12' },
   monthly_fee: { type: :number, col: '3', step: 1, label: "Monthly Fee (#{@currency_symbol})" },
   discount_mf: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   scholarship: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Scholarship (%)" },
@@ -205,9 +204,6 @@
         <% select_classes = disabled_flag ? "form-select" : "form-select editable-input" %>
         <% stimulus_attrs = {} %>
         <% html_options = stimulus_attrs.merge(class: select_classes, disabled: disabled_flag) %>
-        <% if attr == :grade_year %>
-          <% html_options[:required] = !disabled_flag %>
-        <% end %>
         <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
           <%= f.label(attr, label) %>
           <%= f.select(attr, choices, { prompt: opts[:prompt] || opts[:include_blank] || false }, html_options) %>
@@ -328,7 +324,7 @@
         <% render_input.call(f, :full_name, field_opts[:full_name] || { col: '6' }) %>
         <% render_input.call(f, :preferred_name, field_opts[:preferred_name] || { col: '6' }) %>
         <% render_input.call(f, :student_number, field_opts[:student_number] || { col: '6' }) %>
-        <% render_input.call(f, :status, field_opts[:status] || { col: '6' }) %> <%# MOVED: Status field added where start_date was %>
+        <% render_input.call(f, :status, field_opts[:status] || { col: '6' }) %>
         <% render_input.call(f, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }) %>
         <% render_input.call(f, :programme, field_opts[:programme] || { col: '6' }) %>
         <% render_input.call(f, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }) %>
