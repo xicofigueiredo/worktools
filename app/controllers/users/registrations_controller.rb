@@ -18,6 +18,7 @@ module Users
             end
             LearnerFlag.create(user: user) if user.learner?
           end
+          user.update(changed_password: true, confirmed_at: Time.now)
         end
       end
     end
