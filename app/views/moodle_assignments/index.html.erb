@@ -1,0 +1,26 @@
+<h1>Moodle Assignments</h1>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Moodle Course ID</th>
+      <th>CMID</th>
+      <th>Moodle Assignment ID</th>
+      <th>Name</th>
+      <th>Created</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @moodle_assignments.each do |ma| %>
+      <tr>
+        <td><%= link_to ma.id, moodle_assignment_path(ma) %></td>
+        <td><%= ma.moodle_course_id %></td>
+        <td><%= ma.cmid %></td>
+        <td><%= ma.moodle_id %></td>
+        <td><%= ma.name %></td>
+        <td><%= l(ma.created_at, format: :short) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+  </table>

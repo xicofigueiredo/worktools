@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :moodle_assignments, only: [:index, :show]
   get 'responses/create'
   get 'forms/index'
   get 'forms/show'

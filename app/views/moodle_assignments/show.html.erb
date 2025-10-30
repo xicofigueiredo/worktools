@@ -1,0 +1,60 @@
+<h1><%= @moodle_assignment.name %></h1>
+
+<p>
+  <strong>Moodle Assignment ID:</strong> <%= @moodle_assignment.moodle_id %><br>
+  <strong>Moodle Course ID:</strong> <%= @moodle_assignment.moodle_course_id %><br>
+  <strong>CMID:</strong> <%= @moodle_assignment.cmid %><br>
+  <strong>Subject:</strong> <%= @moodle_assignment.subject&.name %>
+</p>
+
+<h2>Submissions (graded)</h2>
+<p>
+  <strong>Total submissions:</strong> <%= @submissions_count %><br>
+  <strong>Average grading turnaround:</strong>
+  <% if @avg_grading_seconds.present? %>
+    <% days = (@avg_grading_seconds / 86400.0) %>
+    <% if days >= 1 %>
+      <%= sprintf('%.2f days', days) %>
+    <% else %>
+      <%= sprintf('%.2f hours', @avg_grading_seconds / 3600.0) %>
+    <% end %>
+  <% else %>
+    N/A
+  <% end %>
+  <br>
+  <strong>Average grading turnaround (business days):</strong>
+  <% if @avg_grading_business_days.present? %>
+    <%= sprintf('%.2f days', @avg_grading_business_days) %>
+  <% else %>
+    N/A
+  <% end %>
+</p>
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Moodle Submission ID</th>
+      <th>User ID</th>
+      <th>Submission Date</th>
+      <th>Grade</th>
+      <th>Grading Date</th>
+      <th>Grading Time (business days)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @submissions.each do |s| %>
+      <tr>
+        <td><%= s.moodle_submission_id %></td>
+        <td><%= s.user_id %></td>
+        <td><%= s.submission_date ? l(s.submission_date, format: :short) : '-' %></td>
+        <td><%= s.grade %></td>
+        <td><%= s.grading_date ? l(s.grading_date, format: :short) : '-' %></td>
+        <td>
+          <% bd = @grading_business_days_by_submission_id[s.id] %>
+          <%= bd.present? ? bd : '-' %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<p><%= link_to 'Back', moodle_assignments_path %></p>

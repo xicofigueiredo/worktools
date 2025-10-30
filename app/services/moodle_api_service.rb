@@ -60,7 +60,6 @@ class MoodleApiService
           section_visible: activity['section_visible'],
           name: activity['name'],
           modname: activity['modname'],
-          ect: ect_value,
           visible: activity['visible'] == 1,
           availabilityinfo: activity['availabilityinfo'] || "No restrictions",
           description: activity['description'] || "",
@@ -72,7 +71,7 @@ class MoodleApiService
           submission_date: activity['submission_date'],
           evaluation_date: activity['evaluation_date'],
           grade: activity['grade'],
-          ect: activity['ect']
+          ect: ect_value
 
         }
       end
@@ -89,89 +88,89 @@ class MoodleApiService
     end
   end
 
-  # get all the topics for a specific course and learner
-  def get_course_topics_for_learner(email, course_id)
-    user_id = get_user_id(email)
-    return puts "User not found!" if user_id.nil?
+    # get all the topics for a specific course and learner
+    def get_course_topics_for_learner(email, course_id)
+      user_id = get_user_id(email)
+      return puts "User not found!" if user_id.nil?
 
-    # Fetch course contents (topics & activities)
-    course_contents = call('core_course_get_contents', { courseid: course_id })
+      # Fetch course contents (topics & activities)
+      course_contents = call('core_course_get_contents', { courseid: course_id })
 
-    # Fetch completion status for activities
-    completion_status = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user_id })
+      # Fetch completion status for activities
+      completion_status = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user_id })
 
-    # Fetch grades for activities in the course
-    grades_response = call('core_grades_get_gradeitems', { courseid: course_id })
+      # Fetch grades for activities in the course
+      grades_response = call('core_grades_get_gradeitems', { courseid: course_id })
 
-    # Convert completion status into a hash for quick lookup
-    completion_lookup = {}
-    if completion_status["statuses"]
-      completion_status["statuses"].each do |status|
-        completion_lookup[status["cmid"]] = {
-          completed: status["state"] == 1 ? "✅ Done" : "❌ Not Done",
-          completion_date: status["timecompleted"] ? Time.at(status["timecompleted"]).strftime("%d %B %Y, %H:%M") : "N/A"
-        }
+      # Convert completion status into a hash for quick lookup
+      completion_lookup = {}
+      if completion_status["statuses"]
+        completion_status["statuses"].each do |status|
+          completion_lookup[status["cmid"]] = {
+            completed: status["state"] == 1 ? "✅ Done" : "❌ Not Done",
+            completion_date: status["timecompleted"] ? Time.at(status["timecompleted"]).strftime("%d %B %Y, %H:%M") : "N/A"
+          }
+        end
       end
-    end
 
-    # Convert grades into a hash using cmid
-    grades_lookup = {}
-    if grades_response["gradeitems"]
-      grades_response["gradeitems"].each do |grade|
-        grades_lookup[grade["cmid"]] = {
-          grade: grade["graderaw"] || "No Grade",
-          max_grade: grade["grademax"] || "N/A"
-        }
+      # Convert grades into a hash using cmid
+      grades_lookup = {}
+      if grades_response["gradeitems"]
+        grades_response["gradeitems"].each do |grade|
+          grades_lookup[grade["cmid"]] = {
+            grade: grade["graderaw"] || "No Grade",
+            max_grade: grade["grademax"] || "N/A"
+          }
+        end
       end
-    end
 
-    if course_contents.is_a?(Array) && course_contents.any?
-      course_topics = []
+      if course_contents.is_a?(Array) && course_contents.any?
+        course_topics = []
 
-      course_contents.each do |section|
-        next if section['name'].nil? || section['modules'].nil? # Skip empty sections
+        course_contents.each do |section|
+          next if section['name'].nil? || section['modules'].nil? # Skip empty sections
 
-        section_title = section['name']
-        section_visibility = section['visible'] == 1 ? " Visible" : "❌ Hidden"
-        section_availability = section['availabilityinfo'] || "No restrictions"
+          section_title = section['name']
+          section_visibility = section['visible'] == 1 ? " Visible" : "❌ Hidden"
+          section_availability = section['availabilityinfo'] || "No restrictions"
 
-        activities = section['modules'].map do |mod|
-          activity_id = mod["id"]  # Capture the activity ID
-          activity_visibility = mod['visible'] == 1 ? " Visible" : "❌ Hidden"
-          activity_availability = mod['availabilityinfo'] || "No restrictions"
+          activities = section['modules'].map do |mod|
+            activity_id = mod["id"]  # Capture the activity ID
+            activity_visibility = mod['visible'] == 1 ? " Visible" : "❌ Hidden"
+            activity_availability = mod['availabilityinfo'] || "No restrictions"
 
-          # Get completion state and completion date
-          completion_info = completion_lookup[activity_id] || { completed: "❓ Unknown", completion_date: "N/A" }
+            # Get completion state and completion date
+            completion_info = completion_lookup[activity_id] || { completed: "❓ Unknown", completion_date: "N/A" }
 
-          # Check if the activity is completed and has a grade
-          grade_info = grades_lookup[activity_id]
-          grade_display = grade_info ? "#{grade_info[:grade]} / #{grade_info[:max_grade]}" : "No Grade"
+            # Check if the activity is completed and has a grade
+            grade_info = grades_lookup[activity_id]
+            grade_display = grade_info ? "#{grade_info[:grade]} / #{grade_info[:max_grade]}" : "No Grade"
 
-          {
-            id: activity_id,  # Added activity ID here
-            name: mod['name'],
-            visible: activity_visibility,
-            availabilityinfo: activity_availability,
-            completed: completion_info[:completed],
-            completion_date: completion_info[:completion_date],  # Added completion date
-            grade: completion_info[:completed] == "✅ Done" ? grade_display : "N/A",
+            {
+              id: activity_id,  # Added activity ID here
+              name: mod['name'],
+              visible: activity_visibility,
+              availabilityinfo: activity_availability,
+              completed: completion_info[:completed],
+              completion_date: completion_info[:completion_date],  # Added completion date
+              grade: completion_info[:completed] == "✅ Done" ? grade_display : "N/A",
+            }
+          end
+
+          course_topics << {
+            section: section_title,
+            visible: section_visibility,
+            availabilityinfo: section_availability,
+            activities: activities
           }
         end
 
-        course_topics << {
-          section: section_title,
-          visible: section_visibility,
-          availabilityinfo: section_availability,
-          activities: activities
-        }
+        return course_topics
+      else
+        puts "No topics or activities found for Course ID #{course_id}"
+        return []
       end
-
-      return course_topics
-    else
-      puts "No topics or activities found for Course ID #{course_id}"
-      return []
     end
-  end
 
   #create moodle timelines
   def create_moodle_timelines_for_learner(email)
@@ -782,13 +781,16 @@ class MoodleApiService
   # assignments: array of hashes from fetch_course_assignments or array of IDs
   # options:
   #   fetch_grades: false (if true, will call submission status API per user to try to fill grade/grading_date)
-  def create_submissions_for_assignments(assignments, fetch_grades: true)
+  def create_submissions_for_assignments
+    assignments = MoodleAssignment.all.last(10)
     records_created = 0
     records_updated = 0
 
     # Normalize assignments to hashes with id and name when available
     assignment_list = assignments.map do |a|
-      if a.is_a?(Hash)
+      if a.is_a?(MoodleAssignment)
+        { id: a.moodle_id, name: a.name }
+      elsif a.is_a?(Hash)
         { id: a[:id] || a['id'], name: a[:name] || a['name'] }
       else
         { id: a }
@@ -811,7 +813,7 @@ class MoodleApiService
         grade = nil
         grading_date = nil
 
-        if fetch_grades && user_id
+        if user_id
           begin
             status = fetch_submission_status(assignment_id, user_id)
             if status && status['feedback'] && status['feedback']['grade']
@@ -883,6 +885,7 @@ class MoodleApiService
 
 
 
+
   # Helper method to inspect submission fields
   def inspect_submission_fields(assignments)
     puts "🔍 Inspecting submission fields..."
@@ -910,58 +913,27 @@ class MoodleApiService
   def get_assignments_submissions(assignments)
     puts "📋 Getting submissions for #{assignments.size} assignments..."
 
-    # Extract assignment IDs if hashes are passed
-    assignment_ids = assignments.map { |a| a.is_a?(Hash) ? a[:id] || a['id'] : a }
-
     organized_submissions = []
 
-    # Try batch call first with array format
-    submissions_result = call('mod_assign_get_submissions', { assignmentids: assignment_ids })
+    # Always use individual calls per assignment (batch disabled)
+    assignments.each do |assignment|
+      assignment_id = assignment.is_a?(Hash) ? (assignment[:id] || assignment['id']) : assignment
+      assignment_name = assignment.is_a?(Hash) ? (assignment[:name] || assignment['name']) : nil
 
-    # If batch call fails, fall back to individual calls
-    if submissions_result['exception']
-      puts "⚠️  Batch call failed, trying individual calls..."
+      result = call('mod_assign_get_submissions', { assignmentids: [assignment_id] })
 
-      assignments.each do |assignment|
-        assignment_id = assignment.is_a?(Hash) ? (assignment[:id] || assignment['id']) : assignment
-        assignment_name = assignment.is_a?(Hash) ? (assignment[:name] || assignment['name']) : nil
+      if result['assignments']&.any?
+        assignment_data = result['assignments'].first
+        submissions = assignment_data['submissions'] || []
 
-        result = call('mod_assign_get_submissions', { assignmentids: [assignment_id] })
+        organized_submissions << {
+          assignment_id: assignment_id,
+          assignment_name: assignment_name,
+          submissions: submissions,
+          submission_count: submissions.size
+        }
 
-        if result['assignments']&.any?
-          assignment_data = result['assignments'].first
-          submissions = assignment_data['submissions'] || []
-
-          organized_submissions << {
-            assignment_id: assignment_id,
-            assignment_name: assignment_name,
-            submissions: submissions,
-            submission_count: submissions.size
-          }
-
-          puts "  📝 Assignment ID #{assignment_id}#{assignment_name ? " (#{assignment_name})" : ''}: #{submissions.size} submissions"
-        end
-      end
-    else
-      # Batch call succeeded, process results
-      if submissions_result['assignments']
-        submissions_result['assignments'].each do |assignment_data|
-          assignment_id = assignment_data['assignmentid']
-          submissions = assignment_data['submissions'] || []
-
-          # Find the assignment name if we have it
-          assignment_info = assignments.find { |a| (a.is_a?(Hash) ? (a[:id] || a['id']) : a) == assignment_id }
-          assignment_name = assignment_info.is_a?(Hash) ? (assignment_info[:name] || assignment_info['name']) : nil
-
-          organized_submissions << {
-            assignment_id: assignment_id,
-            assignment_name: assignment_name,
-            submissions: submissions,
-            submission_count: submissions.size
-          }
-
-          puts "  📝 Assignment ID #{assignment_id}#{assignment_name ? " (#{assignment_name})" : ''}: #{submissions.size} submissions"
-        end
+        puts "  📝 Assignment ID #{assignment_id}#{assignment_name ? " (#{assignment_name})" : ''}: #{submissions.size} submissions"
       end
     end
 
@@ -1081,10 +1053,9 @@ class MoodleApiService
           organized_data << organized_record
         end
       end
+      puts "✅ Organized data for #{organized_data.size} submission records"
+      organized_data
     end
-
-    puts "✅ Organized data for #{organized_data.size} submission records"
-    organized_data
   end
 
   # Helper method to extract feedback comments
@@ -1105,11 +1076,11 @@ class MoodleApiService
     comments.any? ? comments.join('; ') : 'No feedback comments'
   end
 
-    # Get submission status for a specific assignment and user
-    def fetch_submission_status(assignment_id, user_id)
-      params = { 'assignid' => assignment_id, 'userid' => user_id }
-      call('mod_assign_get_submission_status', params)
-    end
+  # Get submission status for a specific assignment and user
+  def fetch_submission_status(assignment_id, user_id)
+    params = { 'assignid' => assignment_id, 'userid' => user_id }
+    call('mod_assign_get_submission_status', params)
+  end
 
   # Helper method to get feedback for a specific attempt
   def get_attempt_feedback(assignment_id, user_id, attempt_number)
@@ -1144,7 +1115,7 @@ class MoodleApiService
     end
   end
 
-  # Get learners enrolled in a course
+    # Get learners enrolled in a course
   def get_course_learners(course_id)
     puts "👥 Getting learners for course #{course_id}..."
 
@@ -1204,6 +1175,4 @@ class MoodleApiService
     puts "Found #{learner_data.size} assignments with feedback for learner"
     learner_data
   end
-
-
 end
