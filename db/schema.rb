@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_29_134835) do
+ActiveRecord::Schema[7.0].define(version: 2025_10_30_100646) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -547,8 +547,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_29_134835) do
     t.bigint "hub_id"
     t.text "onboarding_meeting_notes"
     t.boolean "data_validated", default: false
+    t.bigint "learning_coach_id"
     t.index ["hub_id"], name: "index_learner_infos_on_hub_id"
     t.index ["institutional_email"], name: "index_learner_infos_on_institutional_email"
+    t.index ["learning_coach_id"], name: "index_learner_infos_on_learning_coach_id"
     t.index ["start_date"], name: "index_learner_infos_on_start_date"
     t.index ["student_number"], name: "index_learner_infos_on_student_number_unique", unique: true, where: "(student_number IS NOT NULL)"
     t.index ["user_id"], name: "index_learner_infos_on_user_id"
@@ -1164,6 +1166,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_29_134835) do
   add_foreign_key "learner_flags", "users"
   add_foreign_key "learner_infos", "hubs"
   add_foreign_key "learner_infos", "users"
+  add_foreign_key "learner_infos", "users", column: "learning_coach_id"
   add_foreign_key "lws_timelines", "users"
   add_foreign_key "monday_slots", "users", column: "lc_id"
   add_foreign_key "monday_slots", "users", column: "learner_id"

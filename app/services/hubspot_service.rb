@@ -51,14 +51,24 @@ class HubspotService
     # New logic: Set status based on hub capacity after association
     if learner_info.hub_id.present?
       hub = learner_info.hub
-      active_count = LearnerInfo.where(hub_id: hub.id).where.not(id: learner_info.id).where.not(status: ['Inactive', 'Graduated']).count
 
-      if active_count < hub.capacity
+      if hub.name == "Online"
+        # Online hub always has capacity
         learner_info.update!(status: 'In progress conditional')
-        Rails.logger.info("Set status to 'In progress conditional' for LearnerInfo ID: #{learner_info.id} (hub has capacity)")
+        Rails.logger.info("Set status to 'In progress conditional' for LearnerInfo ID: #{learner_info.id} (Online hub always has capacity)")
       else
-        learner_info.update!(status: 'Waitlist')
-        Rails.logger.info("Set status to 'Waitlist' for LearnerInfo ID: #{learner_info.id} (hub at capacity)")
+        active_count = LearnerInfo.where(hub_id: hub.id)
+                                  .where.not(id: learner_info.id)
+                                  .where.not(status: ['Inactive', 'Graduated'])
+                                  .count
+
+        if active_count < hub.capacity
+          learner_info.update!(status: 'In progress conditional')
+          Rails.logger.info("Set status to 'In progress conditional' for LearnerInfo ID: #{learner_info.id} (hub has capacity)")
+        else
+          learner_info.update!(status: 'Waitlist')
+          Rails.logger.info("Set status to 'Waitlist' for LearnerInfo ID: #{learner_info.id} (hub at capacity)")
+        end
       end
     else
       Rails.logger.warn("No hub associated for LearnerInfo ID: #{learner_info.id} - Status remains unset")

@@ -100,7 +100,8 @@
   gender: { type: :select, col: '6', choices: ['Male', 'Female', 'Other'] },
   native_language: { col: '6' },
   english_proficiency: { type: :toggle, col: '6' },
-  data_validated: { type: :toggle, col: '6' }, # NEW: Added toggle for data_validated
+  data_validated: { type: :toggle, col: '6' },
+  learning_coach: { col: '6' },
   parent1_full_name: { col: '6' },
   parent1_email: { type: :email, col: '6' },
   parent1_phone_number: { col: '6' },
@@ -412,6 +413,17 @@
     <div class="li-section li-grid">
       <h4>Administrative</h4>
       <div class="row gx-3">
+        <% if @learner_info.hub&.name == 'Online' && @learner_info.status == 'In progress conditional' %>
+          <%= content_tag(:div, class: "mb-3 col-md-6") do %>
+            <%= label_tag(nil, "Learning Coach", class: "form-label") %>
+            <div class="input-group">
+              <%= tag.input(value: @learner_info.learning_coach&.full_name || "-", type: "text", class: "form-control", disabled: true) %>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#learningCoachModal">
+                <%= @learner_info.learning_coach ? "Change Learning Coach" : "Select Learning Coach" %>
+              </button>
+            </div>
+          <% end %>
+        <% end %>
         <% render_input.call(f, :id_information, field_opts[:id_information] || { col: '6' }) %>
         <% render_input.call(f, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }) %>
         <% render_input.call(f, :start_date, field_opts[:start_date] || { type: :date, col: '3' }) %>
@@ -520,6 +532,12 @@
   <div class="li-section li-grid">
     <h4>Administrative</h4>
     <div class="row gx-3">
+      <% if @learner_info.hub&.name == 'Online' && @learner_info.status == 'In progress conditional' %>
+        <%= content_tag(:div, class: "mb-3 col-md-6") do %>
+          <%= label_tag(nil, "Learning Coach", class: "form-label") %>
+          <%= tag.input(value: @learner_info.learning_coach&.full_name || "-", type: "text", class: "form-control", disabled: true) %>
+        <% end %>
+      <% end %>
       <% render_input.call(nil, :id_information, field_opts[:id_information] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :start_date, field_opts[:start_date] || { type: :date, col: '3' }, false, @learner_info) %>
@@ -679,6 +697,73 @@
 <% if @main_hub %>
 </div>
 <% end %>
+
+<!-- New Modal for Learning Coach Selection  -->
+<% if @sorted_coaches %>
+  <div class="modal fade" id="learningCoachModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Select Learning Coach</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <%= form_with model: @learner_info, url: admission_path(@learner_info), method: :patch do |f| %>
+            <table class="table table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>Select</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Hub</th>
+                  <th># LC in Hub</th>
+                  <th># Kids in Hub</th>
+                  <th># Remote Learners</th>
+                  <th>Ratio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if @sorted_coaches.empty? %>
+                  <tr>
+                    <td colspan="8">No learning coaches available.</td>
+                  </tr>
+                <% else %>
+                  <% @sorted_coaches.each do |data| %>
+                    <% coach = data[:coach] %>
+                    <% main_hub = data[:main_hub] %>
+                    <% lc_count = data[:lc_count] %>
+                    <% kids_count = data[:kids_count] %>
+                    <% remote_count = data[:remote_count] %>
+                    <% ratio = data[:ratio] %>
+                    <tr>
+                      <td>
+                        <%= f.radio_button :learning_coach_id, coach.id, checked: (@learner_info.learning_coach_id == coach.id) %>
+                      </td>
+                      <td><%= coach.full_name %></td>
+                      <td><%= coach.email %></td>
+                      <td><%= main_hub.name %></td>
+                      <td><%= lc_count %></td>
+                      <td><%= kids_count %></td>
+                      <td><%= remote_count %></td>
+                      <td><%= number_with_precision(ratio, precision: 2) %></td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <% unless @sorted_coaches.empty? %>
+                <%= f.submit "Assign Learning Coach", class: "btn btn-primary" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
 <script>
   function setupFinanceCalculations() {
     // Auto-calculate billable fields using percentages
