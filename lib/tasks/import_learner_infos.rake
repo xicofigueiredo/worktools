@@ -451,20 +451,49 @@ namespace :admissions do
           parsed = parse_field.call(raw, attr)
           attrs[attr] = parsed
         end
-        # Programme normalization
+        # Fetch and match hub first to allow showing it in programme prompts if needed
+        raw_hub_cell = fetch.call(row, 'Hub Location (Section 2)', 'Hub Location', 'Hub')
+        raw_hub_for_logging = to_utf8.call(raw_hub_cell).to_s.strip
+        hub_fragment = nil
+        if raw_hub_cell.present?
+          s = raw_hub_cell.to_s
+          hub_fragment = s.include?('-') ? s.split('-', 2).last.to_s.strip : s.strip
+        end
+        matched_hub = find_best_hub_match(hub_fragment)
+        # Programme normalization (updated logic: only Online or Hybrid, prompt if unclear)
         if attrs[:programme].present?
-          long_to_short = {
-            normalize.call('In-person (with Hub access): Secondary Education (Grades 6 to 12)') => 'In-Person: Secondary Education',
-            normalize.call('In-person (with Hub access): UP Programme (Higher Education)') => 'In-Person: UP Programme',
-            normalize.call('Online Only (no Hub access): Secondary Education (Grades 6 to 12)') => 'Online: Secondary Education',
-            normalize.call('Online Only (no Hub access): UP Programme (Higher Education)') => 'Online: UP Programme',
-            normalize.call('BAS Programme (Academy of Sports)') => 'BAS Programme',
-            normalize.call('In-person (with Hub access): Own Curriculum') => 'Own Curriculum'
-          }
-          incoming_key = normalize.call(attrs[:programme])
-          if long_to_short.key?(incoming_key)
-            old = attrs[:programme]
-            attrs[:programme] = long_to_short[incoming_key]
+          normalized_programme = attrs[:programme].to_s.strip
+          downcased_programme = normalized_programme.downcase
+          old = normalized_programme
+          if downcased_programme.start_with?('in-person')
+            attrs[:programme] = 'Hybrid'
+          elsif downcased_programme.start_with?('online')
+            attrs[:programme] = 'Online'
+          else
+            # Prompt user, showing the learner hub
+            hub_info = if matched_hub
+                         "#{matched_hub.name} (id: #{matched_hub.id})"
+                       else
+                         "No hub matched for \"#{raw_hub_for_logging}\""
+                       end
+            puts "\nUnclear programme for row #{row_num}: #{normalized_programme.inspect}"
+            puts "Associated hub: #{hub_info}"
+            puts "Options:"
+            puts "1. Hybrid"
+            puts "2. Online"
+            puts "0. Skip (set to nil)"
+            print "Choose (0-2): "
+            choice = gets.chomp.to_i
+            case choice
+            when 1
+              attrs[:programme] = 'Hybrid'
+            when 2
+              attrs[:programme] = 'Online'
+            else
+              attrs[:programme] = nil
+            end
+          end
+          if attrs[:programme] != old
             puts "Row #{row_num}: NORMALIZED programme - #{old.inspect} -> #{attrs[:programme].inspect}"
           end
         end
@@ -535,14 +564,6 @@ namespace :admissions do
           billable_rf: billable_rf
         }
         ident = attrs[:institutional_email].presence || "#{attrs[:full_name].to_s[0..40]}|#{attrs[:birthdate].to_s}"
-        raw_hub_cell = fetch.call(row, 'Hub Location (Section 2)', 'Hub Location', 'Hub')
-        raw_hub_for_logging = to_utf8.call(raw_hub_cell).to_s.strip
-        hub_fragment = nil
-        if raw_hub_cell.present?
-          s = raw_hub_cell.to_s
-          hub_fragment = s.include?('-') ? s.split('-', 2).last.to_s.strip : s.strip
-        end
-        matched_hub = find_best_hub_match(hub_fragment)
         found = nil
         if attrs[:institutional_email].present?
           found = LearnerInfo.find_by(institutional_email: attrs[:institutional_email])

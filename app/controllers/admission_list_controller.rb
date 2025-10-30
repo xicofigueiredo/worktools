@@ -165,15 +165,6 @@ class AdmissionListController < ApplicationController
       return render json: { error: 'Hub not found' }, status: :not_found
     end
 
-    # Compute model based on programme and hub (same as matcher)
-    model = if programme&.start_with?('Online:')
-      'online'
-    elsif programme&.start_with?('In-Person:')
-      'hybrid'
-    else
-      hub.name.downcase == 'remote' ? 'online' : 'hybrid'
-    end
-
     # Get new pricing for the selected curriculum and programme
     new_pricing = PricingTierMatcher.for_learner(@learner_info, curriculum, hub, programme)
 
@@ -204,7 +195,7 @@ class AdmissionListController < ApplicationController
       old_programme: @learner_info.programme,
       new_programme: programme,
       pricing_criteria: {
-        model: model.capitalize,
+        model: programme,
         country: hub.country,
         hub_name: hub.name,
         curriculum: curriculum

@@ -18,18 +18,9 @@ class PricingTierMatcher
 
     search_curriculum = curriculum_aliases[target_curriculum] || target_curriculum
 
-    # Determine model based on programme (priority) or hub
-    model = if programme&.start_with?('Online:')
-      'Online'
-    elsif programme&.start_with?('In-Person:')
-      'Hybrid'
-    else
-      target_hub.name.downcase == 'remote' ? 'online' : 'hybrid'
-    end
-
     # Try to find pricing tier with exact match including specific_hub
     pricing = PricingTier.find_by(
-      model: model,
+      model: programme,
       country: target_hub.country,
       curriculum: search_curriculum,
       specific_hub: target_hub.name
@@ -37,7 +28,7 @@ class PricingTierMatcher
 
     # Fallback: try without specific_hub if not found
     pricing ||= PricingTier.find_by(
-      model: model,
+      model: programme,
       country: target_hub.country,
       curriculum: search_curriculum,
       specific_hub: "N/A"
@@ -46,7 +37,7 @@ class PricingTierMatcher
     # Fallback: try with hub_type if that's set
     if pricing.nil? && target_hub.hub_type.present?
       pricing = PricingTier.find_by(
-        model: model,
+        model: programme,
         country: target_hub.country,
         curriculum: search_curriculum,
         hub_type: target_hub.hub_type,
