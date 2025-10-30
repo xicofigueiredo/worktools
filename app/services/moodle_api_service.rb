@@ -805,8 +805,15 @@ class MoodleApiService
       moodle_assignment = MoodleAssignment.find_by(moodle_id: assignment_id)
       next unless moodle_assignment
 
+      # Prefetch existing submission IDs to skip fast
+      incoming_ids = (group[:submissions] || []).map { |sub| sub['id'] }
+      existing_ids = Submission.where(moodle_submission_id: incoming_ids)
+                               .pluck(:moodle_submission_id)
+                               .to_set
+
       group[:submissions].each do |sub|
         moodle_submission_id = sub['id']
+        next if existing_ids.include?(moodle_submission_id)
         user_id = sub['userid']
         submission_date = sub['timecreated'].to_i > 0 ? Time.at(sub['timecreated'].to_i) : nil
 
@@ -916,7 +923,7 @@ class MoodleApiService
     organized_submissions = []
 
     # Always use individual calls per assignment (batch disabled)
-    assignments.each do |assignment|
+    assignments.each_with_index do |assignment, index|
       assignment_id = assignment.is_a?(Hash) ? (assignment[:id] || assignment['id']) : assignment
       assignment_name = assignment.is_a?(Hash) ? (assignment[:name] || assignment['name']) : nil
 
@@ -933,7 +940,7 @@ class MoodleApiService
           submission_count: submissions.size
         }
 
-        puts "  📝 Assignment ID #{assignment_id}#{assignment_name ? " (#{assignment_name})" : ''}: #{submissions.size} submissions"
+        puts " #{index + 1} Assignment ID #{assignment_id}#{assignment_name ? " (#{assignment_name})" : ''}: #{submissions.size} submissions"
       end
     end
 
