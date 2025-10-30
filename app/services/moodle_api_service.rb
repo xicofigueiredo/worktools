@@ -733,9 +733,6 @@ class MoodleApiService
     result
   end
 
-
-
-
   # Get assignments for a course using the standard Moodle API
   def fetch_course_assignments(course_id)
     puts "📋 Fetching assignments for course #{course_id} using standard API..."
@@ -780,6 +777,79 @@ class MoodleApiService
       create_course_assignments(assignments, subject)            # <-- pass subject
     end
   end
+
+    # Create Submission records for the given assignments
+  # assignments: array of hashes from fetch_course_assignments or array of IDs
+  # options:
+  #   fetch_grades: false (if true, will call submission status API per user to try to fill grade/grading_date)
+  def create_submissions_for_assignments(assignments, fetch_grades: true)
+    records_created = 0
+    records_updated = 0
+
+    # Normalize assignments to hashes with id and name when available
+    assignment_list = assignments.map do |a|
+      if a.is_a?(Hash)
+        { id: a[:id] || a['id'], name: a[:name] || a['name'] }
+      else
+        { id: a }
+      end
+    end
+
+    # Pull submissions from Moodle
+    groups = get_assignments_submissions(assignment_list)
+
+    groups.each do |group|
+      assignment_id = group[:assignment_id]
+      moodle_assignment = MoodleAssignment.find_by(moodle_id: assignment_id)
+      next unless moodle_assignment
+
+      group[:submissions].each do |sub|
+        moodle_submission_id = sub['id']
+        user_id = sub['userid']
+        submission_date = sub['timecreated'].to_i > 0 ? Time.at(sub['timecreated'].to_i) : nil
+
+        grade = nil
+        grading_date = nil
+
+        if fetch_grades && user_id
+          begin
+            status = fetch_submission_status(assignment_id, user_id)
+            if status && status['feedback'] && status['feedback']['grade']
+              grade_info = status['feedback']['grade']
+              grade = grade_info['grade'].to_f if grade_info['grade']
+              grading_date = grade_info['timemodified'].to_i > 0 ? Time.at(grade_info['timemodified'].to_i) : nil
+            end
+          rescue => e
+            Rails.logger.warn "Could not fetch grade for assignment #{assignment_id}, user #{user_id}: #{e.message}"
+          end
+        end
+
+        # Only persist submissions that have a grade (nil grades are skipped)
+        next if grade.nil?
+
+        submission = Submission.find_or_initialize_by(moodle_submission_id: moodle_submission_id)
+        submission.moodle_assignment_id = moodle_assignment.id
+        submission.user_id = user_id
+        submission.submission_date = submission_date
+        submission.grade = grade
+        submission.grading_date = grading_date
+
+        if submission.new_record?
+          if submission.save
+            records_created += 1
+          end
+        else
+          if submission.changed?
+            submission.save
+            records_updated += 1
+          end
+        end
+      end
+    end
+
+    { created: records_created, updated: records_updated }
+  end
+
 
 
 
