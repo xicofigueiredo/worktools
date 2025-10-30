@@ -2,7 +2,13 @@ class MoodleAssignmentsController < ApplicationController
   before_action :set_moodle_assignment, only: [:show]
 
   def index
-    @moodle_assignments = MoodleAssignment.where(moodle_course_id: 2).order(created_at: :desc).limit(500)
+    # Subjects that have Moodle assignments, with counts of assignments and submissions
+    @subject_rows = MoodleAssignment
+                      .joins(:subject)
+                      .left_joins(:submissions)
+                      .group('subjects.id', 'subjects.name', 'subjects.category')
+                      .select('subjects.id AS subject_id, subjects.name AS subject_name, subjects.category AS category, COUNT(DISTINCT moodle_assignments.id) AS assignments_count, COUNT(submissions.id) AS submissions_count')
+                      .order('subjects.category ASC, subjects.name ASC')
   end
 
   def show
@@ -46,6 +52,19 @@ class MoodleAssignmentsController < ApplicationController
       @grading_business_days_by_submission_id = {}
       @avg_grading_business_days = nil
     end
+  end
+
+  # List assignments for a given subject with their submission counts
+  def subject
+    subject_id = params[:id]
+    @subject = Subject.find(subject_id)
+
+    @assignments_with_counts = MoodleAssignment
+      .where(subject_id: subject_id)
+      .left_joins(:submissions)
+      .select('moodle_assignments.*, COUNT(submissions.id) AS submissions_count')
+      .group('moodle_assignments.id')
+      .order('moodle_assignments.name ASC')
   end
 
   def fetch_submissions_range
