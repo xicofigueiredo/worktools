@@ -786,43 +786,38 @@ class MoodleApiService
     records_created = 0
     records_updated = 0
 
-    # Normalize assignments to hashes with id and name when available
-    assignment_list = assignments.map do |a|
-      if a.is_a?(MoodleAssignment)
-        { id: a.moodle_id, name: a.name }
-      elsif a.is_a?(Hash)
-        { id: a[:id] || a['id'], name: a[:name] || a['name'] }
-      else
-        { id: a }
-      end
-    end
+    assignments.each_with_index do |assignment_record, idx|
+      assignment_id = assignment_record.moodle_id
+      next if assignment_id.blank?
 
-    # Pull submissions from Moodle
-    groups = get_assignments_submissions(assignment_list)
+      # Fetch submissions for this single assignment directly
+      result = call('mod_assign_get_submissions', { assignmentids: [assignment_id] })
+      next unless result['assignments']&.any?
 
-    groups.each do |group|
-      assignment_id = group[:assignment_id]
-      moodle_assignment = MoodleAssignment.find_by(moodle_id: assignment_id)
-      next unless moodle_assignment
+      assignment_data = result['assignments'].first
+      submissions = assignment_data['submissions'] || []
 
       # Prefetch existing submission IDs to skip fast
-      incoming_ids = (group[:submissions] || []).map { |sub| sub['id'] }
+      incoming_ids = submissions.map { |s| s['id'] }
       existing_ids = Submission.where(moodle_submission_id: incoming_ids)
                                .pluck(:moodle_submission_id)
                                .to_set
 
-      group[:submissions].each do |sub|
+      submissions.each do |sub|
         moodle_submission_id = sub['id']
         next if existing_ids.include?(moodle_submission_id)
+
         user_id = sub['userid']
         submission_date = sub['timecreated'].to_i > 0 ? Time.at(sub['timecreated'].to_i) : nil
-
+        # Skip submissions not in year 2025 or later (also skip when date is nil)
+        next unless submission_date && submission_date.year >= 2025
         grade = nil
         grading_date = nil
 
+        # Inline fetch of submission status to obtain grade
         if user_id
           begin
-            status = fetch_submission_status(assignment_id, user_id)
+            status = call('mod_assign_get_submission_status', { 'assignid' => assignment_id, 'userid' => user_id })
             if status && status['feedback'] && status['feedback']['grade']
               grade_info = status['feedback']['grade']
               grade = grade_info['grade'].to_f if grade_info['grade']
@@ -833,11 +828,11 @@ class MoodleApiService
           end
         end
 
-        # Only persist submissions that have a grade (nil grades are skipped)
+        # Skip ungraded submissions
         next if grade.nil?
 
         submission = Submission.find_or_initialize_by(moodle_submission_id: moodle_submission_id)
-        submission.moodle_assignment_id = moodle_assignment.id
+        submission.moodle_assignment_id = assignment_record.id
         submission.user_id = user_id
         submission.submission_date = submission_date
         submission.grade = grade
