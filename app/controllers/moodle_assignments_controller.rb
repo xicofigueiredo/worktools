@@ -48,6 +48,21 @@ class MoodleAssignmentsController < ApplicationController
     end
   end
 
+  def fetch_submissions_range
+    first = params[:first].to_i
+    last  = params[:last].to_i
+
+    if first < 0 || last <= first
+      redirect_to moodle_assignments_path, alert: "Invalid range. Use first < last and both >= 0." and return
+    end
+
+    service = MoodleApiService.new
+    result = service.create_submissions_for_assignments(first, last)
+    redirect_to moodle_assignments_path, notice: "Fetched submissions: created #{result[:created]}, updated #{result[:updated]} (range #{first}...#{last})."
+  rescue => e
+    redirect_to moodle_assignments_path, alert: "Error fetching submissions: #{e.message}"
+  end
+
   private
 
   def set_moodle_assignment

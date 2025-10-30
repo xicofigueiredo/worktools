@@ -1,5 +1,19 @@
 <h1>Moodle Assignments</h1>
 
+<div class="mb-3">
+  <%= form_with url: fetch_submissions_range_moodle_assignments_path, method: :post, local: true, class: 'form-inline' do |f| %>
+    <div class="form-group mr-2">
+      <label for="first" class="mr-1">First</label>
+      <%= number_field_tag :first, params[:first], min: 0, class: 'form-control', id: 'first' %>
+    </div>
+    <div class="form-group mr-2">
+      <label for="last" class="mr-1">Last</label>
+      <%= number_field_tag :last, params[:last], min: 1, class: 'form-control', id: 'last' %>
+    </div>
+    <%= submit_tag 'Fetch submissions for range', class: 'btn btn-primary' %>
+  <% end %>
+</div>
+
 <table class="table table-striped">
   <thead>
     <tr>

@@ -1,5 +1,9 @@
 Rails.application.routes.draw do
-  resources :moodle_assignments, only: [:index, :show]
+  resources :moodle_assignments, only: [:index, :show] do
+    collection do
+      post :fetch_submissions_range
+    end
+  end
   get 'responses/create'
   get 'forms/index'
   get 'forms/show'

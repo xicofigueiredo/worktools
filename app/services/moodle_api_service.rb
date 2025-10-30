@@ -781,8 +781,8 @@ class MoodleApiService
   # assignments: array of hashes from fetch_course_assignments or array of IDs
   # options:
   #   fetch_grades: false (if true, will call submission status API per user to try to fill grade/grading_date)
-  def create_submissions_for_assignments
-    assignments = MoodleAssignment.all.last(10)
+  def create_submissions_for_assignments(first, last)
+    assignments = MoodleAssignment.all[first...last]
     records_created = 0
     records_updated = 0
 
