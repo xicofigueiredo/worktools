@@ -449,52 +449,43 @@ class AdmissionListController < ApplicationController
   private
 
   def set_learner_info
-    # include user for view convenience
-    @learner_info = LearnerInfo.includes(:user).find(params[:id])
-    @permission   = LearnerInfoPermission.new(current_user, @learner_info)
-  end
+      # include user for view convenience
+      @learner_info = LearnerInfo.includes(:user).find(params[:id])
+      @permission   = LearnerInfoPermission.new(current_user, @learner_info)
+    end
 
-  def set_learning_coaches
+    def set_learning_coaches
     @online_hub = Hub.find_by(name: 'Online')
     return unless @online_hub
 
-    # Fetch all users with role 'lc' associated with Online hub (via UsersHubs)
-    @learning_coaches = User.joins(:users_hubs)
-                            .where(users_hubs: { hub_id: @online_hub.id })
-                            .where(role: 'lc')
-                            .distinct
+    @learning_coaches = @online_hub.learning_coaches
+
+    excluded_statuses = ['Waitlist', 'Waitlist - OK', 'In progress conditional', 'Inactive', 'Graduated']
 
     @sorted_coaches = @learning_coaches.map do |coach|
       # Find the main hub for this coach
       main_users_hub = coach.users_hubs.find_by(main: true)
       main_hub = main_users_hub&.hub
-      next unless main_hub  # Skip if no main hub (edge case)
+      next unless main_hub
 
-      # #lc in the main hub: LCs associated with this hub (not necessarily main)
-      lc_count = User.joins(:users_hubs)
-                    .where(users_hubs: { hub_id: main_hub.id })
-                    .where(role: 'lc')
-                    .distinct
-                    .count
-
-      # #kids in the main hub: Active learners (exclude specified statuses)
-      excluded_statuses = ['Waitlist', 'Waitlist - OK', 'In progress conditional', 'Inactive', 'Graduated']  # Adjust cases as per your data
-      kids_count = LearnerInfo.where.not(status: excluded_statuses)
-                              .where(
-                                "(learner_infos.hub_id = :hub_id) OR (learner_infos.hub_id IS NULL AND EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id = :hub_id AND uh.main = TRUE))",
-                                hub_id: main_hub.id
-                              )
-                              .count
-
-      # #remote learners: All LearnerInfos assigned to this coach (no status filter as per spec)
+      # Use hub model methods
+      lc_count = main_hub.learning_coaches_count
+      kids_count = main_hub.learners_excluding_statuses(excluded_statuses).count
       remote_count = LearnerInfo.where(learning_coach_id: coach.id).count
 
-      # Ratio: (#kids / #lc) + #remote; handle division by zero
+      # Calculate ratio
       base_ratio = lc_count > 0 ? (kids_count.to_f / lc_count) : 0.0
       ratio = base_ratio + remote_count
 
-      { coach: coach, main_hub: main_hub, lc_count: lc_count, kids_count: kids_count, remote_count: remote_count, ratio: ratio }
-    end.compact  # Remove any skipped (nil) entries
+      {
+        coach: coach,
+        main_hub: main_hub,
+        lc_count: lc_count,
+        kids_count: kids_count,
+        remote_count: remote_count,
+        ratio: ratio
+      }
+    end.compact
 
     @sorted_coaches.sort_by! { |data| data[:ratio] }
   end

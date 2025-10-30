@@ -8,6 +8,8 @@ class LearnerInfo < ApplicationRecord
 
   accepts_nested_attributes_for :learner_finance, update_only: true
 
+  attr_accessor :skip_email_validation
+
   EMAIL_FIELDS = %w[
     personal_email
     institutional_email
@@ -74,8 +76,9 @@ class LearnerInfo < ApplicationRecord
   VALID_EMAIL_REGEX = URI::MailTo::EMAIL_REGEXP
 
   validates *EMAIL_FIELDS.map(&:to_sym),
-            format: { with: VALID_EMAIL_REGEX, message: "is not a valid email" },
-            allow_blank: true
+              format: { with: VALID_EMAIL_REGEX, message: "is not a valid email" },
+              allow_blank: true,
+              unless: :skip_email_validation
 
   # Class methods for normalization (can be used independently)
   class << self

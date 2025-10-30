@@ -140,16 +140,22 @@ class HubspotService
     learner_info_mapping.each do |hub_key, model_col|
       next unless fields[hub_key].present?
       val = fields[hub_key]
+
+      if [:personal_email, :previous_school_email, :parent1_email, :parent2_email].include?(model_col)
+        val = val.to_s.strip.downcase.presence
+        next unless val.present?
+      end
+
       if model_col == :birthdate
-          timestamp_seconds = val.to_i / 1000
-          val = Time.at(timestamp_seconds).to_date
-          val = (Date.parse(val) rescue val)
+        timestamp_seconds = val.to_i / 1000
+        val = Time.at(timestamp_seconds).to_date
+        val = (Date.parse(val) rescue val)
       end
       attrs[model_col] = val
     end
 
     # Special handling for UP Programme
-    if attrs[:programme] == "UP Programme (Higher Education)" && fields[:level].present?
+    if attrs[:programme].in?(["UP Programme (Higher Education)", "UP Programme (Online: Higher Education)"]) && fields[:level].present?
       attrs[:curriculum_course_option] = fields[:level]
     end
 
@@ -172,6 +178,7 @@ class HubspotService
     end
 
     learner_info = LearnerInfo.new(attrs)
+    learner_info.skip_email_validation = true
 
     if learner_info.save
       Rails.logger.info("Successfully created NEW LearnerInfo for #{learner_info.full_name} (ID: #{learner_info.id})")

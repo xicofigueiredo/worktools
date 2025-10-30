@@ -571,7 +571,7 @@ namespace :admissions do
                 li_var = found
               else
                 found.assign_attributes(learner_info_attrs)
-                found.save!
+                found.save!(validate: false)
                 updated += 1
                 puts "Row #{row_num}: UPDATED #{ident} (id=#{found.id}) - changes: #{diffs.keys.join(', ')}"
                 li_var = found
@@ -583,12 +583,13 @@ namespace :admissions do
               puts "Row #{row_num}: WOULD CREATE #{ident} student_number=#{learner_info_attrs[:student_number].inspect}"
             else
               li_var = LearnerInfo.new(learner_info_attrs)
-              li_var.data_validated = (attrs[:status] != "In progress") # NEW: Set data_validated based on status for new entries
+              li_var.data_validated = (attrs[:status] != "In progress")
               if attrs[:institutional_email].present?
                 u = User.find_by(email: attrs[:institutional_email])
                 li_var.user = u if u
               end
-              li_var.save!(validate: false)
+              li_var.skip_email_validation = true
+              li_var.save!
               created += 1
               puts "Row #{row_num}: CREATED id=#{li_var.id} #{ident} student_number=#{learner_info_attrs[:student_number].inspect} data_validated=#{li_var.data_validated}"
             end
