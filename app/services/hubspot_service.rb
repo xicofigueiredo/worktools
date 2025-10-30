@@ -25,20 +25,43 @@ class HubspotService
 
   def self.process_submission(submission_data)
     fields = submission_data['values'].map { |v| [v['name'].to_sym, v['value']] }.to_h
-    email  = fields[:learner_s_personal_email_address]
+    email = fields[:learner_s_personal_email_address]
+    conversion_id = submission_data['conversionId']
 
     Rails.logger.info("All submission fields: #{fields.inspect}")
-    Rails.logger.info("Processing submission for email: #{email} at #{Time.zone.at(submission_data['submittedAt']/1000.0)}")
+    Rails.logger.info("Processing submission for email: #{email} (conversionId: #{conversion_id}) at #{Time.zone.at(submission_data['submittedAt']/1000.0)}")
 
-    # Skip existing leads
-    if LearnerInfo.find_by(personal_email: email.strip.presence&.downcase).present?
-      Rails.logger.warn("Skipping submission: LearnerInfo with email #{email} already exists.")
+    # Normalize email
+    normalized_email = normalize_email(email)
+
+    # Parse full_name and birthdate for fallback check
+    full_name = fields[:studentname].to_s.strip if fields[:studentname].present?
+    birthdate = nil
+    if fields[:learner_s_date_of_birth].present?
+      begin
+        timestamp_seconds = fields[:learner_s_date_of_birth].to_i / 1000
+        birthdate = Time.at(timestamp_seconds).to_date
+      rescue
+        Rails.logger.warn("Failed to parse birthdate for duplicate check in submission #{conversion_id}")
+      end
+    end
+
+    # Check for existing using combination: conversionId OR email OR (full_name + birthdate)
+    query = LearnerInfo.where(hubspot_conversion_id: conversion_id) if conversion_id.present?
+    query = query.or(LearnerInfo.where(personal_email: normalized_email)) if normalized_email.present?
+    if full_name.present? && birthdate.present?
+      query = query.or(LearnerInfo.where(full_name: full_name, birthdate: birthdate))
+    end
+    existing = query.first if query
+
+    if existing
+      Rails.logger.warn("Skipping submission #{conversion_id}: Matching LearnerInfo (ID: #{existing.id}) found via #{existing.hubspot_conversion_id == conversion_id ? 'conversionId' : (existing.personal_email == normalized_email ? 'email' : 'name + birthdate')}")
       return
     end
 
-    learner_info = create_learner_info(fields)
+    learner_info = create_learner_info(fields, conversion_id)
     unless learner_info
-      Rails.logger.error("Failed to create LearnerInfo for submission with email #{email}")
+      Rails.logger.error("Failed to create LearnerInfo for submission #{conversion_id} with email #{email}")
       return
     end
 
@@ -109,7 +132,7 @@ class HubspotService
     end
   end
 
-  def self.create_learner_info(fields)
+  def self.create_learner_info(fields, conversion_id = nil)
     learner_info_mapping = {
       :learning_model                    => :programme,
       :curriculum_option__2_             => :curriculum_course_option,
@@ -142,7 +165,7 @@ class HubspotService
       val = fields[hub_key]
 
       if [:personal_email, :previous_school_email, :parent1_email, :parent2_email].include?(model_col)
-        val = val.to_s.strip.downcase.presence
+        val = normalize_email(val)
         next unless val.present?
       end
 
@@ -190,11 +213,14 @@ class HubspotService
       end
     end
 
+    # Store conversion_id if provided
+    attrs[:hubspot_conversion_id] = conversion_id if conversion_id.present?
+
     learner_info = LearnerInfo.new(attrs)
     learner_info.skip_email_validation = true
 
     if learner_info.save
-      Rails.logger.info("Successfully created NEW LearnerInfo for #{learner_info.full_name} (ID: #{learner_info.id})")
+      Rails.logger.info("Successfully created NEW LearnerInfo for #{learner_info.full_name} (ID: #{learner_info.id}) with conversionId #{conversion_id}")
       learner_info
     else
       Rails.logger.error("FATAL ERROR: Failed to create LearnerInfo for #{attrs[:full_name]}: #{learner_info.errors.full_messages.join(', ')}")
@@ -499,5 +525,15 @@ class HubspotService
   rescue => e
     Rails.logger.error "Error fetching HubSpot form options for level: #{e.message}"
     return []
+  end
+
+  def self.normalize_email(raw)
+    return nil if raw.blank?
+    raw = raw.to_s.strip
+    # Extract from <...> if fully wrapped (allowing spaces)
+    if raw =~ /\A<\s*([^>]+)\s*>\z/
+      raw = $1.strip
+    end
+    raw.downcase
   end
 end
