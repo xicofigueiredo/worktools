@@ -2,12 +2,12 @@ class MoodleAssignmentsController < ApplicationController
   before_action :set_moodle_assignment, only: [:show]
 
   def index
-    # Subjects that have Moodle assignments, with counts of assignments and submissions
+    # Subjects that have Moodle assignments, with counts of assignments and submissions, plus average grading_time
     @subject_rows = MoodleAssignment
                       .joins(:subject)
                       .left_joins(:submissions)
                       .group('subjects.id', 'subjects.name', 'subjects.category')
-                      .select('subjects.id AS subject_id, subjects.name AS subject_name, subjects.category AS category, COUNT(DISTINCT moodle_assignments.id) AS assignments_count, COUNT(submissions.id) AS submissions_count')
+                      .select('subjects.id AS subject_id, subjects.name AS subject_name, subjects.category AS category, COUNT(DISTINCT moodle_assignments.id) AS assignments_count, COUNT(submissions.id) AS submissions_count, COALESCE(AVG(moodle_assignments.grading_time), 0) AS avg_grading_time')
                       .order('subjects.category ASC, subjects.name ASC')
   end
 

@@ -808,7 +808,7 @@ class MoodleApiService
         next if existing_ids.include?(moodle_submission_id)
 
         user_id = sub['userid']
-        submission_date = sub['timecreated'].to_i > 0 ? Time.at(sub['timecreated'].to_i) : nil
+        submission_date = sub['timemodified'].to_i > 0 ? Time.at(sub['timemodified'].to_i) : nil
         # Skip submissions not in year 2025 or later (also skip when date is nil)
         next unless submission_date && submission_date.year >= 2025
         grade = nil
