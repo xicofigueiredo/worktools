@@ -248,7 +248,7 @@ class LearnerInfo < ApplicationRecord
 
   def check_status_updates
     new_status = calculate_status
-    return if new_status == status
+    return if new_status == status && !saved_change_to_status?
 
     old_status = status
     if new_status == "Onboarded" && student_number.blank?
@@ -332,6 +332,34 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
+  def learning_coaches
+    prog = programme.to_s.strip.downcase
+    case prog
+    when 'online'
+      [learning_coach].compact
+    when 'hybrid'
+      hub ? hub.learning_coaches.to_a : []
+    else
+      []
+    end
+  end
+
+  def admissions_users
+    [User.find_by(email: "admissions@bravegenerationacademy.com")].compact
+  end
+
+  def curriculum_responsibles
+    curr = curriculum_course_option.to_s.strip.downcase
+    case
+    when curr.include?('portuguese')
+      User.where(email: ['luis@bravegenerationacademy.com', 'Goncalo.Meireles@edubga.com']).to_a
+    when curr.start_with?('up')
+      [User.find_by(email: 'esther@bravegenerationacademy.com')].compact
+    else
+      [User.find_by(email: 'danielle@bravegenerationacademy.com')].compact
+    end
+  end
+
   private
 
   def status_was_waitlist_ok?
@@ -391,8 +419,15 @@ class LearnerInfo < ApplicationRecord
     # e.g., UserMailer.status_update(self, new_status).deliver_later
     # or NotificationService.notify(user, "Status changed to #{new_status}")
     case new_status
+    when "In progress conditional"
+      message = "New Learner has filled the application forms."
+      notify_recipients(admissions_users, message)
     when "In progress"
-      # Send "data validated" email
+      message = "#{full_name} is enrolling for: #{hub.name}. Check the profile on the link."
+      notify_recipients(learning_coaches, message)
+
+      curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
+      notify_recipients(curriculum_responsibles, curr_message)
     when "In progress - ok"
       # Send onboarding notes confirmation
     when "Validated"
@@ -404,6 +439,21 @@ class LearnerInfo < ApplicationRecord
     when "Inactive"
       # Send deactivation email
     # Add more as needed
+    end
+  end
+
+  def notify_recipients(recipients, message, link: nil)
+    raise ArgumentError, "message is required" if message.blank?
+
+    link ||= Rails.application.routes.url_helpers.admission_path(self)
+
+    if recipients.blank?
+      Rails.logger.warn("[LearnerInfo##{id}] No recipients found for notification; none created.")
+      return
+    end
+
+    recipients.each do |user|
+      Notification.create!(user: user, message: message, link: link, read: false)
     end
   end
 
