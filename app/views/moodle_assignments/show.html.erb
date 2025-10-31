@@ -1,60 +1,136 @@
-<h1><%= @moodle_assignment.name %></h1>
+<div class="container-fluid mt-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0"><%= @moodle_assignment.name %></h1>
+        <%= link_to '← Back to Subjects', moodle_assignments_path, class: 'btn btn-outline-secondary btn-sm' %>
+      </div>
 
-<p>
-  <strong>Moodle Assignment ID:</strong> <%= @moodle_assignment.moodle_id %><br>
-  <strong>Moodle Course ID:</strong> <%= @moodle_assignment.moodle_course_id %><br>
-  <strong>CMID:</strong> <%= @moodle_assignment.cmid %><br>
-  <strong>Subject:</strong> <%= @moodle_assignment.subject&.name %>
-</p>
+      <div class="card mb-4">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Assignment Details</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <strong>Subject:</strong>
+              <%= link_to @moodle_assignment.subject&.name, subject_moodle_assignments_path(id: @moodle_assignment.subject_id), class: 'badge bg-primary text-decoration-none' %>
+            </div>
+            <div class="col-md-6 mb-3">
+              <strong>Moodle Assignment ID:</strong> <code><%= @moodle_assignment.moodle_id %></code>
+            </div>
+            <div class="col-md-6 mb-3">
+              <strong>Moodle Course ID:</strong> <code><%= @moodle_assignment.moodle_course_id %></code>
+            </div>
+            <div class="col-md-6 mb-3">
+              <strong>CMID:</strong> <code><%= @moodle_assignment.cmid %></code>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<h2>Submissions (graded)</h2>
-<p>
-  <strong>Total submissions:</strong> <%= @submissions_count %><br>
-  <strong>Average grading turnaround:</strong>
-  <% if @avg_grading_seconds.present? %>
-    <% days = (@avg_grading_seconds / 86400.0) %>
-    <% if days >= 1 %>
-      <%= sprintf('%.2f days', days) %>
-    <% else %>
-      <%= sprintf('%.2f hours', @avg_grading_seconds / 3600.0) %>
-    <% end %>
-  <% else %>
-    N/A
-  <% end %>
-  <br>
-  <strong>Average grading turnaround (business days):</strong>
-  <% if @avg_grading_business_days.present? %>
-    <%= sprintf('%.2f days', @avg_grading_business_days) %>
-  <% else %>
-    N/A
-  <% end %>
-</p>
-<table class="table table-sm">
-  <thead>
-    <tr>
-      <th>Moodle Submission ID</th>
-      <th>User ID</th>
-      <th>Submission Date</th>
-      <th>Grade</th>
-      <th>Grading Date</th>
-      <th>Grading Time (business days)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @submissions.each do |s| %>
-      <tr>
-        <td><%= s.moodle_submission_id %></td>
-        <td><%= s.user_id %></td>
-        <td><%= s.submission_date ? l(s.submission_date, format: :short) : '-' %></td>
-        <td><%= s.grade %></td>
-        <td><%= s.grading_date ? l(s.grading_date, format: :short) : '-' %></td>
-        <td>
-          <% bd = @grading_business_days_by_submission_id[s.id] %>
-          <%= bd.present? ? bd : '-' %>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+      <div class="card mb-4">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Grading Statistics</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <div class="text-muted small">Total Submissions</div>
+              <h4><span class="badge bg-info"><%= @submissions_count %></span></h4>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="text-muted small">Average Turnaround</div>
+              <h5>
+                <% if @avg_grading_seconds.present? %>
+                  <% days = (@avg_grading_seconds / 86400.0) %>
+                  <% if days >= 1 %>
+                    <span class="badge bg-secondary"><%= sprintf('%.2f days', days) %></span>
+                  <% else %>
+                    <span class="badge bg-secondary"><%= sprintf('%.2f hours', @avg_grading_seconds / 3600.0) %></span>
+                  <% end %>
+                <% else %>
+                  <span class="text-muted">N/A</span>
+                <% end %>
+              </h5>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="text-muted small">Avg Business Days</div>
+              <h5>
+                <% if @avg_grading_business_days.present? %>
+                  <span class="badge bg-warning"><%= sprintf('%.2f days', @avg_grading_business_days) %></span>
+                <% else %>
+                  <span class="text-muted">N/A</span>
+                <% end %>
+              </h5>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="text-muted small">Stored Grading Time</div>
+              <h5>
+                <% if @moodle_assignment.grading_time.present? %>
+                  <span class="badge bg-success"><%= sprintf('%.2f days', @moodle_assignment.grading_time) %></span>
+                <% else %>
+                  <span class="text-muted">N/A</span>
+                <% end %>
+              </h5>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<p><%= link_to 'Back', moodle_assignments_path %></p>
+      <div class="card">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Submissions (Graded)</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Moodle Submission ID</th>
+                  <th>User ID</th>
+                  <th>Submission Date</th>
+                  <th class="text-end">Grade</th>
+                  <th>Grading Date</th>
+                  <th class="text-end">Grading Time (days)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @submissions.each do |s| %>
+                  <tr>
+                    <td><code><%= s.moodle_submission_id %></code></td>
+                    <td><code><%= s.user_id %></code></td>
+                    <td><%= s.submission_date ? s.submission_date.strftime("%d/%m/%Y") : '<span class="text-muted">-</span>'.html_safe %></td>
+                    <td class="text-end">
+                      <% if s.grade.present? %>
+                        <span class="badge bg-success"><%= s.grade %></span>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                    <td><%= s.grading_date ? s.grading_date.strftime("%d/%m/%Y") : '<span class="text-muted">-</span>'.html_safe %></td>
+                    <td class="text-end">
+                      <% bd = @grading_business_days_by_submission_id[s.id] %>
+                      <% if bd.present? %>
+                        <span class="badge bg-info"><%= sprintf('%.2f', bd) %></span>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+  }
+</style>

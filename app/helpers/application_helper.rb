@@ -27,15 +27,13 @@ module ApplicationHelper
   def format_time_spent(seconds)
     return "0h" if seconds.nil? || seconds == 0
 
-    hours = seconds / 3600
-    minutes = (seconds % 3600) / 60
+    decimal_hours = seconds / 3600.0
+    rounded_hours = (decimal_hours * 2).round / 2.0  # Round to nearest 0.5
 
-    if hours > 0 && minutes > 0
-      "#{hours}h #{minutes}m"
-    elsif hours > 0
-      "#{hours}h"
+    if rounded_hours == rounded_hours.to_i
+      "#{rounded_hours.to_i}h"
     else
-      "#{minutes}m"
+      "#{rounded_hours}h"
     end
   end
 end
