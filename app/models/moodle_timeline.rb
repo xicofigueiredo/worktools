@@ -250,7 +250,10 @@ class MoodleTimeline < ApplicationRecord
           submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
           evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
           as1: as1,
-          as2: as2
+          as2: as2,
+          ano10: true,
+          ano11: true,
+          ano12: true
         )
       end
 
@@ -479,28 +482,32 @@ class MoodleTimeline < ApplicationRecord
       self.moodle_topics.where(hidden: true).update_all(hidden: false)
     end
 
-    # Handle ano10, ano11, ano12 fields
-    if self.ano10 == false
-      self.moodle_topics.where("unit LIKE ?", "10°%").update_all(hidden: true)
-    elsif self.ano10 == true && saved_change_to_ano10?
-      # Unhide topics for ano10 and recreate to catch any new ones from Moodle
-      self.moodle_topics.where("unit LIKE ?", "10°%").update_all(hidden: false)
-    end
+    if self.subject.moodle_id == 360
+      last_topic_ano10 = self.moodle_topics.where("unit LIKE ?", "10°%").last
+      last_topic_ano11 = self.moodle_topics.where("unit LIKE ?", "11°%").last
+      last_topic_ano12 = self.moodle_topics.where("unit LIKE ?", "12°%").last
 
-    if self.ano11 == false
-      self.moodle_topics.where("unit LIKE ?", "11°%").update_all(hidden: true)
-    elsif self.ano11 == true && saved_change_to_ano11?
-      # Unhide topics for ano11 and recreate to catch any new ones from Moodle
-      self.moodle_topics.where("unit LIKE ?", "11°%").update_all(hidden: false)
-    end
+      if self.ano10 == false
+        self.moodle_topics.where('"order" <= ?', last_topic_ano10.order).update_all(hidden: true)
+      elsif self.ano10 == true && saved_change_to_ano10?
+        # Unhide topics for ano10 and recreate to catch any new ones from Moodle
+        self.moodle_topics.where('"order" <= ?', last_topic_ano10.order).update_all(hidden: false)
+      end
 
-    if self.ano12 == false
-      self.moodle_topics.where("unit LIKE ?", "12°%").update_all(hidden: true)
-    elsif self.ano12 == true && saved_change_to_ano12?
-      # Unhide topics for ano12 and recreate to catch any new ones from Moodle
-      self.moodle_topics.where("unit LIKE ?", "12°%").update_all(hidden: false)
-    end
+      if self.ano11 == false
+        self.moodle_topics.where('"order" > ? AND "order" <= ?', last_topic_ano10.order, last_topic_ano11.order).update_all(hidden: true)
+      elsif self.ano11 == true && saved_change_to_ano11?
+        # Unhide topics for ano11 and recreate to catch any new ones from Moodle
+        self.moodle_topics.where('"order" > ? AND "order" <= ?', last_topic_ano10.order, last_topic_ano11.order).update_all(hidden: false)
+      end
 
+      if self.ano12 == false
+        self.moodle_topics.where('"order" > ? AND "order" <= ?', last_topic_ano11.order, last_topic_ano12.order).update_all(hidden: true)
+      elsif self.ano12 == true && saved_change_to_ano12?
+        # Unhide topics for ano12 and recreate to catch any new ones from Moodle
+        self.moodle_topics.where('"order" > ? AND "order" <= ?', last_topic_ano11.order, last_topic_ano12.order).update_all(hidden: false)
+      end
+    end
   end
 
   def recreate_topics_for_year(year_prefix)
