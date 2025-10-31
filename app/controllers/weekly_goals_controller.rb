@@ -182,7 +182,7 @@ class WeeklyGoalsController < ApplicationController
           .first
 
         if moodle_timeline.present?
-          topics = moodle_timeline.moodle_topics
+          topics = moodle_timeline.moodle_topics.where(hidden: false)
             .order(:order)
             .select(:id, :name)
             .map { |mt| { id: mt.id, name: mt.name } }
@@ -197,7 +197,7 @@ class WeeklyGoalsController < ApplicationController
         .first
 
       if moodle_timeline.present?
-        topics = moodle_timeline.moodle_topics
+        topics = moodle_timeline.moodle_topics.where(hidden: false)
           .order(:order)
           .select(:id, :name)
           .map { |mt| { id: mt.id, name: mt.name } }

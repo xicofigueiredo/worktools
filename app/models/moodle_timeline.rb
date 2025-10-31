@@ -113,7 +113,7 @@ class MoodleTimeline < ApplicationRecord
 
       # Calculate total ECT time for each child block and the sum of all blocks
       block_ect_times = children.map do |child|
-        child.moodle_topics.sum(:time).to_f
+        child.moodle_topics.where(hidden: false).sum(:time).to_f
       end
 
       total_ect_time = block_ect_times.sum
@@ -181,7 +181,7 @@ class MoodleTimeline < ApplicationRecord
       user_id = self.user.moodle_id
       course_id = self.moodle_id
 
-      if self.subject.board == "Portuguese Curriculum" || self.subject.board == "UP" || self.subject.category == 0 || self.subject.category == 1 || self.subject.category == 2
+      if self.subject.board == "Portuguese Curriculum" || self.subject.board == "UP" || self.subject.category == 0 || self.subject.category == 1 || self.subject.category == 2 || self.subject.moodle_id == 45
         user_id = 2617
       end
 
@@ -271,7 +271,7 @@ class MoodleTimeline < ApplicationRecord
       completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
 
       # Get all moodle_topics for this timeline in one query to avoid N+1
-      existing_topics = self.moodle_topics.index_by(&:moodle_id)
+      existing_topics = self.moodle_topics.where(hidden: false).index_by(&:moodle_id)
 
       # Prepare bulk updates
       topics_to_update = []
@@ -282,7 +282,7 @@ class MoodleTimeline < ApplicationRecord
         # Prefer id match, but fallback by name and backfill moodle_id like sync
         moodle_topic = existing_topics[activity[:id]]
         if moodle_topic.nil?
-          moodle_topic = self.moodle_topics.find_by(name: activity[:name])
+          moodle_topic = self.moodle_topics.where(hidden: false).find_by(name: activity[:name])
           if moodle_topic && activity[:id].present? && moodle_topic.moodle_id.nil?
             moodle_topic.update_column(:moodle_id, activity[:id])
             existing_topics[activity[:id]] = moodle_topic
@@ -471,31 +471,34 @@ class MoodleTimeline < ApplicationRecord
 
   def update_as1_as2
     if self.as1 == true && self.as2 == false
-      self.moodle_topics.where(as1: false).destroy_all
+      self.moodle_topics.where(as1: false).update_all(hidden: true)
     elsif self.as2 == true && self.as1 == false
-      self.moodle_topics.where(as2: false).destroy_all
+      self.moodle_topics.where(as2: false).update_all(hidden: true)
+    else
+      # Unhide topics when both are true or both are false
+      self.moodle_topics.where(hidden: true).update_all(hidden: false)
     end
 
     # Handle ano10, ano11, ano12 fields
     if self.ano10 == false
-      self.moodle_topics.where("unit LIKE ?", "10°%").destroy_all
+      self.moodle_topics.where("unit LIKE ?", "10°%").update_all(hidden: true)
     elsif self.ano10 == true && saved_change_to_ano10?
-      # Recreate topics for ano10 if it changed from false to true
-      recreate_topics_for_year("10°")
+      # Unhide topics for ano10 and recreate to catch any new ones from Moodle
+      self.moodle_topics.where("unit LIKE ?", "10°%").update_all(hidden: false)
     end
 
     if self.ano11 == false
-      self.moodle_topics.where("unit LIKE ?", "11°%").destroy_all
+      self.moodle_topics.where("unit LIKE ?", "11°%").update_all(hidden: true)
     elsif self.ano11 == true && saved_change_to_ano11?
-      # Recreate topics for ano11 if it changed from false to true
-      recreate_topics_for_year("11°")
+      # Unhide topics for ano11 and recreate to catch any new ones from Moodle
+      self.moodle_topics.where("unit LIKE ?", "11°%").update_all(hidden: false)
     end
 
     if self.ano12 == false
-      self.moodle_topics.where("unit LIKE ?", "12°%").destroy_all
+      self.moodle_topics.where("unit LIKE ?", "12°%").update_all(hidden: true)
     elsif self.ano12 == true && saved_change_to_ano12?
-      # Recreate topics for ano12 if it changed from false to true
-      recreate_topics_for_year("12°")
+      # Unhide topics for ano12 and recreate to catch any new ones from Moodle
+      self.moodle_topics.where("unit LIKE ?", "12°%").update_all(hidden: false)
     end
 
   end
@@ -507,7 +510,7 @@ class MoodleTimeline < ApplicationRecord
     user_id = self.user.moodle_id
     course_id = self.moodle_id
 
-    if self.subject.board == "Portuguese Curriculum" || self.subject.board == "UP"
+    if self.subject.board == "Portuguese Curriculum" || self.subject.board == "UP" || self.subject.moodle_id == 45
       user_id = 2617
     end
 
@@ -757,8 +760,6 @@ class MoodleTimeline < ApplicationRecord
   def progress_and_expected_progress_present?
     progress.present? && expected_progress.present?
   end
-
-  private
 
   def parse_evaluation_date(date_value)
     return nil unless date_value.present?

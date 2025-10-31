@@ -36,7 +36,7 @@ class WeeklyGoal < ApplicationRecord
       selected_topic_names = slots.map(&:topic_name).compact.uniq
 
       # Find all moodle topics that match the selected topic names
-      selected_topics = moodle_timeline.moodle_topics
+      selected_topics = moodle_timeline.moodle_topics.where(hidden: false)
         .where(name: selected_topic_names)
 
       next if selected_topics.empty?
@@ -47,7 +47,7 @@ class WeeklyGoal < ApplicationRecord
       next unless last_topic
 
       # Get all moodle topics for this timeline ordered by order (ascending)
-      all_topics = moodle_timeline.moodle_topics.order(order: :asc)
+      all_topics = moodle_timeline.moodle_topics.where(hidden: false).order(order: :asc)
 
       # Collect topics from last_topic backwards (to lower order) until we reach a done topic
       topics_to_sum = []

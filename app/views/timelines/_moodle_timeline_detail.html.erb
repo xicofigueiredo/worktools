@@ -20,7 +20,7 @@
         </thead>
         <tbody>
           <% previous_unit = nil %>
-          <% @timeline.moodle_topics.order(:id).each do |moodle_topic| %>
+          <% @timeline.moodle_topics.where(hidden: false).order(:id).each do |moodle_topic| %>
             <% background_color = if moodle_topic && !moodle_topic.done && moodle_topic.deadline && moodle_topic.deadline < Date.today && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)
                                     '#ff193499'
                                   elsif moodle_topic && !moodle_topic.done && moodle_topic.deadline && Date.today.monday? && moodle_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)

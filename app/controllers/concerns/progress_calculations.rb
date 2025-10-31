@@ -65,12 +65,12 @@ module ProgressCalculations
   def moodle_calculate_progress_and_balance(timelines)
 
     timelines.each do |timeline|
-      topics = timeline.moodle_topics
+      topics = timeline.moodle_topics.where(hidden: false)
       total_topics = topics.size
       progress = 0
       balance = 0
       expected_progress = 0
-      total_time = timeline.moodle_topics.sum(:time).to_f
+      total_time = timeline.moodle_topics.where(hidden: false).sum(:time).to_f
 
       topics.each do |topic|
         # Update balance based on deadline and done state
@@ -129,7 +129,7 @@ module ProgressCalculations
   end
 
   def moodle_calc_remaining_timeline_hours_and_percentage(timeline)
-    topics = timeline.moodle_topics
+    topics = timeline.moodle_topics.where(hidden: false)
 
     remaining_hours_count = 0
     remaining_percentage = 0.0
