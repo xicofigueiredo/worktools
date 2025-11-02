@@ -415,9 +415,6 @@ class LearnerInfo < ApplicationRecord
   end
 
   def send_status_notification(new_status)
-    # Placeholder: Expand to send emails/notifications per status
-    # e.g., UserMailer.status_update(self, new_status).deliver_later
-    # or NotificationService.notify(user, "Status changed to #{new_status}")
     case new_status
     when "In progress conditional"
       message = "New Learner has filled the application forms."
@@ -428,17 +425,26 @@ class LearnerInfo < ApplicationRecord
 
       curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
       notify_recipients(curriculum_responsibles, curr_message)
+
+      # TO DO: RM logic
+
+      # TO DO: Email to parents
     when "In progress - ok"
-      # Send onboarding notes confirmation
+      message = "#{full_name} had the onboarding meeting. Check here."
+      notify_recipients(learning_coaches, message)
+
+      # TO DO: RM logic
+
+      # TO DO: Email to admissions
     when "Validated"
-      # Send documents approved notification
+      # TO DO: Teams Message to Amanda
     when "Onboarded"
-      # Send welcome/onboarding email
-    when "Active"
-      # Send account activation notice
-    when "Inactive"
-      # Send deactivation email
-    # Add more as needed
+      message = "#{full_name} is ready to roll at #{start_date}"
+      notify_recipients(learning_coaches + curriculum_responsibles, message)
+
+      # TO DO: RM logic
+
+      # TO DO: Email to parents
     end
   end
 
