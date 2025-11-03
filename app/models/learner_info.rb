@@ -77,6 +77,7 @@ class LearnerInfo < ApplicationRecord
 
   after_commit :check_status_updates, on: [:create, :update]
   after_commit :update_discounts_if_needed, on: [:create, :update]
+  after_update :send_end_date_notifications, if: :saved_change_to_end_date?
 
   VALID_EMAIL_REGEX = URI::MailTo::EMAIL_REGEXP
 
@@ -353,11 +354,15 @@ class LearnerInfo < ApplicationRecord
     [User.find_by(email: "admissions@bravegenerationacademy.com")].compact
   end
 
+  def finance_users
+    [User.find_by(email: "maria.m@bravegenerationacademy.com")].compact
+  end
+
   def curriculum_responsibles
     curr = curriculum_course_option.to_s.strip.downcase
     case
     when curr.include?('portuguese')
-      User.where(email: ['luis@bravegenerationacademy.com', 'Goncalo.Meireles@edubga.com']).to_a
+      User.where(email: ['luis@bravegenerationacademy.com', 'goncalo.meireles@edubga.com']).to_a
     when curr.start_with?('up')
       [User.find_by(email: 'esther@bravegenerationacademy.com')].compact
     else
@@ -422,6 +427,16 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
+  def send_end_date_notifications
+    return unless end_date.present?
+
+    # Immediate notification
+    message = "End date has been set for learner #{full_name} to #{end_date.strftime('%d-%m-%Y')}."
+    notify_recipient(finance_users, message)
+
+    # TO DO: Schedule reminder if more than 1 month away
+  end
+
   private
 
   def status_was_waitlist_ok?
@@ -480,21 +495,21 @@ class LearnerInfo < ApplicationRecord
     case new_status
     when "In progress conditional"
       message = "New Learner has filled the application forms."
-      notify_recipients(admissions_users, message)
+      notify_recipient(admissions_users, message)
     when "In progress"
       message = "#{full_name} is enrolling for: #{hub.name}. Check the profile on the link."
-      notify_recipient(learning_coaches, message)
+      notify_recipient(learning_coaches + finance_users, message)
 
       curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
-      notify_recipients(curriculum_responsibles, curr_message)
+      notify_recipient(curriculum_responsibles, curr_message)
 
       rm_message = "#{full_name} is enrolling for: #{hub.name}."
-      notify_recipients(regional_manager, rm_message)
+      notify_recipient(regional_manager, rm_message)
 
       # TO DO: Email to parents
     when "In progress - ok"
       message = "#{full_name} had the onboarding meeting. Check here."
-      notify_recipients(learning_coaches + regional_manager, message)
+      notify_recipient(learning_coaches + regional_manager, message)
 
       # TO DO: CHECK PROPER LINK LOGIC WHEN XICO IS BACK
       link = Rails.application.routes.url_helpers.admission_path(self)
@@ -510,13 +525,12 @@ class LearnerInfo < ApplicationRecord
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipient(learning_coaches + curriculum_responsibles + regional_manager, message)
 
-      # TO DO: RM logic
-
       # TO DO: Email to parents
     end
   end
 
-  def notify_recipients(recipient, message, link: nil)
+  def notify_recipient(recipient, message, link: nil)
+    recipients = Array.wrap(recipient)
     raise ArgumentError, "message is required" if message.blank?
 
     link ||= Rails.application.routes.url_helpers.admission_path(self)
