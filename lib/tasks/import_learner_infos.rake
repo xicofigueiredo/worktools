@@ -526,6 +526,15 @@ namespace :admissions do
         # Split into learner_info_attrs and finance_attrs
         finance_keys = [:deposit, :sponsor, :payment_plan, :monthly_tuition, :discount_mt, :scholarship, :billable_fee_per_month, :scholarship_percentage, :admission_fee, :discount_af, :billable_af, :registration_renewal]
         learner_info_attrs = attrs.except(*finance_keys)
+
+        u = nil
+        if attrs[:institutional_email].present?
+          u = User.find_by(email: attrs[:institutional_email])
+          if u
+            learner_info_attrs[:preferred_name] = u.full_name if u.full_name.present?
+            learner_info_attrs[:user_id] = u.id
+          end
+        end
         # Convert absolute discounts and scholarships to percentages
         monthly_fee = attrs[:monthly_tuition].to_f
         admission_fee = attrs[:admission_fee].to_f
