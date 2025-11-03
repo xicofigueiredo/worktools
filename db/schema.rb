@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_03_095805) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_03_105527) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -458,14 +458,14 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_03_095805) do
     t.bigint "learner_info_id", null: false
     t.string "payment_plan"
     t.integer "monthly_fee"
-    t.integer "discount_mf"
+    t.decimal "discount_mf", precision: 6, scale: 2
     t.integer "scholarship"
     t.integer "billable_mf"
     t.integer "admission_fee"
-    t.integer "discount_af"
+    t.decimal "discount_af", precision: 6, scale: 2
     t.integer "billable_af"
     t.integer "renewal_fee"
-    t.integer "discount_rf"
+    t.decimal "discount_rf", precision: 6, scale: 2
     t.integer "billable_rf"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

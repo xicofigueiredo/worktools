@@ -67,11 +67,16 @@ class LearnerInfo < ApplicationRecord
     12 => 6, 11 => 5, 10 => 4, 9 => 3
   }.freeze
 
+  INACTIVE_STATUSES = %w[Waitlist Waitlist\ -\ ok In\ progress\ conditional Inactive Graduated].freeze
+
+  scope :active, -> { where.not(status: INACTIVE_STATUSES) }
+
   before_validation :normalize_emails
   before_validation :normalize_curriculum
   before_validation :normalize_grade
 
   after_commit :check_status_updates, on: [:create, :update]
+  after_commit :update_discounts_if_needed, on: [:create, :update]
 
   VALID_EMAIL_REGEX = URI::MailTo::EMAIL_REGEXP
 
@@ -365,6 +370,58 @@ class LearnerInfo < ApplicationRecord
     [hub.regional_manager]
   end
 
+  def active?
+    !INACTIVE_STATUSES.include?(status)
+  end
+
+  def siblings
+    return [] unless parent1_email.present? || parent2_email.present?
+
+    siblings_query = LearnerInfo.where.not(id: id)
+
+    or_conditions = []
+    [parent1_email, parent2_email].compact.uniq.each do |email|
+      or_conditions << "parent1_email = '#{email}' OR parent2_email = '#{email}'"
+    end
+
+    siblings_query = siblings_query.where(or_conditions.join(' OR '))
+
+    siblings_query.distinct
+  end
+
+  def family
+    [self] + siblings
+  end
+
+  def update_family_discounts
+    active_family = family.select(&:active?)
+    count = active_family.size
+
+    discount = case count
+               when 0..1 then 0.0
+               when 2 then 5.0
+               else 7.5
+               end
+
+    active_family.each do |learner|
+      finance = learner.learner_finance
+      next unless finance
+
+      if finance.discount_mf != discount
+        old_discount = finance.discount_mf
+        finance.update!(discount_mf: discount)
+        learner.log_update(nil, { 'learner_finance.discount_mf' => [old_discount, discount] }, note: "Updated sibling discount based on family size #{count}")
+        Rails.logger.info("Updated discount_mf for LearnerInfo ID: #{learner.id} to #{discount}% (family active count: #{count})")
+      end
+    end
+  end
+
+  def update_discounts_if_needed
+    if saved_change_to_status? || saved_change_to_parent1_email? || saved_change_to_parent2_email?
+      update_family_discounts
+    end
+  end
+
   private
 
   def status_was_waitlist_ok?
@@ -426,7 +483,7 @@ class LearnerInfo < ApplicationRecord
       notify_recipients(admissions_users, message)
     when "In progress"
       message = "#{full_name} is enrolling for: #{hub.name}. Check the profile on the link."
-      notify_recipients(learning_coaches, message)
+      notify_recipient(learning_coaches, message)
 
       curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
       notify_recipients(curriculum_responsibles, curr_message)
@@ -451,7 +508,7 @@ class LearnerInfo < ApplicationRecord
       # TO DO: Teams Message to Amanda
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
-      notify_recipients(learning_coaches + curriculum_responsibles + regional_manager, message)
+      notify_recipient(learning_coaches + curriculum_responsibles + regional_manager, message)
 
       # TO DO: RM logic
 
@@ -459,7 +516,7 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
-  def notify_recipients(recipients, message, link: nil)
+  def notify_recipients(recipient, message, link: nil)
     raise ArgumentError, "message is required" if message.blank?
 
     link ||= Rails.application.routes.url_helpers.admission_path(self)
