@@ -250,10 +250,7 @@ class MoodleTimeline < ApplicationRecord
           submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
           evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
           as1: as1,
-          as2: as2,
-          ano10: true,
-          ano11: true,
-          ano12: true
+          as2: as2
         )
       end
 
