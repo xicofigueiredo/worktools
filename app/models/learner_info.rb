@@ -581,9 +581,9 @@ class LearnerInfo < ApplicationRecord
     # 1. Prepare data for the Adaptive Card "FactSet"
     facts = [
       { "title": "Learner's Full Name", "value": self.full_name },
-      { "title": "Learner's Email", "value": self.institutional_email },
-      { "title": "Programme Level", "value": self.grade_year },
-      { "title": "Curriculum/Course", "value": self.curriculum_course_option },
+      { "title": "Learner's Email", "value": self.personal_email },
+      { "title": "Learner's Level", "value": self.grade_year },
+      { "title": "Curriculum", "value": self.curriculum_course_option },
       { "title": "Hub Location", "value": self.hub&.name } # Use safe navigation (&.) for hub
     ]
 
