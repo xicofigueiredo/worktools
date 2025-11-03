@@ -360,6 +360,11 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
+  def regional_manager
+    return [] unless hub && hub.respond_to?(:regional_manager) && hub.regional_manager.present?
+    [hub.regional_manager]
+  end
+
   private
 
   def status_was_waitlist_ok?
@@ -426,21 +431,27 @@ class LearnerInfo < ApplicationRecord
       curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
       notify_recipients(curriculum_responsibles, curr_message)
 
-      # TO DO: RM logic
+      rm_message = "#{full_name} is enrolling for: #{hub.name}."
+      notify_recipients(regional_manager, rm_message)
 
       # TO DO: Email to parents
     when "In progress - ok"
       message = "#{full_name} had the onboarding meeting. Check here."
-      notify_recipients(learning_coaches, message)
+      notify_recipients(learning_coaches + regional_manager, message)
 
-      # TO DO: RM logic
+      # TO DO: CHECK PROPER LINK LOGIC WHEN XICO IS BACK
+      link = Rails.application.routes.url_helpers.admission_path(self)
+      adm_message = "#{full_name} had the onboarding meeting. Check here: #{link}.'"
+      adm_subject = "Onboarding Meeting for #{full_name}"
 
-      # TO DO: Email to admissions
+      admissions_users.each do |user|
+        UserMailer.admissions_notification(User.find_by(email: "guilherme@bravegenerationacademy.com"), adm_message, adm_subject).deliver_now
+      end
     when "Validated"
       # TO DO: Teams Message to Amanda
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
-      notify_recipients(learning_coaches + curriculum_responsibles, message)
+      notify_recipients(learning_coaches + curriculum_responsibles + regional_manager, message)
 
       # TO DO: RM logic
 

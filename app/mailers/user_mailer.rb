@@ -69,4 +69,10 @@ class UserMailer < Devise::Mailer
       subject: "Don’t Miss Out – Follow Your Child’s Journey on Worktools"
     )
   end
+
+  def admissions_notification(user, message, subject)
+    @user = user
+    @message = message
+    mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
+  end
 end

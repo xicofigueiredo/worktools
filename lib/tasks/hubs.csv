@@ -1,45 +1,45 @@
-﻿Country;Province;Hub Name;Hub Type;Hub Address;Google Maps Link;Hub Capacity;Exam Centre
-Portugal;Northern;Braga;Independent;Praça do Município, No10, R/C Dto, Braga, 4700-319;https://goo.gl/maps/omv2df6nhVouNM5n6;30;0
-Portugal;Northern;Aveiro;Independent;Rua Direita de Aradas na 14, Aradas, Aveiro, 3810-164 ;https://goo.gl/maps/GfUVimVLEcbAtNtT8;30;18
-Portugal;Northern;Ofir;Independent;Hotel Ofir Beach Resort Hotel, Sala Piscina, Raúl Sousa Martins 99, 4740-405 Fão ;https://goo.gl/maps/C1SXhevnqyxMtAit8 ;30;0
-Portugal;Northern;Anje;Independent;Rua de Paulo da Gama, nr 629 Porto Anje 4169-006;https://goo.gl/maps/V8WhXtPJexaL9aZX6;30;
-Portugal;Central;Setubal;Independent;Av, Luísa Todi no 1, 2900-459 Setúbal (Prédio das finanças) ;https://goo.gl/maps/Sa2VdmB3qn72U1G98 ;30;
-Portugal;Central;CCB;Independent;Centro Cultural de Belém (CCB), Sala José Ribeiro da Fonte, 1449-003 ;https://g.page/centroculturaldebelem?share ;45;
-Portugal;Central;Campolide;Independent;Rua de Campolide nº 24ª, Campolide, 1070-026 ;https://goo.gl/maps/qaifBCPpuXzr3RdG7;35;
-Portugal;Central;Expo;Independent;Av. de Pádua, 10 I, Santa Maria dos Olivais, 1000-897 Lisboa;https://goo.gl/maps/RowUtdkR6V4H1HPR9;26;
-Portugal;Central;Restelo;Independent;Rua Capitão-Mor Pedro Teixeira, nº 1-A, Belém, 1400-225, Lisboa;https://goo.gl/maps/BvfZvUzZaZXeH2cNA;30;
-Portugal;Central;Cascais 1;Independent;Alameda Combatentes da Grande Guerra 25A, 2750-416 Cascais ;https://goo.gl/maps/HAex6cNakT7zWm3eA;30;
-Portugal;Central;Cascais 2;Independent;Alameda Combatentes da Grande Guerra 25A, 2750-416 Cascais ;https://goo.gl/maps/HAex6cNakT7zWm3eA;30;
-Portugal;Central;Baia 1;Independent;Praça 5 de Outubro Antigo Edifício dos Bombeiros 45, 2750-642 ;https://goo.gl/maps/f8Hg7Gr8YhxU2yEH9;30;
-Portugal;Central;Baia 2;Independent;Praça 5 de Outubro Antigo Edifício dos Bombeiros 45, 2750-642 ;https://goo.gl/maps/f8Hg7Gr8YhxU2yEH9;35;
-Portugal;Central;Guincho;Independent;R. Areia, Club Dom Carlos, 2750-642;https://goo.gl/maps/iaqdY2SY16tfQcQQA;26;
-Portugal;Central;Parede;Independent;Rua Vasco da Gama n 60 C, 2775-297 Parede ;https://goo.gl/maps/9Pa2PXiN67znwMMm9;30;
-Portugal;Central;Linho;Independent;Rua António dos Reis Nº 157, Linhó, Sintra;https://maps.app.goo.gl/27KCbhwGNGadh2st7;0;26
-Portugal;Central;Ericeira;Independent;Rua Alto da Camacha, Edifício Pão da Vila, Nº 2, Ericeira, 2655-003;https://goo.gl/maps/iD7V2tBq7gSqAHAC7;35;
-Portugal;Central;Santarém;Independent;Rua Alvaro Cunhal, Edifício Panorama, R/C Dto, 2005-141, Santarém;https://goo.gl/maps/FwtpS3tU4rBZc7Af8;30;
-Portugal;Central;Caldas d/Rainha;Independent;Avenida 1º de Maio 20, 1º Andar, 2500-081, Caldas da Rainha;https://maps.app.goo.gl/eSW4JmC5fHPR7CAx9;35;
-Portugal;Central;Leiria;Independent;Rua Miguel Bombarda nº 31, Pousos e Cortes, 2400-190 Leiria;https://goo.gl/maps/bRPsZrxR6rfvWvBe8;28;
-Portugal;Central;Coimbra;Independent;Rua da Louça, Nº 91ª, Coimbra, 3000-170;https://maps.app.goo.gl/D68NHJWwReCzmxBX7;30;
-Portugal;Central;Fundão;Independent;Rua da Cale 54, 6230-378 Fundão;https://maps.app.goo.gl/JyAp1eqkBxQ2SBSS6;30;
-Portugal;Islands;Funchal;Independent;Rua Ponta da Cruz 04, Piso -1 BC, Edifício “Roda Mar”, São Martinho;https://maps.app.goo.gl/D68NHJWwReCzmxBX7;30;6
-Portugal;Southern;Tavira;Independent;Av. Zeca Afonso nº 5, 8800-741 Tavira;https://goo.gl/maps/PaKEpXAitWvF8fSv8;30;12
-Portugal;Southern;Vila Sol;Independent;VilaSol Shopping Centre, Rua 1, Loja 85, Quarteira, 8125-307 ;https://goo.gl/maps/Wva115dBgTNyGoKX6 ;35;4
-Portugal;Southern;Lagoa;Independent;25 de Abril Nº60, 1º Andar, Esq. Nº BR,  8400-343 Lagoa;https://goo.gl/maps/Qk7QdMFnUhu31hGGA;30;
-Portugal;Southern;Lagos 1;Independent;Urbanização da Marina de Lagos, Núcleo Gil Eanes, Loja 4 e 5, 8600-315;https://goo.gl/maps/YiitWWj6yphYZcCe6;32;
-Portugal;Southern;Lagos 2;Independent;Avenida dos Descobrimentos, Edifício “Fabrica da Ribeira”, Loja C, Lagos, 8600-315;https://goo.gl/maps/k9Rny2S7GwJcW1aF7;28;
-Portugal;Southern;Loulé;Independent;Rua Maria Campina no 32, 2nd Esq 8100-604 Loulé;https://goo.gl/maps/165D4yvzgfqBnwnk6;30;
-Spain;Marbella;Marbella;Independent;Avenida Virgen del Rocío, Centro Comercial la Colonia, Bloque 1, local número 15, Marbella, 29670 ;https://goo.gl/maps/dHsSKw6XnCnNkzuU8;40;16
-Spain;Valencia;Valencia;Independent;Calle Ricardo Mico, 3, Local 14, Valencia, 46009;https://maps.app.goo.gl/zZVxtc8LxAtYg5hc7;30;
-Switzerland;Bern;Bern;Powered by BGA;Sperlisacher 2, 3075 Rüfenacht, Switzerland;https://maps.app.goo.gl/McU5CiYzphkVkvPJA;15;
-South Africa;KZN;DHS;Powered by BGA;Durban High School, 255 St Thomas Rd, Musgrave, Durban, 4001, RSA;https://maps.app.goo.gl/1AGfUbjCJsStZFHL7;30;16
-South Africa;KZN;WBHS;Powered by BGA;Westville Boys High School, 26 Wandsbeck Rd, Dawncrest, Westville, 3629;https://maps.app.goo.gl/Zv7fnW3SM7VLTxcW7;30;
-South Africa;MPL;Nelspruit;Independent;Elwood Farm, R37, Nelspruit, Mpumalanga;https://goo.gl/maps/JrEJCDgG7hmXqeMa8;30;4
-South Africa;WC;HHS;Powered by BGA;Hugenote Hoer Skool, Blouvlei Rd, Wellington, 7654, RSA;https://maps.app.goo.gl/qp36j16485Afy7CU8;26;
-South Africa;WC;TygerValley;Independent;Nº 4, Bella Rosa Street, Rosenpark, Bellville, 7550;https://goo.gl/maps/v5DGkkoixbo7Rk9u5;30;4
-South Africa;WC;Paarl;Independent;272 Main Street, Paarl, Western Cape, RSA;https://maps.app.goo.gl/CWPydr6CCCVRBGmb8;30;
-Namibia;Windhoek;Windhoek;Independent;Unit 9. Southern Square, 20 Andimba Toivo Ya Toivo street, Windhoek;https://goo.gl/maps/Z2qcdDfmxoXgQJmJ7;30;6
-Namibia;Walvis Bay;Walvis Bay;Independent;Unit 7, Erf 1004, Cnr Theo Gurirab & 9th Road, Walvisbay;https://goo.gl/maps/uBcs2pLnr9ZXwXbo7;26;
-Mozambique;Maputo;Sommerschiled;Independent;313 Rua Daniel Napatima, Sommerschield, Maputo, Mozambique;https://maps.app.goo.gl/YTyN6bWT9KZxMSGz5;45;9
-Mozambique;Enhambane;Tofo;Independent;Talhão 12, Bairro Josina Machel, Praia do Tofo, Inhambane Province;https://maps.app.goo.gl/4FRoGYWcE52oqNMY7;26;12
-UK;Ipswich;Ipswich;Powered by BGA;Woolverstone hall, Ipswich IP9 1AZ, United Kingdom;https://maps.app.goo.gl/McU5CiYzphkVkvPJA;30;
-Kenya;Kilifi;Kilifi;Independent;8VF6+VMP, Kilifi, (Above the Food Movement Restaurant), Kenya;https://goo.gl/maps/rH7epskF5uw83AUPA;20;
+﻿Country;Province;Hub Name;Hub Type;Hub Address;Google Maps Link;Hub Capacity;Exam Centre;RM
+Portugal;Northern;Braga;Independent;Praça do Município, No10, R/C Dto, Braga, 4700-319;https://goo.gl/maps/omv2df6nhVouNM5n6;30;0;silvia.navega@edubga.com
+Portugal;Northern;Aveiro;Independent;Rua Direita de Aradas na 14, Aradas, Aveiro, 3810-164 ;https://goo.gl/maps/GfUVimVLEcbAtNtT8;30;18;silvia.navega@edubga.com
+Portugal;Northern;Ofir;Independent;Hotel Ofir Beach Resort Hotel, Sala Piscina, Raúl Sousa Martins 99, 4740-405 Fão ;https://goo.gl/maps/C1SXhevnqyxMtAit8 ;30;0;silvia.navega@edubga.com
+Portugal;Northern;Anje;Independent;Rua de Paulo da Gama, nr 629 Porto Anje 4169-006;https://goo.gl/maps/V8WhXtPJexaL9aZX6;30;;silvia.navega@edubga.com
+Portugal;Central;Setubal;Independent;Av, Luísa Todi no 1, 2900-459 Setúbal (Prédio das finanças) ;https://goo.gl/maps/Sa2VdmB3qn72U1G98 ;30;;luis.pereira@edubga.com
+Portugal;Central;CCB;Independent;Centro Cultural de Belém (CCB), Sala José Ribeiro da Fonte, 1449-003 ;https://g.page/centroculturaldebelem?share ;45;;luis.pereira@edubga.com
+Portugal;Central;Campolide;Independent;Rua de Campolide nº 24ª, Campolide, 1070-026 ;https://goo.gl/maps/qaifBCPpuXzr3RdG7;35;;luis.pereira@edubga.com
+Portugal;Central;Expo;Independent;Av. de Pádua, 10 I, Santa Maria dos Olivais, 1000-897 Lisboa;https://goo.gl/maps/RowUtdkR6V4H1HPR9;26;;luis.pereira@edubga.com
+Portugal;Central;Restelo;Independent;Rua Capitão-Mor Pedro Teixeira, nº 1-A, Belém, 1400-225, Lisboa;https://goo.gl/maps/BvfZvUzZaZXeH2cNA;30;;
+Portugal;Central;Cascais 1;Independent;Alameda Combatentes da Grande Guerra 25A, 2750-416 Cascais ;https://goo.gl/maps/HAex6cNakT7zWm3eA;30;;
+Portugal;Central;Cascais 2;Independent;Alameda Combatentes da Grande Guerra 25A, 2750-416 Cascais ;https://goo.gl/maps/HAex6cNakT7zWm3eA;30;;
+Portugal;Central;Baia 1;Independent;Praça 5 de Outubro Antigo Edifício dos Bombeiros 45, 2750-642 ;https://goo.gl/maps/f8Hg7Gr8YhxU2yEH9;30;;
+Portugal;Central;Baia 2;Independent;Praça 5 de Outubro Antigo Edifício dos Bombeiros 45, 2750-642 ;https://goo.gl/maps/f8Hg7Gr8YhxU2yEH9;35;;
+Portugal;Central;Guincho;Independent;R. Areia, Club Dom Carlos, 2750-642;https://goo.gl/maps/iaqdY2SY16tfQcQQA;26;;
+Portugal;Central;Parede;Independent;Rua Vasco da Gama n 60 C, 2775-297 Parede ;https://goo.gl/maps/9Pa2PXiN67znwMMm9;30;;luis.pereira@edubga.com
+Portugal;Central;Linho;Independent;Rua António dos Reis Nº 157, Linhó, Sintra;https://maps.app.goo.gl/27KCbhwGNGadh2st7;0;26;
+Portugal;Central;Ericeira;Independent;Rua Alto da Camacha, Edifício Pão da Vila, Nº 2, Ericeira, 2655-003;https://goo.gl/maps/iD7V2tBq7gSqAHAC7;35;;luis.pereira@edubga.com
+Portugal;Central;Santarém;Independent;Rua Alvaro Cunhal, Edifício Panorama, R/C Dto, 2005-141, Santarém;https://goo.gl/maps/FwtpS3tU4rBZc7Af8;30;;silvia.navega@edubga.com
+Portugal;Central;Caldas d/Rainha;Independent;Avenida 1º de Maio 20, 1º Andar, 2500-081, Caldas da Rainha;https://maps.app.goo.gl/eSW4JmC5fHPR7CAx9;35;;silvia.navega@edubga.com
+Portugal;Central;Leiria;Independent;Rua Miguel Bombarda nº 31, Pousos e Cortes, 2400-190 Leiria;https://goo.gl/maps/bRPsZrxR6rfvWvBe8;28;;luis.pereira@edubga.com
+Portugal;Central;Coimbra;Independent;Rua da Louça, Nº 91ª, Coimbra, 3000-170;https://maps.app.goo.gl/D68NHJWwReCzmxBX7;30;;
+Portugal;Central;Fundão;Independent;Rua da Cale 54, 6230-378 Fundão;https://maps.app.goo.gl/JyAp1eqkBxQ2SBSS6;30;;silvia.navega@edubga.com
+Portugal;Islands;Funchal;Independent;Rua Ponta da Cruz 04, Piso -1 BC, Edifício “Roda Mar”, São Martinho;https://maps.app.goo.gl/D68NHJWwReCzmxBX7;30;6;silvia.navega@edubga.com
+Portugal;Southern;Tavira;Independent;Av. Zeca Afonso nº 5, 8800-741 Tavira;https://goo.gl/maps/PaKEpXAitWvF8fSv8;30;12;luis.pereira@edubga.com
+Portugal;Southern;Vila Sol;Independent;VilaSol Shopping Centre, Rua 1, Loja 85, Quarteira, 8125-307 ;https://goo.gl/maps/Wva115dBgTNyGoKX6 ;35;4;luis.pereira@edubga.com
+Portugal;Southern;Lagoa;Independent;25 de Abril Nº60, 1º Andar, Esq. Nº BR,  8400-343 Lagoa;https://goo.gl/maps/Qk7QdMFnUhu31hGGA;30;;luis.pereira@edubga.com
+Portugal;Southern;Lagos 1;Independent;Urbanização da Marina de Lagos, Núcleo Gil Eanes, Loja 4 e 5, 8600-315;https://goo.gl/maps/YiitWWj6yphYZcCe6;32;;luis.pereira@edubga.com
+Portugal;Southern;Lagos 2;Independent;Avenida dos Descobrimentos, Edifício “Fabrica da Ribeira”, Loja C, Lagos, 8600-315;https://goo.gl/maps/k9Rny2S7GwJcW1aF7;28;;luis.pereira@edubga.com
+Portugal;Southern;Loulé;Independent;Rua Maria Campina no 32, 2nd Esq 8100-604 Loulé;https://goo.gl/maps/165D4yvzgfqBnwnk6;30;;luis.pereira@edubga.com
+Spain;Marbella;Marbella;Independent;Avenida Virgen del Rocío, Centro Comercial la Colonia, Bloque 1, local número 15, Marbella, 29670 ;https://goo.gl/maps/dHsSKw6XnCnNkzuU8;40;16;silvia.navega@edubga.com
+Spain;Valencia;Valencia;Independent;Calle Ricardo Mico, 3, Local 14, Valencia, 46009;https://maps.app.goo.gl/zZVxtc8LxAtYg5hc7;30;;silvia.navega@edubga.com
+Switzerland;Bern;Bern;Powered by BGA;Sperlisacher 2, 3075 Rüfenacht, Switzerland;https://maps.app.goo.gl/McU5CiYzphkVkvPJA;15;;
+South Africa;KZN;DHS;Powered by BGA;Durban High School, 255 St Thomas Rd, Musgrave, Durban, 4001, RSA;https://maps.app.goo.gl/1AGfUbjCJsStZFHL7;30;16;lorne@bravegenerationacademy.com
+South Africa;KZN;WBHS;Powered by BGA;Westville Boys High School, 26 Wandsbeck Rd, Dawncrest, Westville, 3629;https://maps.app.goo.gl/Zv7fnW3SM7VLTxcW7;30;;lorne@bravegenerationacademy.com
+South Africa;MPL;Nelspruit;Independent;Elwood Farm, R37, Nelspruit, Mpumalanga;https://goo.gl/maps/JrEJCDgG7hmXqeMa8;30;4;lorne@bravegenerationacademy.com
+South Africa;WC;HHS;Powered by BGA;Hugenote Hoer Skool, Blouvlei Rd, Wellington, 7654, RSA;https://maps.app.goo.gl/qp36j16485Afy7CU8;26;;lorne@bravegenerationacademy.com
+South Africa;WC;TygerValley;Independent;Nº 4, Bella Rosa Street, Rosenpark, Bellville, 7550;https://goo.gl/maps/v5DGkkoixbo7Rk9u5;30;4;lorne@bravegenerationacademy.com
+South Africa;WC;Paarl;Independent;272 Main Street, Paarl, Western Cape, RSA;https://maps.app.goo.gl/CWPydr6CCCVRBGmb8;30;;lorne@bravegenerationacademy.com
+Namibia;Windhoek;Windhoek;Independent;Unit 9. Southern Square, 20 Andimba Toivo Ya Toivo street, Windhoek;https://goo.gl/maps/Z2qcdDfmxoXgQJmJ7;30;6;lorne@bravegenerationacademy.com
+Namibia;Walvis Bay;Walvis Bay;Independent;Unit 7, Erf 1004, Cnr Theo Gurirab & 9th Road, Walvisbay;https://goo.gl/maps/uBcs2pLnr9ZXwXbo7;26;;lorne@bravegenerationacademy.com
+Mozambique;Maputo;Sommerschiled;Independent;313 Rua Daniel Napatima, Sommerschield, Maputo, Mozambique;https://maps.app.goo.gl/YTyN6bWT9KZxMSGz5;45;9;joana.mazuze@edubga.com
+Mozambique;Enhambane;Tofo;Independent;Talhão 12, Bairro Josina Machel, Praia do Tofo, Inhambane Province;https://maps.app.goo.gl/4FRoGYWcE52oqNMY7;26;12;joana.mazuze@edubga.com
+UK;Ipswich;Ipswich;Powered by BGA;Woolverstone hall, Ipswich IP9 1AZ, United Kingdom;https://maps.app.goo.gl/McU5CiYzphkVkvPJA;30;;
+Kenya;Kilifi;Kilifi;Independent;8VF6+VMP, Kilifi, (Above the Food Movement Restaurant), Kenya;https://goo.gl/maps/rH7epskF5uw83AUPA;20;;lorne@bravegenerationacademy.com

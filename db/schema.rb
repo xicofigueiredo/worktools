@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_10_30_184338) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_03_095805) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -387,10 +387,12 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_30_184338) do
     t.integer "capacity"
     t.text "parents_whatsapp_group"
     t.string "hubspot_key"
+    t.bigint "regional_manager_id"
     t.index ["city"], name: "index_hubs_on_city"
     t.index ["hub_type"], name: "index_hubs_on_hub_type"
     t.index ["hubspot_key"], name: "index_hubs_on_hubspot_key", unique: true
     t.index ["region"], name: "index_hubs_on_region"
+    t.index ["regional_manager_id"], name: "index_hubs_on_regional_manager_id"
   end
 
   create_table "inis", force: :cascade do |t|
@@ -1156,6 +1158,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_10_30_184338) do
   add_foreign_key "friday_slots", "weekly_meetings"
   add_foreign_key "holidays", "users"
   add_foreign_key "hubps", "kdas"
+  add_foreign_key "hubs", "users", column: "regional_manager_id"
   add_foreign_key "inis", "kdas"
   add_foreign_key "kdas", "users"
   add_foreign_key "kdas", "weeks"

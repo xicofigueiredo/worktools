@@ -28,7 +28,13 @@ namespace :hubs do
       header_map[normalized] = h
     end
 
-    expected_headers = ['hub name', 'country', 'province', 'hub type', 'hub address', 'google maps link', 'hub capacity', 'exam centre', 'exam center']
+    # Add RM-related normalized header names so we detect common variants
+    expected_headers = [
+      'hub name', 'country', 'province', 'hub type', 'hub address',
+      'google maps link', 'hub capacity', 'exam centre', 'exam center',
+      # RM variants
+      'rm', 'regional manager', 'regional_manager', 'rm email', 'regional manager email'
+    ]
     missing = expected_headers.reject { |eh| header_map.key?(eh) }
     if missing.any?
       puts "Warning: some expected headers not found (normalized): #{missing.join(', ')}"
@@ -149,6 +155,45 @@ namespace :hubs do
       hub.capacity = get.call('hub capacity').to_i
       exam_val = get.call('exam centre')
       hub.exam_center = (exam_val.to_s.strip != '0' && !exam_val.to_s.strip.empty?)
+
+      rm_email = nil
+      %w[rm regional manager regional_manager rm email rm_email regional manager email].each do |nm|
+        if header_map.key?(nm)
+          rm_email = (row[header_map[nm]] || '').to_s.strip
+          break if rm_email && !rm_email.empty?
+        end
+      end
+
+      if rm_email && !rm_email.empty?
+        rm_email_down = rm_email.downcase
+        user = User.where("LOWER(email) = ?", rm_email_down).first
+
+        if user.nil? && interactive
+          puts "Regional manager with email '#{rm_email}' not found."
+          print "If you'd like to try a different email for this hub, type it now (or press Enter to skip assignment): "
+          alt = STDIN.gets
+          if alt
+            alt = alt.chomp.strip
+            if !alt.empty?
+              user = User.where("LOWER(email) = ?", alt.downcase).first
+              if user.nil?
+                puts "Still not found for '#{alt}'. Will skip RM assignment for this hub."
+              end
+            else
+              puts "Skipping RM assignment for this hub."
+            end
+          else
+            puts "No input — skipping RM assignment."
+          end
+        end
+
+        if user
+          hub.regional_manager = user
+          puts "Assigning regional manager #{user.email} to hub #{hub.name}."
+        else
+          puts "No user assigned for RM (CSV value: #{rm_email.inspect})."
+        end
+      end
 
       if hub.save
         puts "Updated #{hub.name} successfully."

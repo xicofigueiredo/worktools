@@ -2,6 +2,7 @@ class Hub < ApplicationRecord
   validates :name, presence: true
   validates :country, presence: true
 
+  belongs_to :regional_manager, class_name: 'User', optional: true
   has_many :users_hubs
   has_many :users, through: :users_hubs
   has_many :weekly_meetings, dependent: :destroy
