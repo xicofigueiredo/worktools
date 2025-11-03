@@ -12,9 +12,14 @@ class Hub < ApplicationRecord
 
   # Get active learners for this hub
   def active_learners
-    # Users who have this hub as their main hub with Active status
-    hub_user_ids = users_hubs.where(main: true).distinct.pluck(:user_id)
-    LearnerInfo.where(user_id: hub_user_ids, status: 'Active')
+    LearnerInfo.active
+               .where(
+                 "(learner_infos.hub_id = :hub_id) OR " \
+                 "(learner_infos.hub_id IS NULL AND EXISTS " \
+                 "(SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id " \
+                 "AND uh.hub_id = :hub_id AND uh.main = TRUE))",
+                 hub_id: id
+               )
   end
 
   # Get all learners (excluding certain statuses)
