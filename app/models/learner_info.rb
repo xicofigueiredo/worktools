@@ -512,9 +512,9 @@ class LearnerInfo < ApplicationRecord
       notify_recipient(learning_coaches + regional_manager, message)
 
       # TO DO: CHECK PROPER LINK LOGIC WHEN XICO IS BACK
-      link = Rails.application.routes.url_helpers.admission_path(self)
-      adm_message = "#{full_name} had the onboarding meeting. Check here: #{link}.'"
-      adm_subject = "Onboarding Meeting for #{full_name}"
+      link = Rails.application.routes.url_helpers.admission_url(self)
+      adm_message = "The learner #{full_name} had the onboarding meeting today. Check his profile here: #{link}"
+      adm_subject = "#{full_name} had the onboarding meeting"
 
       admissions_users.each do |user|
         UserMailer.admissions_notification(User.find_by(email: "guilherme@bravegenerationacademy.com"), adm_message, adm_subject).deliver_now
