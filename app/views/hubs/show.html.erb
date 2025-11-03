@@ -409,6 +409,7 @@
 
         <div style="flex: 1 1 40%; border-left: 1px solid #e5e7eb; padding-left: 20px;">
           <h4 style="margin: 0 0 12px 0; font-size: 1rem; font-weight: 600;">Learning Coaches</h4>
+
           <% if @lcs.present? %>
             <% @lcs.limit(3).each do |lc| %>
               <div class="lc-item">
@@ -419,6 +420,20 @@
           <% else %>
             <div style="color: var(--muted); font-size: 0.9rem;">No LCs assigned</div>
           <% end %>
+
+          <!-- Regional manager section (directly below LCs) -->
+          <div style="margin-top: 16px; border-top: 1px solid #eef2f6; padding-top: 12px;">
+            <h4 style="margin: 0 0 12px 0; font-size: 1rem; font-weight: 600;">Regional Manager</h4>
+
+            <% if @regional_manager.present? %>
+              <div class="lc-item">
+                <strong><%= h(@regional_manager.full_name.presence || @regional_manager.email) %></strong>
+                <div class="muted"><%= mail_to @regional_manager.email %></div>
+              </div>
+            <% else %>
+              <div style="color: var(--muted); font-size: 0.9rem;">No Regional Manager assigned</div>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>

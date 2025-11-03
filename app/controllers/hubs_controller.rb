@@ -33,6 +33,8 @@ class HubsController < ApplicationController
     # Use hub model method for LCs
     @lcs = @hub.learning_coaches_with_capacity(3)
 
+    @regional_manager = @hub.respond_to?(:regional_manager) ? @hub.regional_manager : nil
+
     # Sample learners
     @learners_sample = @active_learners_scope
                         .select(:id, :full_name, :birthdate, :programme, :curriculum_course_option, :grade_year, :student_number)
