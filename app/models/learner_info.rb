@@ -520,7 +520,7 @@ class LearnerInfo < ApplicationRecord
         UserMailer.admissions_notification(User.find_by(email: "guilherme@bravegenerationacademy.com"), adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      # TO DO: Teams Message to Amanda
+      send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipient(learning_coaches + curriculum_responsibles + regional_manager, message)
@@ -575,5 +575,77 @@ class LearnerInfo < ApplicationRecord
       self.grade_year = normalized
       Rails.logger.info("Normalized grade: #{old_value.inspect} -> #{normalized.inspect} (curriculum: #{curriculum_course_option})")
     end
+  end
+
+  def send_teams_message
+    # 1. Prepare data for the Adaptive Card "FactSet"
+    facts = [
+      { "title": "Learner's Full Name", "value": self.full_name },
+      { "title": "Learner's Email", "value": self.institutional_email },
+      { "title": "Programme Level", "value": self.grade_year },
+      { "title": "Curriculum/Course", "value": self.curriculum_course_option },
+      { "title": "Hub Location", "value": self.hub&.name } # Use safe navigation (&.) for hub
+    ]
+
+    # 2. Build the full Adaptive Card JSON structure
+    payload = build_adaptive_card_payload(facts)
+
+    # 3. Post the payload to the Teams webhook URL
+    post_to_teams_webhook(ENV['TEAMS_WEBHOOK'], payload)
+  end
+
+  # Helper method to construct the required Adaptive Card JSON
+  def build_adaptive_card_payload(facts)
+    {
+      "type": "message",
+      "attachments": [
+        {
+          "contentType": "application/vnd.microsoft.card.adaptive",
+          "content": {
+            "type": "AdaptiveCard",
+            "body": [
+              {
+                "type": "TextBlock",
+                "text": "✅ Learner Data Validation Complete!",
+                "size": "large",
+                "weight": "bolder"
+              },
+              {
+                "type": "TextBlock",
+                "text": "The learner is now ready for the next step in the enrollment process.",
+                "wrap": true
+              },
+              {
+                "type": "FactSet",
+                "facts": facts
+              }
+            ],
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "version": "1.2"
+          }
+        }
+      ]
+    }.to_json
+  end
+
+  # Generic method to handle the HTTP POST request
+  def post_to_teams_webhook(url, json_payload)
+    uri = URI(url)
+
+    # Use a background job (like Sidekiq) for real apps to prevent blocking
+    # For a direct example, we'll use synchronous Net::HTTP
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+
+    request = Net::HTTP::Post.new(uri.request_uri, 'Content-Type' => 'application/json')
+    request.body = json_payload
+
+    response = http.request(request)
+
+    # Basic logging for success/failure
+    Rails.logger.info "Teams Webhook Response: #{response.code} #{response.message}"
+
+    # You may want to add error handling logic here (e.g., retries on 500/429 status codes)
+    response.is_a?(Net::HTTPSuccess)
   end
 end
