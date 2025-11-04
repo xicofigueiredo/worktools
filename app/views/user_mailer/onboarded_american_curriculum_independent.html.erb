@@ -1,0 +1,72 @@
+<p>Dear <%= @parent_names %></p>
+
+<p>We are looking forward to welcoming <%= @learner.full_name %> to the start of their BGA journey!</p>
+
+<p>Below you will find some important information regarding <%= @learner.full_name.split.first %>'s first day. Please read through it carefully and do not hesitate to contact us in case you have any questions.</p>
+
+<ol>
+  <li>
+    <strong>BGA Email Creation:</strong><br>
+    Our team will create a BGA email account for <%= @learner.full_name.split.first %>. Its password will be sent to the Learner's Learning Coaches (LCs) email address. Please view the tutorial document with your LCs on how to proceed with the authentication of the account.
+    <a href="https://hubs.ly/Q03RhZGL0">https://hubs.ly/Q03RhZGL0</a>
+  </li>
+  <li>
+    <strong>Day and Time:</strong><br>
+    <%= @learner.full_name.split.first %>'s onboarding day is scheduled for <%= @learner.start_date.strftime("%d/%m/%Y") %>.<br>
+    For the first day only, <%= @learner.full_name.split.first %> is expected to be at the Hub at 10 am so that the Learning Coach can initiate the onboarding.<br>
+    <u>What to bring:</u> laptop, charger, headphones, a notebook, and stationery (including a calculator).
+  </li>
+  <li>
+    <strong>Hub Address:</strong><br>
+    <%= @hub.address %> (<a href="<%= @hub.google_map_link %>">Google Maps</a>)
+  </li>
+  <li>
+    <strong>Platform access:</strong><br>
+    <%= @learner.full_name.split.first %> will start <%= @learner.grade_year %>, and below you can find the login credentials for access to our platform.
+    Please wait for the Learning Coach in order to access it for the first time.
+    <div style="margin-top: 0.5em; margin-bottom: 0.5em;">
+      <div>Username: ssw <%= @learner.full_name.split.first.downcase %>.<%= @learner.full_name.split.last.downcase %></div>
+      <div>Password: A password will be automatically created and sent to the learner's Microsoft email account.</div>
+    </div>
+    *Credentials for the US Curriculum have been sent to Seth and the learning coaches.
+  </li>
+  <li>
+    <strong>Additional Platform Registration:</strong><br>
+    UNIFROG: Unifrog is an online platform that will help learners to search and connect with universities across the globe, as well as to find career opportunities with MOOCs, CV, personal statement and recommendation letter preparation, and more. It really is a one-stop-shop for finding and applying for any opportunity taught in English, anywhere in the world. Unifrog encompasses apprenticeships and Further Education colleges in the UK, as well as US and Canadian universities, and degrees taught in English in Europe, Asia, and Australasia. In practice, it supports learners to plan their career pathways, find opportunities, as well as helps with all the steps involved in the university application process. Register by completing <a href="https://d114wx04.na1.hs-sales-engage.com/Ctc/ZU+23284/d114wX04/JkM2-6qcW6N1vHY6lZ3q6W43C-hK4yqstsW10g98_3FzX-YW5NwKRF1M6PYRW3t729V78VMJnW3nhyc45sSB5dW2BgnPy4130JQW4c07c18_cLvNW8z7BXR7wXKZZW2ZsSvy7zr96QW7FWPbt4Smn95W8kq2nV13MNnRW99s3Cz4sRF80W7-swxT8_3wFxW4nXxp61Ghb75W8f3LBF4JkZrzW2D2BB21RcqXTW31TB5h6BS5tNW7lZwCQ41x30wW4D6pH96B7CD0W6RydL96w7SSsMHS55xgd_RlW3RvwZr5czjTVf586Spg04">this form</a>.
+  </li>
+  <li>
+    <strong>Important Contacts:</strong><br>
+    <u>Learning Coaches:</u><br>
+    <% @learning_coaches.each do |lc| %>
+      <%= lc.full_name %>: <%= lc.email %><br>
+    <% end %>
+    <br>
+    <u>Regional Manager:</u><br>
+    <% if @regional_manager %>
+      <%= @regional_manager.full_name %>: <%= @regional_manager.email %>
+    <% else %>
+      N/A
+    <% end %>
+  </li>
+  <li>
+    <strong>Invitation for Parents WhatsApp Group</strong><br>
+    At BGA, each Hub has a Parent WhatsApp group to facilitate communication and create a bigger sense of community among the BGA Family. Therefore, in case you wish to be a part of it, you can click the link on your mobile phone and join the group!<br><br>
+    <u>Parents WhatsApp Group:</u><br>
+    <a href="<%= @hub.parents_whatsapp_group %>"><%= @hub.parents_whatsapp_group %></a><br><br>
+    We also have created another WhatsApp group, which is designed to foster communication and collaboration among parents, providing a platform to share insights, experiences, and updates related to the American curriculum. It's a great way to stay connected with fellow parents. Your participation in this group is entirely optional, and we respect your privacy. If you'd like to join this group, simply click on the following link: <a href="https://chat.whatsapp.com/HjyHa3ekekTL39MYGctGdmX7">https://chat.whatsapp.com/HjyHa3ekekTL39MYGctGdmX7</a>
+  </li>
+  <li>
+    <strong>Lunch:</strong><br>
+    Learners are welcome to bring their own packed lunch from home or purchase lunch at any of the surrounding restaurants or cafes.
+  </li>
+</ol>
+
+<p>After approximately one month, you will be contacted by the Learning Coaches for an individual meeting, and at the end of each term/sprint, you will receive via email a personalised report on the learner's progress and goals.</p>
+
+<p>--</p>
+
+<p>We wish <%= @learner.full_name.split.first %> all the best for the start of his Brave Journey and are pleased to welcome him to the BGA Family!</p>
+
+<p>Kind regards,</p>
+
+<p>Admissions Team</p>
