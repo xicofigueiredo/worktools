@@ -511,21 +511,22 @@ class LearnerInfo < ApplicationRecord
       message = "#{full_name} had the onboarding meeting. Check here."
       notify_recipient(learning_coaches + regional_manager, message)
 
-      # TO DO: CHECK PROPER LINK LOGIC WHEN XICO IS BACK
       link = Rails.application.routes.url_helpers.admission_url(self)
       adm_message = "The learner #{full_name} had the onboarding meeting today. Check his profile here: #{link}"
       adm_subject = "#{full_name} had the onboarding meeting"
 
       admissions_users.each do |user|
+        # TO DO: CHANGE TO ADMISSION USERS
         UserMailer.admissions_notification(User.find_by(email: "guilherme@bravegenerationacademy.com"), adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      send_teams_message
+      #send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipient(learning_coaches + curriculum_responsibles + regional_manager, message)
 
-      # TO DO: Email to parents
+      # Send email to parents based on curriculum and hub type
+      UserMailer.onboarded_parent_email(self).deliver_now
     end
   end
 

@@ -75,4 +75,39 @@ class UserMailer < Devise::Mailer
     @message = message
     mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
   end
+
+  def onboarded_parent_email(learner_info)
+    @learner = learner_info
+    @parent_emails = [@learner.parent1_email, @learner.parent2_email].compact
+    return if @parent_emails.blank?
+
+    @parent_names = [@learner.parent1_full_name, @learner.parent2_full_name].compact.join(' & ')
+    @learning_coaches = @learner.learning_coaches
+    @hub = @learner.hub
+    @regional_manager = @hub.regional_manager
+
+    curriculum = @learner.curriculum_course_option.to_s.downcase.gsub(' ', '_')
+    hub_type = @hub.hub_type.to_s.downcase.gsub(' ', '_')
+
+    # Determine the template name based on curriculum and hub type
+    template = "onboarded_#{curriculum}_#{hub_type}"
+
+    supported_templates = {
+      "onboarded_british_curriculum_powered_by_bga" => true
+      # TODO: Add entries
+    }
+
+    if supported_templates[template]
+      mail(
+        to: "guilherme@bravegenerationacademy.com", # to: @parent_emails,
+        from: 'worktools@bravegenerationacademy.com',
+        subject: "Onboarding Day - #{@learner.full_name}",
+        template_name: template
+      )
+    else
+      # TODO: Handle other combinations (e.g., fallback template, log, or notify)
+      Rails.logger.warn("No onboarding email template available for curriculum: #{curriculum} and hub_type: #{hub_type}")
+      # Optionally, raise or return without sending
+    end
+  end
 end
