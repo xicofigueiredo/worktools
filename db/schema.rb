@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_03_105527) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -380,7 +380,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_03_105527) do
     t.datetime "updated_at", null: false
     t.text "address"
     t.text "google_map_link"
-    t.string "city"
     t.string "region"
     t.string "hub_type"
     t.boolean "exam_center", default: false, null: false
@@ -388,7 +387,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_03_105527) do
     t.text "parents_whatsapp_group"
     t.string "hubspot_key"
     t.bigint "regional_manager_id"
-    t.index ["city"], name: "index_hubs_on_city"
     t.index ["hub_type"], name: "index_hubs_on_hub_type"
     t.index ["hubspot_key"], name: "index_hubs_on_hubspot_key", unique: true
     t.index ["region"], name: "index_hubs_on_region"

@@ -32,8 +32,7 @@ namespace :hubs do
     expected_headers = [
       'hub name', 'country', 'province', 'hub type', 'hub address',
       'google maps link', 'hub capacity', 'exam centre', 'exam center',
-      # RM variants
-      'rm', 'regional manager', 'regional_manager', 'rm email', 'regional manager email'
+      'parents whatsapp group', 'rm'
     ]
     missing = expected_headers.reject { |eh| header_map.key?(eh) }
     if missing.any?
@@ -155,14 +154,9 @@ namespace :hubs do
       hub.capacity = get.call('hub capacity').to_i
       exam_val = get.call('exam centre')
       hub.exam_center = (exam_val.to_s.strip != '0' && !exam_val.to_s.strip.empty?)
+      hub.parents_whatsapp_group = get.call('parents whatsapp group')
 
-      rm_email = nil
-      %w[rm regional manager regional_manager rm email rm_email regional manager email].each do |nm|
-        if header_map.key?(nm)
-          rm_email = (row[header_map[nm]] || '').to_s.strip
-          break if rm_email && !rm_email.empty?
-        end
-      end
+      rm_email = get.call('rm').strip
 
       if rm_email && !rm_email.empty?
         rm_email_down = rm_email.downcase
