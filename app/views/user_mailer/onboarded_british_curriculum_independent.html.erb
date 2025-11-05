@@ -1,8 +1,8 @@
 <p>Dear <%= @parent_names %></p>
 
-<p>We are looking forward to welcoming <%= @learner.full_name %> to the start of their BGA journey!</p>
+<p>We are looking forward to welcoming <%= @learner.full_name %> to the start of his BGA journey!</p>
 
-<p>Below you will find some important information regarding <%= @learner.full_name.split.first %>'s first day. Please read through it carefully and do not hesitate to contact us in case you have any questions.</p>
+<p>Below you will find some important information regarding <%= @learner.full_name.split.first %>'s first day. Please read through it carefully and do not hesitate to contact me in case you have any questions.</p>
 
 <ol>
   <li>
@@ -28,7 +28,6 @@
       <div>Username: <%= @learner.full_name.split.first.downcase %>.<%= @learner.full_name.split.last.downcase %></div>
       <div>Password: A password will be automatically created and sent to the learner's Microsoft email account.</div>
     </div>
-    *Credentials for the US Curriculum have been sent to Seth and the learning coaches.
   </li>
   <li>
     <strong>Additional Platform Registration:</strong><br>
@@ -52,8 +51,7 @@
     <strong>Invitation for Parents WhatsApp Group</strong><br>
     At BGA, each Hub has a Parent WhatsApp group to facilitate communication and create a bigger sense of community among the BGA Family. Therefore, in case you wish to be a part of it, you can click the link on your mobile phone and join the group!<br><br>
     <u>Parents WhatsApp Group:</u><br>
-    <a href="<%= @hub.parents_whatsapp_group %>"><%= @hub.parents_whatsapp_group %></a><br><br>
-    We also have created another WhatsApp group, which is designed to foster communication and collaboration among parents, providing a platform to share insights, experiences, and updates related to the American curriculum. It's a great way to stay connected with fellow parents. Your participation in this group is entirely optional, and we respect your privacy. If you'd like to join this group, simply click on the following link: <a href="https://chat.whatsapp.com/HjyHa3ekekTL39MYGctGdmX7">https://chat.whatsapp.com/HjyHa3ekekTL39MYGctGdmX7</a>
+    <a href="<%= @hub.parents_whatsapp_group %>"><%= @hub.parents_whatsapp_group %></a><br>
   </li>
   <li>
     <strong>Lunch:</strong><br>

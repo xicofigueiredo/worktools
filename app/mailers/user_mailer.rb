@@ -94,7 +94,8 @@ class UserMailer < Devise::Mailer
 
     supported_templates = {
       "onboarded_british_curriculum_powered_by_bga" => true,
-      "onboarded_american_curriculum_independent" => true
+      "onboarded_american_curriculum_independent" => true,
+      "onboarded_british_curriculum_independent" => true
       # TODO: Add entries
     }
 
