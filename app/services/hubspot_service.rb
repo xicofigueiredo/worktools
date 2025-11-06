@@ -110,6 +110,43 @@ class HubspotService
     end
   end
 
+  def self.fetch_contact_remote_region(email)
+    return nil if email.blank?
+
+    search_endpoint = "https://api.hubapi.com/crm/v3/objects/contacts/search"
+    headers = {
+      'Authorization' => "Bearer #{HUBSPOT_ACCESS_TOKEN}",
+      'Content-Type' => 'application/json'
+    }
+
+    body = {
+      filterGroups: [{
+        filters: [{
+          propertyName: 'email',
+          operator: 'EQ',
+          value: email
+        }]
+      }],
+      properties: ['remote_region'],
+      limit: 1
+    }.to_json
+
+    response = HTTParty.post(search_endpoint, body: body, headers: headers)
+
+    if response.success?
+      data = JSON.parse(response.body)
+      if data['total'] > 0
+        data['results'][0]['properties']['remote_region']
+      else
+        Rails.logger.warn "No contact found in HubSpot for email: #{email}"
+        nil
+      end
+    else
+      Rails.logger.error "HubSpot Contact Search API Error: #{response.code} - #{response.body}"
+      nil
+    end
+  end
+
   def self.associate_hub(learner_info, fields)
     hubspot_key = fields[:hub_interest_portugal]
 
@@ -122,6 +159,11 @@ class HubspotService
         Rails.logger.warn("No hub found for hubspot_key: #{hubspot_key} - LearnerInfo ID: #{learner_info.id} remains without hub association.")
       end
     else
+      form_email = fields[:email]
+      remote_region = fetch_contact_remote_region(form_email)
+      region_display = remote_region || '(not defined)'
+      Rails.logger.info("ONLINE LEARNER ASSOCIATION: #{region_display} for learner ID #{learner_info.id} (email: #{form_email})")
+
       online_hub = Hub.find_by(name: "Online")
       if online_hub
         learner_info.update!(hub_id: online_hub.id)

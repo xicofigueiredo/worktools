@@ -41,21 +41,42 @@ def resolve_hub_ambiguity(raw_fragment, frag_norm, candidates)
     puts "#{i+1}. #{h.name} (id: #{h.id})"
   end
   puts "0. None (skip)"
-  print "Choose the correct hub (0-#{candidates.size}): "
-  choice = gets.chomp.to_i
-  if choice == 0 || choice > candidates.size
+  puts "c. Create new hub with name '#{raw_fragment}'"
+  print "Choose the correct hub (0-#{candidates.size}) or c: "
+  choice = gets.chomp.strip.downcase
+  if choice == 'c'
+    print "Enter country for the new hub (leave blank for none): "
+    country = gets.chomp.strip
+    country = nil if country.empty?
+    new_hub = Hub.create!(name: raw_fragment, country: country)
+    puts "Created new hub: #{new_hub.name} (id: #{new_hub.id}, country: #{country.inspect})"
+    # Refresh caches to include the new hub
+    @cached_hubs = Hub.all.map { |h| [h, normalize_name_for_match(h.name)] }
+    @remote_hubs = @cached_hubs.select { |h, name_norm| name_norm.include?('remote') }
+    @num_all_hubs = @cached_hubs.size
+    @hub_mappings[frag_norm] = new_hub
+    return new_hub
+  elsif choice =~ /^\d+$/
+    choice_i = choice.to_i
+    if choice_i == 0 || choice_i > candidates.size
+      @hub_mappings[frag_norm] = nil
+      return nil
+    else
+      selected = candidates[choice_i - 1]
+      @hub_mappings[frag_norm] = selected
+      return selected
+    end
+  else
+    puts "Invalid choice. Treating as skip."
     @hub_mappings[frag_norm] = nil
     return nil
-  else
-    selected = candidates[choice - 1]
-    @hub_mappings[frag_norm] = selected
-    return selected
   end
 end
 def find_best_hub_match(raw_hub_fragment)
   return nil if raw_hub_fragment.nil? || raw_hub_fragment.strip == ''
   frag_norm = normalize_name_for_match(raw_hub_fragment)
   @cached_hubs ||= Hub.all.map { |h| [h, normalize_name_for_match(h.name)] }
+  @remote_hubs ||= @cached_hubs.select { |h, name_norm| name_norm.include?('remote') }
   @hub_mappings ||= {}
   if @hub_mappings.has_key?(frag_norm)
     return @hub_mappings[frag_norm]
@@ -94,7 +115,9 @@ def find_best_hub_match(raw_hub_fragment)
       @hub_mappings[frag_norm] = candidates.first
       return candidates.first
     else
-      return resolve_hub_ambiguity(raw_hub_fragment, frag_norm, candidates)
+      # Override to always prompt with all or remote-filtered
+      prompted_candidates = frag_norm.include?('remote') ? @remote_hubs.map(&:first) : @cached_hubs.map(&:first)
+      return resolve_hub_ambiguity(raw_hub_fragment, frag_norm, prompted_candidates)
     end
   end
   # 4) Levenshtein fallback
@@ -109,7 +132,9 @@ def find_best_hub_match(raw_hub_fragment)
   top_candidates = top.map { |arr| arr[0] }
   top_name_norm = top[0][1]
   if top_candidates.size > 1
-    return resolve_hub_ambiguity(raw_hub_fragment, frag_norm, top_candidates)
+    # Override to always prompt with all or remote-filtered
+    prompted_candidates = frag_norm.include?('remote') ? @remote_hubs.map(&:first) : @cached_hubs.map(&:first)
+    return resolve_hub_ambiguity(raw_hub_fragment, frag_norm, prompted_candidates)
   else
     top_h = top_candidates.first
     if min_d <= 3 || min_d.to_f <= ([frag_norm.length, top_name_norm.length].max * 0.25)
@@ -117,9 +142,9 @@ def find_best_hub_match(raw_hub_fragment)
       return top_h
     end
   end
-  # No match: prompt from all hubs
-  all_candidates = @cached_hubs.map(&:first)
-  resolve_hub_ambiguity(raw_hub_fragment, frag_norm, all_candidates)
+  # No match: prompt from all or remote-filtered
+  prompted_candidates = frag_norm.include?('remote') ? @remote_hubs.map(&:first) : @cached_hubs.map(&:first)
+  resolve_hub_ambiguity(raw_hub_fragment, frag_norm, prompted_candidates)
 end
 # Curriculum normalization mapping
 def normalize_curriculum(raw_curriculum)
@@ -268,6 +293,13 @@ end
 namespace :admissions do
   desc "Import admissions CSV into learner_infos with curriculum and grade normalization"
   task import_learner_infos: :environment do
+    %w[1 2 3].each do |num|
+      name = "Remote #{num}"
+      country = "Region #{num}"
+      Hub.find_or_create_by!(name: name) do |h|
+        h.country = country
+      end
+    end
     csv_file_path = Rails.root.join('lib', 'tasks', 'admissions_list.csv')
     unless File.exist?(csv_file_path)
       puts "CSV file not found at #{csv_file_path}"
@@ -470,27 +502,12 @@ namespace :admissions do
           elsif downcased_programme.start_with?('online')
             attrs[:programme] = 'Online'
           else
-            # Prompt user, showing the learner hub
-            hub_info = if matched_hub
-                         "#{matched_hub.name} (id: #{matched_hub.id})"
-                       else
-                         "No hub matched for \"#{raw_hub_for_logging}\""
-                       end
-            puts "\nUnclear programme for row #{row_num}: #{normalized_programme.inspect}"
-            puts "Associated hub: #{hub_info}"
-            puts "Options:"
-            puts "1. Hybrid"
-            puts "2. Online"
-            puts "0. Skip (set to nil)"
-            print "Choose (0-2): "
-            choice = gets.chomp.to_i
-            case choice
-            when 1
-              attrs[:programme] = 'Hybrid'
-            when 2
+            # Determine based on hub
+            hub_name = matched_hub&.name
+            if hub_name == 'Brave House' || hub_name&.match?(/Remote \d/)
               attrs[:programme] = 'Online'
             else
-              attrs[:programme] = nil
+              attrs[:programme] = 'Hybrid'
             end
           end
           if attrs[:programme] != old
@@ -526,7 +543,6 @@ namespace :admissions do
         # Split into learner_info_attrs and finance_attrs
         finance_keys = [:deposit, :sponsor, :payment_plan, :monthly_tuition, :discount_mt, :scholarship, :billable_fee_per_month, :scholarship_percentage, :admission_fee, :discount_af, :billable_af, :registration_renewal]
         learner_info_attrs = attrs.except(*finance_keys)
-
         u = nil
         if attrs[:institutional_email].present?
           u = User.find_by(email: attrs[:institutional_email])
@@ -582,6 +598,16 @@ namespace :admissions do
         end
         li_var = nil
         begin
+          # Determine hub_id to assign
+          hub_to_assign = matched_hub
+          hub_id_to_assign = hub_to_assign&.id
+          hub_name_for_log = hub_to_assign&.name || "none"
+          hub_log_msg = if matched_hub
+                          "to hub #{hub_name_for_log} (id=#{hub_id_to_assign})"
+                        else
+                          "no hub associated"
+                        end
+
           if found
             diffs = {}
             learner_info_attrs.each do |k, v|
@@ -589,6 +615,11 @@ namespace :admissions do
               cur_s = current.respond_to?(:strftime) ? current.to_s : (current.nil? ? '' : current.to_s)
               new_s = v.respond_to?(:strftime) ? v.to_s : (v.nil? ? '' : v.to_s)
               diffs[k] = { from: cur_s, to: new_s } if cur_s != new_s
+            end
+            # Check hub_id diff separately
+            current_hub_id = found.hub_id
+            if current_hub_id != hub_id_to_assign
+              diffs[:hub_id] = { from: current_hub_id.inspect, to: hub_id_to_assign.inspect }
             end
             if diffs.empty?
               no_changes += 1
@@ -600,19 +631,20 @@ namespace :admissions do
                 puts "Row #{row_num}: WOULD UPDATE #{ident} - changes: #{diffs.keys.join(', ')}"
                 li_var = found
               else
-                found.assign_attributes(learner_info_attrs)
+                found.assign_attributes(learner_info_attrs.merge(hub_id: hub_id_to_assign))
                 found.save!(validate: false)
                 updated += 1
                 puts "Row #{row_num}: UPDATED #{ident} (id=#{found.id}) - changes: #{diffs.keys.join(', ')}"
+                puts "Row #{row_num}: associated #{ident} (id=#{found.id}) #{hub_log_msg}"
                 li_var = found
               end
             end
           else
             if dry_run
               created += 1
-              puts "Row #{row_num}: WOULD CREATE #{ident} student_number=#{learner_info_attrs[:student_number].inspect}"
+              puts "Row #{row_num}: WOULD CREATE #{ident} student_number=#{learner_info_attrs[:student_number].inspect} and associate #{hub_log_msg}"
             else
-              li_var = LearnerInfo.new(learner_info_attrs)
+              li_var = LearnerInfo.new(learner_info_attrs.merge(hub_id: hub_id_to_assign))
               li_var.data_validated = (attrs[:status] != "In progress")
               if attrs[:institutional_email].present?
                 u = User.find_by(email: attrs[:institutional_email])
@@ -621,19 +653,8 @@ namespace :admissions do
               li_var.skip_email_validation = true
               li_var.save!
               created += 1
-              puts "Row #{row_num}: CREATED id=#{li_var.id} #{ident} student_number=#{learner_info_attrs[:student_number].inspect} data_validated=#{li_var.data_validated}"
+              puts "Row #{row_num}: CREATED id=#{li_var.id} #{ident} student_number=#{learner_info_attrs[:student_number].inspect} data_validated=#{li_var.data_validated} and associated #{hub_log_msg}"
             end
-          end
-          # Handle hub association
-          if !dry_run && li_var && matched_hub
-            li_var.update!(hub_id: matched_hub.id)
-            puts "Row #{row_num}: associated #{ident} (id=#{li_var.id}) to hub #{matched_hub.name} (id=#{matched_hub.id})"
-          elsif !dry_run && li_var && !matched_hub
-            puts "Row #{row_num}: couldn't associate #{ident} (id=#{li_var.id}) to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\""
-          elsif dry_run && matched_hub
-            puts "Row #{row_num}: WOULD associate #{ident} to hub #{matched_hub.name} (id=#{matched_hub.id})"
-          elsif dry_run && !matched_hub
-            puts "Row #{row_num}: WOULD NOT associate #{ident} to the \"Hub Location (Section 2)\" \"#{raw_hub_for_logging}\""
           end
           # Handle learner_finances
           if dry_run
