@@ -73,9 +73,8 @@ class AdmissionListController < ApplicationController
     @currency_symbol = '€'
     if @learner_info.hub.presence
       hub = @learner_info.hub
-      if hub.name == 'Online'
+      if %w[Online Remote\ 1 Remote\ 2 Remote\ 3 Undetermined].include?(hub.name)
         @currency_symbol = '$'
-
       else
         # Fetch any pricing tier for the hub's country to extract currency symbol
         pricing_tier = PricingTier.where(country: @learner_info.hub.country).first
@@ -85,6 +84,10 @@ class AdmissionListController < ApplicationController
         end
       end
     end
+
+    # Prepare hub options based on programme type
+    @online_hubs = Hub.where(hub_type: 'Online').pluck(:name, :id)
+    @hybrid_hubs = Hub.where.not(hub_type: 'Online').pluck(:name, :id)
 
     excluded = %w[id user_id created_at updated_at]
     @show_columns = LearnerInfo.column_names - excluded
