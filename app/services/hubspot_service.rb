@@ -75,8 +75,8 @@ class HubspotService
     if learner_info.hub_id.present?
       hub = learner_info.hub
 
-      if hub.name == "Online"
-        # Online hub always has capacity
+      if %w[Online Remote\ 1 Remote\ 2 Remote\ 3 Undetermined].include?(hub.name)
+        # These hubs always have capacity
         learner_info.update!(status: 'In progress conditional')
         Rails.logger.info("Set status to 'In progress conditional' for LearnerInfo ID: #{learner_info.id} (Online hub always has capacity)")
       else
@@ -158,19 +158,28 @@ class HubspotService
       else
         Rails.logger.warn("No hub found for hubspot_key: #{hubspot_key} - LearnerInfo ID: #{learner_info.id} remains without hub association.")
       end
-    else
-      form_email = fields[:email]
-      remote_region = fetch_contact_remote_region(form_email)
-      region_display = remote_region || '(not defined)'
-      Rails.logger.info("ONLINE LEARNER ASSOCIATION: #{region_display} for learner ID #{learner_info.id} (email: #{form_email})")
+      return
+    end
 
-      online_hub = Hub.find_by(name: "Online")
-      if online_hub
-        learner_info.update!(hub_id: online_hub.id)
-        Rails.logger.info("Associated 'Online' hub (ID: #{online_hub.id}) with LearnerInfo ID: #{learner_info.id} (no hub_interest_portugal provided).")
+    form_email = fields[:email]
+    remote_region = fetch_contact_remote_region(form_email)
+    region_display = remote_region || '(not defined)'
+    Rails.logger.info("ONLINE LEARNER ASSOCIATION: #{region_display} for learner ID #{learner_info.id} (email: #{form_email})")
+
+    target_hub_name =
+      if remote_region.blank?
+        'Undetermined'
       else
-        Rails.logger.warn("No 'Online' hub found - LearnerInfo ID: #{learner_info.id} remains without hub association.")
+        m = remote_region.to_s.strip.match(/region\s*([1-3])\b/i)
+        "Remote #{m[1].to_i}"
       end
+    target_hub = Hub.find_by(name: target_hub_name)
+
+    if target_hub
+      learner_info.update!(hub_id: target_hub.id)
+      Rails.logger.info("Associated '#{target_hub_name}' hub (ID: #{target_hub.id}) with LearnerInfo ID: #{learner_info.id}. (remote_region: #{region_display})")
+    else
+      Rails.logger.warn("No '#{target_hub_name}' hub found - LearnerInfo ID: #{learner_info.id} remains without hub association. (remote_region: #{region_display})")
     end
   end
 

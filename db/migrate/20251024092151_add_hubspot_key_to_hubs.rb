@@ -4,8 +4,8 @@ class AddHubspotKeyToHubs < ActiveRecord::Migration[7.0]
 
     mappings = {
       'Boca Raton' => 'US - Boca Raton',
-      'Baia 1' => 'Portugal - Cascais Baía',
-      'Baia 2' => 'Portugal - Cascais Baía 2',
+      'Cascais Baía 1' => 'Portugal - Cascais Baía',
+      'Cascais Baía 2' => 'Portugal - Cascais Baía 2',
       'Braga' => 'Braga',
       'Ofir' => 'Portugal - Esposende',
       'Setúbal' => 'Setúbal',
