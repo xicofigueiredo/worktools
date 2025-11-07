@@ -1,0 +1,52 @@
+<p>Dear <%= @learner.full_name.split.first %>,</p>
+
+<p>Welcome to the UP Program!</p>
+
+<p>We are looking forward to having you with us starting from <%= @learner.start_date.strftime("%d/%m/%Y") %>.</p>
+
+<p>Below you will find some important information regarding the beginning of your studies. Please read through it carefully and do not hesitate to contact me in case you have any questions.</p>
+
+<ol>
+  <li>
+    <strong>BGA Email Creation:</strong>
+    <p>Attached are your BGA email credentials. Please view the tutorial document with your LCs on how to proceed with the authentication of the account. You will need your BGA email to communicate with your mentor, LCs and to keep up with all events and relevant information regarding UP!</p>
+    <p>Tutorial: <a href="https://hubs.ly/Q03RhZGL0">Watch Here</a> + [Attach BGA email credentials]</p>
+  </li>
+
+  <li>
+    <strong>BGA Platform Credentials</strong>
+    <p>Below, you will find your access to the BGA platform, where your course is hosted:</p>
+    <p><%= @platform_details %></p>
+
+    <p>Once logged in, you will see the <strong>Business and Management</strong> course. Before you can begin accessing the course content, you’ll need to book an <strong>Induction Meeting</strong> with one of your course managers. You can find the link to book the induction meeting in the course introduction. During this meeting, your course manager will guide you through the platform, course structure, expectations, assessment and requirements.</p>
+
+    <p>Your Course Manager is:</p>
+    <p><%= @mentor_name %> : <%= @mentor_email %></p>
+  </li>
+
+  <li>
+    <strong>Important Contacts:</strong><br>
+    <u>Learning Coaches:</u><br>
+    <% @learning_coaches.each do |lc| %>
+      <%= lc.full_name %> : <%= lc.email %><br>
+    <% end %>
+    <br>
+    <u>Regional Manager:</u><br>
+    <% if @regional_manager %>
+      <%= @regional_manager.full_name %> : <%= @regional_manager.email %>
+    <% else %>
+      N/A
+    <% end %>
+  </li>
+
+  <li>
+    <strong>Invitation to WhatsApp Group</strong>
+    <p>We have a WhatsApp group for all UP Learners, and we encourage you to join to get to know other Learners.</p>
+    <p><strong>UP Learners WhatsApp Group:</strong> <a href="https://chat.whatsapp.com/GexbP1IIMx0ICc8uAvRMDr">https://chat.whatsapp.com/GexbP1IIMx0ICc8uAvRMDr</a></p>
+  </li>
+</ol>
+
+<p>We wish you all the best for the start of your Brave Journey and are pleased to welcome you to the BGA Family!</p>
+
+<p>Kind regards,</p>
+<p>BGA Admissions Team | (+351) 913 578 362</p>

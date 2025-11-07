@@ -76,40 +76,83 @@ class UserMailer < Devise::Mailer
     mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
   end
 
-  def onboarded_parent_email(learner_info)
+  def onboarding_email(learner_info)
     @learner = learner_info
     @parent_emails = [@learner.parent1_email, @learner.parent2_email].compact
-    return if @parent_emails.blank?
+    @learner_email = @learner.personal_email.presence || @learner.institutional_email
 
-    @parent_names = [@learner.parent1_full_name, @learner.parent2_full_name].compact.join(' & ')
-    @learning_coaches = @learner.learning_coaches
-    @hub = @learner.hub
-    @regional_manager = @hub.regional_manager
+    return if @parent_emails.blank? && @learner_email.blank?
 
-    curriculum = @learner.curriculum_course_option.to_s.downcase.gsub(' ', '_')
-    hub_type = @hub.hub_type.to_s.downcase.gsub(' ', '_')
+    @parent_names       = [@learner.parent1_full_name, @learner.parent2_full_name].compact.join(' & ')
+    @learning_coaches   = @learner.learning_coaches
+    @hub                = @learner.hub
+    @regional_manager   = @hub.regional_manager
 
-    # Determine the template name based on curriculum and hub type
-    template = "onboarded_#{curriculum}_#{hub_type}"
+    curriculum_raw = @learner.curriculum_course_option.to_s.downcase
+    hub_type_raw   = @hub.hub_type.to_s.downcase
 
-    supported_templates = {
-      "onboarded_british_curriculum_powered_by_bga" => true,
-      "onboarded_american_curriculum_independent" => true,
-      "onboarded_british_curriculum_independent" => true
-      # TODO: Add entries
-    }
+    # --- Detect UP program ---
+    is_up = curriculum_raw.include?('up')
+    up_program = if curriculum_raw.include?('business')
+                  'business'
+                elsif curriculum_raw.include?('computing')
+                  'computing'
+                elsif curriculum_raw.include?('sports')
+                  'sports'
+                end
 
-    if supported_templates[template]
-      mail(
-        to: "guilherme@bravegenerationacademy.com", # to: @parent_emails,
-        from: 'worktools@bravegenerationacademy.com',
-        subject: "Onboarding Day - #{@learner.full_name}",
-        template_name: template
-      )
+    # --- Delivery mode: online = exact, hybrid = everything else ---
+    up_mode = hub_type_raw == 'online' ? 'online' : 'hybrid'
+
+    # --- Build template name ---
+    if is_up && up_program
+      template = "onboarded_up_#{up_program}_#{up_mode}"
     else
-      # TODO: Handle other combinations (e.g., fallback template, log, or notify)
-      Rails.logger.warn("No onboarding email template available for curriculum: #{curriculum} and hub_type: #{hub_type}")
-      # Optionally, raise or return without sending
+      curriculum = curriculum_raw.gsub(' ', '_')
+      hub_type   = hub_type_raw.gsub(' ', '_')
+      template   = "onboarded_#{curriculum}_#{hub_type}"
     end
+
+    # --- Full path to template file ---
+    template_path = "onboarding/#{template}"
+    full_path     = Rails.root.join("app/views/user_mailer/#{template_path}.html.erb")
+
+    unless File.exist?(full_path)
+      Rails.logger.warn("Onboarding template not found: #{template_path} (curriculum: #{curriculum_raw}, hub_type: #{hub_type_raw})")
+      return
+    end
+
+    # --- Recipient & subject ---
+    to      = @parent_emails
+    subject = "Onboarding Day - #{@learner.full_name}"
+
+    if template.start_with?('onboarded_up_')
+      to      = @learner_email
+      subject = "Welcome to the UP Program!"
+
+      # --- Hard-coded mentors ---
+      case up_program
+        when 'business'
+          @mentor_name = "Placeholder"
+          @mentor_email = "Placeholder"
+          @platform_details = "Placeholder"
+        when 'computing'
+          @mentor_name = "Placeholder"
+          @mentor_email = "Placeholder"
+          @platform_details = "Placeholder"
+        when 'sports'
+          @mentor_name = "Placeholder"
+          @mentor_email = "Placeholder"
+          @platform_details = "Placeholder"
+      end
+    end
+
+    # --- Send email ---
+    mail(
+      to: "guilherme@bravegenerationacademy.com", # to: to, # Use in production
+      from:          'worktools@bravegenerationacademy.com',
+      subject:       subject,
+      template_name: template_path
+    )
   end
 end

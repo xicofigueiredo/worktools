@@ -509,7 +509,7 @@ class LearnerInfo < ApplicationRecord
       notify_recipients(learning_coaches + curriculum_responsibles + regional_manager, message)
 
       # Send email to parents based on curriculum and hub type
-      UserMailer.onboarded_parent_email(self).deliver_now
+      UserMailer.onboarding_email(self).deliver_now
     when "Inactive"
       # Notify finance users when a learner becomes Inactive
       message = "#{full_name} status has been changed to Inactive."

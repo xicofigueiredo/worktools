@@ -1,0 +1,67 @@
+<p>Dear <%= @learner.full_name.split.first %>,</p>
+
+<p>Welcome to the UP Program!</p>
+
+<p>We are looking forward to having you with us starting from <%= @learner.start_date.strftime("%d/%m/%Y") %>.</p>
+
+<p>Below you will find some important information regarding the beginning of your studies. Please read through it carefully and do not hesitate to contact me in case you have any questions.</p>
+
+<ol>
+  <li>
+    <strong>BGA Email Creation:</strong>
+    <p>Attached are your BGA email credentials. Please view the tutorial document with your LCs on how to proceed with the authentication of the account. You will need your BGA email to communicate with your mentor, LCs and to keep up with all events and relevant information regarding UP!</p>
+    <p>Tutorial: <a href="https://hubs.ly/Q03RhZGL0">Watch Here</a> + [Attach BGA email credentials]</p>
+  </li>
+
+  <li>
+    <strong>Computing Science Genex Credentials</strong>
+    <p>Below, you will find your access to the platform where your course is hosted:</p>
+    <p><%= @platform_details %></p>
+
+    <p>Please use the following link to book an <strong>induction meeting</strong> with your Mentor. Your Learning Coach should be present with you in this meeting, so please share the meeting link with the LC as soon as you book it. You can find the link to book the induction meeting here: <a href="https://linktr.ee/genex.institute">https://linktr.ee/genex.institute</a></p>
+
+    <p>Your Mentor is:</p>
+    <p><%= @mentor_name %> : <%= @mentor_email %></p>
+  </li>
+
+  <li>
+    <strong>Hub Address:</strong>
+    <p>The BGA Hub is located at <%= @hub.address %>.</p>
+    <p><strong>What to bring:</strong> laptop, charger, water bottle, headphones, a notebook, and stationery (including a calculator).</p>
+  </li>
+
+  <li>
+    <strong>Important Contacts:</strong><br>
+    <u>Learning Coaches:</u><br>
+    <% @learning_coaches.each do |lc| %>
+      <%= lc.full_name %> : <%= lc.email %><br>
+    <% end %>
+    <br>
+    <u>Regional Manager:</u><br>
+    <% if @regional_manager %>
+      <%= @regional_manager.full_name %> : <%= @regional_manager.email %>
+    <% else %>
+      N/A
+    <% end %>
+  </li>
+
+  <li>
+    <strong>Invitation WhatsApp Group</strong>
+    <p>At BGA, each Hub has a Parent WhatsApp group to facilitate communication and create a bigger sense of community among the BGA Family. Therefore, in case your parents wish to be a part of it, they can click the link on your mobile phone and join the group!</p>
+
+    <p><strong>Parent WhatsApp Group:</strong> <a href="<%= @hub.parents_whatsapp_group %>"><%= @hub.parents_whatsapp_group %></a></p>
+
+    <p>We also have a WhatsApp group for all UP Learners, and we encourage you to join to get to know other Learners.</p>
+    <p><strong>UP Learners WhatsApp Group:</strong> <a href="https://chat.whatsapp.com/GexbP1IIMx0ICc8uAvRMDr">https://chat.whatsapp.com/GexbP1IIMx0ICc8uAvRMDr</a></p>
+  </li>
+
+  <li>
+    <strong>Lunch:</strong>
+    <p>Learners are welcome to bring their own packed lunch from home or purchase lunch at any of the surrounding restaurants or cafes.</p>
+  </li>
+</ol>
+
+<p>We wish you all the best for the start of your Brave Journey and are pleased to welcome you to the BGA Family!</p>
+
+<p>Kind regards,</p>
+<p>BGA Admissions Team | (+351) 913 578 362</p>
