@@ -328,19 +328,31 @@
 </div>
 
 <% if edit_mode %>
+  <%# Build the data attributes hash for Stimulus controller %>
+  <% stimulus_data = {} %>
   <% if @main_hub %>
-  <div data-controller="curriculum-pricing"
-      data-curriculum-pricing-hub-id-value="<%= @main_hub.id %>"
-      data-curriculum-pricing-current-curriculum-value="<%= @learner_info.curriculum_course_option %>"
-      data-curriculum-pricing-current-programme-value="<%= @learner_info.programme %>"
-      data-curriculum-pricing-learner-info-id-value="<%= @learner_info.id %>"
-      data-curriculum-pricing-model-value="<%= @main_hub.name.downcase == 'remote' ? 'Online' : 'Hybrid' %>"
-      data-curriculum-pricing-country-value="<%= @main_hub.country %>"
-      data-curriculum-pricing-hub-name-value="<%= @main_hub.name %>"
-      data-curriculum-pricing-currency-symbol-value="<%= @currency_symbol %>">
+    <% stimulus_data = {
+      controller: "curriculum-pricing",
+      curriculum_pricing_hub_id_value: @main_hub.id,
+      curriculum_pricing_current_curriculum_value: @learner_info.curriculum_course_option,
+      curriculum_pricing_current_programme_value: @learner_info.programme,
+      curriculum_pricing_learner_info_id_value: @learner_info.id,
+      curriculum_pricing_model_value: @main_hub.hub_type == 'Online' ? 'Online' : 'Hybrid',
+      curriculum_pricing_country_value: @main_hub.country,
+      curriculum_pricing_hub_name_value: @main_hub.name,
+      curriculum_pricing_currency_symbol_value: @currency_symbol
+    } %>
   <% end %>
 
-  <%= form_with model: @learner_info, url: admission_path(@learner_info), method: :patch, local: true, html: { id: 'learner-info-form' } do |f| %>
+  <%= form_with model: @learner_info,
+                url: admission_path(@learner_info),
+                method: :patch,
+                local: true,
+                html: {
+                  id: 'learner-info-form',
+                  data: stimulus_data
+                } do |f| %>
+
     <div class="mb-3 d-flex justify-content-end gap-2">
       <%= f.submit "Save changes", class: "btn btn-primary" %>
       <%= link_to 'Cancel', admission_path(@learner_info), class: 'btn btn-secondary' %>
@@ -361,7 +373,6 @@
       </div>
     </div>
 
-    <!-- Rest of the form sections remain the same -->
     <div class="li-section li-grid">
       <h4>Contact information</h4>
       <div class="row gx-3">
@@ -424,7 +435,7 @@
             </div>
           <% end %>
         <% else %>
-          <div class="alert alert-warning text-center">
+          <div class="alert alert-warning text-center" style="margin-top: 20px;">
             Financial plan not defined. Please set the learner's hub to define the financial plan.
           </div>
         <% end %>
@@ -471,6 +482,149 @@
         <% render_input.call(f, :onboarding_meeting_notes, field_opts[:onboarding_meeting_notes] || { type: :text_area, rows: 4, col: '12' }) %>
       </div>
     </div>
+
+    <%# Pricing Confirmation Modal - NOW INSIDE THE FORM %>
+    <% if @main_hub %>
+      <div class="modal fade" id="pricingConfirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">⚠️ Change Detected - Pricing Confirmation</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="alert alert-info">
+                <p class="mb-0">
+                  <strong>Change Detected:</strong><br>
+                  <span data-curriculum-pricing-target="changesDetails"></span>
+                </p>
+              </div>
+
+              <div class="card mb-3">
+                <div class="card-header">
+                  <strong>Pricing Tier Criteria</strong>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-3">
+                      <strong>Model:</strong> <span id="pricing-model"></span>
+                    </div>
+                    <div class="col-md-3">
+                      <strong>Country:</strong> <span id="pricing-country"></span>
+                    </div>
+                    <div class="col-md-3">
+                      <strong>Hub:</strong> <span id="pricing-hub"></span>
+                    </div>
+                    <div class="col-md-3">
+                      <strong>Curriculum:</strong> <span id="pricing-curriculum"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <h6 class="mb-3">Financial Changes</h6>
+
+              <%# Monthly Fees Section %>
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <strong>Monthly Fees</strong>
+                </div>
+                <div class="card-body">
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Current Monthly Fee</label>
+                      <div class="form-control-plaintext" data-curriculum-pricing-target="oldMonthly"></div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">New Monthly Fee</label>
+                      <div class="form-control-plaintext" data-curriculum-pricing-target="newMonthly"></div>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Discount (%)</label>
+                      <input type="number" class="form-control" data-curriculum-pricing-target="discountMfInput" onchange="window.curriculumPricingController?.calculateBillables()" step="0.01" min="0" max="100">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Scholarship (%)</label>
+                      <input type="number" class="form-control" data-curriculum-pricing-target="scholarshipInput" onchange="window.curriculumPricingController?.calculateBillables()" step="0.01" min="0" max="100">
+                    </div>
+                  </div>
+                  <div class="alert alert-secondary mb-0">
+                    <strong>Billable Monthly Fee:</strong> <span id="billable-mf"></span>
+                  </div>
+                </div>
+              </div>
+
+              <%# Admission Fees Section %>
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <strong>Admission Fees</strong>
+                </div>
+                <div class="card-body">
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Current Admission Fee</label>
+                      <div class="form-control-plaintext" data-curriculum-pricing-target="oldAdmission"></div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">New Admission Fee</label>
+                      <div class="form-control-plaintext" data-curriculum-pricing-target="newAdmission"></div>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Discount (%)</label>
+                      <input type="number" class="form-control" data-curriculum-pricing-target="discountAfInput" onchange="window.curriculumPricingController?.calculateBillables()" step="0.01" min="0" max="100">
+                    </div>
+                  </div>
+                  <div class="alert alert-secondary mb-0">
+                    <strong>Billable Admission Fee:</strong> <span id="billable-af"></span>
+                  </div>
+                </div>
+              </div>
+
+              <%# Renewal Fees Section %>
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <strong>Renewal Fees</strong>
+                </div>
+                <div class="card-body">
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Current Renewal Fee</label>
+                      <div class="form-control-plaintext" data-curriculum-pricing-target="oldRenewal"></div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">New Renewal Fee</label>
+                      <div class="form-control-plaintext" data-curriculum-pricing-target="newRenewal"></div>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Discount (%)</label>
+                      <input type="number" class="form-control" data-curriculum-pricing-target="discountRfInput" onchange="window.curriculumPricingController?.calculateBillables()" step="0.01" min="0" max="100">
+                    </div>
+                  </div>
+                  <div class="alert alert-secondary mb-0">
+                    <strong>Billable Renewal Fee:</strong> <span id="billable-rf"></span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="pricing-cancel-btn">
+                Cancel
+              </button>
+              <button type="button" class="btn btn-primary" id="pricing-confirm-btn">
+                Confirm & Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
 
   <% end %>
 
@@ -550,7 +704,7 @@
           <% render_input.call(nil, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true, @learner_finance) %>
         </div>
       <% else %>
-        <div class="alert alert-warning text-center" style="margin-top: 20px; margin-left: 10px">
+        <div class="alert alert-warning text-center" style="margin-top: 20px;">
           Financial plan not defined. Please set the learner's hub to define the financial plan.
         </div>
       <% end %>
@@ -594,149 +748,14 @@
   </div>
 <% end %>
 
-<%# Pricing Confirmation Modal %>
-<div class="modal fade" id="pricingConfirmationModal" tabindex="-1" aria-hidden="true" data-curriculum-pricing-target="modal">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">⚠️ Change Detected - Pricing Confirmation</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" data-curriculum-pricing-target="modalBody">
-        <div class="alert alert-info">
-          <p class="mb-0">
-            <strong>Change Detected:</strong><br>
-            <span data-curriculum-pricing-target="changesDetails"></span>
-          </p>
-        </div>
-
-        <div class="card mb-3">
-          <div class="card-header">
-            <strong>Pricing Tier Criteria</strong>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-3">
-                <strong>Model:</strong> <span id="pricing-model"></span>
-              </div>
-              <div class="col-md-3">
-                <strong>Country:</strong> <span id="pricing-country"></span>
-              </div>
-              <div class="col-md-3">
-                <strong>Hub:</strong> <span id="pricing-hub"></span>
-              </div>
-              <div class="col-md-3">
-                <strong>Curriculum:</strong> <span id="pricing-curriculum"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <h6 class="mb-3">Financial Changes</h6>
-
-        <%# Monthly Fees Section %>
-        <div class="card mb-3">
-          <div class="card-header bg-light">
-            <strong>Monthly Fees</strong>
-          </div>
-          <div class="card-body">
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Current Monthly Fee</label>
-                <div class="form-control-plaintext" data-curriculum-pricing-target="oldMonthly"></div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">New Monthly Fee</label>
-                <div class="form-control-plaintext" data-curriculum-pricing-target="newMonthly"></div>
-              </div>
-            </div>
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Discount (%)</label>
-                <input type="number" class="form-control" data-curriculum-pricing-target="discountMfInput" data-action="input->curriculum-pricing#calculateBillables" step="0.01" min="0" max="100">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Scholarship (%)</label>
-                <input type="number" class="form-control" data-curriculum-pricing-target="scholarshipInput" data-action="input->curriculum-pricing#calculateBillables" step="0.01" min="0" max="100">
-              </div>
-            </div>
-            <div class="alert alert-secondary mb-0">
-              <strong>Billable Monthly Fee:</strong> <span id="billable-mf"></span>
-            </div>
-          </div>
-        </div>
-
-        <%# Admission Fees Section %>
-        <div class="card mb-3">
-          <div class="card-header bg-light">
-            <strong>Admission Fees</strong>
-          </div>
-          <div class="card-body">
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Current Admission Fee</label>
-                <div class="form-control-plaintext" data-curriculum-pricing-target="oldAdmission"></div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">New Admission Fee</label>
-                <div class="form-control-plaintext" data-curriculum-pricing-target="newAdmission"></div>
-              </div>
-            </div>
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Discount (%)</label>
-                <input type="number" class="form-control" data-curriculum-pricing-target="discountAfInput" data-action="input->curriculum-pricing#calculateBillables" step="0.01" min="0" max="100">
-              </div>
-            </div>
-            <div class="alert alert-secondary mb-0">
-              <strong>Billable Admission Fee:</strong> <span id="billable-af"></span>
-            </div>
-          </div>
-        </div>
-
-        <%# Renewal Fees Section %>
-        <div class="card mb-3">
-          <div class="card-header bg-light">
-            <strong>Renewal Fees</strong>
-          </div>
-          <div class="card-body">
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Current Renewal Fee</label>
-                <div class="form-control-plaintext" data-curriculum-pricing-target="oldRenewal"></div>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">New Renewal Fee</label>
-                <div class="form-control-plaintext" data-curriculum-pricing-target="newRenewal"></div>
-              </div>
-            </div>
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Discount (%)</label>
-                <input type="number" class="form-control" data-curriculum-pricing-target="discountRfInput" data-action="input->curriculum-pricing#calculateBillables" step="0.01" min="0" max="100">
-              </div>
-            </div>
-            <div class="alert alert-secondary mb-0">
-              <strong>Billable Renewal Fee:</strong> <span id="billable-rf"></span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-action="click->curriculum-pricing#cancelChanges">
-          Cancel
-        </button>
-        <button type="button" class="btn btn-primary" data-curriculum-pricing-target="confirmButton" data-action="click->curriculum-pricing#confirmChanges">
-          Confirm & Save Changes
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<% if @main_hub %>
-</div>
-<% end %>
+<script>
+  // Store controller reference globally when it connects
+  document.addEventListener('stimulus:connect', function(event) {
+    if (event.detail.controller.identifier === 'curriculum-pricing') {
+      window.curriculumPricingController = event.detail.controller;
+    }
+  });
+</script>
 
 <!-- Modal for Learning Coach Selection  -->
 <% if @sorted_coaches %>

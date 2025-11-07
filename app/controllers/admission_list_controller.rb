@@ -70,6 +70,8 @@ class AdmissionListController < ApplicationController
 
     @learner_finance = @learner_info.learner_finance
 
+    @main_hub = @learner_info.hub || PricingTierMatcher.get_main_hub_for_learner(@learner_info)
+
     @currency_symbol = '€'
     if @learner_info.hub.presence
       hub = @learner_info.hub
@@ -156,8 +158,9 @@ class AdmissionListController < ApplicationController
     head :forbidden and return unless @permission.show?
 
     curriculum = params[:curriculum]
-    programme = params[:programme]
     hub_id = params[:hub_id]
+
+    Rails.logger.info("check_pricing_impact called with: curriculum=#{curriculum}, hub_id=#{hub_id}")
 
     if curriculum.blank? || hub_id.blank?
       return render json: { error: 'Missing curriculum or hub_id' }, status: :bad_request
@@ -168,37 +171,49 @@ class AdmissionListController < ApplicationController
       return render json: { error: 'Hub not found' }, status: :not_found
     end
 
-    # Get new pricing for the selected curriculum and programme
-    new_pricing = PricingTierMatcher.for_learner(@learner_info, curriculum, hub, programme)
+    # Get new pricing for the selected combination
+    new_pricing = PricingTierMatcher.for_learner(@learner_info, curriculum, hub)
 
-    # Get current finance values
+    # Get or build current finance values
     current_finance = @learner_info.learner_finance || @learner_info.build_learner_finance
 
     current_pricing = {
-      monthly_fee: current_finance.monthly_fee,
-      admission_fee: current_finance.admission_fee,
-      renewal_fee: current_finance.renewal_fee,
-      discount_mf: current_finance.discount_mf,
-      scholarship: current_finance.scholarship,
-      discount_af: current_finance.discount_af,
-      discount_rf: current_finance.discount_rf
+      monthly_fee: current_finance.monthly_fee || 0,
+      admission_fee: current_finance.admission_fee || 0,
+      renewal_fee: current_finance.renewal_fee || 0,
+      discount_mf: current_finance.discount_mf || 0,
+      scholarship: current_finance.scholarship || 0,
+      discount_af: current_finance.discount_af || 0,
+      discount_rf: current_finance.discount_rf || 0
     }
 
     if new_pricing.nil?
       return render json: {
         requires_confirmation: false,
-        error: 'No pricing tier found for this combination'
+        error: "No pricing tier found for this combination (#{new_pricing.model} / #{hub.country} / #{curriculum}). Please contact administration."
       }
     end
 
-    # Always require confirmation if pricing tier found (since called on change)
+    # Check if pricing actually changed
+    pricing_changed = (
+      current_finance.monthly_fee != new_pricing.monthly_fee ||
+      current_finance.admission_fee != new_pricing.admission_fee ||
+      current_finance.renewal_fee != new_pricing.renewal_fee
+    )
+
+    # Always show confirmation if:
+    # 1. Finance doesn't exist yet (new record)
+    # 2. Pricing has changed
+    requires_confirmation = current_finance.new_record? || pricing_changed
+
+    Rails.logger.info("Pricing comparison: changed=#{pricing_changed}, new_record=#{current_finance.new_record?}, requires_confirmation=#{requires_confirmation}")
+
     render json: {
-      requires_confirmation: true,
+      requires_confirmation: requires_confirmation,
       new_curriculum: curriculum,
-      old_programme: @learner_info.programme,
-      new_programme: programme,
+      new_hub_name: hub.name,
       pricing_criteria: {
-        model: programme,
+        model: new_pricing.model,
         country: hub.country,
         hub_name: hub.name,
         curriculum: curriculum
