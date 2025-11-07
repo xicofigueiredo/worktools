@@ -468,16 +468,16 @@ class AdmissionListController < ApplicationController
   private
 
   def set_learner_info
-      # include user for view convenience
-      @learner_info = LearnerInfo.includes(:user).find(params[:id])
-      @permission   = LearnerInfoPermission.new(current_user, @learner_info)
-    end
+    # include user for view convenience
+    @learner_info = LearnerInfo.includes(:user).find(params[:id])
+    @permission   = LearnerInfoPermission.new(current_user, @learner_info)
+  end
 
-    def set_learning_coaches
-    @online_hub = Hub.find_by(name: 'Online')
-    return unless @online_hub
+  def set_learning_coaches
+    @online_hubs = Hub.where(hub_type: 'Online')
+    return if @online_hubs.empty?
 
-    @learning_coaches = @online_hub.learning_coaches
+    @learning_coaches = User.joins(:users_hubs).where(users_hubs: { hub_id: @online_hubs.pluck(:id) }).where(role: 'lc').distinct
 
     excluded_statuses = ['Waitlist', 'Waitlist - OK', 'In progress conditional', 'Inactive', 'Graduated']
 

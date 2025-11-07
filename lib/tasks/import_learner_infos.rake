@@ -421,6 +421,7 @@ namespace :admissions do
       previous_school_email: ['Previous School Email (Section 4)'],
       withdrawal_category: ['Withdrawal Category'],
       withdrawal_reason: ['Withdrawal Reason'],
+      learning_coach_email: ['Learning Coaches'],
     }.freeze
     parse_field = lambda do |value, key|
       return nil if nilish.call(value)
@@ -542,13 +543,24 @@ namespace :admissions do
         end
         # Split into learner_info_attrs and finance_attrs
         finance_keys = [:deposit, :sponsor, :payment_plan, :monthly_tuition, :discount_mt, :scholarship, :billable_fee_per_month, :scholarship_percentage, :admission_fee, :discount_af, :billable_af, :registration_renewal]
-        learner_info_attrs = attrs.except(*finance_keys)
+        special_keys = finance_keys + [:learning_coach_email]
+        learner_info_attrs = attrs.except(*special_keys)
         u = nil
         if attrs[:institutional_email].present?
           u = User.find_by(email: attrs[:institutional_email])
           if u
             learner_info_attrs[:preferred_name] = u.full_name if u.full_name.present?
             learner_info_attrs[:user_id] = u.id
+          end
+        end
+        # Handle learning_coach_id for Online programmes
+        if attrs[:programme] == 'Online' && attrs[:learning_coach_email].present?
+          lc_user = User.find_by(email: attrs[:learning_coach_email].downcase)
+          if lc_user
+            learner_info_attrs[:learning_coach_id] = lc_user.id
+            puts "Row #{row_num}: Associated learning coach (id: #{lc_user.id}, email: #{attrs[:learning_coach_email]})"
+          else
+            puts "Row #{row_num}: WARNING - Learning coach email #{attrs[:learning_coach_email]} not found as User"
           end
         end
         # Convert absolute discounts and scholarships to percentages

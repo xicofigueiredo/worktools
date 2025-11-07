@@ -367,6 +367,15 @@
         <% render_input.call(f, :status, field_opts[:status] || { col: '6' }) %>
         <% render_input.call(f, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }) %>
         <% render_input.call(f, :programme, field_opts[:programme] || { col: '6' }) %>
+        <div id="learning-coach-field" class="mb-3 col-md-6" style="<%= @learner_info.programme == 'Online' ? '' : 'display: none;' %>">
+          <%= label_tag(nil, "Learning Coach") %>
+          <div class="input-group">
+            <%= tag.input(value: @learner_info.learning_coach&.full_name || "-", type: "text", class: "form-control", disabled: true) %>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#learningCoachModal">
+              <%= @learner_info.learning_coach ? "Change Learning Coach" : "Select Learning Coach" %>
+            </button>
+          </div>
+        </div>
         <% render_input.call(f, :hub_id, field_opts[:hub_id] || { type: :select, col: '6' }) %>
         <% render_input.call(f, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }) %>
         <% render_input.call(f, :grade_year, field_opts[:grade_year] || { col: '6' }) %>
@@ -457,17 +466,6 @@
     <div class="li-section li-grid">
       <h4>Administrative</h4>
       <div class="row gx-3">
-        <% if @learner_info.hub&.name == 'Online' && @learner_info.status == 'In progress conditional' %>
-          <%= content_tag(:div, class: "mb-3 col-md-6") do %>
-            <%= label_tag(nil, "Learning Coach", class: "form-label") %>
-            <div class="input-group">
-              <%= tag.input(value: @learner_info.learning_coach&.full_name || "-", type: "text", class: "form-control", disabled: true) %>
-              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#learningCoachModal">
-                <%= @learner_info.learning_coach ? "Change Learning Coach" : "Select Learning Coach" %>
-              </button>
-            </div>
-          <% end %>
-        <% end %>
         <% render_input.call(f, :id_information, field_opts[:id_information] || { col: '6' }) %>
         <% render_input.call(f, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }) %>
         <% render_input.call(f, :start_date, field_opts[:start_date] || { type: :date, col: '3' }) %>
@@ -638,6 +636,10 @@
       <% render_input.call(nil, :status, field_opts[:status] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :birthdate, field_opts[:birthdate] || { type: :date, col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :programme, field_opts[:programme] || { col: '6' }, false, @learner_info) %>
+      <div id="learning-coach-field" class="mb-3 col-md-6" style="<%= @learner_info.programme == 'Online' ? '' : 'display: none;' %>">
+        <%= label_tag(nil, "Learning Coach", class: "form-label") %>
+        <%= tag.input(value: @learner_info.learning_coach&.full_name || "-", type: "text", class: "form-control", disabled: true) %>
+      </div>
       <% render_input.call(nil, :hub_id, field_opts[:hub_id] || { type: :select, col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :curriculum_course_option, field_opts[:curriculum_course_option] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :grade_year, field_opts[:grade_year] || { col: '6' }, false, @learner_info) %>
@@ -726,12 +728,6 @@
   <div class="li-section li-grid">
     <h4>Administrative</h4>
     <div class="row gx-3">
-      <% if @learner_info.hub&.name == 'Online' && @learner_info.status == 'In progress conditional' %>
-        <%= content_tag(:div, class: "mb-3 col-md-6") do %>
-          <%= label_tag(nil, "Learning Coach", class: "form-label") %>
-          <%= tag.input(value: @learner_info.learning_coach&.full_name || "-", type: "text", class: "form-control", disabled: true) %>
-        <% end %>
-      <% end %>
       <% render_input.call(nil, :id_information, field_opts[:id_information] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :fiscal_number, field_opts[:fiscal_number] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :start_date, field_opts[:start_date] || { type: :date, col: '3' }, false, @learner_info) %>
@@ -920,6 +916,7 @@
     const programmeSelect = document.getElementById('learner_info_programme');
     const hubSelect = document.getElementById('learner_info_hub_id');
     const form = document.getElementById('learner-info-form');
+    const lcField = document.getElementById('learning-coach-field');
 
     if (!programmeSelect || !hubSelect) return;
 
@@ -953,6 +950,11 @@
       if (selectedProgramme !== originalProgramme) {
         hubSelect.value = '';
         hubSelect.classList.add('is-invalid');
+      }
+
+      // Show/hide learning coach field
+      if (lcField) {
+        lcField.style.display = selectedProgramme === 'Online' ? 'block' : 'none';
       }
     });
 
