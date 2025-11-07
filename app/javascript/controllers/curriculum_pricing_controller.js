@@ -39,7 +39,6 @@ export default class extends Controller {
     this.originalHubId = this.hubIdValue
     this.originalCurriculum = this.currentCurriculumValue
     this.originalProgramme = this.currentProgrammeValue
-
     const hubSelect = this.form.querySelector('select[name="learner_info[hub_id]"]')
     if (hubSelect && hubSelect.selectedIndex >= 0) {
       this.originalHubName = hubSelect.options[hubSelect.selectedIndex].text
@@ -64,12 +63,10 @@ export default class extends Controller {
   async handleSubmit(event) {
     event.preventDefault()
     event.stopPropagation()
-
     const formData = new FormData(this.form)
     const newCurriculum = formData.get('learner_info[curriculum_course_option]')
     const newProgramme = formData.get('learner_info[programme]')
     const newHubId = formData.get('learner_info[hub_id]')
-
     console.log('Form submission check:', {
       original: {
         curriculum: this.originalCurriculum,
@@ -82,12 +79,10 @@ export default class extends Controller {
         hubId: newHubId
       }
     })
-
     // Check if curriculum, programme, or hub changed
     const curriculumChanged = newCurriculum !== this.originalCurriculum
     const programmeChanged = newProgramme !== this.originalProgramme
     const hubChanged = newHubId != this.originalHubId // Use != for type coercion
-
     if (curriculumChanged || programmeChanged || hubChanged) {
       console.log('Pricing-relevant change detected')
       // Store form data for later submission
@@ -96,7 +91,6 @@ export default class extends Controller {
       this.newCurriculum = newCurriculum
       this.newProgramme = newProgramme
       this.newHubId = newHubId
-
       // Check if pricing is affected
       await this.checkPricingImpact(newCurriculum, newProgramme, newHubId)
     } else {
@@ -116,15 +110,11 @@ export default class extends Controller {
           hub_id: newHubId
         })
       )
-
       if (!response.ok) {
         throw new Error('Failed to check pricing impact')
       }
-
       const data = await response.json()
-
       console.log('Pricing impact response:', data)
-
       if (data.requires_confirmation) {
         this.showConfirmationModal(data)
       } else if (data.error) {
@@ -174,11 +164,9 @@ export default class extends Controller {
         newHubName = selectedOption.text
       }
     }
-
     if (newHubName !== this.originalHubName) {
       changesHtml += `Hub: ${this.originalHubName || "N/A"} → ${newHubName}<br>`;
     }
-
     changesDetails.innerHTML = changesHtml;
 
     // Set pricing tier criteria
@@ -187,10 +175,13 @@ export default class extends Controller {
     document.getElementById('pricing-hub').textContent = data.pricing_criteria.hub_name
     document.getElementById('pricing-curriculum').textContent = data.pricing_criteria.curriculum
 
+    // Store the new currency symbol
+    this.newCurrencySymbol = data.new_currency_symbol
+
     // Set old values
-    oldMonthly.textContent = this.formatCurrency(data.current_pricing.monthly_fee)
-    oldAdmission.textContent = this.formatCurrency(data.current_pricing.admission_fee)
-    oldRenewal.textContent = this.formatCurrency(data.current_pricing.renewal_fee)
+    oldMonthly.textContent = this.formatCurrency(data.current_pricing.monthly_fee, this.currencySymbolValue)
+    oldAdmission.textContent = this.formatCurrency(data.current_pricing.admission_fee, this.currencySymbolValue)
+    oldRenewal.textContent = this.formatCurrency(data.current_pricing.renewal_fee, this.currencySymbolValue)
 
     // Set new fees
     this.newMonthlyFee = data.new_pricing.monthly_fee || 0;
@@ -198,9 +189,9 @@ export default class extends Controller {
     this.newRenewalFee = data.new_pricing.renewal_fee || 0;
 
     // Set new values in display
-    newMonthly.textContent = this.formatCurrency(data.new_pricing.monthly_fee)
-    newAdmission.textContent = this.formatCurrency(data.new_pricing.admission_fee)
-    newRenewal.textContent = this.formatCurrency(data.new_pricing.renewal_fee)
+    newMonthly.textContent = this.formatCurrency(data.new_pricing.monthly_fee, this.newCurrencySymbol)
+    newAdmission.textContent = this.formatCurrency(data.new_pricing.admission_fee, this.newCurrencySymbol)
+    newRenewal.textContent = this.formatCurrency(data.new_pricing.renewal_fee, this.newCurrencySymbol)
 
     // Set discount/scholarship values (preserve existing or set to 0)
     discountMfInput.value = data.current_pricing.discount_mf || 0
@@ -228,7 +219,6 @@ export default class extends Controller {
     // Bind methods to preserve 'this' context
     this.boundConfirmChanges = this.confirmChanges.bind(this)
     this.boundCancelChanges = this.cancelChanges.bind(this)
-
     confirmBtn.addEventListener('click', this.boundConfirmChanges)
     cancelBtn.addEventListener('click', this.boundCancelChanges)
 
@@ -250,21 +240,21 @@ export default class extends Controller {
     const scholarship = parseFloat(this.modalScholarshipInput?.value || 0);
     const discountPercentMf = (discountMf + scholarship) / 100;
     const billableMf = Math.max(0, monthlyFee * (1 - discountPercentMf));
-    document.getElementById('billable-mf').textContent = this.formatCurrency(billableMf);
+    document.getElementById('billable-mf').textContent = this.formatCurrency(billableMf, this.newCurrencySymbol);
 
     // Calculate billable admission fee
     const admissionFee = parseFloat(this.newAdmissionFee) || 0;
     const discountAf = parseFloat(this.modalDiscountAfInput?.value || 0);
     const discountPercentAf = discountAf / 100;
     const billableAf = Math.max(0, admissionFee * (1 - discountPercentAf));
-    document.getElementById('billable-af').textContent = this.formatCurrency(billableAf);
+    document.getElementById('billable-af').textContent = this.formatCurrency(billableAf, this.newCurrencySymbol);
 
     // Calculate billable renewal fee
     const renewalFee = parseFloat(this.newRenewalFee) || 0;
     const discountRf = parseFloat(this.modalDiscountRfInput?.value || 0);
     const discountPercentRf = discountRf / 100;
     const billableRf = Math.max(0, renewalFee * (1 - discountPercentRf));
-    document.getElementById('billable-rf').textContent = this.formatCurrency(billableRf);
+    document.getElementById('billable-rf').textContent = this.formatCurrency(billableRf, this.newCurrencySymbol);
   }
 
   confirmChanges() {
@@ -319,7 +309,6 @@ export default class extends Controller {
     const curriculumSelect = this.form.querySelector('select[name="learner_info[curriculum_course_option]"]')
     const programmeSelect = this.form.querySelector('select[name="learner_info[programme]"]')
     const hubSelect = this.form.querySelector('select[name="learner_info[hub_id]"]')
-
     if (curriculumSelect) curriculumSelect.value = this.originalCurriculum
     if (programmeSelect) programmeSelect.value = this.originalProgramme
     if (hubSelect) hubSelect.value = this.originalHubId
@@ -345,15 +334,14 @@ export default class extends Controller {
       input.value = value
       tempForm.appendChild(input)
     }
-
     document.body.appendChild(tempForm)
     tempForm.submit()
   }
 
-  formatCurrency(amount) {
+  formatCurrency(amount, symbol = this.currencySymbolValue) {
     if (amount === null || amount === undefined || amount === '') {
-      return `${this.currencySymbolValue} 0.00`
+      return `${symbol} 0.00`
     }
-    return `${this.currencySymbolValue} ${parseFloat(amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    return `${symbol} ${parseFloat(amount).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 }

@@ -208,6 +208,15 @@ class AdmissionListController < ApplicationController
 
     Rails.logger.info("Pricing comparison: changed=#{pricing_changed}, new_record=#{current_finance.new_record?}, requires_confirmation=#{requires_confirmation}")
 
+    # Calculate new currency symbol based on the same logic as in show action
+    new_currency_symbol = '€'
+    if %w[Online Remote\ 1 Remote\ 2 Remote\ 3 Undetermined].include?(hub.name)
+      new_currency_symbol = '$'
+    else
+      match = new_pricing.currency.match(/\(([^)]+)\)/) if new_pricing.currency
+      new_currency_symbol = match ? match[1] : '€'
+    end
+
     render json: {
       requires_confirmation: requires_confirmation,
       new_curriculum: curriculum,
@@ -223,7 +232,8 @@ class AdmissionListController < ApplicationController
         monthly_fee: new_pricing.monthly_fee,
         admission_fee: new_pricing.admission_fee,
         renewal_fee: new_pricing.renewal_fee
-      }
+      },
+      new_currency_symbol: new_currency_symbol
     }
   end
 
