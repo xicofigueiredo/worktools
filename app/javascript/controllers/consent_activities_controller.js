@@ -10,7 +10,7 @@ export default class extends Controller {
   addRow(event) {
     event.preventDefault();
     const template = this.templateTarget;
-    
+
     if (template) {
       let content = template.innerHTML.replace(
         /TEMPLATE_INDEX/g,
@@ -42,7 +42,7 @@ export default class extends Controller {
         row.remove();
         return;
       }
-      
+
       row.remove();
     }
   }
