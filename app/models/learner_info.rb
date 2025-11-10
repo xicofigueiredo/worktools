@@ -282,16 +282,28 @@ class LearnerInfo < ApplicationRecord
     has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
     has_documents = has_contract && has_proof
     has_start_date = start_date.present?
-    has_active_account = user.present? && !user.deactivate
+    has_started = has_start_date && start_date <= Date.today
     end_date_passed = end_date.present? && end_date < Date.today
 
     case status
     when "Inactive"
-      "Inactive"
+      if !end_date_passed && has_active_account
+        "Active"
+      else
+        "Inactive"
+      end
     when "Active"
-      end_date_passed ? "Inactive" : "Active"
+      if end_date_passed
+      "Inactive"
+      elsif !has_started && has_start_date
+        "Onboarded"
+      elsif !has_started && !has_start_date
+        "Validated"
+      else
+        "Active"
+      end
     when "Onboarded"
-      if has_active_account
+      if has_started
         "Active"
       elsif !has_start_date
         "Validated"
@@ -455,27 +467,6 @@ class LearnerInfo < ApplicationRecord
     # TO DO: Schedule reminder if more than 1 month away
   end
 
-  def check_status_updates
-    new_status = calculate_status
-    return if new_status == status && !saved_change_to_status?
-
-    old_status = status
-    if new_status == "Onboarded" && student_number.blank?
-      gen_number = generate_student_number
-      update_columns(status: new_status, student_number: gen_number)
-      log_update(nil, { 'status' => [old_status, new_status], 'student_number' => [nil, gen_number] }, note: "Automated status update to #{new_status} with student number generation")
-    else
-      update_column(:status, new_status)
-      log_update(nil, { 'status' => [old_status, new_status] }, note: "Automated status update to #{new_status}")
-    end
-
-    if new_status == "In progress" && old_status == "In progress conditional"
-      create_institutional_user_if_needed
-    end
-
-    send_status_notification(new_status)
-  end
-
   def send_status_notification(new_status)
     case new_status
     when "In progress conditional"
@@ -517,34 +508,29 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
-  def self.inactivate_expired!(run_at: Time.current)
+  def self.sync_date_based_statuses!(run_at: Time.current)
     today = run_at.to_date
 
-    # Find learners whose end_date passed AND status is still active
-    expired = where(
-      "end_date IS NOT NULL AND end_date < ? AND status NOT IN (?)",
-      today,
-      INACTIVE_STATUSES
-    )
+    # Find candidates for activation
+    activation_candidates = where(status: "Onboarded")
+                            .where("start_date IS NOT NULL AND start_date <= ?", today)
+
+    # Find candidates for inactivation
+    inactivation_candidates = where(status: "Active")
+                              .where("end_date IS NOT NULL AND end_date < ?", today)
+
+    # Combine and dedupe (some might overlap if both dates trigger)
+    candidates = (activation_candidates + inactivation_candidates).uniq
 
     updated_count = 0
 
-    expired.find_each do |learner|
-      old_status = learner.status
-      learner.update_column(:status, "Inactive")   # bypass callbacks for speed
-      learner.log_update(
-        nil,
-        { "status" => [old_status, "Inactive"] },
-        note: "Automated nightly inactivation – end_date #{learner.end_date} passed"
-      )
-      Rails.logger.info(
-        "[LearnerInfo##{learner.id}] Status changed #{old_status} → Inactive (end_date: #{learner.end_date})"
-      )
-      updated_count += 1
+    candidates.each do |learner|
+      learner.check_status_updates
+      updated_count += 1 if learner.saved_change_to_status?
     end
 
     Rails.logger.info(
-      "[LearnerInfo.inactivate_expired!] Processed #{expired.size} expired learners – #{updated_count} updated."
+      "[LearnerInfo.sync_date_based_statuses!] Processed #{candidates.size} candidates – #{updated_count} statuses synced (activations/inactivations)."
     )
 
     updated_count
@@ -585,23 +571,33 @@ class LearnerInfo < ApplicationRecord
       counter += 1
     end
 
-    # Update institutional_email
-    update_column(:institutional_email, generated_email)
+    begin
+      # Create User
+      new_user = User.create!(
+        email: generated_email,
+        password: "123456",
+        password_confirmation: "123456",
+        role: 'learner',
+        deactivate: false,
+        confirmed_at: Time.now
+      )
 
-    # Create User
-    new_user = User.create!(
-      email: generated_email,
-      password: "123456",
-      password_confirmation: "123456",
-      role: 'learner',
-      deactivate: true
-    )
+      # Associate user
+      update_column(:user_id, new_user.id)
+      update_column(:institutional_email, generated_email)
 
-    # Associate user
-    update_column(:user_id, new_user.id)
+      # Associate with hub via users_hubs (if hub exists)
+      if hub_id.present?
+        UsersHub.create!(user_id: new_user.id, hub_id: hub_id)
+        Rails.logger.info("[LearnerInfo##{id}] Associated new user #{new_user.id} with hub #{hub_id} via users_hubs.")
+      end
 
-    # Log the creation
-    log_update(nil, { 'institutional_email' => [nil, generated_email], 'user_id' => [nil, new_user.id] }, note: "Created institutional user on data validation")
+      # Log the creation
+      log_update(nil, { 'institutional_email' => [nil, generated_email], 'user_id' => [nil, new_user.id] }, note: "Created institutional user on data validation")
+    rescue ActiveRecord::RecordInvalid => e
+      Rails.logger.error("[LearnerInfo##{id}] Failed to create institutional user: #{e.message}")
+      # Optionally rollback or notify
+    end
   end
 
   def normalize_emails
