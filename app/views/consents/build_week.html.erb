@@ -1,7 +1,7 @@
 
 <div class="container mt-4">
   <%= form_with model: @bw_consent, url: build_week_consents_path(learner_id: @learner&.id), method: :post, local: true, data: { controller: 'consent-form' } do |f| %>
-    <h1 class="mb-3"><%= @current_sprint.name %> <%= @nearest_build_week.name %> Consent Form</h1>
+    <h1 class="mb-3"><%= @current_sprint.start_date.strftime('%Y') %> <%= @current_sprint.name %> <%= @nearest_build_week.name %> Consent Form</h1>
 
     <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
       <p>
@@ -21,20 +21,54 @@
       </p>
 
       <%# table with consent activities %>
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Activity</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @bw_consent.consent_activities.each do |activity| %>
-            <tr>
-              <td><%= activity.name %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+      <% if @activities&.any? %>
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Activity and Location</th>
+                <th>Meeting and Pick-up</th>
+                <th>Transport</th>
+                <th>To bring along</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @activities.each do |activity| %>
+                <tr>
+                  <td><%= activity.day %></td>
+                  <td>
+                    <div class="mb-2">
+                      <strong><%= activity.name %></strong>
+                    </div>
+                    <div>
+                      <%= activity.activity_location %>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="mb-2">
+                      <label class="form-label small">Meeting @</label>
+                      <div><%= activity.meeting %></div>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label small">Pick-up point @</label>
+                      <div><%= activity.pick_up %></div>
+                    </div>
+                    <div>
+                      <label class="form-label small">Location:</label>
+                      <div><%= activity.location %></div>
+                    </div>
+                  </td>
+                  <td><%= activity.transport %></td>
+                  <td><%= activity.bring_along %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-muted mb-4">No activities have been added for this build week yet.</p>
+      <% end %>
 
       <p>
         We believe that a Build Week is essential to every learner’s development, but we also understand that it is not always possible to attend all the various activities due to explicit circumstances. It is for this reason that the <strong> <%= @bw_consent.hub || @hub %></strong> Hub will be open during the week of <%= @bw_consent.start_date || @nearest_build_week.start_date.strftime('%d %B, %Y') %> to <%= @bw_consent.end_date || @nearest_build_week.end_date.strftime('%d %B, %Y') %> as the dedicated study hub for that day from 9:00 – 17:00.

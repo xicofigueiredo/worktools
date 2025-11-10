@@ -1,0 +1,114 @@
+<% if !@current_build_week %>
+<div class="d-flex flex-column align-items-center justify-content-start vh-100">
+  <!-- Message Section -->
+  <div class="text-center">
+    <h1>There are no Build Weeks available</h1>
+    <p>No build weeks found in the system.</p>
+  </div>
+</div>
+
+<% else %>
+  <!-- Hub Selector Dropdown -->
+  <% if current_user.role == 'lc' || current_user.role == 'admin' %>
+    <div style="padding-top: 20px; padding-bottom: 20px;">
+      <%= form_with url: navigator_consents_path, method: :get, local: true, class: "d-flex align-items-center justify-content-center gap-2" do |f| %>
+        <%= hidden_field_tag :date, @current_date %>
+        <%= select_tag :hub_id,
+              options_from_collection_for_select(@available_hubs, :id, :name, @selected_hub&.id),
+              class: "form-select form-select-lg w-25",
+              onchange: "this.form.submit();" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="container mt-3">
+    <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+
+      <div>
+        <h1><%= @current_build_week.start_date.strftime('%Y') %> <%= @current_build_week.name %></h1>
+      </div>
+
+      <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
+        <% if @prev_build_week %>
+          <%= link_to '<i class="fa-solid fa-chevron-left"></i>'.html_safe, navigator_consents_path(date: @prev_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+        <% else %>
+          <button class="btn btn-outline-secondary rounded d-flex align-items-center" disabled>
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+        <% end %>
+
+        <%= link_to 'This Week', navigator_consents_path(date: Date.today, hub_id: @selected_hub&.id), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+
+        <% if @next_build_week %>
+          <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe, navigator_consents_path(date: @next_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+        <% else %>
+          <button class="btn btn-outline-secondary rounded d-flex align-items-center" disabled>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        <% end %>
+      </div>
+
+      <div>
+        <h1><%= @current_build_week.sprint.name %></h1>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end mb-3">
+      <%= link_to "Manage Activities", manage_activities_consents_path(date: @current_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-primary", style: "border-radius: 10px;" %>
+    </div>
+
+    <!-- Activities Table -->
+    <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
+      <h3 class="mb-3">Activities during Build Week</h3>
+      
+      <% if @consent_activities&.any? %>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Activity and Location</th>
+                <th>Meeting and Pick-up</th>
+                <th>Transport</th>
+                <th>To bring along</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @consent_activities.each do |activity| %>
+                <tr>
+                  <td><%= activity.day %></td>
+                  <td>
+                    <div class="mb-2">
+                      <strong><%= activity.name %></strong>
+                    </div>
+                    <div>
+                      <%= activity.activity_location %>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="mb-2">
+                      <label class="form-label small">Meeting @</label>
+                      <div><%= activity.meeting %></div>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label small">Pick-up point @</label>
+                      <div><%= activity.pick_up %></div>
+                    </div>
+                    <div>
+                      <label class="form-label small">Location:</label>
+                      <div><%= activity.location %></div>
+                    </div>
+                  </td>
+                  <td><%= activity.transport %></td>
+                  <td><%= activity.bring_along %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-muted">No activities have been added for this build week yet.</p>
+      <% end %>
+    </div>
+  </div>
+<% end %>
