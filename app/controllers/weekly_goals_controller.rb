@@ -12,7 +12,7 @@ class WeeklyGoalsController < ApplicationController
                                                                   @current_date, @current_date)
     @weekly_slots = @weekly_goal&.weekly_slots
     @current_week = Week.find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_date, @current_date)
-    
+
     # Get both regular timelines and moodle timelines
     @timelines = current_user.timelines.where(hidden: false)
     @moodle_timelines = current_user.moodle_timelines
@@ -52,7 +52,7 @@ class WeeklyGoalsController < ApplicationController
     @current_week = Week.where("start_date <= ? AND end_date >= ?", @date, @date).first
     @weekly_goal = current_user.weekly_goals.build(week: @current_week)
     @is_edit = false
-    @special_subjects = @combined_options - @subject_names
+    # @special_subjects is now set in set_subject_names method
     build_weekly_slots
     @is_learner = current_user.role == 'learner'
   end
@@ -60,7 +60,7 @@ class WeeklyGoalsController < ApplicationController
   def edit
     @weekly_goal = WeeklyGoal.find(params[:id])
     @is_edit = true
-    @special_subjects = @combined_options - @subject_names
+    # @special_subjects is now set in set_subject_names method
     # Pre-populate or build missing slots if necessary
     WeeklySlot.time_slots.each_key do |time|
       WeeklySlot.day_of_weeks.each_key do |day|
@@ -77,6 +77,7 @@ class WeeklyGoalsController < ApplicationController
 
     if @weekly_goal.save
       save_weekly_slots
+      @weekly_goal.calculate_expected_hours
       hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
         lc.hubs.count >= 3 || lc.deactivate
       end
@@ -85,18 +86,19 @@ class WeeklyGoalsController < ApplicationController
           user: lc,
           message: "Your learner #{current_user.full_name} has updated the weekly goals for the #{@weekly_goal.week.name}.",
           read: false)
-        end
-        redirect_to weekly_goals_navigator_path(date: @weekly_goal.week.start_date),
-        notice: 'Weekly goal was successfully created.'
-      else
-        render :new
       end
+      redirect_to weekly_goals_navigator_path(date: @weekly_goal.week.start_date),
+                  notice: 'Weekly goal was successfully created.'
+    else
+      render :new
     end
+  end
 
 
   def update
     if @weekly_goal.update(weekly_goal_params)
       save_weekly_slots
+      @weekly_goal.calculate_expected_hours
       if current_user.role == 'learner'
         hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
           lc.hubs.count >= 3 || lc.deactivate
@@ -105,16 +107,16 @@ class WeeklyGoalsController < ApplicationController
           notification = Notification.find_or_create_by!(
             user: lc,
             message: "Your learner #{current_user.full_name} has updated the weekly goals for the #{@weekly_goal.week.name}.")
-            notification.read = false
-            notification.save
-          end
+          notification.read = false
+          notification.save
         end
-        redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date),
-        notice: 'Weekly goal was successfully updated.'
-      else
-        render :edit
       end
+      redirect_to weekly_goals_navigator_path(@weekly_goal.week.start_date),
+                  notice: 'Weekly goal was successfully updated.'
+    else
+      render :edit
     end
+  end
 
   def destroy
     @weekly_goal.destroy
@@ -125,7 +127,7 @@ class WeeklyGoalsController < ApplicationController
     @name = @weekly_goal.user.full_name
     @is_edit = true
     @weekly_slots = @weekly_goal&.weekly_slots
-    
+
     # Get both timeline types for the user
     @timelines = @weekly_goal.user.timelines.where(hidden: false)
     @moodle_timelines = @weekly_goal.user.moodle_timelines
@@ -138,7 +140,7 @@ class WeeklyGoalsController < ApplicationController
       @subjects.append(subject) if subject
     end
 
-    # Add subjects from moodle timelines  
+    # Add subjects from moodle timelines
     @moodle_timelines.each do |moodle_timeline|
       if moodle_timeline.subject
         @subjects.append(moodle_timeline.subject)
@@ -163,19 +165,46 @@ class WeeklyGoalsController < ApplicationController
     subject = Subject.find_by(name: params[:subject_name])
 
     if subject.present?
-      # Fetch the topics based on the found subject's id
+      # First try to find regular topics
       topics = Topic.joins(:subject)
-      .joins(:user_topics)
-      .where(user_topics: { user_id: current_user.id })
-      .where(subject_id: subject.id)
-      .where("user_topics.done = ? OR user_topics.done IS NULL", false)
-      .select(:id, :name)
-      .order(:order)
+        .joins(:user_topics)
+        .where(user_topics: { user_id: current_user.id })
+        .where(subject_id: subject.id)
+        .where("user_topics.done = ? OR user_topics.done IS NULL", false)
+        .select(:id, :name)
+        .order(:order)
+
+      # If no regular topics found, try to find moodle topics
+      if topics.empty?
+        moodle_timeline = current_user.moodle_timelines
+          .joins(:subject)
+          .where(subjects: { name: params[:subject_name] })
+          .first
+
+        if moodle_timeline.present?
+          topics = moodle_timeline.moodle_topics.where(hidden: false)
+            .order(:order)
+            .select(:id, :name)
+            .map { |mt| { id: mt.id, name: mt.name } }
+        end
+      end
 
       render json: topics
     else
-      # If no subject is found, respond with an error message
-      render json: { error: "Subject not found" }, status: :not_found
+      # If no subject is found, also check if it's a moodle timeline with personalized name
+      moodle_timeline = current_user.moodle_timelines
+        .where(personalized_name: params[:subject_name])
+        .first
+
+      if moodle_timeline.present?
+        topics = moodle_timeline.moodle_topics.where(hidden: false)
+          .order(:order)
+          .select(:id, :name)
+          .map { |mt| { id: mt.id, name: mt.name } }
+        render json: topics
+      else
+        render json: { error: "Subject not found" }, status: :not_found
+      end
     end
   rescue StandardError => e
     # Log the error and respond with a generic 500 error message
@@ -213,15 +242,15 @@ class WeeklyGoalsController < ApplicationController
     # Get subject names from regular timelines
     @subject_names = current_user.timelines.where(hidden: false).map(&:subject).uniq.pluck(:name)
     personalized_names = current_user.timelines.where(subject_id: 666, hidden: false).map(&:personalized_name)
-    
+
     # Get subject names from moodle timelines
-    moodle_subject_names = current_user.moodle_timelines.map(&:subject).compact.uniq.pluck(:name)
+    moodle_subject_names = current_user.moodle_timelines.where(hidden: false).map(&:subject).compact.uniq.pluck(:name)
     moodle_personalized_names = current_user.moodle_timelines.where(subject: nil).map(&:personalized_name).compact
-    
-    # Combine all subject names
+
+    # Combine all subject names (both regular and moodle)
     all_subject_names = (@subject_names + moodle_subject_names).reject { |name| name.blank? }.uniq
     all_personalized_names = (personalized_names + moodle_personalized_names).reject { |name| name.blank? }.uniq
-    
+
     current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     skill_names = current_sprint.sprint_goals.where(user: current_user).map(&:skills).flatten.uniq.pluck(:extracurricular).reject(&:blank?).map(&:capitalize)
     communities_names = current_sprint.sprint_goals.where(user: current_user).map(&:communities).flatten.uniq.pluck(:involved).reject(&:blank?).map(&:capitalize)
@@ -229,6 +258,13 @@ class WeeklyGoalsController < ApplicationController
     # Combine subjects and skills, prefixing each for clarity
     @combined_options = all_subject_names +
                         skill_names.map { |name| name } +
+                        communities_names.map { |name| name } +
+                        all_personalized_names +
+                        ["Other"]
+
+    # Special subjects are only skills, communities, personalized names, and "Other"
+    # Regular and moodle subjects should NOT be special subjects
+    @special_subjects = skill_names.map { |name| name } +
                         communities_names.map { |name| name } +
                         all_personalized_names +
                         ["Other"]

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_10_121641) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -93,8 +93,12 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "absence"
+    t.bigint "week_id", null: false
+    t.bigint "weekly_goal_id"
     t.index ["user_id", "attendance_date"], name: "index_attendances_on_user_id_and_attendance_date", unique: true
     t.index ["user_id"], name: "index_attendances_on_user_id"
+    t.index ["week_id"], name: "index_attendances_on_week_id"
+    t.index ["weekly_goal_id"], name: "index_attendances_on_weekly_goal_id"
   end
 
   create_table "blocked_periods", force: :cascade do |t|
@@ -160,7 +164,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
   end
 
   create_table "consent_activities", force: :cascade do |t|
-    t.bigint "consent_id", null: false
     t.string "day"
     t.string "activity_location"
     t.string "meeting"
@@ -170,8 +173,12 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
     t.string "bring_along"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["consent_id"], name: "index_consent_activities_on_consent_id"
+    t.string "name"
+    t.bigint "hub_id", null: false
+    t.bigint "week_id"
     t.index ["day"], name: "index_consent_activities_on_day"
+    t.index ["hub_id"], name: "index_consent_activities_on_hub_id"
+    t.index ["week_id"], name: "index_consent_activities_on_week_id"
   end
 
   create_table "consents", force: :cascade do |t|
@@ -582,6 +589,22 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
     t.index ["weekly_meeting_id"], name: "index_monday_slots_on_weekly_meeting_id"
   end
 
+  create_table "moodle_assignments", force: :cascade do |t|
+    t.bigint "moodle_id", null: false
+    t.bigint "subject_id", null: false
+    t.bigint "moodle_course_id", null: false
+    t.bigint "cmid", null: false
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "grading_time", precision: 8, scale: 2
+    t.index ["cmid"], name: "index_moodle_assignments_on_cmid"
+    t.index ["grading_time"], name: "index_moodle_assignments_on_grading_time"
+    t.index ["moodle_course_id"], name: "index_moodle_assignments_on_moodle_course_id"
+    t.index ["moodle_id"], name: "index_moodle_assignments_on_moodle_id", unique: true
+    t.index ["subject_id"], name: "index_moodle_assignments_on_subject_id"
+  end
+
   create_table "moodle_timelines", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.date "start_date"
@@ -638,6 +661,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
     t.bigint "moodle_timeline_id"
     t.boolean "as1"
     t.boolean "as2"
+    t.boolean "hidden", default: false, null: false
     t.index ["moodle_timeline_id"], name: "index_moodle_topics_on_moodle_timeline_id"
     t.index ["timeline_id"], name: "index_moodle_topics_on_timeline_id"
   end
@@ -920,6 +944,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
     t.string "qualification"
   end
 
+  create_table "submissions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.decimal "grade", precision: 5, scale: 2
+    t.datetime "submission_date"
+    t.datetime "grading_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "moodle_submission_id", null: false
+    t.bigint "moodle_assignment_id", null: false
+    t.index ["moodle_assignment_id"], name: "index_submissions_on_moodle_assignment_id"
+    t.index ["moodle_submission_id"], name: "index_submissions_on_moodle_submission_id", unique: true
+    t.index ["user_id"], name: "index_submissions_on_user_id"
+  end
+
   create_table "thursday_slots", force: :cascade do |t|
     t.bigint "weekly_meeting_id", null: false
     t.string "time_slot"
@@ -1088,6 +1126,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
     t.bigint "week_id"
     t.text "lc_comment"
     t.text "reflection"
+    t.float "expected_hours"
     t.index ["user_id", "week_id"], name: "index_weekly_goals_on_user_id_and_week_id", unique: true
     t.index ["user_id"], name: "index_weekly_goals_on_user_id"
     t.index ["week_id"], name: "index_weekly_goals_on_week_id"
@@ -1129,6 +1168,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
   add_foreign_key "assignments", "subjects"
   add_foreign_key "assignments", "users"
   add_foreign_key "attendances", "users"
+  add_foreign_key "attendances", "weekly_goals"
+  add_foreign_key "attendances", "weeks"
   add_foreign_key "blocked_periods", "departments"
   add_foreign_key "blocked_periods", "hubs"
   add_foreign_key "blocked_periods", "users"
@@ -1138,7 +1179,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
   add_foreign_key "communities", "sprint_goals"
   add_foreign_key "confirmations", "staff_leaves", column: "staff_leave_id"
   add_foreign_key "confirmations", "users", column: "approver_id"
-  add_foreign_key "consent_activities", "consents"
+  add_foreign_key "consent_activities", "hubs"
+  add_foreign_key "consent_activities", "weeks"
   add_foreign_key "consents", "sprints"
   add_foreign_key "consents", "users"
   add_foreign_key "consents", "weeks"
@@ -1173,6 +1215,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
   add_foreign_key "monday_slots", "users", column: "lc_id"
   add_foreign_key "monday_slots", "users", column: "learner_id"
   add_foreign_key "monday_slots", "weekly_meetings"
+  add_foreign_key "moodle_assignments", "subjects"
   add_foreign_key "moodle_timelines", "exam_dates"
   add_foreign_key "moodle_timelines", "subjects"
   add_foreign_key "moodle_timelines", "users"
@@ -1202,6 +1245,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_04_185617) do
   add_foreign_key "staff_leave_entitlements", "users"
   add_foreign_key "staff_leaves", "users"
   add_foreign_key "staff_leaves", "users", column: "approver_user_id"
+  add_foreign_key "submissions", "moodle_assignments"
   add_foreign_key "thursday_slots", "users", column: "lc_id"
   add_foreign_key "thursday_slots", "users", column: "learner_id"
   add_foreign_key "thursday_slots", "weekly_meetings"

@@ -1,0 +1,76 @@
+<div class="container-fluid mt-4">
+  <% if current_user.role == 'admin' %>
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="mb-4">Moodle Assignments</h1>
+        <div class="card mb-4">
+          <div class="card-body">
+            <%= form_with url: fetch_submissions_range_moodle_assignments_path, method: :post, local: true, class: 'row g-3' do |f| %>
+              <div class="col-md-3">
+                <label for="first" class="form-label">First Index</label>
+                <%= number_field_tag :first, params[:first], min: 0, class: 'form-control form-control-sm', id: 'first' %>
+              </div>
+              <div class="col-md-3">
+                <label for="last" class="form-label">Last Index</label>
+                <%= number_field_tag :last, params[:last], min: 1, class: 'form-control form-control-sm', id: 'last' %>
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <%= submit_tag 'Fetch Submissions', class: 'btn btn-primary btn-sm' %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% grouped = (@subject_rows || []).group_by { |r| r.category } %>
+
+  <% grouped.each do |category, rows| %>
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><%= Subject.category_options[category.to_sym] rescue category %></h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Subject</th>
+                <th class="text-end">Assignments</th>
+                <th class="text-end">Submissions</th>
+                <th class="text-end">Avg Grading Time (days)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% rows.each do |r| %>
+                <tr class="cursor-pointer" onclick="window.location='<%= subject_moodle_assignments_path(id: r.subject_id) %>'" style="cursor: pointer;">
+                  <td class="fw-medium"><%= r.subject_name %></td>
+                  <td class="text-end"><span class="badge bg-secondary"><%= r.assignments_count %></span></td>
+                  <td class="text-end"><span class="badge bg-info"><%= r.submissions_count %></span></td>
+                  <td class="text-end">
+                    <% if r.avg_grading_time > 0 %>
+                      <span class="badge bg-success"><%= sprintf('%.2f', r.avg_grading_time) %></span>
+                    <% else %>
+                      <span class="text-muted">-</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+  }
+  .cursor-pointer {
+    cursor: pointer;
+  }
+</style>

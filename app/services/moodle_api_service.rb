@@ -60,7 +60,6 @@ class MoodleApiService
           section_visible: activity['section_visible'],
           name: activity['name'],
           modname: activity['modname'],
-          ect: ect_value,
           visible: activity['visible'] == 1,
           availabilityinfo: activity['availabilityinfo'] || "No restrictions",
           description: activity['description'] || "",
@@ -72,7 +71,7 @@ class MoodleApiService
           submission_date: activity['submission_date'],
           evaluation_date: activity['evaluation_date'],
           grade: activity['grade'],
-          ect: activity['ect']
+          ect: ect_value
 
         }
       end
@@ -386,6 +385,66 @@ class MoodleApiService
               puts "Found existing timeline for user #{user_id} and subject #{subject.id}"
             end
           end
+        else
+          # Check if timeline exists and verify topic count matches activity count
+          puts "Timeline #{moodle_timeline.subject.name} already exists, checking topic count..."
+
+          # Get count of activities from Moodle API
+          begin
+            activities = get_all_course_activities(course_id, moodle_user_id)
+            activity_count = activities.is_a?(Array) ? activities.length : 0
+
+            # Get count of existing MoodleTopic records
+            existing_topic_count = moodle_timeline.moodle_topics.count
+
+            puts "Activity count: #{activity_count}, Existing topic count: #{existing_topic_count}"
+
+            # If counts don't match, delete existing topics and recreate
+            if activity_count != existing_topic_count
+              puts "Counts don't match! Deleting existing topics and recreating..."
+
+              # Delete all existing moodle_topics for this timeline
+              moodle_timeline.moodle_topics.destroy_all
+
+              # Recreate topics from activities
+              activities.each_with_index do |activity, index|
+                next if activity[:section_visible] == 0
+
+                MoodleTopic.create!(
+                  moodle_timeline_id: moodle_timeline.id,
+                  name: activity[:name],
+                  unit: activity[:section_name],
+                  moodle_id: activity[:id],
+                  time: activity[:ect] || 0,
+                  order: index + 1,
+                  grade: activity[:grade].present? ? activity[:grade].round(2) : nil,
+                  done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),
+                  completion_date: begin
+                    if activity[:evaluation_date].present?
+                      DateTime.parse(activity[:evaluation_date])
+                    else
+                      nil
+                    end
+                  rescue Date::Error
+                    nil
+                  end,
+                  deadline: moodle_timeline.end_date,
+                  percentage: 0.0, # Will be calculated later
+                  mock50: activity[:mock50].to_i == 1,
+                  mock100: activity[:mock100].to_i == 1,
+                  number_attempts: activity[:number_attempts],
+                  submission_date: activity[:submission_date].present? ? Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M") : nil,
+                  evaluation_date: activity[:evaluation_date].present? ? Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M") : nil
+                )
+              end
+
+              puts "Recreated #{moodle_timeline.moodle_topics.count} topics for timeline"
+            else
+              puts "Topic count matches activity count, no action needed"
+            end
+          rescue => e
+            puts "Error checking topic count for timeline: #{e.message}"
+          end
         end
 
         created_timelines << moodle_timeline
@@ -497,11 +556,6 @@ class MoodleApiService
     end
   end
 
-  # 1) Find a course by shortname
-  def find_course_by_shortname(shortname)
-    call('core_course_get_courses_by_field', { field: 'shortname', value: shortname })
-  end
-
   # 2) Get enrolled users for a given course id
   def get_enrolled_users(course_id)
     call('core_enrol_get_enrolled_users', { courseid: course_id })
@@ -549,7 +603,6 @@ class MoodleApiService
     end
   end
 
-
   # 5) Get enrolled courses for a given user ID
   def get_user_courses(email)
     user_id = get_user_id(email)
@@ -569,65 +622,6 @@ class MoodleApiService
       return []
     end
   end
-
-  #now i want to take a learner email and create those timelines for the courses they are enrolled that has a Subject with that moodle id
-
-  # def create_timelines_for_learner(email)
-  #   moodle_id = get_user_id(email)
-  #   user_id = User.find_by(email: email).id
-  #   return puts "User not found!" if user_id.nil?
-
-  #   courses = get_user_courses(email) # Get enrolled courses
-  #   return puts "No courses found!" if courses.empty?
-
-  #   created_timelines = []
-
-  #   courses.each do |course|
-  #     subject = Subject.find_by(moodle_id: course.split(":").first.to_i) # Extract Moodle ID and find the subject
-
-  #     if subject
-  #       timeline = Timeline.find_or_create_by!(
-  #         user_id: user_id,
-  #         subject_id: subject.id,
-  #         start_date: Date.today,
-  #         end_date: Date.today + 1.year,
-  #         balance: 0,
-  #         expected_progress: 0,
-  #         progress: 0,
-  #         total_time: 0,
-  #         difference: 0
-  #       )
-  #       created_timelines << timeline
-  #       puts "Created #{timeline.subject.name} Timeline for #{course.split(':').last.strip}"
-
-  #       # 🔹 Fetch and Create MoodleTopics for the Timeline 🔹
-  #       course_topics = get_course_topics_for_learner(email, course.split(":").first.to_i)
-
-  #       course_topics.each do |section|
-  #         section[:activities].each_with_index do |activity, index|
-  #             next if activity[:completion_date] == "N/A" || activity[:completion_date]== "N/A" || activity[:visible] == "Hidden" || activity[:completed] == "❓ Unknown"
-  #             MoodleTopic.create!(
-  #               timeline: timeline,
-  #               time: 1,
-  #               name: activity[:name],
-  #               unit: section[:section],  # Store section name as unit
-  #               order: index + 1,  # Use index to maintain order
-  #               grade: activity[:grade] == "No Grade" ? nil : activity[:grade].to_f,  # Convert grade if available
-  #               done: activity[:completed] == "✅ Done",  # Mark as done if completed
-  #               completion_date: activity[:completion_date] == "N/A" ? nil : DateTime.parse(activity[:completion_date]),
-  #               moodle_id: activity[:id],
-  #               deadline: Date.today + 1.year,  # Set a default deadline
-  #               percentage: index * 0.001
-  #             )
-  #         end
-  #       end
-  #     end
-  #   end
-
-  #   puts "✅ Created #{created_timelines.size} timelines for #{email}"
-  # end
-
-
 
   def update_course_topics_for_learner(user, timeline)
     count = 0
@@ -725,211 +719,241 @@ class MoodleApiService
 
 
 
+  def check_courses_without_assignments
+    subjects = Subject.where.not(moodle_id: nil)
+    result = []
+    subjects.each do |subject|
+      course_id = subject.moodle_id
+      assignments = fetch_course_assignments(course_id)
+      if assignments.empty?
+        result << "Course #{course_id} - #{subject.name} has no assignments"
+      end
+    end
+    result
+  end
 
-
-
-
-
-
-
-
-
-  # get the activities completion status of a course and a learner
-  # def get_completion_status_for_learner(email, course_id)
-  #   user_id = get_user_id(email)
-  #   return puts "User not found!" if user_id.nil?
-
-  #   completion_data = call('core_completion_get_activities_completion_status', { courseid: course_id, userid: user_id })
-
-  #   # Ensure we have a valid response
-  #   return puts "No completion data found!" if completion_data.nil? || completion_data["statuses"].nil?
-
-  #   # Map Moodle completion states
-  #   status_map = {
-  #     0 => "❌ Not Completed",
-  #     1 => "Completed",
-  #     2 => "🎉 Completed (Passed)",
-  #     3 => "⚠️ Completed (Failed)"
-  #   }
-
-  #   completion_results = {}
-
-  #   completion_data["statuses"].each do |status|
-  #     activity_id = status["cmid"]
-  #     completion_results[activity_id] = status_map[status["state"]] || "❓ Unknown Status"
-  #   end
-
-  #   return completion_results
-  # end
-
-  # def get_grades_for_learner(email, course_id)
-  #   user_id = get_user_id(email)
-  #   return puts "User not found!" if user_id.nil?
-
-  #   # Fetch grade items for the course
-  #   grades_data = call('core_grades_get_gradeitems', { courseid: course_id })
-
-  #   return puts "No grades found!" if grades_data.nil? || grades_data["gradeitems"].nil?
-
-  #   grades = {}
-
-  #   grades_data["gradeitems"].each do |item|
-  #     # Handle cases where Moodle rejects 'itemname'
-  #     clean_name = item["itemname"] rescue "Unnamed Item"
-
-  #     grades[item["id"]] = {
-  #       name: clean_name,
-  #       max_grade: item["grademax"],
-  #       min_grade: item["grademin"],
-  #       grade_pass: item["gradepass"],
-  #       aggregationcoef: item["aggregationcoef"], # Grade weight in final score
-  #     }
-  #   end
-
-  #   return grades
-  # end
-
-
-
-
-
-  # def get_course_details_for_learner(email, course_id)
-  #   topics = get_course_topics_for_learner(email, course_id)
-  #   completion_status = get_completion_status_for_learner(email, course_id)
-  #   grades = get_grades_for_learner(email, course_id)
-
-  #   puts "📌 Course Overview for #{email} (Course ID: #{course_id}):"
-  #   topics.each do |topic|
-  #     puts "🔹 #{topic[:section]} (#{topic[:visible]})"
-  #     topic[:activities].each do |activity|
-  #       activity_status = completion_status[activity[:id]] || "❓ Unknown Status"
-  #       activity_grade = grades[activity[:id]] || "No grade"
-  #       puts "  - #{activity[:name]} (#{activity[:visible]})"
-  #       puts "    ✔️ Status: #{activity_status}"
-  #       puts "    📊 Grade: #{activity_grade}"
-  #     end
-  #   end
-  # end
-
-
-
-  # 6) Create user topics based on enrolled courses
-  # def create_user_topics(email)
-  #   user_id = get_user_id(email)
-  #   return puts "User not found!" unless user_id
-
-  #   courses = get_user_courses(email)
-  #   return puts "No courses found!" if courses.empty?
-
-  #   courses.each do |course|
-  #     subject = Subject.find_or_create_by(moodle_id: course['shortname'])
-  #     subject.update(moodle_id: course['id'])
-
-  #     UserTopic.create!(
-  #       user_id: user_id,
-  #       subject_id: subject.id,
-  #       moodle_course_id: course['id'],
-  #       status: 'active'
-  #     )
-  #     puts "Created topic for #{course['shortname']} (#{course['id']})"
-  #   end
-  # end
-
-  # service = MoodleApiService.new
-  # courses = service.get_all_courses
-  # francisco@bravegenerationacademy.com
-  #lidia@bravegenerationacademy.com
-  #I need to create user topics
-
-  # Get assignments for a course using the standard Moodle API (similar to your working client)
+  # Get assignments for a course using the standard Moodle API
   def fetch_course_assignments(course_id)
     puts "📋 Fetching assignments for course #{course_id} using standard API..."
 
     params = { 'courseids[0]' => course_id }
     data = call('mod_assign_get_assignments', params)
 
-    assignments = data.dig('courses', 0, 'assignments') || []
+    courses = data.fetch('courses', [])
+    assignments = courses.first ? (courses.first['assignments'] || []) : []
 
     puts "Found #{assignments.size} assignments"
-    assignments
-  end
 
-  # Get assignment by cmid (course module id)
-  def fetch_assignment_by_cmid(course_id, cmid)
-    assignments = fetch_course_assignments(course_id)
-    assignments.find { |a| a['cmid'] == cmid.to_i }
-  end
-
-  # Get submission status for a specific assignment and user
-  def fetch_submission_status(assignment_id, user_id)
-    params = { 'assignid' => assignment_id, 'userid' => user_id }
-    call('mod_assign_get_submission_status', params)
-  end
-
-  # Get user info by user ID
-  def fetch_user_info(user_id)
-    params = { 'field' => 'id', 'values[0]' => user_id }
-    data = call('core_user_get_users_by_field', params)
-
-    return nil unless data.is_a?(Array) && data.any?
-
-    user = data.first
-    {
-      id: user["id"],
-      email: user["email"],
-      name: "#{user['firstname']} #{user['lastname']}",
-      firstname: user['firstname'],
-      lastname: user['lastname']
-    }
-  rescue => e
-    puts "Failed to fetch user info for user ##{user_id}: #{e.message}"
-    nil
-  end
-
-  # Get detailed assignment information for a course
-  def get_course_assignments_detailed(course_id)
-    puts "📋 Getting detailed assignment info for course #{course_id}..."
-
-    # Get basic assignment info
-    assignments = fetch_course_assignments(course_id)
-    return [] if assignments.empty?
-
-    detailed_assignments = []
-
-    assignments.each do |assignment|
-      assignment_info = {
-        id: assignment['id'],
-        cmid: assignment['cmid'],
-        name: assignment['name'],
-        course_id: course_id,
-        due_date: assignment['duedate'] > 0 ? Time.at(assignment['duedate']).strftime("%d %B %Y, %H:%M") : "No due date",
-        cutoff_date: assignment['cutoffdate'] > 0 ? Time.at(assignment['cutoffdate']).strftime("%d %B %Y, %H:%M") : "No cutoff",
-        allow_submissions_from: assignment['allowsubmissionsfromdate'] > 0 ? Time.at(assignment['allowsubmissionsfromdate']).strftime("%d %B %Y, %H:%M") : "No start date",
-        max_grade: assignment['grade'],
-        max_attempts: assignment['maxattempts'],
-        intro: assignment['intro'],
-        submissions: []
+    detailed_assignments = assignments.map do |a|
+      puts "  📝 Processing assignment: #{a['name']}"
+      {
+        id: a['id'],
+        cmid: a['cmid'],
+        course_id: a['course'], # <-- correct field
+        name: a['name']
       }
-
-      puts "  📝 Processing assignment: #{assignment['name']}"
-      detailed_assignments << assignment_info
     end
 
     detailed_assignments
   end
-  # Get assignment submissions for all learners in a course
-  def get_course_assignment_submissions(course_id)
-    puts "📋 Getting assignment submissions for all learners in course #{course_id}..."
 
-    # Get assignments
+  def create_course_assignments(assignments, subject)
+    assignments.each do |a|
+      assignment_record = MoodleAssignment.find_or_initialize_by(moodle_id: a[:id])
+      assignment_record.subject_id = subject.id
+      assignment_record.moodle_course_id = a[:course_id]
+      assignment_record.cmid = a[:cmid]
+      assignment_record.name = a[:name]
+      assignment_record.save!
+    end
+  end
+
+  def create_course_assignments_for_all_subjects
+    subjects = Subject.where.not(moodle_id: nil)
+    subjects.find_each do |subject|
+      course_id   = subject.moodle_id
+      assignments = fetch_course_assignments(course_id)
+      create_course_assignments(assignments, subject)            # <-- pass subject
+    end
+  end
+
+    # Create Submission records for the given assignments
+  # assignments: array of hashes from fetch_course_assignments or array of IDs
+  # options:
+  #   fetch_grades: false (if true, will call submission status API per user to try to fill grade/grading_date)
+  def create_submissions_for_assignments(first, last)
+    assignments = MoodleAssignment.all[first...last]
+    records_created = 0
+    records_updated = 0
+
+    assignments.each_with_index do |assignment_record, idx|
+      assignment_id = assignment_record.moodle_id
+      next if assignment_id.blank?
+
+      # Fetch submissions for this single assignment directly
+      result = call('mod_assign_get_submissions', { assignmentids: [assignment_id] })
+      next unless result['assignments']&.any?
+
+      assignment_data = result['assignments'].first
+      submissions = assignment_data['submissions'] || []
+
+      # Prefetch existing submission IDs to skip fast
+      incoming_ids = submissions.map { |s| s['id'] }
+      existing_ids = Submission.where(moodle_submission_id: incoming_ids)
+                               .pluck(:moodle_submission_id)
+                               .to_set
+
+      submissions.each do |sub|
+        moodle_submission_id = sub['id']
+        next if existing_ids.include?(moodle_submission_id)
+
+        user_id = sub['userid']
+        submission_date = sub['timemodified'].to_i > 0 ? Time.at(sub['timemodified'].to_i) : nil
+        # Skip submissions not in year 2025 or later (also skip when date is nil)
+        next unless submission_date && submission_date.year >= 2025
+        grade = nil
+        grading_date = nil
+
+        # Inline fetch of submission status to obtain grade
+        if user_id
+          begin
+            status = call('mod_assign_get_submission_status', { 'assignid' => assignment_id, 'userid' => user_id })
+            if status && status['feedback'] && status['feedback']['grade']
+              grade_info = status['feedback']['grade']
+              grade = grade_info['grade'].to_f if grade_info['grade']
+              grading_date = grade_info['timemodified'].to_i > 0 ? Time.at(grade_info['timemodified'].to_i) : nil
+            end
+          rescue => e
+            Rails.logger.warn "Could not fetch grade for assignment #{assignment_id}, user #{user_id}: #{e.message}"
+          end
+        end
+
+        # Skip ungraded submissions
+        next if grade.nil?
+
+        submission = Submission.find_or_initialize_by(moodle_submission_id: moodle_submission_id)
+        submission.moodle_assignment_id = assignment_record.id
+        submission.user_id = user_id
+        submission.submission_date = submission_date
+        submission.grade = grade
+        submission.grading_date = grading_date
+
+        if submission.new_record?
+          if submission.save
+            records_created += 1
+          end
+        else
+          if submission.changed?
+            submission.save
+            records_updated += 1
+          end
+        end
+      end
+    end
+
+    { created: records_created, updated: records_updated }
+  end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  # Helper method to inspect submission fields
+  def inspect_submission_fields(assignments)
+    puts "🔍 Inspecting submission fields..."
+
+    sample_submissions = get_assignments_submissions(assignments.is_a?(Array) ? [assignments.first] : [assignments])
+    return puts "No submissions found" if sample_submissions.empty?
+
+    sample = sample_submissions.first[:submissions].first
+    return puts "No sample submission found" unless sample
+
+    puts "\nAvailable fields in submission object:"
+    puts "=" * 60
+    sample.keys.sort.each do |key|
+      value = sample[key]
+      display_value = value.is_a?(Integer) && value > 1000000000 ? Time.at(value).to_s : value.inspect
+      puts "  #{key}: #{display_value}"
+    end
+    puts "=" * 60
+
+    sample
+  end
+
+  # Get submissions for assignments
+  # Accepts: array of assignment hashes (with :id) or array of assignment IDs
+  def get_assignments_submissions(assignments)
+    puts "📋 Getting submissions for #{assignments.size} assignments..."
+
+    organized_submissions = []
+
+    # Always use individual calls per assignment (batch disabled)
+    assignments.each_with_index do |assignment, index|
+      assignment_id = assignment.is_a?(Hash) ? (assignment[:id] || assignment['id']) : assignment
+      assignment_name = assignment.is_a?(Hash) ? (assignment[:name] || assignment['name']) : nil
+
+      result = call('mod_assign_get_submissions', { assignmentids: [assignment_id] })
+
+      if result['assignments']&.any?
+        assignment_data = result['assignments'].first
+        submissions = assignment_data['submissions'] || []
+
+        organized_submissions << {
+          assignment_id: assignment_id,
+          assignment_name: assignment_name,
+          submissions: submissions,
+          submission_count: submissions.size
+        }
+
+        puts " #{index + 1} Assignment ID #{assignment_id}#{assignment_name ? " (#{assignment_name})" : ''}: #{submissions.size} submissions"
+      end
+    end
+
+    organized_submissions
+  end
+
+  def get_organized_assignment_data(course_id)
+    puts "📋 Getting organized assignment submission data for course #{course_id}..."
+
+    # Get all assignments for the course
     assignments = fetch_course_assignments(course_id)
     return [] if assignments.empty?
 
-    # Get enrolled users
+    # Get all enrolled users
     enrolled_users = get_enrolled_users(course_id)
     return [] unless enrolled_users.is_a?(Array) && enrolled_users.any?
 
-    all_submissions = []
+    organized_data = []
 
     assignments.each do |assignment|
       assignment_id = assignment['id']
@@ -946,212 +970,143 @@ class MoodleApiService
         submission_data = fetch_submission_status(assignment_id, user_id)
 
         if submission_data && submission_data['lastattempt']
-          attempt = submission_data['lastattempt']
-          submission = attempt['submission'] || attempt['teamsubmission']
-          feedback = submission_data['feedback']
+          # Get all attempts by calling the submissions API
+          attempts_data = []
 
-          submission_info = {
+          begin
+            # Try to get all submissions for this assignment
+            all_submissions_response = call('mod_assign_get_submissions', { assignmentids: [assignment_id] })
+
+            if all_submissions_response['assignments']&.any?
+              assignment_submissions = all_submissions_response['assignments'].find { |a| a['assignmentid'] == assignment_id }
+
+              if assignment_submissions && assignment_submissions['submissions']
+                user_submissions = assignment_submissions['submissions'].select { |s| s['userid'] == user_id }
+
+                # Sort by attempt number
+                user_submissions.sort_by! { |s| s['attemptnumber'] }
+
+                user_submissions.each do |submission|
+                  attempt_number = submission['attemptnumber'] + 1
+
+                  # Get detailed feedback for this specific attempt
+                  attempt_feedback = get_attempt_feedback(assignment_id, user_id, submission['attemptnumber'])
+
+                  attempts_data << {
+                    attempt_number: attempt_number,
+                    submission_date: submission['timecreated'] > 0 ? Time.at(submission['timecreated']).strftime("%d %B %Y, %H:%M") : 'Not submitted',
+                    last_modified: submission['timemodified'] > 0 ? Time.at(submission['timemodified']).strftime("%d %B %Y, %H:%M") : 'N/A',
+                    status: submission['status'],
+                    feedback_date: attempt_feedback[:feedback_date],
+                    grade: attempt_feedback[:grade],
+                    grade_display: attempt_feedback[:grade_display],
+                    feedback_comments: attempt_feedback[:comments]
+                  }
+                end
+              end
+            end
+          rescue => e
+            puts "    Warning: Could not fetch all attempts for assignment #{assignment_id}: #{e.message}"
+            # Fallback to using the latest attempt data
+            attempt = submission_data['lastattempt']
+            submission = attempt['submission'] || attempt['teamsubmission']
+            feedback = submission_data['feedback']
+
+            if submission
+              attempts_data << {
+                attempt_number: submission['attemptnumber'] + 1,
+                submission_date: submission['timecreated'] > 0 ? Time.at(submission['timecreated']).strftime("%d %B %Y, %H:%M") : 'Not submitted',
+                last_modified: submission['timemodified'] > 0 ? Time.at(submission['timemodified']).strftime("%d %B %Y, %H:%M") : 'N/A',
+                status: submission['status'],
+                feedback_date: feedback && feedback['grade'] && feedback['grade']['timemodified'] > 0 ? Time.at(feedback['grade']['timemodified']).strftime("%d %B %Y, %H:%M") : 'No feedback',
+                grade: feedback && feedback['grade'] ? feedback['grade']['grade'].to_f : 0,
+                grade_display: feedback ? feedback['gradefordisplay'] : 'No grade',
+                feedback_comments: extract_feedback_comments(feedback)
+              }
+            end
+          end
+
+          # Create organized record
+          organized_record = {
             assignment_id: assignment_id,
             assignment_name: assignment_name,
-            cmid: assignment['cmid'],
             learner_id: user_id,
             learner_name: user_name,
             learner_email: user_email,
             course_id: course_id,
-
-            # Submission data
-            submission_status: submission ? submission['status'] : 'No submission',
-            submission_date: submission && submission['timecreated'] > 0 ? Time.at(submission['timecreated']).strftime("%d %B %Y, %H:%M") : 'Not submitted',
-            last_modified: submission && submission['timemodified'] > 0 ? Time.at(submission['timemodified']).strftime("%d %B %Y, %H:%M") : 'N/A',
-            attempt_number: submission ? submission['attemptnumber'] + 1 : 0,
-
-            # Feedback data
-            grade: feedback && feedback['grade'] ? feedback['grade']['grade'].to_f : 0,
-            grade_display: feedback ? feedback['gradefordisplay'] : 'No grade',
-            feedback_date: feedback && feedback['grade'] && feedback['grade']['timemodified'] > 0 ? Time.at(feedback['grade']['timemodified']).strftime("%d %B %Y, %H:%M") : 'No feedback',
-            graded_date: feedback && feedback['gradeddate'] > 0 ? Time.at(feedback['gradeddate']).strftime("%d %B %Y, %H:%M") : 'Not graded',
-
-            # Assignment details
             due_date: assignment['duedate'] > 0 ? Time.at(assignment['duedate']).strftime("%d %B %Y, %H:%M") : "No due date",
             max_grade: assignment['grade'],
-            max_attempts: assignment['maxattempts']
+            max_attempts: assignment['maxattempts'],
+            total_attempts: attempts_data.size,
+
+            # Organized attempt data
+            first_submission_date: attempts_data.first&.dig(:submission_date) || 'Not submitted',
+            first_feedback_date: attempts_data.first&.dig(:feedback_date) || 'No feedback',
+            first_grade: attempts_data.first&.dig(:grade) || 0,
+
+            second_submission_date: attempts_data[1]&.dig(:submission_date) || 'No resubmission',
+            second_feedback_date: attempts_data[1]&.dig(:feedback_date) || 'No 2nd feedback',
+            second_grade: attempts_data[1]&.dig(:grade) || 0,
+
+            # Keep all attempts for reference
+            all_attempts: attempts_data
           }
 
-          # Extract feedback comments
-          if feedback && feedback['plugins']
-            comments = []
-            feedback['plugins'].each do |plugin|
-              if plugin['type'] == 'comments' && plugin['editorfields']
-                plugin['editorfields'].each do |field|
-                  if field['name'] == 'comments' && field['text'].present?
-                    comments << field['text']
-                  end
-                end
-              end
-            end
-            submission_info[:feedback_comments] = comments.join('; ')
-          end
+          organized_data << organized_record
+        end
+      end
+      puts "✅ Organized data for #{organized_data.size} submission records"
+      organized_data
+    end
+  end
 
-          all_submissions << submission_info
+  # Helper method to extract feedback comments
+  def extract_feedback_comments(feedback)
+    return 'No feedback' unless feedback && feedback['plugins']
+
+    comments = []
+    feedback['plugins'].each do |plugin|
+      if plugin['type'] == 'comments' && plugin['editorfields']
+        plugin['editorfields'].each do |field|
+          if field['name'] == 'comments' && field['text'].present?
+            comments << field['text']
+          end
         end
       end
     end
 
-    all_submissions
+    comments.any? ? comments.join('; ') : 'No feedback comments'
   end
 
-def get_organized_assignment_data(course_id)
-  puts "📋 Getting organized assignment submission data for course #{course_id}..."
+  # Get submission status for a specific assignment and user
+  def fetch_submission_status(assignment_id, user_id)
+    params = { 'assignid' => assignment_id, 'userid' => user_id }
+    call('mod_assign_get_submission_status', params)
+  end
 
-  # Get all assignments for the course
-  assignments = fetch_course_assignments(course_id)
-  return [] if assignments.empty?
+  # Helper method to get feedback for a specific attempt
+  def get_attempt_feedback(assignment_id, user_id, attempt_number)
+    submission_data = fetch_submission_status(assignment_id, user_id)
 
-  # Get all enrolled users
-  enrolled_users = get_enrolled_users(course_id)
-  return [] unless enrolled_users.is_a?(Array) && enrolled_users.any?
+    if submission_data && submission_data['feedback'] && submission_data['feedback']['grade']
+      grade_info = submission_data['feedback']['grade']
 
-  organized_data = []
-
-  assignments.each do |assignment|
-    assignment_id = assignment['id']
-    assignment_name = assignment['name']
-
-    puts "  📝 Processing assignment: #{assignment_name}"
-
-    enrolled_users.each do |user|
-      user_id = user['id']
-      user_name = user['fullname']
-      user_email = user['email']
-
-      # Get submission status for this user and assignment
-      submission_data = fetch_submission_status(assignment_id, user_id)
-
-      if submission_data && submission_data['lastattempt']
-        # Get all attempts by calling the submissions API
-        attempts_data = []
-
-        begin
-          # Try to get all submissions for this assignment
-          all_submissions_response = call('mod_assign_get_submissions', { assignmentids: [assignment_id] })
-
-          if all_submissions_response['assignments']&.any?
-            assignment_submissions = all_submissions_response['assignments'].find { |a| a['assignmentid'] == assignment_id }
-
-            if assignment_submissions && assignment_submissions['submissions']
-              user_submissions = assignment_submissions['submissions'].select { |s| s['userid'] == user_id }
-
-              # Sort by attempt number
-              user_submissions.sort_by! { |s| s['attemptnumber'] }
-
-              user_submissions.each do |submission|
-                attempt_number = submission['attemptnumber'] + 1
-
-                # Get detailed feedback for this specific attempt
-                attempt_feedback = get_attempt_feedback(assignment_id, user_id, submission['attemptnumber'])
-
-                attempts_data << {
-                  attempt_number: attempt_number,
-                  submission_date: submission['timecreated'] > 0 ? Time.at(submission['timecreated']).strftime("%d %B %Y, %H:%M") : 'Not submitted',
-                  last_modified: submission['timemodified'] > 0 ? Time.at(submission['timemodified']).strftime("%d %B %Y, %H:%M") : 'N/A',
-                  status: submission['status'],
-                  feedback_date: attempt_feedback[:feedback_date],
-                  grade: attempt_feedback[:grade],
-                  grade_display: attempt_feedback[:grade_display],
-                  feedback_comments: attempt_feedback[:comments]
-                }
-              end
-            end
-          end
-        rescue => e
-          puts "    Warning: Could not fetch all attempts for assignment #{assignment_id}: #{e.message}"
-          # Fallback to using the latest attempt data
-          attempt = submission_data['lastattempt']
-          submission = attempt['submission'] || attempt['teamsubmission']
-          feedback = submission_data['feedback']
-
-          if submission
-            attempts_data << {
-              attempt_number: submission['attemptnumber'] + 1,
-              submission_date: submission['timecreated'] > 0 ? Time.at(submission['timecreated']).strftime("%d %B %Y, %H:%M") : 'Not submitted',
-              last_modified: submission['timemodified'] > 0 ? Time.at(submission['timemodified']).strftime("%d %B %Y, %H:%M") : 'N/A',
-              status: submission['status'],
-              feedback_date: feedback && feedback['grade'] && feedback['grade']['timemodified'] > 0 ? Time.at(feedback['grade']['timemodified']).strftime("%d %B %Y, %H:%M") : 'No feedback',
-              grade: feedback && feedback['grade'] ? feedback['grade']['grade'].to_f : 0,
-              grade_display: feedback ? feedback['gradefordisplay'] : 'No grade',
-              feedback_comments: extract_feedback_comments(feedback)
-            }
-          end
-        end
-
-        # Create organized record
-        organized_record = {
-          assignment_id: assignment_id,
-          assignment_name: assignment_name,
-          learner_id: user_id,
-          learner_name: user_name,
-          learner_email: user_email,
-          course_id: course_id,
-          due_date: assignment['duedate'] > 0 ? Time.at(assignment['duedate']).strftime("%d %B %Y, %H:%M") : "No due date",
-          max_grade: assignment['grade'],
-          max_attempts: assignment['maxattempts'],
-          total_attempts: attempts_data.size,
-
-          # Organized attempt data
-          first_submission_date: attempts_data.first&.dig(:submission_date) || 'Not submitted',
-          first_feedback_date: attempts_data.first&.dig(:feedback_date) || 'No feedback',
-          first_grade: attempts_data.first&.dig(:grade) || 0,
-
-          second_submission_date: attempts_data[1]&.dig(:submission_date) || 'No resubmission',
-          second_feedback_date: attempts_data[1]&.dig(:feedback_date) || 'No 2nd feedback',
-          second_grade: attempts_data[1]&.dig(:grade) || 0,
-
-          # Keep all attempts for reference
-          all_attempts: attempts_data
+      # Check if this feedback is for the specific attempt
+      if grade_info['attemptnumber'] == attempt_number
+        {
+          feedback_date: grade_info['timemodified'] > 0 ? Time.at(grade_info['timemodified']).strftime("%d %B %Y, %H:%M") : 'No feedback',
+          grade: grade_info['grade'].to_f,
+          grade_display: submission_data['feedback']['gradefordisplay'] || 'No grade',
+          comments: extract_feedback_comments(submission_data['feedback'])
         }
-
-        organized_data << organized_record
+      else
+        {
+          feedback_date: 'No feedback',
+          grade: 0,
+          grade_display: 'No grade',
+          comments: 'No feedback'
+        }
       end
-    end
-  end
-
-  puts "✅ Organized data for #{organized_data.size} submission records"
-  organized_data
-end
-
-# Helper method to extract feedback comments
-def extract_feedback_comments(feedback)
-  return 'No feedback' unless feedback && feedback['plugins']
-
-  comments = []
-  feedback['plugins'].each do |plugin|
-    if plugin['type'] == 'comments' && plugin['editorfields']
-      plugin['editorfields'].each do |field|
-        if field['name'] == 'comments' && field['text'].present?
-          comments << field['text']
-        end
-      end
-    end
-  end
-
-  comments.any? ? comments.join('; ') : 'No feedback comments'
-end
-
-# Helper method to get feedback for a specific attempt
-def get_attempt_feedback(assignment_id, user_id, attempt_number)
-  submission_data = fetch_submission_status(assignment_id, user_id)
-
-  if submission_data && submission_data['feedback'] && submission_data['feedback']['grade']
-    grade_info = submission_data['feedback']['grade']
-
-    # Check if this feedback is for the specific attempt
-    if grade_info['attemptnumber'] == attempt_number
-      {
-        feedback_date: grade_info['timemodified'] > 0 ? Time.at(grade_info['timemodified']).strftime("%d %B %Y, %H:%M") : 'No feedback',
-        grade: grade_info['grade'].to_f,
-        grade_display: submission_data['feedback']['gradefordisplay'] || 'No grade',
-        comments: extract_feedback_comments(submission_data['feedback'])
-      }
     else
       {
         feedback_date: 'No feedback',
@@ -1160,470 +1115,66 @@ def get_attempt_feedback(assignment_id, user_id, attempt_number)
         comments: 'No feedback'
       }
     end
-  else
-    {
-      feedback_date: 'No feedback',
-      grade: 0,
-      grade_display: 'No grade',
-      comments: 'No feedback'
-    }
-  end
-end
-
-  # Create a summary table format
-  def create_assignment_summary_table(course_id)
-    data = get_organized_assignment_data(course_id)
-
-    puts "\n📊 ASSIGNMENT SUBMISSION SUMMARY - Course #{course_id}"
-    puts "=" * 120
-    printf "%-30s %-20s %-15s %-15s %-8s %-15s %-15s %-8s\n",
-          "Assignment", "Learner", "1st Submission", "1st Feedback", "1st Grade", "2nd Submission", "2nd Feedback", "2nd Grade"
-    puts "=" * 120
-
-    data.each do |record|
-      printf "%-30s %-20s %-15s %-15s %-8s %-15s %-15s %-8s\n",
-            record[:assignment_name][0..29],
-            record[:learner_name][0..19],
-            record[:first_submission_date][0..14],
-            record[:first_feedback_date][0..14],
-            record[:first_grade],
-            record[:second_submission_date][0..14],
-            record[:second_feedback_date][0..14],
-            record[:second_grade]
-    end
-
-    puts "=" * 120
-    puts "Total records: #{data.size}"
-
-    data
   end
 
-  def get_quick_assignment_sample(course_id, max_assignments: 10, max_users: 50)
-    puts "📋 Getting sample assignment data for course #{course_id}..."
+    # Get learners enrolled in a course
+  def get_course_learners(course_id)
+    puts "👥 Getting learners for course #{course_id}..."
 
-    assignments = fetch_course_assignments(course_id)
-    enrolled_users = get_enrolled_users(course_id)
-
-    return [] if assignments.empty? || enrolled_users.empty?
-
-    # Limit to specified number of assignments and users
-    sample_assignments = assignments.first(max_assignments)
-    sample_users = enrolled_users.first(max_users)
-
-    puts "Processing #{sample_assignments.size} assignments with #{sample_users.size} users"
-
-    results = []
-
-    sample_assignments.each do |assignment|
-      assignment_id = assignment['id']
-      assignment_name = assignment['name']
-
-      puts "  📝 Processing: #{assignment_name}"
-
-      sample_users.each do |user|
-        user_id = user['id']
-        user_name = user['fullname']
-
-        submission_data = fetch_submission_status(assignment_id, user_id)
-
-        if submission_data && submission_data['lastattempt']
-          attempt = submission_data['lastattempt']
-          submission = attempt['submission'] || attempt['teamsubmission']
-          feedback = submission_data['feedback']
-
-          result = {
-            assignment_name: assignment_name,
-            learner_name: user_name,
-            learner_email: user['email'],
-            submission_date: submission ? (submission['timecreated'] > 0 ? Time.at(submission['timecreated']).strftime("%d %B %Y, %H:%M") : 'Not submitted') : 'No submission',
-            feedback_date: feedback && feedback['grade'] && feedback['grade']['timemodified'] > 0 ? Time.at(feedback['grade']['timemodified']).strftime("%d %B %Y, %H:%M") : 'No feedback',
-            grade: feedback && feedback['grade'] ? feedback['grade']['grade'].to_f : 0,
-            attempts: submission ? submission['attemptnumber'] + 1 : 0
-          }
-
-          results << result
-        end
-      end
-    end
-
-    results
-  end
-
-  # Add this method - it uses your working custom API instead of the assignment API
-  def get_assignments_from_activities(course_id, max_users: 50)
-    puts "📋 Getting assignments from activities for course #{course_id}..."
-
-    # Get enrolled users
     enrolled_users = get_enrolled_users(course_id)
     return [] unless enrolled_users.is_a?(Array) && enrolled_users.any?
 
-    # Limit users for performance
-    sample_users = enrolled_users.first(max_users)
-
-    all_results = []
-
-    sample_users.each do |user|
-      user_id = user['id']
-      user_name = user['fullname']
-      user_email = user['email']
-
-      puts "  Processing user: #{user_name}"
-
-      # Use your working custom API
-      activities = get_all_course_activities(course_id, user_id)
-
-      # Filter for assignment-like activities
-      assignments = activities.select do |activity|
-        activity[:submission_date].present? ||
-        activity[:evaluation_date].present? ||
-        activity[:name].downcase.include?('assignment') ||
-        activity[:name].downcase.include?('essay') ||
-        activity[:name].downcase.include?('project') ||
-        activity[:name].downcase.include?('mock') ||
-        (activity[:grade]&.to_f || 0) > 0 ||
-        (activity[:number_attempts]&.to_i || 0) > 0
-      end
-
-      assignments.each do |assignment|
-        all_results << {
-          assignment_name: assignment[:name],
-          learner_name: user_name,
-          learner_email: user_email,
-          submission_date: assignment[:submission_date].present? ? assignment[:submission_date] : 'No submission',
-          feedback_date: assignment[:evaluation_date].present? ? assignment[:evaluation_date] : 'No feedback',
-          grade: (assignment[:grade]&.to_f || 0),
-          attempts: (assignment[:number_attempts]&.to_i || 0),
-          section_name: assignment[:section_name],
-          ect: assignment[:ect],
-          completion_status: assignment[:completiondata] == 1 ? "Completed" : "Not Completed"
-        }
-      end
-    end
-
-    puts "Found #{all_results.size} assignment records"
-    all_results
-  end
-
-# Test which courses actually work with our APIs
-def test_course_access(course_ids = [1, 2, 107, 128, 149])
-  puts "🔍 Testing course access..."
-
-  working_courses = []
-
-  course_ids.each do |course_id|
-    puts "\n--- Testing Course #{course_id} ---"
-
-    # Test 1: Check if course exists
-    begin
-      enrolled_users = get_enrolled_users(course_id)
-      puts "✅ Course #{course_id}: #{enrolled_users.size} enrolled users"
-
-      # Test 2: Check assignment API
-      begin
-        assignments = fetch_course_assignments(course_id)
-        puts "✅ Assignment API: #{assignments.size} assignments found"
-      rescue => e
-        puts "❌ Assignment API failed: #{e.message}"
-        assignments = []
-      end
-
-      # Test 3: Check custom API with admin user (ID 2)
-      begin
-        activities = get_all_course_activities(course_id, 2)
-        puts "✅ Custom API (admin): #{activities.size} activities found"
-
-        # Fixed nil handling
-        assignment_like = activities.select do |activity|
-          activity[:submission_date].present? ||
-          activity[:evaluation_date].present? ||
-          (activity[:grade]&.to_f || 0) > 0  # Safe nil handling
-        end
-        puts "✅ Assignment-like activities: #{assignment_like.size}"
-
-        working_courses << {
-          course_id: course_id,
-          enrolled_users: enrolled_users.size,
-          assignments: assignments.size,
-          activities: activities.size,
-          assignment_activities: assignment_like.size
-        }
-
-      rescue => e
-        puts "❌ Custom API failed: #{e.message}"
-      end
-
-    rescue => e
-      puts "❌ Course #{course_id} not accessible: #{e.message}"
-    end
-  end
-
-  puts "\n📊 Working Courses Summary:"
-  working_courses.each do |course|
-    puts "Course #{course[:course_id]}: #{course[:enrolled_users]} users, #{course[:assignments]} assignments, #{course[:assignment_activities]} assignment activities"
-  end
-
-  working_courses
-end
-
-# Get assignments only from courses that work
-def get_safe_assignments_from_activities(course_id, max_users: nil)
-  puts "📋 Safely getting assignments from activities for course #{course_id}..."
-
-  # First test if the course works with admin user
-  begin
-    test_activities = get_all_course_activities(course_id, 2)
-    puts "✅ Course #{course_id} is accessible, found #{test_activities.size} activities"
-  rescue => e
-    puts "❌ Course #{course_id} not accessible: #{e.message}"
-    return []
-  end
-
-  # Get enrolled users
-  enrolled_users = get_enrolled_users(course_id)
-  return [] unless enrolled_users.is_a?(Array) && enrolled_users.any?
-
-  # Filter out problematic users, but don't limit unless specified
-  sample_users = enrolled_users.reject { |u| u['fullname'].include?('Guest') }
-
-  # Only limit if max_users is specified
-  sample_users = sample_users.first(max_users) if max_users
-
-  puts "Processing #{sample_users.size} users (out of #{enrolled_users.size} total enrolled users)"
-
-  all_results = []
-
-  sample_users.each do |user|
-    user_id = user['id']
-    user_name = user['fullname']
-    user_email = user['email']
-
-    puts "  Processing user: #{user_name} (ID: #{user_id})"
-
-    begin
-      # Use your working custom API
-      activities = get_all_course_activities(course_id, user_id)
-
-      # Filter for assignment-like activities with proper nil handling
-      assignments = activities.select do |activity|
-        activity[:submission_date].present? ||
-        activity[:evaluation_date].present? ||
-        activity[:name].downcase.include?('assignment') ||
-        activity[:name].downcase.include?('essay') ||
-        activity[:name].downcase.include?('project') ||
-        activity[:name].downcase.include?('mock') ||
-        (activity[:grade]&.to_f || 0) > 0 ||  # Safe nil handling
-        (activity[:number_attempts]&.to_i || 0) > 0  # Safe nil handling
-      end
-
-      assignments.each do |assignment|
-        all_results << {
-          assignment_name: assignment[:name],
-          learner_name: user_name,
-          learner_email: user_email,
-          submission_date: assignment[:submission_date].present? ? assignment[:submission_date] : 'No submission',
-          feedback_date: assignment[:evaluation_date].present? ? assignment[:evaluation_date] : 'No feedback',
-          grade: assignment[:grade]&.to_f || 0,  # Safe nil handling
-          attempts: assignment[:number_attempts]&.to_i || 0,  # Safe nil handling
-          section_name: assignment[:section_name],
-          ect: assignment[:ect]&.to_f || 0,  # Safe nil handling
-          completion_status: assignment[:completiondata] == 1 ? "Completed" : "Not Completed"
-        }
-      end
-
-    rescue => e
-      puts "    ❌ Failed for user #{user_name}: #{e.message}"
-      next
-    end
-  end
-
-  puts "Found #{all_results.size} assignment records"
-  all_results
-end
-
-# Add a batch processing method for large courses
-def get_all_assignments_from_activities_batched(course_id, batch_size: 100)
-  puts "📋 Getting ALL assignments from activities for course #{course_id} in batches..."
-
-  enrolled_users = get_enrolled_users(course_id)
-  return [] unless enrolled_users.is_a?(Array) && enrolled_users.any?
-
-  # Filter out problematic users
-  valid_users = enrolled_users.reject { |u| u['fullname'].include?('Guest') }
-
-  all_results = []
-
-  # Process in batches
-  valid_users.each_slice(batch_size) do |batch_users|
-    puts "Processing batch of #{batch_users.size} users..."
-
-    batch_users.each do |user|
-      user_id = user['id']
-      user_name = user['fullname']
-      user_email = user['email']
-
-      begin
-        activities = get_all_course_activities(course_id, user_id)
-
-        # Filter for assignment-like activities
-        assignments = activities.select do |activity|
-          activity[:submission_date].present? ||
-          activity[:evaluation_date].present? ||
-          activity[:name].downcase.include?('assignment') ||
-          activity[:name].downcase.include?('essay') ||
-          activity[:name].downcase.include?('project') ||
-          activity[:name].downcase.include?('mock') ||
-          (activity[:grade]&.to_f || 0) > 0 ||
-          (activity[:number_attempts]&.to_i || 0) > 0
-        end
-
-        assignments.each do |assignment|
-          all_results << {
-            assignment_name: assignment[:name],
-            learner_name: user_name,
-            learner_email: user_email,
-            submission_date: assignment[:submission_date].present? ? assignment[:submission_date] : 'No submission',
-            feedback_date: assignment[:evaluation_date].present? ? assignment[:evaluation_date] : 'No feedback',
-            grade: assignment[:grade]&.to_f || 0,
-            attempts: assignment[:number_attempts]&.to_i || 0,
-            section_name: assignment[:section_name],
-            ect: assignment[:ect]&.to_f || 0,
-            completion_status: assignment[:completiondata] == 1 ? "Completed" : "Not Completed"
-          }
-        end
-
-      rescue => e
-        puts "    ❌ Failed for user #{user_name}: #{e.message}"
-        next
-      end
-    end
-  end
-
-  puts "Found #{all_results.size} assignment records from #{valid_users.size} users"
-  all_results
-end
-
-# Get learners enrolled in a course (for dropdown)
-def get_course_learners(course_id)
-  puts "👥 Getting learners for course #{course_id}..."
-
-  enrolled_users = get_enrolled_users(course_id)
-  return [] unless enrolled_users.is_a?(Array) && enrolled_users.any?
-
-  # Filter out system users and format for dropdown
-  learners = enrolled_users.reject { |u| u['fullname'].include?('Guest') || u['fullname'].include?('Admin') }
-                          .map do |user|
-    {
-      moodle_id: user['id'],
-      name: user['fullname'],
-      email: user['email']
-    }
-  end.sort_by { |learner| learner[:name].downcase }  # Case-insensitive alphabetical sort
-
-  puts "Found #{learners.size} learners"
-  learners
-end
-
-# Get assignment summary for subject (fast version)
-def get_assignment_summary_for_subject(course_id, max_sample: 100)
-  puts "📊 Getting assignment summary for course #{course_id}..."
-
-  # Get a sample of assignment data (much faster)
-  sample_data = get_safe_assignments_from_activities(course_id, max_users: max_sample)
-  return {} if sample_data.empty?
-
-  # Group by assignment and calculate statistics
-  grouped = sample_data.group_by { |data| data[:assignment_name] }
-
-  summary = {}
-  grouped.each do |assignment_name, submissions|
-    total_participants = submissions.size
-    submitted_count = submissions.count { |s| s[:submission_date] != 'No submission' }
-    graded_count = submissions.count { |s| s[:grade] > 0 }
-    completed_count = submissions.count { |s| s[:completion_status] == 'Completed' }
-
-    grades = submissions.map { |s| s[:grade] }.select { |g| g > 0 }
-    average_grade = grades.any? ? (grades.sum / grades.size.to_f).round(2) : 0
-
-    summary[assignment_name] = {
-      total_participants: total_participants,
-      submitted_count: submitted_count,
-      graded_count: graded_count,
-      completed_count: completed_count,
-      average_grade: average_grade,
-      submissions: submissions,
-      section_name: submissions.first[:section_name]
-    }
-  end
-
-  summary
-end
-
-# Get specific learner's assignment data (only assignments with feedback)
-def get_learner_assignment_data(course_id, learner_moodle_id)
-  puts "👤 Getting assignment data for learner #{learner_moodle_id} in course #{course_id}..."
-
-  # Get activities for this specific learner
-  activities = get_all_course_activities(course_id, learner_moodle_id)
-
-  # Filter for assignment-like activities
-  assignments = activities.select do |activity|
-    activity[:submission_date].present? ||
-    activity[:evaluation_date].present? ||
-    activity[:name].downcase.include?('assignment') ||
-    activity[:name].downcase.include?('essay') ||
-    activity[:name].downcase.include?('project') ||
-    activity[:name].downcase.include?('mock') ||
-    (activity[:grade]&.to_f || 0) > 0 ||
-    (activity[:number_attempts]&.to_i || 0) > 0
-  end
-
-  # Convert to hash indexed by assignment name
-  learner_data = {}
-  assignments.each do |assignment|
-    feedback_date = assignment[:evaluation_date].present? ? assignment[:evaluation_date] : 'No feedback'
-
-    # Only include assignments that have feedback dates
-    if feedback_date != 'No feedback'
-      learner_data[assignment[:name]] = {
-        submission_date: assignment[:submission_date].present? ? assignment[:submission_date] : 'No submission',
-        feedback_date: feedback_date,
-        grade: assignment[:grade]&.to_f || 0,
-        attempts: assignment[:number_attempts]&.to_i || 0,
-        completion_status: assignment[:completiondata] == 1 ? "Completed" : "Not Completed"
+    # Filter out system users and format for dropdown
+    learners = enrolled_users.reject { |u| u['fullname'].include?('Guest') || u['fullname'].include?('Admin') }
+                            .map do |user|
+      {
+        moodle_id: user['id'],
+        name: user['fullname'],
+        email: user['email']
       }
+    end.sort_by { |learner| learner[:name].downcase }  # Case-insensitive alphabetical sort
+
+    puts "Found #{learners.size} learners"
+    learners
+  end
+
+  # Get specific learner's assignment data (only assignments with feedback)
+  def get_learner_assignment_data(course_id, learner_moodle_id)
+    puts "👤 Getting assignment data for learner #{learner_moodle_id} in course #{course_id}..."
+
+    # Get activities for this specific learner
+    activities = get_all_course_activities(course_id, learner_moodle_id)
+
+    # Filter for assignment-like activities
+    assignments = activities.select do |activity|
+      activity[:submission_date].present? ||
+      activity[:evaluation_date].present? ||
+      activity[:name].downcase.include?('assignment') ||
+      activity[:name].downcase.include?('essay') ||
+      activity[:name].downcase.include?('project') ||
+      activity[:name].downcase.include?('mock') ||
+      (activity[:grade]&.to_f || 0) > 0 ||
+      (activity[:number_attempts]&.to_i || 0) > 0
     end
-  end
 
-  puts "Found #{learner_data.size} assignments with feedback for learner"
-  learner_data
-end
+    # Convert to hash indexed by assignment name
+    learner_data = {}
+    assignments.each do |assignment|
+      feedback_date = assignment[:evaluation_date].present? ? assignment[:evaluation_date] : 'No feedback'
 
-  private
-
-  def get_from_cache(key)
-    cached_data = @cache[key]
-    return nil unless cached_data
-
-    # Check if cache is expired
-    if Time.current > cached_data[:expires_at]
-      @cache.delete(key)
-      return nil
+      # Only include assignments that have feedback dates
+      if feedback_date != 'No feedback'
+        learner_data[assignment[:name]] = {
+          submission_date: assignment[:submission_date].present? ? assignment[:submission_date] : 'No submission',
+          feedback_date: feedback_date,
+          grade: assignment[:grade]&.to_f || 0,
+          attempts: assignment[:number_attempts]&.to_i || 0,
+          completion_status: assignment[:completiondata] == 1 ? "Completed" : "Not Completed"
+        }
+      end
     end
 
-    cached_data[:data]
-  end
-
-  def store_in_cache(key, data)
-    @cache[key] = {
-      data: data,
-      expires_at: Time.current + @cache_duration
-    }
-
-    # Clean up expired entries occasionally
-    cleanup_cache if @cache.size > 100
-  end
-
-  def cleanup_cache
-    @cache.delete_if { |_, cached_data| Time.current > cached_data[:expires_at] }
+    puts "Found #{learner_data.size} assignments with feedback for learner"
+    learner_data
   end
 end

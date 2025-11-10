@@ -6,6 +6,7 @@ class Hub < ApplicationRecord
   has_many :users_hubs
   has_many :users, through: :users_hubs
   has_many :weekly_meetings, dependent: :destroy
+  has_many :consent_activities, dependent: :nullify  # Add this line
 
   # Scopes for common queries
   scope :with_main_users, -> { joins(:users_hubs).where(users_hubs: { main: true }) }

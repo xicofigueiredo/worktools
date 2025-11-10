@@ -63,12 +63,19 @@
 
               <div class="container">
                   <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <div class="form-group text-center">
                         <strong>Start Date:</strong> <%= @weekly_goal.week.start_date.strftime("%d/%m/%Y") %>
                       </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                      <div class="form-group text-center">
+                        <% if @weekly_goal.expected_hours.present? %>
+                          <strong>Expected Work:</strong> <%= @weekly_goal.expected_hours.round(1) %>h
+                        <% end %>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
                       <div class="form-group text-center">
                         <strong>End Date:</strong> <%= @weekly_goal.week.end_date.strftime("%d/%m/%Y") %>
                       </div>

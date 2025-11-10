@@ -4,6 +4,7 @@ class AttendancesController < ApplicationController
   def attendance
     create_daily_attendance
     @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    @today = Date.today
     @isweekend = @current_date.saturday? || @current_date.sunday?
     @prev_date = calculate_prev_date(@current_date, 'daily')
     @next_date = calculate_next_date(@current_date, 'daily')
@@ -14,7 +15,11 @@ class AttendancesController < ApplicationController
 
     @is_today = @attendances ? @attendances&.first&.attendance_date == Date.today : false
 
-    create_weekly_goals_notifications(@learners) if (1..5).include?(Date.today.wday)
+    # Set week variables for the view
+    @week = Week.where("start_date <= ? AND end_date >= ?", @current_date, @current_date).first
+    @week_before = Week.where("start_date <= ? AND end_date >= ?", @current_date - 7.days, @current_date - 7.days).first
+
+    # create_weekly_goals_notifications(@learners) if (1..5).include?(Date.today.wday)
   end
 
   def index
@@ -31,8 +36,13 @@ class AttendancesController < ApplicationController
     attendance_date = params[:attendance_date]
     attendance = learner.attendances.find_by(attendance_date:)
     if attendance.nil?
-      learner.attendances.create(attendance_date:, start_time: Time.now, present: true,
-                                 absence: 'Present')
+      # Find the week for this date
+      week = Week.where("start_date <= ? AND end_date >= ?", attendance_date.to_date, attendance_date.to_date).first
+      # Find the weekly goal for this learner and week
+      weekly_goal = learner.weekly_goals.find_by(week: week) if week
+      # Create attendance and associate with weekly goal
+      learner.attendances.create(attendance_date:, week_id: week&.id, start_time: Time.now, present: true,
+                                 absence: 'Present', weekly_goal_id: weekly_goal&.id)
     elsif attendance.start_time.present? && attendance.end_time.blank?
       attendance.update(end_time: Time.now)
     elsif attendance.start_time.blank?
@@ -105,7 +115,14 @@ class AttendancesController < ApplicationController
       attendance = learner.attendances.find_by(attendance_date: current_date)
 
       # If not, create one
-      learner.attendances.create(attendance_date: current_date) if attendance.nil?
+      if attendance.nil?
+        # Find the week for this date
+        week = Week.where("start_date <= ? AND end_date >= ?", current_date, current_date).first
+        # Find the weekly goal for this learner and week
+        weekly_goal = learner.weekly_goals.find_by(week: week) if week
+        # Create attendance and associate with weekly goal
+        learner.attendances.create(attendance_date: current_date, week_id: week&.id, weekly_goal_id: weekly_goal&.id)
+      end
     end
   end
 
@@ -116,7 +133,14 @@ class AttendancesController < ApplicationController
       next if date.wday == 6 || date.wday.zero?
 
       learners.each do |learner|
-        learner.attendances.create(attendance_date: date) unless learner.attendances.exists?(attendance_date: date)
+        unless learner.attendances.exists?(attendance_date: date)
+          # Find the week for this date
+          week = Week.where("start_date <= ? AND end_date >= ?", date, date).first
+          # Find the weekly goal for this learner and week
+          weekly_goal = learner.weekly_goals.find_by(week: week) if week
+          # Create attendance and associate with weekly goal
+          learner.attendances.create(attendance_date: date, week_id: week&.id, weekly_goal_id: weekly_goal&.id)
+        end
       end
     end
   end
@@ -126,7 +150,14 @@ class AttendancesController < ApplicationController
 
     learners = User.joins(:hubs).where(hubs: { id: current_user.users_hubs.find_by(main: true)&.hub_id }, role: 'learner', deactivate: false)
     learners.each do |learner|
-      learner.attendances.create(attendance_date: date) unless learner.attendances.exists?(attendance_date: date)
+      unless learner.attendances.exists?(attendance_date: date)
+        # Find the week for this date
+        week = Week.where("start_date <= ? AND end_date >= ?", date, date).first
+        # Find the weekly goal for this learner and week
+        weekly_goal = learner.weekly_goals.find_by(week: week) if week
+        # Create attendance and associate with weekly goal
+        learner.attendances.create(attendance_date: date, week_id: week&.id, weekly_goal_id: weekly_goal&.id)
+      end
     end
   end
 

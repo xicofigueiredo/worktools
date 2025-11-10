@@ -23,4 +23,17 @@ module ApplicationHelper
       'fas fa-user'
     end
   end
+
+  def format_time_spent(seconds)
+    return "0h" if seconds.nil? || seconds == 0
+
+    decimal_hours = seconds / 3600.0
+    rounded_hours = (decimal_hours * 2).round / 2.0  # Round to nearest 0.5
+
+    if rounded_hours == rounded_hours.to_i
+      "#{rounded_hours.to_i}h"
+    else
+      "#{rounded_hours}h"
+    end
+  end
 end

@@ -11,7 +11,7 @@ class LeavesController < ApplicationController
 
     if current_user.managed_departments.present?
       prepare_manager_entitlements if current_user&.managed_departments&.present?
-      @pending_confirmations = current_user.confirmations.pending.includes(:confirmable)
+      @pending_confirmations = current_user.confirmations.pending
 
       depts = current_user.managed_departments
       is_top = depts.all? { |d| d.superior.nil? }

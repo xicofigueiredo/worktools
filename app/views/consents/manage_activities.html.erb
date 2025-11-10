@@ -1,0 +1,171 @@
+<!-- Hub Selector Dropdown -->
+<% if current_user.role == 'lc' || current_user.role == 'admin' %>
+  <div style="padding-top: 20px; padding-bottom: 20px;">
+    <%= form_with url: manage_activities_consents_path, method: :get, local: true, class: "d-flex align-items-center justify-content-center gap-2" do |f| %>
+      <%= hidden_field_tag :date, @current_date %>
+      <%= select_tag :hub_id,
+            options_from_collection_for_select(@available_hubs, :id, :name, @selected_hub&.id),
+            class: "form-select form-select-lg w-25",
+            prompt: "Select a hub",
+            onchange: "this.form.submit();" %>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="container mt-3">
+  <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+    <div>
+      <h1><%= @current_build_week.name %></h1>
+    </div>
+
+    <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
+      <% if @prev_build_week %>
+        <%= link_to '<i class="fa-solid fa-chevron-left"></i>'.html_safe, manage_activities_consents_path(date: @prev_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+      <% else %>
+        <button class="btn btn-outline-secondary rounded d-flex align-items-center" disabled>
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+      <% end %>
+
+      <%= link_to 'This Week', manage_activities_consents_path(Date.today, hub_id: @selected_hub&.id), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+
+      <% if @next_build_week %>
+        <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe, manage_activities_consents_path(date: @next_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+      <% else %>
+        <button class="btn btn-outline-secondary rounded d-flex align-items-center" disabled>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      <% end %>
+    </div>
+
+    <div>
+      <h1><%= @current_build_week.start_date.strftime('%Y') %> <%= @current_build_week.sprint.name %></h1>
+    </div>
+  </div>
+
+  <%= form_with url: update_activities_consents_path(date: @current_date, hub_id: @selected_hub&.id), method: :patch, local: true, data: { controller: "consent-activities", consent_activities_target: "form" } do |form| %>
+    <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
+      <h3 class="mb-3">Activities during Build Week</h3>
+
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Activity and Location</th>
+                <th>Meeting and Pick-up</th>
+                <th>Transport</th>
+                <th>To bring along</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody data-consent-activities-target="activitiesContainer">
+              <% @consent_activities.each_with_index do |activity, index| %>
+                <tr>
+                  <td>
+                    <%= select_tag "consent_activities[#{index}][day]",
+                          options_for_select([['Monday', 'Monday'], ['Tuesday', 'Tuesday'], ['Wednesday', 'Wednesday'], ['Thursday', 'Thursday'], ['Friday', 'Friday']], activity.day),
+                          { prompt: 'Select day', class: 'form-select' } %>
+                    <%= hidden_field_tag "consent_activities[#{index}][id]", activity.id %>
+                  </td>
+                  <td>
+                    <div class="mb-2">
+                      <%= text_field_tag "consent_activities[#{index}][name]", activity.name, class: "form-control", placeholder: "Activity name" %>
+                    </div>
+                    <div>
+                      <%= text_field_tag "consent_activities[#{index}][activity_location]", activity.activity_location, class: "form-control", placeholder: "Location" %>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="mb-2">
+                      <label class="form-label small">Meeting @</label>
+                      <%= text_field_tag "consent_activities[#{index}][meeting]", activity.meeting, class: "form-control form-control-sm", placeholder: "Meeting time/point" %>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label small">Pick-up point @</label>
+                      <%= text_field_tag "consent_activities[#{index}][pick_up]", activity.pick_up, class: "form-control form-control-sm", placeholder: "Pick-up point" %>
+                    </div>
+                    <div>
+                      <label class="form-label small">Location:</label>
+                      <%= text_field_tag "consent_activities[#{index}][location]", activity.location, class: "form-control form-control-sm", placeholder: "Location" %>
+                    </div>
+                  </td>
+                  <td>
+                    <%= select_tag "consent_activities[#{index}][transport]",
+                          options_for_select([['Private', 'Private'], ['Carpool', 'Carpool']], activity.transport),
+                          { prompt: 'Select transport', class: 'form-select' } %>
+                  </td>
+                  <td>
+                    <%= text_field_tag "consent_activities[#{index}][bring_along]", activity.bring_along, class: "form-control", placeholder: "Items to bring" %>
+                  </td>
+                  <td style="vertical-align: middle">
+                    <%= hidden_field_tag "consent_activities[#{index}][hub_id]", @selected_hub&.id %>
+                    <%= hidden_field_tag "consent_activities[#{index}][_destroy]", false %>
+                    <button type="button" class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->consent-activities#removeRow" data-activity-id="<%= activity.id %>">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-center">
+          <button type="button" class="btn btn-primary" data-action="click->consent-activities#addRow" style="border-radius: 10px;">Add</button>
+        </div>
+
+        <template data-consent-activities-target="template">
+          <tr>
+            <td>
+              <%= select_tag "consent_activities[TEMPLATE_INDEX][day]",
+                    options_for_select([['Monday', 'Monday'], ['Tuesday', 'Tuesday'], ['Wednesday', 'Wednesday'], ['Thursday', 'Thursday'], ['Friday', 'Friday']], nil),
+                    { prompt: 'Select day', class: 'form-select' } %>
+            </td>
+            <td>
+              <div class="mb-2">
+                <%= text_field_tag "consent_activities[TEMPLATE_INDEX][name]", nil, class: "form-control", placeholder: "Activity name" %>
+              </div>
+              <div>
+                <%= text_field_tag "consent_activities[TEMPLATE_INDEX][activity_location]", nil, class: "form-control", placeholder: "Location" %>
+              </div>
+            </td>
+            <td>
+              <div class="mb-2">
+                <label class="form-label small">Meeting @</label>
+                <%= text_field_tag "consent_activities[TEMPLATE_INDEX][meeting]", nil, class: "form-control form-control-sm", placeholder: "Meeting time/point" %>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Pick-up point @</label>
+                <%= text_field_tag "consent_activities[TEMPLATE_INDEX][pick_up]", nil, class: "form-control form-control-sm", placeholder: "Pick-up point" %>
+              </div>
+              <div>
+                <label class="form-label small">Location:</label>
+                <%= text_field_tag "consent_activities[TEMPLATE_INDEX][location]", nil, class: "form-control form-control-sm", placeholder: "Location" %>
+              </div>
+            </td>
+            <td>
+              <%= select_tag "consent_activities[TEMPLATE_INDEX][transport]",
+                    options_for_select([['Private', 'Private'], ['Carpool', 'Carpool']], nil),
+                    { prompt: 'Select transport', class: 'form-select' } %>
+            </td>
+            <td>
+              <%= text_field_tag "consent_activities[TEMPLATE_INDEX][bring_along]", nil, class: "form-control", placeholder: "Items to bring" %>
+            </td>
+            <td style="vertical-align: middle">
+              <%= hidden_field_tag "consent_activities[TEMPLATE_INDEX][hub_id]", @selected_hub&.id %>
+              <button type="button" class="btn btn-danger text-white" style="border-radius: 10px;" data-action="click->consent-activities#removeRow">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </template>
+    </div>
+
+    <div class="d-flex justify-content-center gap-2 mt-4 mb-4">
+      <%= link_to 'Back', navigator_consents_path(date: @current_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-secondary", style: "border-radius: 10px;" %>
+      <%= form.submit "Save Activities", class: "btn btn-primary", style: "border-radius: 10px;" %>
+    </div>
+
+  <% end %>
+</div>

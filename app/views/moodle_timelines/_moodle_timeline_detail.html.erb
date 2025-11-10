@@ -28,9 +28,9 @@
         <tbody>
           <% previous_unit = nil %>
           <% if @moodle_timeline.subject.id.in?([1007, 1008, 1009])
-              topics = @moodle_timeline.moodle_topics.order(unit: :asc).order(:id)
+              topics = @moodle_timeline.moodle_topics.where(hidden: false).order(unit: :asc).order(:id)
             else
-              topics = @moodle_timeline.moodle_topics.order(:id)
+              topics = @moodle_timeline.moodle_topics.where(hidden: false).order(:id)
             end
           %>
           <% topics.each do |moodle_topic| %>

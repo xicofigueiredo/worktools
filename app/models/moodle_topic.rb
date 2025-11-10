@@ -6,7 +6,7 @@ class MoodleTopic < ApplicationRecord
   validates :done, inclusion: { in: [true, false] }
 
   def moodle_calculate_percentage
-    total_time = self.moodle_timeline.moodle_topics.sum(:time).to_f
+    total_time = self.moodle_timeline.moodle_topics.where(hidden: false).sum(:time).to_f
 
     # Handle division by zero case
     if total_time == 0

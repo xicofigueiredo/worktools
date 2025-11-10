@@ -1,13 +1,13 @@
 class ConsentsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_current_sprint
-  before_action :set_learner
+  before_action :set_learner, except: [:navigator, :manage_activities, :create_activity, :update_activity, :destroy_activity]
+  before_action :ensure_lc_or_admin, only: [:navigator, :manage_activities, :create_activity, :update_activity, :destroy_activity]
 
   def build_week
     if @learner.nil?
       redirect_back fallback_location: root_path, alert: "Learner not found" and return
     end
-
     # Find the nearest build week week.name.include?("Build") and start_date is before or equal to Date.today
     @nearest_build_week = Week.where("start_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     bw_existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
@@ -37,6 +37,7 @@ class ConsentsController < ApplicationController
         Rails.logger.debug "After populate - emergency contact name: #{@bw_consent.emergency_contact_name}" if Rails.env.development?
       end
     end
+    @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
   end
 
   def create_build_week
@@ -146,6 +147,190 @@ class ConsentsController < ApplicationController
     end
   end
 
+  def navigator
+    begin
+      @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    rescue ArgumentError
+      @current_date = Date.today
+    end
+    @current_date ||= Date.today
+
+    # First, try to find a build week that contains the current date
+    @current_build_week = Week.where("start_date <= ? AND end_date >= ? AND name ILIKE ?", @current_date, @current_date, "%Build%").first
+
+    # If no build week found for current date, find the nearest one (past or future)
+    if @current_build_week.nil?
+      # Try to find the nearest past build week
+      past_build_week = Week.where("end_date < ? AND name ILIKE ?", @current_date, "%Build%").order(end_date: :desc).first
+      # Try to find the nearest future build week
+      future_build_week = Week.where("start_date > ? AND name ILIKE ?", @current_date, "%Build%").order(:start_date).first
+
+      # Choose the closest one
+      if past_build_week && future_build_week
+        # If both exist, choose the one closest to current_date
+        past_diff = (@current_date - past_build_week.end_date).abs
+        future_diff = (future_build_week.start_date - @current_date).abs
+        @current_build_week = past_diff < future_diff ? past_build_week : future_build_week
+      elsif past_build_week
+        @current_build_week = past_build_week
+      elsif future_build_week
+        @current_build_week = future_build_week
+      else
+        # If no build weeks exist at all, try to find any build week
+        @current_build_week = Week.where("name ILIKE ?", "%Build%").order(:start_date).first
+      end
+    end
+
+    if @current_build_week
+      # Find previous build week
+      @prev_build_week = Week.where("start_date < ? AND name ILIKE ?", @current_build_week.start_date, "%Build%").order(start_date: :desc).first
+
+      # Find next build week
+      @next_build_week = Week.where("start_date > ? AND name ILIKE ?", @current_build_week.end_date, "%Build%").order(:start_date).first
+
+      # Get available hubs for the current user
+      @available_hubs = current_user.hubs.order(:name)
+
+      # Get selected hub (default to main hub)
+      selected_hub_id = params[:hub_id].presence || current_user.main_hub&.id
+      @selected_hub = @available_hubs.find_by(id: selected_hub_id) || @available_hubs.first || current_user.main_hub
+
+      # Find consent activities for the selected hub and build week
+      @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
+    else
+      @prev_build_week = nil
+      @next_build_week = nil
+      @consent_activities = []
+      @available_hubs = current_user.hubs.order(:name)
+      @selected_hub = current_user.main_hub || @available_hubs.first
+    end
+  end
+
+  def manage_activities
+    begin
+      @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    rescue ArgumentError
+      @current_date = Date.today
+    end
+    @current_date ||= Date.today
+
+    # First, try to find a build week that contains the current date
+    @current_build_week = Week.where("start_date <= ? AND end_date >= ? AND name ILIKE ?", @current_date, @current_date, "%Build%").first
+
+    # If no build week found for current date, find the nearest one (past or future)
+    if @current_build_week.nil?
+      # Try to find the nearest past build week
+      past_build_week = Week.where("end_date < ? AND name ILIKE ?", @current_date, "%Build%").order(end_date: :desc).first
+      # Try to find the nearest future build week
+      future_build_week = Week.where("start_date > ? AND name ILIKE ?", @current_date, "%Build%").order(:start_date).first
+
+      # Choose the closest one
+      if past_build_week && future_build_week
+        # If both exist, choose the one closest to current_date
+        past_diff = (@current_date - past_build_week.end_date).abs
+        future_diff = (future_build_week.start_date - @current_date).abs
+        @current_build_week = past_diff < future_diff ? past_build_week : future_build_week
+      elsif past_build_week
+        @current_build_week = past_build_week
+      elsif future_build_week
+        @current_build_week = future_build_week
+      else
+        # If no build weeks exist at all, try to find any build week
+        @current_build_week = Week.where("name ILIKE ?", "%Build%").order(:start_date).first
+      end
+    end
+
+    if @current_build_week.nil?
+      redirect_to navigator_consents_path, alert: "No build week found for this date."
+      return
+    end
+
+    # Find previous and next build weeks for navigation
+    @prev_build_week = Week.where("start_date < ? AND name ILIKE ?", @current_build_week.start_date, "%Build%").order(start_date: :desc).first
+    @next_build_week = Week.where("start_date > ? AND name ILIKE ?", @current_build_week.end_date, "%Build%").order(:start_date).first
+
+    # Get available hubs for the current user
+    @available_hubs = current_user.hubs.order(:name)
+
+    # Get selected hub (default to main hub)
+    selected_hub_id = params[:hub_id].presence || current_user.main_hub&.id
+    @selected_hub = @available_hubs.find_by(id: selected_hub_id) || @available_hubs.first || current_user.main_hub
+
+    # Find consent activities for the selected hub and build week
+    @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
+  end
+
+  def update_activities
+    begin
+      @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    rescue ArgumentError
+      @current_date = Date.today
+    end
+    @current_date ||= Date.today
+
+    @current_build_week = Week.where("start_date <= ? AND end_date >= ? AND name ILIKE ?", @current_date, @current_date, "%Build%").first
+    if @current_build_week.nil?
+      redirect_to navigator_consents_path, alert: "No build week found for this date."
+      return
+    end
+
+    selected_hub_id = params[:hub_id].presence || current_user.main_hub&.id
+    selected_hub = current_user.hubs.find_by(id: selected_hub_id) || current_user.main_hub || current_user.hubs.first
+
+    # Process each activity - permit the consent_activities hash first
+    activities_params = params.permit(consent_activities: [:id, :day, :name, :activity_location, :meeting, :pick_up,
+                                                          :location, :transport, :bring_along, :hub_id, :_destroy])[:consent_activities] || {}
+    errors = []
+
+    activities_params.each do |index, activity_params_hash|
+      # activity_params_hash is already a permitted ActionController::Parameters object
+      # Convert to hash for easier manipulation
+      activity_hash = activity_params_hash.to_h
+
+      if activity_hash[:_destroy] == "true" || activity_hash[:_destroy] == true
+        # Delete activity
+        if activity_hash[:id].present?
+          activity = ConsentActivity.find_by(id: activity_hash[:id])
+          activity&.destroy
+        end
+      else
+        # Create or update activity
+        if activity_hash[:id].present?
+          activity = ConsentActivity.find_by(id: activity_hash[:id])
+          if activity
+            activity.assign_attributes(activity_hash.except(:id, :_destroy))
+            activity.week_id = @current_build_week.id
+            activity.hub_id = selected_hub&.id
+            unless activity.save
+              errors.concat(activity.errors.full_messages)
+            end
+          end
+        else
+          # Create new activity
+          activity = ConsentActivity.new(activity_hash.except(:_destroy))
+          activity.week_id = @current_build_week.id
+          activity.hub_id = selected_hub&.id
+          unless activity.save
+            errors.concat(activity.errors.full_messages)
+          end
+        end
+      end
+    end
+
+    if errors.empty?
+      redirect_to navigator_consents_path(date: @current_build_week.start_date, hub_id: selected_hub_id), notice: "Activities saved successfully."
+    else
+      @available_hubs = current_user.hubs.order(:name)
+      @selected_hub = selected_hub
+      @prev_build_week = Week.where("start_date < ? AND name ILIKE ?", @current_build_week.start_date, "%Build%").order(start_date: :desc).first
+      @next_build_week = Week.where("start_date > ? AND name ILIKE ?", @current_build_week.end_date, "%Build%").order(:start_date).first
+      @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
+      flash.now[:alert] = errors.join(", ")
+      render :manage_activities, status: :unprocessable_entity
+    end
+  end
+
+
   private
 
   def populate_common_fields(target_consent, source_consent)
@@ -227,5 +412,11 @@ class ConsentsController < ApplicationController
   def set_learner
     learner_id = params[:learner_id]
     @learner = learner_id.present? ? User.find_by(id: learner_id) : current_user.kids.first
+  end
+
+  def ensure_lc_or_admin
+    unless current_user.role == 'lc' || current_user.role == 'admin'
+      redirect_to root_path, alert: "You are not authorized to access this page."
+    end
   end
 end

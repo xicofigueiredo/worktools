@@ -65,18 +65,18 @@ module ProgressCalculations
   def moodle_calculate_progress_and_balance(timelines)
 
     timelines.each do |timeline|
-      topics = timeline.moodle_topics
+      topics = timeline.moodle_topics.where(hidden: false)
       total_topics = topics.size
       progress = 0
       balance = 0
       expected_progress = 0
-      total_time = timeline.moodle_topics.sum(:time).to_f
+      total_time = timeline.moodle_topics.where(hidden: false).sum(:time).to_f
 
       topics.each do |topic|
         # Update balance based on deadline and done state
-        if topic.done && topic.deadline && topic.deadline >= Date.today
+        if topic.done && topic.deadline && topic.deadline >= Date.today && (topic.time.positive? || timeline.subject.category == 0 || timeline.subject.category == 1 || timeline.subject.category == 2)
           balance += 1
-        elsif !topic.done && topic.deadline && topic.deadline < Date.today
+        elsif !topic.done && topic.deadline && topic.deadline < Date.today && (topic.time.positive? || timeline.subject.category == 0 || timeline.subject.category == 1 || timeline.subject.category == 2)
           balance -= 1
         end
         percentage = topic.time / total_time if topic.time.positive? && total_time.positive?
@@ -129,7 +129,7 @@ module ProgressCalculations
   end
 
   def moodle_calc_remaining_timeline_hours_and_percentage(timeline)
-    topics = timeline.moodle_topics
+    topics = timeline.moodle_topics.where(hidden: false)
 
     remaining_hours_count = 0
     remaining_percentage = 0.0

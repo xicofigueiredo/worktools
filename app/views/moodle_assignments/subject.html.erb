@@ -1,0 +1,72 @@
+<div class="container-fluid mt-4">
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0"><%= @subject.name %></h1>
+        <%= link_to '← Back to Subjects', moodle_assignments_path, class: 'btn btn-outline-secondary btn-sm' %>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <strong>Category:</strong> <span class="badge bg-primary"><%= @subject.category_long_form rescue @subject.category %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Assignments</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Assignment Name</th>
+                  <th>Moodle ID</th>
+                  <th class="text-end">Submissions</th>
+                  <th class="text-end">Grading Time (days)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @assignments_with_counts.each do |ma| %>
+                  <tr class="cursor-pointer" onclick="window.location='<%= moodle_assignment_path(ma) %>'" style="cursor: pointer;">
+                    <td class="fw-medium"><%= ma.name %></td>
+                    <td><code><%= ma.moodle_id %></code></td>
+                    <td class="text-end">
+                      <span class="badge bg-info"><%= ma.read_attribute(:submissions_count) %></span>
+                    </td>
+                    <td class="text-end">
+                      <% if ma.grading_time.present? && ma.grading_time > 0 %>
+                        <span class="badge bg-success"><%= sprintf('%.2f', ma.grading_time) %></span>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+  }
+  .cursor-pointer {
+    cursor: pointer;
+  }
+</style>

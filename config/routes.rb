@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  resources :moodle_assignments, only: [:index, :show] do
+    collection do
+      post :fetch_submissions_range
+      get 'subject/:id', to: 'moodle_assignments#subject', as: :subject
+    end
+  end
   get 'responses/create'
   get 'forms/index'
   get 'forms/show'
@@ -29,6 +35,12 @@ Rails.application.routes.draw do
         post :build_week, action: :create_build_week
         get :sprint
         post :sprint, action: :create_sprint
+        get :navigator, path: 'build_weeks/navigator'
+        get :manage_activities, path: 'build_weeks/activities'
+        patch :update_activities, path: 'build_weeks/activities'
+        post :create_activity, path: 'build_weeks/activities'
+        patch :update_activity, path: 'build_weeks/activities/:id'
+        delete :destroy_activity, path: 'build_weeks/activities/:id'
       end
     end
 

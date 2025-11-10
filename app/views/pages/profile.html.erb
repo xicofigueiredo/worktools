@@ -148,23 +148,47 @@
               <td><%= @current_sprint.count_absences(@learner) %></td>
             </tr>
             <tr>
-              <td>Weekly Progress</td>
+              <td>Time@Hub</td>
               <% @current_sprint_weeks.each do |week| %>
-                <td>
+                <% if week.start_date <= Date.today %>
+                  <td><%= format_time_spent((@time_spent[week.id] || 0).to_i) %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+              <% end %>
+              <% total_time = @time_spent.values.sum %>
+              <td><%= format_time_spent(total_time) %></td>
+            </tr>
+            <tr>
+              <td>Expected Work</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <% if week.start_date <= Date.today %>
+                  <td><%= @expected_hours[week.id] ? "#{@expected_hours[week.id].round(1)}h" : "-" %></td>
+                <% else %>
+                  <td></td>
+                <% end %>
+              <% end %>
+              <% total_expected_hours = @expected_hours.values.compact.sum %>
+              <td><%= total_expected_hours > 0 ? "#{total_expected_hours.round(1)}h" : "-" %></td>
+            </tr>
+            <tr>
+              <%# <td>Weekly Progress</td>
+              <% @current_sprint_weeks.each do |week| %>
+                <%# <td>
                   <% relative_progress = week.calc_relative_average_timeline_progress(@learner) %>
                   <%# FIXME The logic below is temporary to hide initial
-                      progress without previous week progress.
-                      Logic can be removed after Sprint 3
+                      <%# progress without previous week progress.
+                      <%# Logic can be removed after Sprint 3
                   %>
-                  <% if relative_progress > 10 || relative_progress < 0 %>
-                    N/A
+                  <%# <% if relative_progress > 10 || relative_progress < 0 %>
+                    <%# N/A
                   <% else %>
-                    <%= "#{relative_progress}%" %>
-                  <% end %>
-                </td>
+                    <%# <%= "#{relative_progress}%" %>
+                  <%# <% end %>
+                <%# </td>
               <% end %>
-              <td><%= @current_sprint.count_weekly_progress_average(@learner) %>%</td>
-            </tr>
+              <%# <td><%= @current_sprint.count_weekly_progress_average(@learner)%</td> %>
+            <%# </tr> %>
           </tbody>
         </table>
       </div>

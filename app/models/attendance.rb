@@ -1,3 +1,5 @@
 class Attendance < ApplicationRecord
   belongs_to :user
+  belongs_to :week
+  belongs_to :weekly_goal, optional: true
 end

@@ -20,7 +20,7 @@ module GenerateTopicDeadlines
 
   def moodle_generate_topic_deadlines(timeline)
     # Preload all topics in order and their corresponding user_topics for the current user.
-    moodle_topics = timeline.moodle_topics.order(:id)
+    moodle_topics = timeline.moodle_topics.where(hidden: false).order(:id)
 
     working_days = calculate_working_days(timeline)
     moodle_distribute_deadlines(moodle_topics, working_days)
@@ -81,12 +81,12 @@ module GenerateTopicDeadlines
 
   def moodle_assign_mock_deadlines(timeline)
     # Assign mock50 deadline
-    if (mock50_topic = timeline.moodle_topics.find_by(mock50: true))
+    if (mock50_topic = timeline.moodle_topics.where(hidden: false).find_by(mock50: true))
       timeline.mock50 = mock50_topic
     end
 
     # Assign mock100 deadline
-    if (mock100_topic = timeline.moodle_topics.find_by(mock100: true))
+    if (mock100_topic = timeline.moodle_topics.where(hidden: false).find_by(mock100: true))
       timeline.mock100 = mock100_topic
     end
 
