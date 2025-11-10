@@ -37,6 +37,7 @@ class ConsentsController < ApplicationController
         Rails.logger.debug "After populate - emergency contact name: #{@bw_consent.emergency_contact_name}" if Rails.env.development?
       end
     end
+    @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
   end
 
   def create_build_week

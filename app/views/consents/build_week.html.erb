@@ -3,7 +3,7 @@
   <%= form_with model: @bw_consent, url: build_week_consents_path(learner_id: @learner&.id), method: :post, local: true, data: { controller: 'consent-form' } do |f| %>
     <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
       <h1><%= @nearest_build_week.name %> Consent Form</h1>
-      <h1><%= @current_sprint.start_date.strftime('%Y') %> <%= @current_sprint.name %></h1>
+      <h1><%= @nearest_build_week.sprint.start_date.strftime('%Y') %> <%= @nearest_build_week.sprint.name %></h1>
     </div>
 
 
@@ -12,7 +12,7 @@
         Dear BRAVE parents,
       </p>
       <p>
-        The <strong><%= @bw_consent.hub || @hub %></strong> Hub will be partaking in the <%= @current_sprint.name %> Build Week which is scheduled to take place during the week of <%= @bw_consent.start_date || @nearest_build_week.start_date.strftime('%d %B, %Y') %> to <%= @bw_consent.end_date || @nearest_build_week.end_date.strftime('%d %B, %Y') %>.
+        The <strong><%= @bw_consent.hub || @hub %></strong> Hub will be partaking in the <%= @nearest_build_week.sprint.name %> Build Week which is scheduled to take place during the week of <%= @bw_consent.start_date || @nearest_build_week.start_date.strftime('%d %B, %Y') %> to <%= @bw_consent.end_date || @nearest_build_week.end_date.strftime('%d %B, %Y') %>.
       </p>
       <p>
         Brave Generation Academy aims to keep its three pillars – Knowledge, Skills, and Community - at the forefront when planning the activities for every Build Week. Learners are encouraged to attend all the activities of the Hub during this week since the cohesion of the group within a Hub is fundamental to the success of both the group and the individuals. The goal of each Build Week is to grow the Hub closer together – it places the group above the individual. It is thus a great opportunity to reinforce comradeship and a sense of belonging.
