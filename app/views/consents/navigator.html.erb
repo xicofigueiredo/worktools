@@ -25,7 +25,7 @@
     <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
 
       <div>
-        <h1><%= @current_build_week.start_date.strftime('%Y') %> <%= @current_build_week.name %></h1>
+        <h1><%= @current_build_week.name %></h1>
       </div>
 
       <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
@@ -49,7 +49,7 @@
       </div>
 
       <div>
-        <h1><%= @current_build_week.sprint.name %></h1>
+        <h1><%= @current_build_week.start_date.strftime('%Y') %> <%= @current_build_week.sprint.name %></h1>
       </div>
     </div>
 

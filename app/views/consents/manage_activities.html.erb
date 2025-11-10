@@ -39,7 +39,7 @@
     </div>
 
     <div>
-      <h1><%= @current_build_week.sprint.name %></h1>
+      <h1><%= @current_build_week.start_date.strftime('%Y') %> <%= @current_build_week.sprint.name %></h1>
     </div>
   </div>
 

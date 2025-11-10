@@ -1,7 +1,11 @@
 
 <div class="container mt-4">
   <%= form_with model: @bw_consent, url: build_week_consents_path(learner_id: @learner&.id), method: :post, local: true, data: { controller: 'consent-form' } do |f| %>
-    <h1 class="mb-3"><%= @current_sprint.start_date.strftime('%Y') %> <%= @current_sprint.name %> <%= @nearest_build_week.name %> Consent Form</h1>
+    <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+      <h1><%= @nearest_build_week.name %> Consent Form</h1>
+      <h1><%= @current_sprint.start_date.strftime('%Y') %> <%= @current_sprint.name %></h1>
+    </div>
+
 
     <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
       <p>
