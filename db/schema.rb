@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_10_121641) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_10_195507) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -177,6 +177,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_10_121641) do
     t.index ["day"], name: "index_consent_activities_on_day"
     t.index ["hub_id"], name: "index_consent_activities_on_hub_id"
     t.index ["week_id"], name: "index_consent_activities_on_week_id"
+  end
+
+  create_table "consent_study_hubs", force: :cascade do |t|
+    t.string "monday"
+    t.string "tuesday"
+    t.string "wednesday"
+    t.string "thursday"
+    t.string "friday"
+    t.bigint "week_id", null: false
+    t.bigint "hub_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["hub_id"], name: "index_consent_study_hubs_on_hub_id"
+    t.index ["week_id"], name: "index_consent_study_hubs_on_week_id"
   end
 
   create_table "consents", force: :cascade do |t|
@@ -1051,6 +1065,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_10_121641) do
   add_foreign_key "confirmations", "users", column: "approver_id"
   add_foreign_key "consent_activities", "hubs"
   add_foreign_key "consent_activities", "weeks"
+  add_foreign_key "consent_study_hubs", "hubs"
+  add_foreign_key "consent_study_hubs", "weeks"
   add_foreign_key "consents", "sprints"
   add_foreign_key "consents", "users"
   add_foreign_key "consents", "weeks"

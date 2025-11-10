@@ -7,6 +7,7 @@ class Week < ApplicationRecord
   has_many :timeline_progresses
   has_many :consents, dependent: :nullify
   has_many :consent_activities, dependent: :destroy
+  has_many :consent_study_hubs, dependent: :destroy
 
   def week_name_abbr
     if (match = name.match(/\AWeek (\d+)(?: \/ Build Week)?\z/))

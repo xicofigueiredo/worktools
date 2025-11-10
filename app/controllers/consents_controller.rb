@@ -251,6 +251,7 @@ class ConsentsController < ApplicationController
 
     # Get available hubs for the current user
     @available_hubs = current_user.hubs.order(:name)
+    @all_hubs = Hub.order(:name) # All hubs for the study hub dropdown
 
     # Get selected hub (default to main hub)
     selected_hub_id = params[:hub_id].presence || current_user.main_hub&.id
@@ -258,6 +259,9 @@ class ConsentsController < ApplicationController
 
     # Find consent activities for the selected hub and build week
     @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
+
+    # Find or initialize consent study hub for this week
+    @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id)
   end
 
   def update_activities
@@ -317,14 +321,27 @@ class ConsentsController < ApplicationController
       end
     end
 
+    # Process consent study hub - always try to save, even if params are empty
+    study_hub_params = params.fetch(:consent_study_hub, {}).permit(:monday, :tuesday, :wednesday, :thursday, :friday, :hub_id)
+    @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id)
+    @consent_study_hub.assign_attributes(study_hub_params)
+    @consent_study_hub.week_id = @current_build_week.id
+    # Set hub_id to selected hub if not provided (required by model)
+    @consent_study_hub.hub_id = selected_hub&.id if @consent_study_hub.hub_id.blank?
+    unless @consent_study_hub.save
+      errors.concat(@consent_study_hub.errors.full_messages)
+    end
+
     if errors.empty?
       redirect_to navigator_consents_path(date: @current_build_week.start_date, hub_id: selected_hub_id), notice: "Activities saved successfully."
     else
       @available_hubs = current_user.hubs.order(:name)
+      @all_hubs = Hub.order(:name)
       @selected_hub = selected_hub
       @prev_build_week = Week.where("start_date < ? AND name ILIKE ?", @current_build_week.start_date, "%Build%").order(start_date: :desc).first
       @next_build_week = Week.where("start_date > ? AND name ILIKE ?", @current_build_week.end_date, "%Build%").order(:start_date).first
       @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
+      @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id)
       flash.now[:alert] = errors.join(", ")
       render :manage_activities, status: :unprocessable_entity
     end
