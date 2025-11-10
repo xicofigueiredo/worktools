@@ -53,13 +53,14 @@
       </div>
     </div>
 
-    <div class="d-flex justify-content-end mb-3">
-      <%= link_to "Manage Activities", manage_activities_consents_path(date: @current_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-primary", style: "border-radius: 10px;" %>
-    </div>
-
     <!-- Activities Table -->
     <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
-      <h3 class="mb-3">Activities during Build Week</h3>
+      <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+        <h3 class="mb-3">Activities during Build Week</h3>
+        <div class="d-flex justify-content-end mb-3">
+          <%= link_to "Edit Activities", manage_activities_consents_path(date: @current_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-primary", style: "border-radius: 10px;" %>
+        </div>
+      </div>
 
       <% if @consent_activities&.any? %>
         <div class="table-responsive">
