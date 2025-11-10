@@ -198,21 +198,27 @@
         <% end %>
       <% end %>
     <% elsif attr_sym == :hub_id %>
-      <%# Special handler for hub_id with dynamic options %>
+      <%# Dynamic hub select with forced blank + online/hybrid hubs only %>
       <% select_classes = disabled_flag ? "form-select" : "form-select editable-input" %>
-      <% current_programme = f.object.programme %>
+      <% current_programme = f.object.programme.presence || "Online" %>
       <% hub_choices = hub_options_by_programme[current_programme] || [] %>
+
+      <%# Build options HTML manually to force blank + preserve current value if not in list %>
+      <% options_html = "<option value=\"\">#{opts[:prompt] || 'Select Hub'}</option>" %>
+      <% options_html += options_for_select(hub_choices, selected: f.object.hub_id) %>
+
       <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
         <%= f.label(attr, label) %>
-        <%= f.select(attr, hub_choices, { prompt: opts[:prompt] || 'Select Hub' }, {
-          class: select_classes,
-          disabled: disabled_flag,
-          id: 'learner_info_hub_id',
-          data: {
-            'online-hubs': hub_options_by_programme['Online'].to_json,
-            'hybrid-hubs': hub_options_by_programme['Hybrid'].to_json
-          }
-        }) %>
+        <%= f.select attr,
+              options_html.html_safe,
+              {},
+              class: select_classes,
+              disabled: disabled_flag,
+              id: 'learner_info_hub_id',
+              data: {
+                'online-hubs': hub_options_by_programme['Online'].to_json,
+                'hybrid-hubs': hub_options_by_programme['Hybrid'].to_json
+              } %>
       <% end %>
     <% else %>
       <% case type %>
@@ -538,7 +544,7 @@
                       <div class="form-control-plaintext" data-curriculum-pricing-target="newMonthly"></div>
                     </div>
                   </div>
-                  <div class="row mb-3">
+                  <div class="row mb-4">
                     <div class="col-md-6">
                       <label class="form-label">Discount (%)</label>
                       <input type="number" class="form-control" data-curriculum-pricing-target="discountMfInput" onchange="window.curriculumPricingController?.calculateBillables()" step="0.01" min="0" max="100">
@@ -548,7 +554,7 @@
                       <input type="number" class="form-control" data-curriculum-pricing-target="scholarshipInput" onchange="window.curriculumPricingController?.calculateBillables()" step="0.01" min="0" max="100">
                     </div>
                   </div>
-                  <div class="alert alert-secondary mb-0">
+                  <div class="alert alert-secondary ms-3 mb-0">
                     <strong>Billable Monthly Fee:</strong> <span id="billable-mf"></span>
                   </div>
                 </div>
@@ -570,13 +576,13 @@
                       <div class="form-control-plaintext" data-curriculum-pricing-target="newAdmission"></div>
                     </div>
                   </div>
-                  <div class="row mb-3">
+                  <div class="row mb-4">
                     <div class="col-md-6">
                       <label class="form-label">Discount (%)</label>
                       <input type="number" class="form-control" data-curriculum-pricing-target="discountAfInput" onchange="window.curriculumPricingController?.calculateBillables()" step="0.01" min="0" max="100">
                     </div>
                   </div>
-                  <div class="alert alert-secondary mb-0">
+                  <div class="alert alert-secondary ms-3 mb-0">
                     <strong>Billable Admission Fee:</strong> <span id="billable-af"></span>
                   </div>
                 </div>
@@ -598,13 +604,13 @@
                       <div class="form-control-plaintext" data-curriculum-pricing-target="newRenewal"></div>
                     </div>
                   </div>
-                  <div class="row mb-3">
+                  <div class="row mb-4">
                     <div class="col-md-6">
                       <label class="form-label">Discount (%)</label>
                       <input type="number" class="form-control" data-curriculum-pricing-target="discountRfInput" onchange="window.curriculumPricingController?.calculateBillables()" step="0.01" min="0" max="100">
                     </div>
                   </div>
-                  <div class="alert alert-secondary mb-0">
+                  <div class="alert alert-secondary ms-3 mb-0">
                     <strong>Billable Renewal Fee:</strong> <span id="billable-rf"></span>
                   </div>
                 </div>
@@ -963,6 +969,7 @@
       form.addEventListener('submit', function(e) {
         if (!hubSelect.value || hubSelect.value === '') {
           e.preventDefault();
+          e.stopImmediatePropagation();
           hubSelect.classList.add('is-invalid');
 
           // Add or update error message

@@ -517,6 +517,39 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
+  def self.inactivate_expired!(run_at: Time.current)
+    today = run_at.to_date
+
+    # Find learners whose end_date passed AND status is still active
+    expired = where(
+      "end_date IS NOT NULL AND end_date < ? AND status NOT IN (?)",
+      today,
+      INACTIVE_STATUSES
+    )
+
+    updated_count = 0
+
+    expired.find_each do |learner|
+      old_status = learner.status
+      learner.update_column(:status, "Inactive")   # bypass callbacks for speed
+      learner.log_update(
+        nil,
+        { "status" => [old_status, "Inactive"] },
+        note: "Automated nightly inactivation – end_date #{learner.end_date} passed"
+      )
+      Rails.logger.info(
+        "[LearnerInfo##{learner.id}] Status changed #{old_status} → Inactive (end_date: #{learner.end_date})"
+      )
+      updated_count += 1
+    end
+
+    Rails.logger.info(
+      "[LearnerInfo.inactivate_expired!] Processed #{expired.size} expired learners – #{updated_count} updated."
+    )
+
+    updated_count
+  end
+
   private
 
   def status_was_waitlist_ok?
