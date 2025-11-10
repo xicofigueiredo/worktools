@@ -148,38 +148,50 @@ class HubspotService
   end
 
   def self.associate_hub(learner_info, fields)
+    # 1. Try the explicit HubSpot key first
     hubspot_key = fields[:hub_interest_portugal]
-
     if hubspot_key.present?
       hub = Hub.find_by(hubspot_key: hubspot_key)
       if hub
         learner_info.update!(hub_id: hub.id)
-        Rails.logger.info("Associated hub '#{hub.name}' (ID: #{hub.id}) with LearnerInfo ID: #{learner_info.id}")
+        Rails.logger.info(
+          "Associated hub '#{hub.name}' (ID: #{hub.id}) with LearnerInfo ID: #{learner_info.id}"
+        )
       else
-        Rails.logger.warn("No hub found for hubspot_key: #{hubspot_key} - LearnerInfo ID: #{learner_info.id} remains without hub association.")
+        Rails.logger.warn(
+          "No hub found for hubspot_key: #{hubspot_key} - LearnerInfo ID: #{learner_info.id} remains without hub association."
+        )
       end
       return
     end
 
-    form_email = fields[:email]
-    remote_region = fetch_contact_remote_region(form_email)
-    region_display = remote_region || '(not defined)'
-    Rails.logger.info("ONLINE LEARNER ASSOCIATION: #{region_display} for learner ID #{learner_info.id} (email: #{form_email})")
+    # 2. No HubSpot key → try to infer from contact's remote region
+    form_email      = fields[:email]
+    remote_region   = fetch_contact_remote_region(form_email)
+    region_display  = remote_region || '(not defined)'
 
-    target_hub_name =
-      if remote_region.blank?
-        'Undetermined'
-      else
-        m = remote_region.to_s.strip.match(/region\s*([1-3])\b/i)
-        "Remote #{m[1].to_i}"
-      end
-    target_hub = Hub.find_by(name: target_hub_name)
+    Rails.logger.info(
+      "ONLINE LEARNER ASSOCIATION: #{region_display} for learner ID #{learner_info.id} (email: #{form_email})"
+    )
+
+    return if remote_region.blank?
+
+    # 3. Build the expected hub name
+    m = remote_region.to_s.strip.match(/region\s*([1-3])\b/i)
+    return unless m
+
+    target_hub_name = "Remote #{m[1].to_i}"
+    target_hub      = Hub.find_by(name: target_hub_name)
 
     if target_hub
       learner_info.update!(hub_id: target_hub.id)
-      Rails.logger.info("Associated '#{target_hub_name}' hub (ID: #{target_hub.id}) with LearnerInfo ID: #{learner_info.id}. (remote_region: #{region_display})")
+      Rails.logger.info(
+        "Associated '#{target_hub_name}' hub (ID: #{target_hub.id}) with LearnerInfo ID: #{learner_info.id}. (remote_region: #{region_display})"
+      )
     else
-      Rails.logger.warn("No '#{target_hub_name}' hub found - LearnerInfo ID: #{learner_info.id} remains without hub association. (remote_region: #{region_display})")
+      Rails.logger.warn(
+        "No '#{target_hub_name}' hub found - LearnerInfo ID: #{learner_info.id} remains without hub association. (remote_region: #{region_display})"
+      )
     end
   end
 
