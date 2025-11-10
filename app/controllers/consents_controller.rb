@@ -38,6 +38,7 @@ class ConsentsController < ApplicationController
       end
     end
     @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
+    @consent_study_hub = ConsentStudyHub.find_by(week_id: @nearest_build_week&.id)
   end
 
   def create_build_week
@@ -197,10 +198,14 @@ class ConsentsController < ApplicationController
 
       # Find consent activities for the selected hub and build week
       @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
+
+      # Find consent study hub for this week
+      @consent_study_hub = ConsentStudyHub.find_by(week_id: @current_build_week.id)
     else
       @prev_build_week = nil
       @next_build_week = nil
       @consent_activities = []
+      @consent_study_hub = nil
       @available_hubs = current_user.hubs.order(:name)
       @selected_hub = current_user.main_hub || @available_hubs.first
     end
