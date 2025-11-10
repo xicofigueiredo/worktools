@@ -318,7 +318,7 @@ class ConsentsController < ApplicationController
     end
 
     if errors.empty?
-      redirect_to manage_activities_consents_path(date: @current_build_week.start_date, hub_id: selected_hub_id), notice: "Activities saved successfully."
+      redirect_to navigator_consents_path(date: @current_build_week.start_date, hub_id: selected_hub_id), notice: "Activities saved successfully."
     else
       @available_hubs = current_user.hubs.order(:name)
       @selected_hub = selected_hub

@@ -35,15 +35,14 @@ export default class extends Controller {
         // Mark the row for destruction
         const destroyField = row.querySelector('input[name*="[_destroy]"]');
         if (destroyField) {
-          destroyField.value = true;
+          destroyField.value = "true";
         }
+        // Hide the row instead of removing it, so the _destroy field is still submitted
+        row.style.display = "none";
       } else {
-        // For new rows (no ID), just remove them
+        // For new rows (no ID), just remove them since they're not in the database yet
         row.remove();
-        return;
       }
-
-      row.remove();
     }
   }
 }
