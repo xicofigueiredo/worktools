@@ -11,7 +11,7 @@ class ConsentsController < ApplicationController
     # Find the nearest build week week.name.include?("Build") and start_date is before or equal to Date.today
     @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     bw_existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
-
+    
     if bw_existing
       @bw_consent = bw_existing
     else
@@ -53,18 +53,30 @@ class ConsentsController < ApplicationController
     unless over_confirmed || under_confirmed || approver_present
       @bw_consent = Consent.new
       flash.now[:alert] = "Please tick one of the confirmations or fill the name field."
+      # Set required instance variables for the view
+      @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+      @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
+      @consent_study_hub = ConsentStudyHub.find_by(week_id: @nearest_build_week&.id)
       render :build_week and return
     end
 
-    @nearest_build_week = Week.where("end_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+    # Use the same query as build_week to ensure consistency
+    @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
 
     consent_attrs = consent_params.merge(user: @learner, week: @nearest_build_week, hub: @learner.main_hub&.name)
 
+    # Explicitly convert checkbox values to booleans
+    # Rails checkboxes send "1" for checked, "0" or nothing for unchecked
+    consent_attrs[:confirmation_over_18] = params.dig(:consent, :confirmation_over_18) == '1'
+    consent_attrs[:confirmation_under_18] = params.dig(:consent, :confirmation_under_18) == '1'
+
     if existing
+      # If there's an existing consent, update it with the form values
       @bw_consent = existing
       @bw_consent.assign_attributes(consent_attrs)
     else
+      # First time filling - create new consent (fields already pre-populated from last consent in build_week method)
       @bw_consent = Consent.new(consent_attrs)
     end
 
@@ -72,6 +84,9 @@ class ConsentsController < ApplicationController
       redirect_to learner_profile_path(@learner), notice: "Consent saved."
     else
       flash.now[:alert] = @bw_consent.errors.full_messages.to_sentence
+      # Set required instance variables for the view when rendering after error
+      @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
+      @consent_study_hub = ConsentStudyHub.find_by(week_id: @nearest_build_week&.id)
       render :build_week
     end
   end
