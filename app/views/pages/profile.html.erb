@@ -38,6 +38,7 @@
                 Build Week Consent <i class="fa-solid fa-check"></i>
               <% end %>
             <% else %>
+            <% raise %>
               <%= link_to build_week_consents_path(learner_id: @learner.id), class: "btn btn-danger", style: "border-radius: 10px;" do %>
                 Build Week Consent <i class="fa-solid fa-xmark"></i>
               <% end %>

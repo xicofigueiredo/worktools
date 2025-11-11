@@ -196,7 +196,7 @@ class PagesController < ApplicationController
       @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
 
       @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
-      @bw_consent = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
+      @bw_consent = Consent.where(user_id: @learner.id, sprint_id: nil).order(created_at: :desc).first
 
       get_kda_averages(@learner.kdas, @current_sprint)
       redirect_to some_fallback_path, alert: "Learner not found." unless @learner
@@ -239,7 +239,7 @@ class PagesController < ApplicationController
 
 
     @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
-    @bw_consent = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
+    @bw_consent = Consent.where(user_id: @learner.id, sprint_id: nil).order(created_at: :desc).first
     @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
     # The bulk of the setup is already handled in prepare_dashboard_data.
   end
