@@ -125,6 +125,7 @@ class UserMailer < Devise::Mailer
     # --- Recipient & subject ---
     to      = @parent_emails
     subject = "Onboarding Day - #{@learner.full_name}"
+    attachments['Calendar.pdf'] = File.read(Rails.root.join('public', 'documents', 'calendar_2025.pdf'))
 
     if template.start_with?('onboarded_up_')
       to      = @learner_email
@@ -150,6 +151,23 @@ class UserMailer < Devise::Mailer
         @mentor_name = "Aubrey Stout"
         @mentor_email = "aubrey.stout@etacollege.com"
       end
+
+      # UP-specific document with dynamic learner name
+      # attachments['up_welcome_letter.pdf'] = generate_personalized_pdf(
+      #   template_path: Rails.root.join('public', 'documents', 'templates', 'up_welcome_template.pdf'),
+      #   learner_name: @learner.full_name
+      # )
+
+    else
+      # Non-UP specific documents
+      # attachments['standard_welcome_letter.pdf'] = generate_personalized_pdf(
+      #   template_path: Rails.root.join('public', 'documents', 'templates', 'standard_welcome_template.pdf'),
+      #   learner_name: @learner.full_name
+      # )
+
+      attachments['Handbook.pdf'] = File.read(Rails.root.join('public', 'documents', 'handbook.pdf'))
+
+      attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
     end
 
     # --- Send email ---
