@@ -199,8 +199,8 @@ class ConsentsController < ApplicationController
       # Find consent activities for the selected hub and build week
       @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
 
-      # Find consent study hub for this week
-      @consent_study_hub = ConsentStudyHub.find_by(week_id: @current_build_week.id)
+      # Find consent study hub for this week and selected hub
+      @consent_study_hub = ConsentStudyHub.find_by(week_id: @current_build_week.id, hub_id: @selected_hub&.id)
     else
       @prev_build_week = nil
       @next_build_week = nil
@@ -265,8 +265,8 @@ class ConsentsController < ApplicationController
     # Find consent activities for the selected hub and build week
     @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
 
-    # Find or initialize consent study hub for this week
-    @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id)
+    # Find or initialize consent study hub for this week and selected hub
+    @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id, hub_id: @selected_hub&.id)
   end
 
   def update_activities
@@ -328,11 +328,16 @@ class ConsentsController < ApplicationController
 
     # Process consent study hub - always try to save, even if params are empty
     study_hub_params = params.fetch(:consent_study_hub, {}).permit(:monday, :tuesday, :wednesday, :thursday, :friday, :hub_id)
-    @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id)
+
+    # Always set hub_id to the selected hub from the dropdown (required by model)
+    selected_hub_id = selected_hub&.id
+
+    # Find or initialize by both week_id and hub_id to create separate records for each hub
+    @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id, hub_id: selected_hub_id)
     @consent_study_hub.assign_attributes(study_hub_params)
     @consent_study_hub.week_id = @current_build_week.id
-    # Set hub_id to selected hub if not provided (required by model)
-    @consent_study_hub.hub_id = selected_hub&.id if @consent_study_hub.hub_id.blank?
+    @consent_study_hub.hub_id = selected_hub_id
+
     unless @consent_study_hub.save
       errors.concat(@consent_study_hub.errors.full_messages)
     end
