@@ -130,20 +130,25 @@ class UserMailer < Devise::Mailer
       to      = @learner_email
       subject = "Welcome to the UP Program!"
 
-      # --- Hard-coded mentors ---
+      @platform_details = "Username: #{@learner.platform_username}\nPassword: #{@learner.platform_password}"
+
+      # --- Assign mentors based on program and level ---
       case up_program
-        when 'business'
-          @mentor_name = "Placeholder"
-          @mentor_email = "Placeholder"
-          @platform_details = "Placeholder"
-        when 'computing'
-          @mentor_name = "Placeholder"
-          @mentor_email = "Placeholder"
-          @platform_details = "Placeholder"
-        when 'sports'
-          @mentor_name = "Placeholder"
-          @mentor_email = "Placeholder"
-          @platform_details = "Placeholder"
+      when 'business'
+        # Business mentors differ by level
+        if @learner.grade_year == 'Level 4'
+          @mentor_name = "Rafael Escobar"
+          @mentor_email = "rafael.escobar@edubga.com"
+        else
+          @mentor_name = "Vanessa Gomes"
+          @mentor_email = "vanessa.gomes@edubga.com"
+        end
+      when 'computing'
+        @mentor_name = "Cameron Dorning"
+        @mentor_email = "cameron.dorning@genexinstitute.com"
+      when 'sports'
+        @mentor_name = "Aubrey Stout"
+        @mentor_email = "aubrey.stout@etacollege.com"
       end
     end
 
