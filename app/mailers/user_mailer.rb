@@ -152,11 +152,13 @@ class UserMailer < Devise::Mailer
         @mentor_email = "aubrey.stout@etacollege.com"
       end
 
-      # UP-specific document with dynamic learner name
-      # attachments['up_welcome_letter.pdf'] = generate_personalized_pdf(
-      #   template_path: Rails.root.join('public', 'documents', 'templates', 'up_welcome_template.pdf'),
-      #   learner_name: @learner.full_name
-      # )
+      credentials = @learner.learner_documents.find_by(document_type: 'credentials')
+      if credentials&.file&.attached?
+        attachments["Credentials_Document.pdf"] = {
+          mime_type: credentials.file.blob.content_type,
+          content:   credentials.file.download
+        }
+      end
 
     else
       # Non-UP specific documents

@@ -9,6 +9,7 @@ class LearnerDocument < ApplicationRecord
     medical_form
     letter_of_interest
     picture
+    credentials
   ].freeze
 
   belongs_to :learner_info
