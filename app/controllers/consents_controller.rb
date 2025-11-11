@@ -9,7 +9,7 @@ class ConsentsController < ApplicationController
       redirect_back fallback_location: root_path, alert: "Learner not found" and return
     end
     # Find the nearest build week week.name.include?("Build") and start_date is before or equal to Date.today
-    @nearest_build_week = Week.where("start_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+    @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     bw_existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
 
     if bw_existing
@@ -56,7 +56,7 @@ class ConsentsController < ApplicationController
       render :build_week and return
     end
 
-    @nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+    @nearest_build_week = Week.where("end_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
 
     consent_attrs = consent_params.merge(user: @learner, week: @nearest_build_week, hub: @learner.main_hub&.name)

@@ -26,7 +26,7 @@
                 Sprint Consent <i class="fa-solid fa-xmark"></i>
               <% end %>
             <% end %>
-            <% if @activities %>
+            <% if @activities.any? %>
               <% if @bw_consent.present? && (@bw_consent.confirmation_over_18 || @bw_consent.confirmation_under_18) %>
                 <%= link_to build_week_consents_path(learner_id: @learner.id), class: "btn btn-success", style: "border-radius: 10px;" do %>
                   Build Week Consent <i class="fa-solid fa-check"></i>
