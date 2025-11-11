@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_10_121641) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_11_142726) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -556,6 +556,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_10_121641) do
     t.boolean "data_validated", default: false
     t.bigint "learning_coach_id"
     t.string "hubspot_conversion_id"
+    t.string "platform_username"
+    t.string "platform_password"
     t.index ["hub_id"], name: "index_learner_infos_on_hub_id"
     t.index ["institutional_email"], name: "index_learner_infos_on_institutional_email"
     t.index ["learning_coach_id"], name: "index_learner_infos_on_learning_coach_id"

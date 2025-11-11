@@ -275,17 +275,19 @@ class LearnerInfo < ApplicationRecord
   end
 
   def calculate_status
-    learner_documents.reload
+  learner_documents.reload
 
-    has_notes = onboarding_meeting_notes.present?
-    has_contract = learner_documents.exists?(document_type: 'contract')
-    has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
-    has_documents = has_contract && has_proof
-    has_start_date = start_date.present?
-    has_started = has_start_date && start_date <= Date.today
-    end_date_passed = end_date.present? && end_date < Date.today
+  has_notes = onboarding_meeting_notes.present?
+  has_contract = learner_documents.exists?(document_type: 'contract')
+  has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
+  has_documents = has_contract && has_proof
+  has_start_date = start_date.present?
+  has_started = has_start_date && start_date <= Date.today
+  end_date_passed = end_date.present? && end_date < Date.today
+  is_up_curriculum = curriculum_course_option.to_s.strip.downcase.start_with?('up')
+  has_platform_info = platform_username.present? && platform_password.present?
 
-    case status
+  case status
     when "Inactive"
       if !end_date_passed && has_active_account
         "Active"
@@ -294,7 +296,7 @@ class LearnerInfo < ApplicationRecord
       end
     when "Active"
       if end_date_passed
-      "Inactive"
+        "Inactive"
       elsif !has_started && has_start_date
         "Onboarded"
       elsif !has_started && !has_start_date
@@ -305,21 +307,31 @@ class LearnerInfo < ApplicationRecord
     when "Onboarded"
       if has_started
         "Active"
-      elsif !has_start_date
+      elsif !has_start_date || !has_platform_info
         "Validated"
       else
         "Onboarded"
       end
     when "Validated"
-      if has_start_date
+      if has_start_date && has_platform_info
         "Onboarded"
       elsif !has_documents
-        status_was_waitlist_ok? ? "Waitlist - ok" : "In progress - ok"
+        if is_up_curriculum
+          status_was_waitlist_ok? ? "Waitlist" : "In progress"
+        else
+          status_was_waitlist_ok? ? "Waitlist - ok" : "In progress - ok"
+        end
       else
         "Validated"
       end
     when "In progress - ok"
-      if !has_notes
+      if is_up_curriculum
+        if has_documents
+          "Validated"
+        else
+          "In progress"
+        end
+      elsif !has_notes
         "In progress"
       elsif has_documents
         "Validated"
@@ -329,18 +341,18 @@ class LearnerInfo < ApplicationRecord
     when "Waitlist - ok"
       if !has_notes
         "Waitlist"
-      elsif has_documents
-        "Validated"
       else
         "Waitlist - ok"
       end
     when "In progress"
       if !data_validated
         "In progress conditional"
-      elsif has_notes
-        "In progress - ok"
       else
-        "In progress"
+        if is_up_curriculum
+          has_documents ? "Validated" : "In progress"
+        else
+          has_notes ? "In progress - ok" : "In progress"
+        end
       end
     when "In progress conditional"
       data_validated ? "In progress" : "In progress conditional"
@@ -364,7 +376,7 @@ class LearnerInfo < ApplicationRecord
   end
 
   def admissions_users
-    [User.find_by(email: "admissions@bravegenerationacademy.com")].compact
+    [User.find_by(email: 'guilherme@bravegenerationacademy.com')].compact #[User.find_by(email: "admissions@bravegenerationacademy.com")].compact
   end
 
   def finance_users
@@ -377,7 +389,7 @@ class LearnerInfo < ApplicationRecord
     when curr.include?('portuguese')
       User.where(email: ['luis@bravegenerationacademy.com', 'goncalo.meireles@edubga.com']).to_a
     when curr.start_with?('up')
-      [User.find_by(email: 'esther@bravegenerationacademy.com')].compact
+      [User.find_by(email: 'guilherme@bravegenerationacademy.com')].compact # [User.find_by(email: 'esther@bravegenerationacademy.com')].compact
     else
       [User.find_by(email: 'danielle@bravegenerationacademy.com')].compact
     end
@@ -470,14 +482,45 @@ class LearnerInfo < ApplicationRecord
   def send_status_notification(new_status)
     case new_status
     when "In progress conditional"
-      message = "New Learner has filled the application forms."
-      notify_recipients(admissions_users, message)
+      curr = curriculum_course_option.to_s.strip.downcase
+      link = Rails.application.routes.url_helpers.admission_url(self)
+
+      if curr.start_with?('up')
+        responsible = curriculum_responsibles
+        message = "New enrolment for UP. Please validate the data please. Check profile here: #{link}"
+        subject = "New Enrolment for UP"
+
+        responsible.each do |user|
+          UserMailer.admissions_notification(user, message, subject).deliver_now
+        end
+
+        Rails.logger.info("[LearnerInfo##{id}] Sent UP enrolment email notification to #{responsible.size} curriculum responsible(s).")
+      else
+        message = "New Learner has filled the application forms."
+        notify_recipients(admissions_users, message)
+      end
     when "In progress"
       message = "#{full_name} is enrolling for: #{hub&.name}. Check the profile on the link."
       notify_recipients(learning_coaches + finance_users, message)
 
-      curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
-      notify_recipients(curriculum_responsibles, curr_message)
+      curr = curriculum_course_option.to_s.strip.downcase
+      link = Rails.application.routes.url_helpers.admission_url(self)
+
+      if curr.start_with?('up')
+        adm_message = "New learner for UP has been validated. Check Profile here: #{link}"
+        subject = "New Learner for UP Validated"
+
+        notify_recipients(admissions_users, adm_message)
+
+        admissions_users.each do |user|
+          UserMailer.admissions_notification(user, adm_message, subject).deliver_now
+        end
+
+        Rails.logger.info("[LearnerInfo##{id}] Sent UP validation notification and email to #{admissions_users.size} admissions user(s).")
+      else
+        curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
+        notify_recipients(curriculum_responsibles, curr_message)
+      end
 
       rm_message = "#{full_name} is enrolling for: #{hub&.name}."
       notify_recipients(regional_manager, rm_message)
