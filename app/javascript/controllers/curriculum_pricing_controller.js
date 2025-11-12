@@ -60,13 +60,172 @@ export default class extends Controller {
     }
   }
 
+  validateRequiredFields(formData) {
+    const errors = []
+
+    // Get field values
+    const programme = formData.get('learner_info[programme]')
+    const hubId = formData.get('learner_info[hub_id]')
+    const curriculum = formData.get('learner_info[curriculum_course_option]')
+    const gradeYear = formData.get('learner_info[grade_year]')
+    const learningCoachId = formData.get('learner_info[learning_coach_id]')
+
+    // Get DOM elements for error display
+    const programmeSelect = this.form.querySelector('select[name="learner_info[programme]"]')
+    const hubSelect = this.form.querySelector('select[name="learner_info[hub_id]"]')
+    const curriculumSelect = this.form.querySelector('select[name="learner_info[curriculum_course_option]"]')
+    const gradeSelect = this.form.querySelector('select[name="learner_info[grade_year]"]')
+    const lcField = this.form.querySelector('#learning-coach-field')
+    const lcDisplayInput = this.form.querySelector('#learning-coach-display')
+
+    // Clear previous errors
+    this.clearAllErrors()
+
+    // Validate programme
+    if (!programme || programme === '') {
+      errors.push({ field: programmeSelect, message: 'Please select a programme.' })
+    }
+
+    // Validate hub
+    if (!hubId || hubId === '') {
+      errors.push({ field: hubSelect, message: 'Please select a hub.' })
+    }
+
+    // Validate curriculum
+    if (!curriculum || curriculum === '') {
+      errors.push({ field: curriculumSelect, message: 'Please select a curriculum/course option.' })
+    }
+
+    // Validate grade/year
+    if (!gradeYear || gradeYear === '') {
+      errors.push({ field: gradeSelect, message: 'Please select a Grade/Year.' })
+    }
+
+    // Validate learning coach (only if programme is Online)
+    if (programme === 'Online') {
+      if (!learningCoachId || learningCoachId === '') {
+        // Use the visible display input for error display
+        errors.push({ field: lcDisplayInput, message: 'Please assign a Learning Coach.', isLearningCoach: true })
+      }
+    }
+
+    // Display errors if any
+    if (errors.length > 0) {
+      errors.forEach(error => {
+        this.showError(error.field, error.message, error.isLearningCoach)
+      })
+
+      // Scroll to first error
+      const firstError = this.form.querySelector('.is-invalid')
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+
+      return false
+    }
+
+    return true
+  }
+
+  showError(element, message, isLearningCoach = false) {
+    if (!element) return
+
+    // For learning coach field, we need special handling since it's an input group
+    if (isLearningCoach) {
+      // The structure is: div.mb-3.col-md-6 > label + div.input-group > input + button
+      // We need to find the parent div.mb-3 to append the error message
+      const lcFieldContainer = element.closest('.mb-3')
+      if (!lcFieldContainer) {
+        console.error('Could not find Learning Coach field container')
+        return
+      }
+
+      // Remove any existing error message first
+      const existingError = lcFieldContainer.querySelector('.invalid-feedback')
+      if (existingError) existingError.remove()
+
+      // Create and append new error message
+      const errorMsg = document.createElement('div')
+      errorMsg.className = 'invalid-feedback'
+      errorMsg.style.display = 'block'
+      errorMsg.textContent = message
+      lcFieldContainer.appendChild(errorMsg)
+
+      // Add invalid class to the input
+      element.classList.add('is-invalid')
+
+      // Also highlight the button
+      const inputGroup = element.parentElement
+      const button = inputGroup.querySelector('button')
+      if (button) {
+        button.classList.add('btn-danger')
+        button.classList.remove('btn-primary')
+      }
+    } else {
+      let errorMsg = element.parentElement.querySelector('.invalid-feedback')
+      if (!errorMsg) {
+        errorMsg = document.createElement('div')
+        errorMsg.className = 'invalid-feedback'
+        errorMsg.style.display = 'block'
+        element.parentElement.appendChild(errorMsg)
+      }
+      errorMsg.textContent = message
+      element.classList.add('is-invalid')
+    }
+  }
+
+  clearError(element) {
+    if (!element) return
+
+    element.classList.remove('is-invalid')
+
+    // Check if this is the learning coach display input by checking if parent is input-group
+    const inputGroup = element.parentElement
+    if (inputGroup && inputGroup.classList.contains('input-group')) {
+      // Find the container div.mb-3
+      const lcFieldContainer = element.closest('.mb-3')
+      if (lcFieldContainer) {
+        const errorMsg = lcFieldContainer.querySelector('.invalid-feedback')
+        if (errorMsg) errorMsg.remove()
+      }
+
+      // Reset button styling
+      const button = inputGroup.querySelector('button')
+      if (button && button.classList.contains('btn-danger')) {
+        button.classList.remove('btn-danger')
+        button.classList.add('btn-primary')
+      }
+    } else {
+      const errorMsg = element.parentElement.querySelector('.invalid-feedback')
+      if (errorMsg) errorMsg.remove()
+    }
+  }
+
+  clearAllErrors() {
+    const invalidElements = this.form.querySelectorAll('.is-invalid')
+    invalidElements.forEach(element => {
+      element.classList.remove('is-invalid')
+    })
+    const errorMessages = this.form.querySelectorAll('.invalid-feedback')
+    errorMessages.forEach(msg => msg.remove())
+  }
+
   async handleSubmit(event) {
     event.preventDefault()
     event.stopPropagation()
+
     const formData = new FormData(this.form)
+
+    // First, validate required fields
+    if (!this.validateRequiredFields(formData)) {
+      console.log('Form validation failed, aborting submission')
+      return
+    }
+
     const newCurriculum = formData.get('learner_info[curriculum_course_option]')
     const newProgramme = formData.get('learner_info[programme]')
     const newHubId = formData.get('learner_info[hub_id]')
+
     console.log('Form submission check:', {
       original: {
         curriculum: this.originalCurriculum,
@@ -79,10 +238,12 @@ export default class extends Controller {
         hubId: newHubId
       }
     })
+
     // Check if curriculum, programme, or hub changed
     const curriculumChanged = newCurriculum !== this.originalCurriculum
     const programmeChanged = newProgramme !== this.originalProgramme
     const hubChanged = newHubId != this.originalHubId // Use != for type coercion
+
     if (curriculumChanged || programmeChanged || hubChanged) {
       console.log('Pricing-relevant change detected')
       // Store form data for later submission
@@ -110,11 +271,14 @@ export default class extends Controller {
           hub_id: newHubId
         })
       )
+
       if (!response.ok) {
         throw new Error('Failed to check pricing impact')
       }
+
       const data = await response.json()
       console.log('Pricing impact response:', data)
+
       if (data.requires_confirmation) {
         this.showConfirmationModal(data)
       } else if (data.error) {

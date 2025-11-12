@@ -130,30 +130,6 @@ class AdmissionListController < ApplicationController
     end
   end
 
-  # Update learner_info_params_from_permission to include nested attributes
-  def learner_info_params_from_permission
-    permitted = Array(@permission&.permitted_attributes).map(&:to_sym)
-    finance_permitted = Array(@permission&.finance_permitted_attributes).map(&:to_sym)
-
-    permitted = [] if permitted.blank?
-
-    if params[:learner_info].present?
-      # Build the permit hash
-      permit_hash = permitted.dup
-
-      # Add nested finance attributes if finance permissions exist
-      if finance_permitted.any?
-        # Always include :id for nested attributes to work properly
-        permit_hash << { learner_finance_attributes: [:id] + finance_permitted }
-      end
-
-      Rails.logger.debug "Permitting params: #{permit_hash.inspect}"
-      params.require(:learner_info).permit(permit_hash)
-    else
-      {}
-    end
-  end
-
   def check_pricing_impact
     head :forbidden and return unless @permission.show?
 
@@ -513,28 +489,20 @@ class AdmissionListController < ApplicationController
   def learner_info_params_from_permission
     permitted = Array(@permission&.permitted_attributes).map(&:to_sym)
     finance_permitted = Array(@permission&.finance_permitted_attributes).map(&:to_sym)
-    permitted = [] if permitted.blank?
 
-    if params[:learner_info].present?
-      # Start with base permitted attributes
-      permit_hash = permitted.dup
+    permit_hash = permitted.dup
 
-      # Add virtual attribute if institutional_email is editable
-      if permitted.include?(:institutional_email)
-        permit_hash << :institutional_email_prefix
-      end
+    # 1. Institutional email prefix
+    permit_hash << :institutional_email_prefix if permitted.include?(:institutional_email)
 
-      # Add nested learner_finance_attributes if any finance fields are permitted
-      if finance_permitted.any?
-        permit_hash << { learner_finance_attributes: [:id] + finance_permitted }
-      end
+    # 2. Nested finance
+    permit_hash << { learner_finance_attributes: [:id] + finance_permitted } if finance_permitted.any?
 
-      # Optional: Log for debugging
-      Rails.logger.debug "Permitted params: #{permit_hash.inspect}"
+    # 3. Learning Coach – always allow if user has edit permission
+    permit_hash << :learning_coach_id if @permission.update?
 
-      params.require(:learner_info).permit(*permit_hash)
-    else
-      {}
-    end
+    Rails.logger.debug "Permitting: #{permit_hash.inspect}"
+
+    params[:learner_info].present? ? params.require(:learner_info).permit(*permit_hash) : {}
   end
 end
