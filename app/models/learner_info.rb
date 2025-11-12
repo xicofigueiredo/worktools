@@ -281,7 +281,7 @@ class LearnerInfo < ApplicationRecord
     has_contract = learner_documents.exists?(document_type: 'contract')
     has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
     has_documents = has_contract && has_proof
-    has_credentials = learner_documents.exists?(document_type: 'credentials')
+    has_credentials = learner_documents.exists?(document_type: 'credentials') || !curriculum_course_option.to_s.strip.downcase.start_with?('up')
     has_start_date = start_date.present?
     has_started = has_start_date && start_date <= Date.today
     end_date_passed = end_date.present? && end_date < Date.today
