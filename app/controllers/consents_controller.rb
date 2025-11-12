@@ -11,7 +11,7 @@ class ConsentsController < ApplicationController
     # Find the nearest build week week.name.include?("Build") and start_date is before or equal to Date.today
     @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     bw_existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
-    
+
     if bw_existing
       @bw_consent = bw_existing
     else
@@ -37,8 +37,17 @@ class ConsentsController < ApplicationController
         Rails.logger.debug "After populate - emergency contact name: #{@bw_consent.emergency_contact_name}" if Rails.env.development?
       end
     end
-    @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
-    @consent_study_hub = ConsentStudyHub.find_by(week_id: @nearest_build_week&.id)
+    day_order = { 'Monday' => 1, 'Tuesday' => 2, 'Wednesday' => 3, 'Thursday' => 4, 'Friday' => 5 }
+    @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id)
+                                 .order(Arel.sql("CASE day 
+                                                   WHEN 'Monday' THEN 1 
+                                                   WHEN 'Tuesday' THEN 2 
+                                                   WHEN 'Wednesday' THEN 3 
+                                                   WHEN 'Thursday' THEN 4 
+                                                   WHEN 'Friday' THEN 5 
+                                                   ELSE 6 
+                                                 END"))
+    @consent_study_hub = ConsentStudyHub.find_by(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id)
   end
 
   def create_build_week
