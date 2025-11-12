@@ -275,91 +275,92 @@ class LearnerInfo < ApplicationRecord
   end
 
   def calculate_status
-  learner_documents.reload
+    learner_documents.reload
 
-  has_notes = onboarding_meeting_notes.present?
-  has_contract = learner_documents.exists?(document_type: 'contract')
-  has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
-  has_documents = has_contract && has_proof
-  has_start_date = start_date.present?
-  has_started = has_start_date && start_date <= Date.today
-  end_date_passed = end_date.present? && end_date < Date.today
-  is_up_curriculum = curriculum_course_option.to_s.strip.downcase.start_with?('up')
-  has_platform_info = platform_username.present? && platform_password.present?
+    has_notes = onboarding_meeting_notes.present?
+    has_contract = learner_documents.exists?(document_type: 'contract')
+    has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
+    has_documents = has_contract && has_proof
+    has_credentials = learner_documents.exists?(document_type: 'credentials')
+    has_start_date = start_date.present?
+    has_started = has_start_date && start_date <= Date.today
+    end_date_passed = end_date.present? && end_date < Date.today
+    is_up_curriculum = curriculum_course_option.to_s.strip.downcase.start_with?('up')
+    has_platform_info = platform_username.present? && platform_password.present?
 
-  case status
-    when "Inactive"
-      if !end_date_passed && has_active_account
-        "Active"
-      else
-        "Inactive"
-      end
-    when "Active"
-      if end_date_passed
-        "Inactive"
-      elsif !has_started && has_start_date
-        "Onboarded"
-      elsif !has_started && !has_start_date
-        "Validated"
-      else
-        "Active"
-      end
-    when "Onboarded"
-      if has_started
-        "Active"
-      elsif !has_start_date || !has_platform_info
-        "Validated"
-      else
-        "Onboarded"
-      end
-    when "Validated"
-      if has_start_date && has_platform_info
-        "Onboarded"
-      elsif !has_documents
-        if is_up_curriculum
-          status_was_waitlist_ok? ? "Waitlist" : "In progress"
+    case status
+      when "Inactive"
+        if !end_date_passed && has_active_account
+          "Active"
         else
-          status_was_waitlist_ok? ? "Waitlist - ok" : "In progress - ok"
+          "Inactive"
         end
-      else
-        "Validated"
-      end
-    when "In progress - ok"
-      if is_up_curriculum
-        if has_documents
+      when "Active"
+        if end_date_passed
+          "Inactive"
+        elsif !has_started && has_start_date
+          has_credentials ? "Onboarded" : "Validated"
+        elsif !has_started && !has_start_date
           "Validated"
         else
-          "In progress"
+          "Active"
         end
-      elsif !has_notes
-        "In progress"
-      elsif has_documents
-        "Validated"
-      else
-        "In progress - ok"
-      end
-    when "Waitlist - ok"
-      if !has_notes
-        "Waitlist"
-      else
-        "Waitlist - ok"
-      end
-    when "In progress"
-      if !data_validated
-        "In progress conditional"
-      else
-        if is_up_curriculum
-          has_documents ? "Validated" : "In progress"
+      when "Onboarded"
+        if has_started
+          "Active"
+        elsif !has_start_date || !has_platform_info || !has_credentials
+          "Validated"
         else
-          has_notes ? "In progress - ok" : "In progress"
+          "Onboarded"
         end
-      end
-    when "In progress conditional"
-      data_validated ? "In progress" : "In progress conditional"
-    when "Waitlist"
-      has_notes ? "Waitlist - ok" : "Waitlist"
-    else
-      status # Fallback for new or unknown
+      when "Validated"
+        if has_start_date && has_platform_info && has_credentials
+          "Onboarded"
+        elsif !has_documents
+          if is_up_curriculum
+            status_was_waitlist_ok? ? "Waitlist" : "In progress"
+          else
+            status_was_waitlist_ok? ? "Waitlist - ok" : "In progress - ok"
+          end
+        else
+          "Validated"
+        end
+      when "In progress - ok"
+        if is_up_curriculum
+          if has_documents
+            "Validated"
+          else
+            "In progress"
+          end
+        elsif !has_notes
+          "In progress"
+        elsif has_documents
+          "Validated"
+        else
+          "In progress - ok"
+        end
+      when "Waitlist - ok"
+        if !has_notes
+          "Waitlist"
+        else
+          "Waitlist - ok"
+        end
+      when "In progress"
+        if !data_validated
+          "In progress conditional"
+        else
+          if is_up_curriculum
+            has_documents ? "Validated" : "In progress"
+          else
+            has_notes ? "In progress - ok" : "In progress"
+          end
+        end
+      when "In progress conditional"
+        data_validated ? "In progress" : "In progress conditional"
+      when "Waitlist"
+        has_notes ? "Waitlist - ok" : "Waitlist"
+      else
+        status # Fallback for new or unknown
     end
   end
 
