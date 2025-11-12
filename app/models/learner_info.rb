@@ -562,21 +562,32 @@ class LearnerInfo < ApplicationRecord
     inactivation_candidates = where(status: "Active")
                               .where("end_date IS NOT NULL AND end_date < ?", today)
 
-    # Combine and dedupe (some might overlap if both dates trigger)
-    candidates = (activation_candidates + inactivation_candidates).uniq
+    # Find candidates for user account activation (start date within next 15 days)
+    user_activation_candidates = where(status: "Onboarded")
+                                .where("start_date IS NOT NULL AND start_date > ? AND start_date <= ?", today, today + 15)
+
+    # Combine and dedupe
+    candidates = (activation_candidates + inactivation_candidates + user_activation_candidates).uniq
 
     updated_count = 0
+    user_activated_count = 0
 
     candidates.each do |learner|
       learner.check_status_updates
       updated_count += 1 if learner.saved_change_to_status?
+
+      # Activate user account if start date is within 15 days and user is deactivated
+      if learner.user && learner.start_date && (today + 1..today + 15).cover?(learner.start_date) && learner.user.deactivate
+        learner.user.update(deactivate: false)
+        user_activated_count += 1
+      end
     end
 
     Rails.logger.info(
-      "[LearnerInfo.sync_date_based_statuses!] Processed #{candidates.size} candidates – #{updated_count} statuses synced (activations/inactivations)."
+      "[LearnerInfo.sync_date_based_statuses!] Processed #{candidates.size} candidates – #{updated_count} statuses synced (activations/inactivations), #{user_activated_count} user accounts activated."
     )
 
-    updated_count
+    { updated_statuses: updated_count, activated_users: user_activated_count }
   end
 
   private
@@ -617,11 +628,12 @@ class LearnerInfo < ApplicationRecord
     begin
       # Create User
       new_user = User.create!(
+        full_name: full_name,
         email: generated_email,
         password: "123456",
         password_confirmation: "123456",
         role: 'learner',
-        deactivate: false,
+        deactivate: true,
         confirmed_at: Time.now
       )
 
