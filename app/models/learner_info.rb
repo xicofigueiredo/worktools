@@ -537,7 +537,7 @@ class LearnerInfo < ApplicationRecord
         UserMailer.admissions_notification(User.find_by(email: "guilherme@bravegenerationacademy.com"), adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      #send_teams_message
+      # send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipients(learning_coaches + curriculum_responsibles + regional_manager, message)

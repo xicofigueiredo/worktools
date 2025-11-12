@@ -131,7 +131,10 @@ class UserMailer < Devise::Mailer
       to      = @learner_email
       subject = "Welcome to the UP Program!"
 
-      @platform_details = "Username: #{@learner.platform_username}\nPassword: #{@learner.platform_password}"
+      @platform_details = [
+        "Username: #{@learner.platform_username}",
+        "Password: #{@learner.platform_password}"
+      ].join("<br>").html_safe
 
       # --- Assign mentors based on program and level ---
       case up_program
