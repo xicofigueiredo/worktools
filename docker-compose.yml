@@ -9,9 +9,8 @@ services:
     env_file:
       - .env.production
     ports:
-      - "5433:5432"  # Local port 5433 → Docker port 5432
-    # ports:
-    #   - "5432:5432"
+      # - "5433:5432"  # Local port 5433 → Docker port 5432
+      - "5432:5432"
   server:
       build: .
       command: "./bin/rails server"
