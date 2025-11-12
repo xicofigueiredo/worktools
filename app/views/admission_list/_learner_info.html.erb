@@ -804,7 +804,9 @@
                     <% ratio = data[:ratio] %>
                     <tr>
                       <td>
-                        <%= f.radio_button :learning_coach_id, coach.id, checked: (@learner_info.learning_coach_id == coach.id) %>
+                        <%= f.radio_button :learning_coach_id, coach.id,
+                            checked: (@learner_info.learning_coach_id == coach.id),
+                            required: (@learner_info.programme == 'Online') %>
                       </td>
                       <td><%= coach.full_name %></td>
                       <td><%= coach.email %></td>
@@ -923,89 +925,132 @@
     }
   }
 
-  // NEW: Handle programme change to update hub options dynamically
   function setupProgrammeHubHandler() {
     const programmeSelect = document.getElementById('learner_info_programme');
     const hubSelect = document.getElementById('learner_info_hub_id');
-    const form = document.getElementById('learner-info-form');
+    const gradeSelect = document.getElementById('learner_info_grade_year');
     const lcField = document.getElementById('learning-coach-field');
+    const lcButton = lcField?.querySelector('button[data-bs-target="#learningCoachModal"]');
+    const form = document.getElementById('learner-info-form');
 
-    if (!programmeSelect || !hubSelect) return;
+    if (!programmeSelect || !hubSelect || !form) return;
 
     const onlineHubs = JSON.parse(hubSelect.dataset.onlineHubs || '[]');
     const hybridHubs = JSON.parse(hubSelect.dataset.hybridHubs || '[]');
     const originalProgramme = programmeSelect.value;
-    const originalHubId = hubSelect.value;
 
+    // Helper: Add or update error message
+    function showError(element, message) {
+      let errorMsg = element.parentElement.querySelector('.invalid-feedback');
+      if (!errorMsg) {
+        errorMsg = document.createElement('div');
+        errorMsg.className = 'invalid-feedback';
+        errorMsg.style.display = 'block';
+        element.parentElement.appendChild(errorMsg);
+      }
+      errorMsg.textContent = message;
+      element.classList.add('is-invalid');
+    }
+
+    function clearError(element) {
+      element.classList.remove('is-invalid');
+      const errorMsg = element.parentElement.querySelector('.invalid-feedback');
+      if (errorMsg) errorMsg.remove();
+    }
+
+    // Update hubs + show/hide LC field
     programmeSelect.addEventListener('change', function() {
       const selectedProgramme = this.value;
       const hubs = selectedProgramme === 'Online' ? onlineHubs : hybridHubs;
 
-      // Clear existing options
+      // Update hub options
       hubSelect.innerHTML = '';
-
-      // Add prompt option
       const promptOption = document.createElement('option');
       promptOption.value = '';
       promptOption.text = 'Select Hub';
       hubSelect.add(promptOption);
-
-      // Add hub options
-      hubs.forEach(function(hub) {
-        const option = document.createElement('option');
-        option.value = hub[1];
-        option.text = hub[0];
-        hubSelect.add(option);
+      hubs.forEach(hub => {
+        const opt = document.createElement('option');
+        opt.value = hub[1];
+        opt.text = hub[0];
+        hubSelect.add(opt);
       });
 
-      // Reset hub selection if programme changed
       if (selectedProgramme !== originalProgramme) {
         hubSelect.value = '';
         hubSelect.classList.add('is-invalid');
       }
 
-      // Show/hide learning coach field
+      // Show/hide Learning Coach
       if (lcField) {
         lcField.style.display = selectedProgramme === 'Online' ? 'block' : 'none';
+        if (selectedProgramme !== 'Online') {
+          clearError(hubSelect); // not required
+        }
       }
     });
 
-    // Form submission validation
-    if (form) {
-      form.addEventListener('submit', function(e) {
-        if (!hubSelect.value || hubSelect.value === '') {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          hubSelect.classList.add('is-invalid');
+    // Validate on submit
+    form.addEventListener('submit', function(e) {
+      let valid = true;
 
-          // Add or update error message
-          let errorMsg = hubSelect.parentElement.querySelector('.invalid-feedback');
-          if (!errorMsg) {
-            errorMsg = document.createElement('div');
-            errorMsg.className = 'invalid-feedback';
-            errorMsg.style.display = 'block';
-            hubSelect.parentElement.appendChild(errorMsg);
-          }
-          errorMsg.textContent = 'Please select a hub before saving.';
+      // 1. Hub is always required
+      if (!hubSelect.value) {
+        showError(hubSelect, 'Please select a hub.');
+        valid = false;
+      } else {
+        clearError(hubSelect);
+      }
 
-          // Scroll to the hub field
-          hubSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // 2. Grade/Year is always required
+      if (!gradeSelect || !gradeSelect.value || gradeSelect.value === '') {
+        showError(gradeSelect, 'Please select a Grade/Year.');
+        valid = false;
+      } else {
+        clearError(gradeSelect);
+      }
 
-          return false;
+      // 3. Learning Coach required only if Online
+      if (programmeSelect.value === 'Online') {
+        const lcRadio = document.querySelector('input[name="learner_info[learning_coach_id]"]:checked');
+        if (!lcRadio || !lcRadio.value) {
+          // Highlight button + show error
+          if (lcButton) lcButton.classList.add('btn-danger');
+          showError(lcButton || lcField, 'Please assign a Learning Coach.');
+          valid = false;
+        } else {
+          if (lcButton) lcButton.classList.remove('btn-danger');
+          clearError(lcButton || lcField);
         }
+      }
 
-        hubSelect.classList.remove('is-invalid');
-        const errorMsg = hubSelect.parentElement.querySelector('.invalid-feedback');
-        if (errorMsg) errorMsg.remove();
-      });
-    }
+      if (!valid) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
 
-    // Remove invalid styling when hub is selected
-    hubSelect.addEventListener('change', function() {
-      if (this.value) {
-        this.classList.remove('is-invalid');
-        const errorMsg = this.parentElement.querySelector('.invalid-feedback');
-        if (errorMsg) errorMsg.remove();
+        // Scroll to first error
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    });
+
+    // Clear errors on change
+    [hubSelect, gradeSelect].forEach(el => {
+      if (el) el.addEventListener('change', () => clearError(el));
+    });
+
+    // Special: Clear LC error when modal assigns coach
+    document.addEventListener('click', function(e) {
+      if (e.target.matches('#learningCoachModal .btn-primary')) {
+        setTimeout(() => {
+          const lcRadio = document.querySelector('input[name="learner_info[learning_coach_id]"]:checked');
+          if (lcRadio && lcButton) {
+            lcButton.classList.remove('btn-danger');
+            clearError(lcButton);
+          }
+        }, 100);
       }
     });
   }
