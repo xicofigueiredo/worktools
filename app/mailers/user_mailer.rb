@@ -162,13 +162,16 @@ class UserMailer < Devise::Mailer
 
     else
       # Non-UP specific documents
-      # attachments['standard_welcome_letter.pdf'] = generate_personalized_pdf(
-      #   template_path: Rails.root.join('public', 'documents', 'templates', 'standard_welcome_template.pdf'),
-      #   learner_name: @learner.full_name
-      # )
+
+      # Generate personalized welcome letter
+      begin
+        generator = WelcomeLetterGenerator.new(@learner.full_name.split.first)
+        attachments['Welcome_Letter.pdf'] = generator.generate
+      rescue => e
+        Rails.logger.error("Failed to generate welcome letter for #{@learner.full_name}: #{e.message}")
+      end
 
       attachments['Handbook.pdf'] = File.read(Rails.root.join('public', 'documents', 'handbook.pdf'))
-
       attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
     end
 
