@@ -226,6 +226,11 @@ class HubspotService
         val = Time.at(timestamp_seconds).to_date
         val = (Date.parse(val) rescue val)
       end
+
+      if model_col == :english_proficiency
+        val = (val != "None")
+      end
+
       attrs[model_col] = val
     end
 
@@ -449,13 +454,13 @@ class HubspotService
     Rails.logger.error("Failed to download file from #{download_url}: #{e.message}")
   end
 
-  def self.fetch_hub_submission_values
+  def self.fetch_submission_values(field_name)
     headers = {
       'Authorization' => "Bearer #{HUBSPOT_ACCESS_TOKEN}",
       'Content-Type'  => 'application/json'
     }
 
-    Rails.logger.info("Fetching form definition from HubSpot API...")
+    Rails.logger.info("Fetching form definition from HubSpot API for field: #{field_name}...")
     response = HTTParty.get("https://api.hubapi.com/forms/v2/forms/#{FORM_GUID}", headers: headers)
 
     unless response.success?
@@ -464,63 +469,18 @@ class HubspotService
     end
 
     form_definition = JSON.parse(response.body)
-    field_name = 'hub_interest_portugal'
 
     # Find the specific field within the form definition structure
-    hub_field = form_definition['formFieldGroups']
-                  .flat_map { |group| group['fields'] }
-                  .find { |field| field['name'] == field_name }
+    field = form_definition['formFieldGroups']
+              .flat_map { |group| group['fields'] }
+              .find { |f| f['name'] == field_name }
 
-    unless hub_field
+    unless field
       Rails.logger.error "HubSpot field '#{field_name}' not found in form definition."
       return []
     end
 
-    options = hub_field.dig('options')
-
-    if options.present?
-      # 🚨 The key part: Return the 'value' property, not the 'label'.
-      # The 'value' is what HubSpot stores and sends in the submission.
-      submission_values = options.map { |option| option['value'] }.compact.uniq
-      Rails.logger.info("Successfully fetched #{submission_values.count} submission values for #{field_name}.")
-      return submission_values
-    else
-      Rails.logger.warn "HubSpot field '#{field_name}' does not appear to have options."
-      return []
-    end
-  rescue => e
-    Rails.logger.error "Error fetching HubSpot form options: #{e.message}"
-    return []
-  end
-
-  def self.fetch_program_submission_values
-    headers = {
-      'Authorization' => "Bearer #{HUBSPOT_ACCESS_TOKEN}",
-      'Content-Type'  => 'application/json'
-    }
-
-    Rails.logger.info("Fetching form definition from HubSpot API for program...")
-    response = HTTParty.get("https://api.hubapi.com/forms/v2/forms/#{FORM_GUID}", headers: headers)
-
-    unless response.success?
-      Rails.logger.error "HubSpot Form Definition API Error: #{response.code} - #{response.body}"
-      return []
-    end
-
-    form_definition = JSON.parse(response.body)
-    field_name = 'learning_model'
-
-    # Find the specific field within the form definition structure
-    program_field = form_definition['formFieldGroups']
-                    .flat_map { |group| group['fields'] }
-                    .find { |field| field['name'] == field_name }
-
-    unless program_field
-      Rails.logger.error "HubSpot field '#{field_name}' not found in form definition."
-      return []
-    end
-
-    options = program_field.dig('options')
+    options = field.dig('options')
 
     if options.present?
       # Return the 'value' property, as that's what is submitted
@@ -532,50 +492,7 @@ class HubspotService
       return []
     end
   rescue => e
-    Rails.logger.error "Error fetching HubSpot form options for program: #{e.message}"
-    return []
-  end
-
-  def self.fetch_level_submission_values
-    headers = {
-      'Authorization' => "Bearer #{HUBSPOT_ACCESS_TOKEN}",
-      'Content-Type'  => 'application/json'
-    }
-
-    Rails.logger.info("Fetching form definition from HubSpot API for level...")
-    response = HTTParty.get("https://api.hubapi.com/forms/v2/forms/#{FORM_GUID}", headers: headers)
-
-    unless response.success?
-      Rails.logger.error "HubSpot Form Definition API Error: #{response.code} - #{response.body}"
-      return []
-    end
-
-    form_definition = JSON.parse(response.body)
-    field_name = 'level'
-
-    # Find the specific field within the form definition structure
-    level_field = form_definition['formFieldGroups']
-                  .flat_map { |group| group['fields'] }
-                  .find { |field| field['name'] == field_name }
-
-    unless level_field
-      Rails.logger.error "HubSpot field '#{field_name}' not found in form definition."
-      return []
-    end
-
-    options = level_field.dig('options')
-
-    if options.present?
-      # Return the 'value' property, as that's what is submitted
-      submission_values = options.map { |option| option['value'] }.compact.uniq
-      Rails.logger.info("Successfully fetched #{submission_values.count} submission values for #{field_name}.")
-      return submission_values
-    else
-      Rails.logger.warn "HubSpot field '#{field_name}' does not appear to have options."
-      return []
-    end
-  rescue => e
-    Rails.logger.error "Error fetching HubSpot form options for level: #{e.message}"
+    Rails.logger.error "Error fetching HubSpot form options for #{field_name}: #{e.message}"
     return []
   end
 
