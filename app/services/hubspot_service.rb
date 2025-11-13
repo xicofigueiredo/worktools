@@ -197,6 +197,7 @@ class HubspotService
       :learner_s_date_of_birth           => :birthdate,
       :learner_s_nationality             => :nationality,
       :learner_s_id_document__name_and_type_ => :id_information,
+      :invoicing_data                    => :fiscal_number,
       :english_fluency__official_        => :english_proficiency,
       :gender__2_                        => :gender,
       :parent_1____name                  => :parent1_full_name,
