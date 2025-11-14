@@ -378,7 +378,7 @@ class LearnerInfo < ApplicationRecord
   end
 
   def admissions_users
-    [User.find_by(email: 'guilherme@bravegenerationacademy.com')].compact #[User.find_by(email: "admissions@bravegenerationacademy.com")].compact
+    [User.find_by(email: "admissions@bravegenerationacademy.com")].compact
   end
 
   def finance_users
@@ -391,7 +391,7 @@ class LearnerInfo < ApplicationRecord
     when curr.include?('portuguese')
       User.where(email: ['luis@bravegenerationacademy.com', 'goncalo.meireles@edubga.com']).to_a
     when curr.start_with?('up')
-      [User.find_by(email: 'guilherme@bravegenerationacademy.com')].compact # [User.find_by(email: 'esther@bravegenerationacademy.com')].compact
+      [User.find_by(email: 'esther@bravegenerationacademy.com')].compact
     else
       [User.find_by(email: 'danielle@bravegenerationacademy.com')].compact
     end
