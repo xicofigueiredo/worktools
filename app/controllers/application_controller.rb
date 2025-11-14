@@ -93,8 +93,16 @@ class ApplicationController < ActionController::Base
       'exams'
     when 'staff'
       'staff'
+    when 'admissions'
+      'staff'
     when 'edu'
-      'edu'
+      'staff'
+    when 'finance'
+      'staff'
+    when 'ops'
+      'staff'
+    when 'it'
+      'staff'
     else
       'learner'  # Default for regular users/learners
     end

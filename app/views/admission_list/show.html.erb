@@ -1,0 +1,92 @@
+<ul class="nav nav-tabs" id="learnerTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="general-info-tab" data-bs-toggle="tab" data-bs-target="#general-info" type="button" role="tab" aria-controls="general-info" aria-selected="true">
+      <h2 class="h5 mb-0">General Info</h2>
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">
+      <h2 class="h5 mb-0">Documents</h2>
+    </button>
+  </li>
+  <% if current_user.role.in?(['admin', 'admissions']) %>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button" role="tab" aria-controls="logs" aria-selected="false">
+        <h2 class="h5 mb-0">Activity Log</h2>
+      </button>
+    </li>
+  <% end %>
+</ul>
+
+<div class="tab-content mt-4" id="learnerTabsContent">
+  <div class="tab-pane fade show active" id="general-info" role="tabpanel" aria-labelledby="general-info-tab">
+    <div class="px-4">
+      <%= render 'learner_info' %>
+    </div>
+  </div>
+
+  <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+    <div class="px-4">
+      <%= render 'learner_documents' %>
+    </div>
+  </div>
+
+  <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
+    <div class="px-4">
+      <%= render 'logs' %>
+    </div>
+  </div>
+</div>
+
+<script>
+  function activateLearnerTab() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('active_tab');
+
+    if (activeTab) {
+      // Hide all tabs first
+      document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('show', 'active');
+      });
+
+      document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
+      });
+
+      const targetTab = document.querySelector(`#${activeTab}-tab`);
+      const targetPane = document.querySelector(`#${activeTab}`);
+
+      if (targetTab && targetPane) {
+        targetTab.classList.add('active');
+        targetTab.setAttribute('aria-selected', 'true');
+        targetPane.classList.add('show', 'active');
+      }
+    } else {
+      // Ensure only first tab is active by default
+      document.querySelectorAll('.tab-pane').forEach((pane, index) => {
+        if (index === 0) {
+          pane.classList.add('show', 'active');
+        } else {
+          pane.classList.remove('show', 'active');
+        }
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', activateLearnerTab);
+  document.addEventListener('turbo:load', activateLearnerTab);
+</script>
+
+<style>
+  .nav-tabs .nav-link.active { color: #000 !important; }
+  .nav-tabs .nav-link { color: lightgrey !important; }
+
+  .tab-pane {
+    display: none;
+  }
+
+  .tab-pane.active {
+    display: block !important;
+  }
+</style>

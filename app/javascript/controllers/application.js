@@ -8,6 +8,7 @@ import SaveKnowledgeController from "./save_knowledge_controller";
 import SaveActivityController from "./save_activity_controller";
 import HubAssociationsController from "./hub_associations_controller";
 import NotificationController from "./notification_controller"
+import AdmissionSearchController from "./admission_search_controller"
 const application = Application.start()
 
 // Configure Stimulus development experience
@@ -23,5 +24,6 @@ Stimulus.register("save-knowledge", SaveKnowledgeController);
 Stimulus.register("save-activity", SaveActivityController);
 Stimulus.register("hub-associations", HubAssociationsController);
 Stimulus.register("notification", NotificationController)
+Stimulus.register("admission-search", AdmissionSearchController)
 
 export { application }

@@ -2,7 +2,7 @@ class StaffLeave < ApplicationRecord
   belongs_to :user
   belongs_to :approver_user, class_name: "User", optional: true
 
-  has_many :confirmations, dependent: :destroy
+  has_many :confirmations, as: :confirmable, dependent: :destroy
   has_many :staff_leave_documents, dependent: :destroy
 
   ADVANCE_DAYS = 20
@@ -82,6 +82,40 @@ class StaffLeave < ApplicationRecord
       count += 1
     end
     count
+  end
+
+  def handle_confirmation_update(confirmation)
+    if confirmation.status == 'rejected'
+      # For regular confirmations: mark leave rejected
+      # For cancellation confirmations: rejection means the cancellation was refused (leave remains as-is)
+      update(status: 'rejected') unless confirmation.is_a?(CancellationConfirmation)
+    elsif confirmation.status == 'approved'
+      if confirmation.is_a?(CancellationConfirmation)
+        # Get the list of approvers who have approved the original leave
+        approved_confs = confirmations.where(status: 'approved', type: 'Confirmation').order(:updated_at)
+        approved_approvers = approved_confs.map(&:approver)
+        # Find the index of the current approver in the approved list
+        idx = approved_approvers.index(confirmation.approver) || 0
+
+        if idx < (approved_approvers.length - 1)
+          # Ask the next manager who approved the original leave to approve the cancellation
+          next_approver = approved_approvers[idx + 1]
+          confirmations.create!(type: 'CancellationConfirmation', approver: next_approver, status: 'pending')
+        else
+          # Last approver approved cancellation -> cancel the leave
+          update(status: 'cancelled')
+        end
+      else
+        # Normal approval chain for creating approvals
+        chain = approval_chain
+        next_index = chain.index(confirmation.approver) + 1
+        if next_index < chain.length
+          confirmations.create!(type: 'Confirmation', approver: chain[next_index], status: 'pending')
+        else
+          update(status: 'approved')
+        end
+      end
+    end
   end
 
   private

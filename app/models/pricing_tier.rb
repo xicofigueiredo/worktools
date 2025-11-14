@@ -1,0 +1,2 @@
+class PricingTier < ApplicationRecord
+end

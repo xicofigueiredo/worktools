@@ -45,7 +45,26 @@ class User < ApplicationRecord
   has_many :managed_departments, class_name: 'Department', foreign_key: 'manager_id'
   has_many :confirmations, foreign_key: 'approver_id'
 
-  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', rm: 'Regional Manager', guardian: 'Parent', cm: 'Course Manager', exams: 'Exams', edu: 'Edu', staff: 'Staff' }
+  has_one :learner_info, dependent: :destroy
+
+  enum role: {
+    admin: 'Admin',
+    lc: 'Learning Coach',
+    learner: 'Learner',
+    rm: 'Regional Manager',
+    guardian: 'Parent',
+    cm: 'Course Manager',
+    exams: 'Exams',
+    edu: 'Edu',
+    staff: 'Staff',
+    admissions: 'Admissions',
+    finance: 'Finance',
+    ops: 'Operations',
+    it: 'IT Support'
+  }
+
+  STAFF_ROLES = %i[admin lc rm cm exams edu staff admissions finance ops it]
+
   validate :email_domain_check, on: :create
 
   before_save :ensure_deactivated_if_graduated
@@ -132,6 +151,10 @@ class User < ApplicationRecord
     return parent_has_access? if guardian?
     return learner_has_access? if learner?
     true # Other roles (admin, lc, cm, etc.) always have access unless explicitly restricted
+  end
+
+  def staff?
+    STAFF_ROLES.include?(role.to_sym)
   end
 
   private

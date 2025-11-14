@@ -69,4 +69,121 @@ class UserMailer < Devise::Mailer
       subject: "Don’t Miss Out – Follow Your Child’s Journey on Worktools"
     )
   end
+
+  def admissions_notification(user, message, subject)
+    @user = user
+    @message = message
+    mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
+  end
+
+  def onboarding_email(learner_info)
+    @learner = learner_info
+    @parent_emails = [@learner.parent1_email, @learner.parent2_email].compact
+    @learner_email = @learner.personal_email.presence || @learner.institutional_email
+
+    return if @parent_emails.blank? && @learner_email.blank?
+
+    @parent_names       = [@learner.parent1_full_name, @learner.parent2_full_name].compact.join(' & ')
+    @learning_coaches   = @learner.learning_coaches
+    @hub                = @learner.hub
+    @regional_manager   = @hub.regional_manager
+
+    curriculum_raw = @learner.curriculum_course_option.to_s.downcase
+    hub_type_raw   = @hub.hub_type.to_s.downcase
+
+    # --- Detect UP program ---
+    is_up = curriculum_raw.include?('up')
+    up_program = if curriculum_raw.include?('business')
+                  'business'
+                elsif curriculum_raw.include?('computing')
+                  'computing'
+                elsif curriculum_raw.include?('sports')
+                  'sports'
+                end
+
+    # --- Delivery mode: online = exact, hybrid = everything else ---
+    up_mode = hub_type_raw == 'online' ? 'online' : 'hybrid'
+
+    # --- Build template name ---
+    if is_up && up_program
+      template = "onboarded_up_#{up_program}_#{up_mode}"
+    else
+      curriculum = curriculum_raw.gsub(' ', '_')
+      hub_type   = hub_type_raw.gsub(' ', '_')
+      template   = "onboarded_#{curriculum}_#{hub_type}"
+    end
+
+    # --- Full path to template file ---
+    template_path = "onboarding/#{template}"
+    full_path     = Rails.root.join("app/views/user_mailer/#{template_path}.html.erb")
+
+    unless File.exist?(full_path)
+      Rails.logger.warn("Onboarding template not found: #{template_path} (curriculum: #{curriculum_raw}, hub_type: #{hub_type_raw})")
+      return
+    end
+
+    # --- Recipient & subject ---
+    to      = @parent_emails
+    subject = "Onboarding Day - #{@learner.full_name}"
+    attachments['Calendar.pdf'] = File.read(Rails.root.join('public', 'documents', 'calendar_2025.pdf'))
+
+    if template.start_with?('onboarded_up_')
+      to      = @learner_email
+      subject = "Welcome to the UP Program!"
+
+      @platform_details = [
+        "Username: #{@learner.platform_username}",
+        "Password: #{@learner.platform_password}"
+      ].join("<br>").html_safe
+
+      # --- Assign mentors based on program and level ---
+      case up_program
+      when 'business'
+        # Business mentors differ by level
+        if @learner.grade_year == 'Level 4'
+          @mentor_name = "Rafael Escobar"
+          @mentor_email = "rafael.escobar@edubga.com"
+        else
+          @mentor_name = "Vanessa Gomes"
+          @mentor_email = "vanessa.gomes@edubga.com"
+        end
+      when 'computing'
+        @mentor_name = "Cameron Dorning"
+        @mentor_email = "cameron.dorning@genexinstitute.com"
+      when 'sports'
+        @mentor_name = "Aubrey Stout"
+        @mentor_email = "aubrey.stout@etacollege.com"
+      end
+
+      credentials = @learner.learner_documents.find_by(document_type: 'credentials')
+      if credentials&.file&.attached?
+        attachments["Credentials_Document.pdf"] = {
+          mime_type: credentials.file.blob.content_type,
+          content:   credentials.file.download
+        }
+      end
+
+    else
+      # Non-UP specific documents
+
+      # Generate personalized welcome letter
+      begin
+        generator = WelcomeLetterGenerator.new(@learner.full_name.split.first)
+        attachments['Welcome_Letter.pdf'] = generator.generate
+      rescue => e
+        Rails.logger.error("Failed to generate welcome letter for #{@learner.full_name}: #{e.message}")
+      end
+
+      attachments['Handbook.pdf'] = File.read(Rails.root.join('public', 'documents', 'handbook.pdf'))
+      attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
+    end
+
+    # --- Send email ---
+    mail(
+      to: to,
+      from:          'worktools@bravegenerationacademy.com',
+      subject:       subject,
+      template_name: template_path
+    )
+  end
 end

@@ -26,7 +26,7 @@
             </thead>
             <tbody>
               <% @pending_confirmations.each do |conf| %>
-                <% leave = conf.staff_leave %>
+                <% leave = conf.confirmable %>
                 <tr id="confirmation-<%= conf.id %>">
                   <td><%= leave.user.departments.first&.name || '—' %></td>
                   <td><%= leave.user.full_name %></td>

@@ -80,6 +80,25 @@ Rails.application.routes.draw do
       resources :topics, except: [:show, :index]
     end
 
+    # Admissions list
+    resources :admissions, controller: 'admission_list', only: [:index, :show, :update] do
+      collection do
+        get 'export', action: :export_form
+        post 'export', action: :export_csv
+        post 'fetch_from_hubspot', action: :fetch_from_hubspot
+      end
+      member do
+        get 'documents', action: :documents
+        post 'documents', action: :create_document
+        delete 'documents/:document_id', action: :destroy_document, as: 'document'
+        get 'check_pricing_impact', action: :check_pricing_impact
+      end
+    end
+
+    resources :hubs, only: [:index, :show]
+
+    resources :pricing_tiers, only: [:index, :update]
+
     resources :leaves, only: [:index, :new, :create, :show] do
       collection do
         post :preview

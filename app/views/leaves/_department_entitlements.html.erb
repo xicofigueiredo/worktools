@@ -178,6 +178,10 @@
       var table = document.getElementById('dept-entitlements-table');
       if (!table) { alert('Table not found'); return; }
 
+      var theadRow = table.querySelector('thead tr');
+      var allHeaders = Array.from(theadRow.querySelectorAll('th')).map(th => th.innerText.trim());
+      var header = allHeaders[allHeaders.length - 1] === 'Actions' ? allHeaders.slice(0, -1) : allHeaders;
+
       var tbodyRows = Array.from(table.querySelectorAll('tbody tr'));
       var visibleData = [];
 
@@ -202,8 +206,6 @@
         return;
       }
 
-      // Header row
-      var header = ['Department', 'Name', 'Total', 'Booked', 'Pending', 'Left'];
       var aoa = [header].concat(visibleData);
 
       // Use SheetJS to create workbook

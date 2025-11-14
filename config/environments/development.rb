@@ -2,7 +2,9 @@ require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
 
-  config.action_mailer.default_url_options = { host: 'bravegenerationacademy.com' }
+  # config.action_mailer.default_url_options = { host: 'bravegenerationacademy.com' }
+  config.action_mailer.default_url_options = { host: 'localhost', port: 3000, protocol: 'http' }
+  Rails.application.routes.default_url_options = { host: 'localhost', port: 3000, protocol: 'http' }
 
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
@@ -12,7 +14,7 @@ Rails.application.configure do
     user_name:            ENV['OUTLOOK_USERNAME'],
     password:             ENV['OUTLOOK_PASSWORD'],
     enable_starttls_auto: true}
-    config.action_mailer.default_url_options = {:host =>'localhost:3000'}  # Settings specified here will take precedence over those in config/application.rb.
+    #config.action_mailer.default_url_options = {:host =>'localhost:3000'}  # Settings specified here will take precedence over those in config/application.rb.
     config.action_mailer.raise_delivery_errors = true
     config.action_mailer.perform_deliveries = true
 

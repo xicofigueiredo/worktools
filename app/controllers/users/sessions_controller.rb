@@ -23,15 +23,15 @@ module Users
         end
 
         # Check if this is the first login (when last_login_at is nil)
-        is_first_login = resource.last_login_at.nil?
+        # is_first_login = resource.last_login_at.nil?
 
         # Always update last_login_at for successful logins
-        resource.update_column(:last_login_at, Time.current)
+        # resource.update_column(:last_login_at, Time.current)
 
         # Redirect to profile edit on first login
-        if is_first_login
-          redirect_to edit_user_registration_path and return
-        end
+        # if is_first_login
+        #   redirect_to edit_user_registration_path and return
+        # end
       end
     end
 
