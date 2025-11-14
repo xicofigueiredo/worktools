@@ -62,6 +62,9 @@ class User < ApplicationRecord
     ops: 'Operations',
     it: 'IT Support'
   }
+
+  STAFF_ROLES = %i[admin lc rm cm exams edu staff admissions finance ops it]
+
   validate :email_domain_check, on: :create
 
   before_save :ensure_deactivated_if_graduated
@@ -148,6 +151,10 @@ class User < ApplicationRecord
     return parent_has_access? if guardian?
     return learner_has_access? if learner?
     true # Other roles (admin, lc, cm, etc.) always have access unless explicitly restricted
+  end
+
+  def staff?
+    STAFF_ROLES.include?(role.to_sym)
   end
 
   private

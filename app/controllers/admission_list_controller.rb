@@ -3,6 +3,7 @@ require 'csv'
 class AdmissionListController < ApplicationController
   before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document, :check_pricing_impact]
   before_action :set_learning_coaches, only: [:show]
+  before_action :require_staff
 
   def index
     @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
@@ -442,6 +443,10 @@ class AdmissionListController < ApplicationController
   end
 
   private
+
+  def require_staff
+    redirect_to root_path unless current_user&.staff?
+  end
 
   def set_learner_info
     # include user for view convenience
