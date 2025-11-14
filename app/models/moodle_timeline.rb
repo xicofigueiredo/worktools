@@ -252,6 +252,16 @@ class MoodleTimeline < ApplicationRecord
           as1: as1,
           as2: as2
         )
+        # if self.user.email == "tester.cms@edubga.com"
+        #   Topic.find_or_create_by!(
+        #     subject_id: self.subject.id,
+        #     name: activity[:name]
+        #   ) do |topic|
+        #     topic.unit = activity[:section_name]
+        #     topic.order = index + 1
+        #     topic.time = activity[:ect] || 0
+        #   end
+        # end
       end
 
       moodle_generate_topic_deadlines(self)
