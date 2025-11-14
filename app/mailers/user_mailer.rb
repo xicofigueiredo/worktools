@@ -180,7 +180,7 @@ class UserMailer < Devise::Mailer
 
     # --- Send email ---
     mail(
-      to: "guilherme@bravegenerationacademy.com", # to: to, # Use in production
+      to: to,
       from:          'worktools@bravegenerationacademy.com',
       subject:       subject,
       template_name: template_path
