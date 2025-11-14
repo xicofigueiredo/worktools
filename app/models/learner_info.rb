@@ -290,7 +290,7 @@ class LearnerInfo < ApplicationRecord
 
     case status
       when "Inactive"
-        if !end_date_passed && has_active_account
+        if !end_date_passed
           "Active"
         else
           "Inactive"
@@ -534,11 +534,10 @@ class LearnerInfo < ApplicationRecord
       adm_subject = "#{full_name} had the onboarding meeting"
 
       admissions_users.each do |user|
-        # TO DO: CHANGE TO ADMISSION USERS
-        UserMailer.admissions_notification(User.find_by(email: "guilherme@bravegenerationacademy.com"), adm_message, adm_subject).deliver_now
+        UserMailer.admissions_notification(user, adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      # send_teams_message
+      send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipients(learning_coaches + curriculum_responsibles + regional_manager, message)
