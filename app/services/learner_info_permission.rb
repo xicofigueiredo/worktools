@@ -4,7 +4,7 @@ class LearnerInfoPermission
   LEARNER_VIEW_BY_ROLE = {
     'admin' => %i[
       full_name preferred_name student_number status birthdate programme
-      learning_coach hub_id curriculum_course_option grade_year
+      learning_coach_id hub_id curriculum_course_option grade_year
       personal_email institutional_email phone_number home_address
       nationality gender native_language english_proficiency
       parent1_full_name parent1_email parent1_phone_number parent1_id_information
@@ -19,7 +19,7 @@ class LearnerInfoPermission
     ],
     'admissions' => %i[
       full_name preferred_name student_number status birthdate programme
-      learning_coach hub_id curriculum_course_option grade_year
+      learning_coach_id hub_id curriculum_course_option grade_year
       personal_email institutional_email phone_number home_address
       nationality gender native_language english_proficiency
       parent1_full_name parent1_email parent1_phone_number parent1_id_information
@@ -34,7 +34,7 @@ class LearnerInfoPermission
     ],
     'edu' => %i[
       full_name preferred_name student_number status birthdate programme
-      learning_coach hub_id curriculum_course_option grade_year
+      learning_coach_id hub_id curriculum_course_option grade_year
       personal_email institutional_email phone_number
       nationality gender native_language english_proficiency
       parent1_full_name parent1_email parent1_phone_number
@@ -49,7 +49,7 @@ class LearnerInfoPermission
     ],
     'finance' => %i[
       full_name preferred_name student_number status birthdate programme
-      learning_coach hub_id curriculum_course_option grade_year
+      learning_coach_id hub_id curriculum_course_option grade_year
       personal_email institutional_email phone_number
       nationality gender native_language english_proficiency
       parent1_full_name parent1_email parent1_phone_number parent1_id_information
@@ -64,7 +64,7 @@ class LearnerInfoPermission
     ],
     'ops' => %i[
       full_name preferred_name student_number status birthdate programme
-      learning_coach hub_id curriculum_course_option grade_year
+      learning_coach_id hub_id curriculum_course_option grade_year
       personal_email institutional_email phone_number
       nationality gender native_language english_proficiency
       parent1_full_name parent1_email parent1_phone_number parent1_id_information
@@ -79,7 +79,7 @@ class LearnerInfoPermission
     ],
     'it' => %i[
       full_name preferred_name student_number status birthdate programme
-      learning_coach hub_id curriculum_course_option grade_year
+      learning_coach_id hub_id curriculum_course_option grade_year
       personal_email institutional_email phone_number
       nationality gender native_language english_proficiency
       parent1_full_name parent1_email parent1_phone_number
@@ -92,7 +92,7 @@ class LearnerInfoPermission
     ],
     'lc' => %i[
       full_name preferred_name student_number status birthdate programme
-      learning_coach hub_id curriculum_course_option grade_year
+      learning_coach_id hub_id curriculum_course_option grade_year
       personal_email institutional_email phone_number
       nationality gender native_language english_proficiency
       parent1_full_name parent1_email parent1_phone_number
@@ -110,11 +110,11 @@ class LearnerInfoPermission
   LEARNER_EDIT_BY_ROLE = {
     'admin' => LEARNER_VIEW_BY_ROLE['admin'],
     'admissions' => LEARNER_VIEW_BY_ROLE['admissions'],
-    'edu' => %i[preferred_name learning_coach personal_email phone_number english_proficiency],
+    'edu' => %i[preferred_name learning_coach_id personal_email phone_number english_proficiency],
     'finance' => %i[preferred_name],
     'ops' => [],
     'it' => %i[preferred_name platform_username platform_password],
-    'lc' => %i[preferred_name learning_coach personal_email phone_number parent1_phone_number parent2_phone_number]
+    'lc' => %i[preferred_name learning_coach_id personal_email phone_number parent1_phone_number parent2_phone_number]
   }.freeze
 
   FINANCE_VIEW_BY_ROLE = {
