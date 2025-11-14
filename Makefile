@@ -119,4 +119,13 @@ recreate_moodle_topics: ## Delete all moodle topics and recreate them from API
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake moodle:recreate_topics"
 
 recreate_moodle_timelines_by_id:
-docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake moodle:recreate_topics_by_ids"
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake moodle:recreate_topics_by_ids"
+
+update_hubs:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rails hubs:update_from_csv"
+
+pricing:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rails pricing:import"
+
+learner_info:
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rails admissions:import_learner_infos"
