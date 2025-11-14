@@ -76,7 +76,7 @@ class LearnerInfo < ApplicationRecord
   before_validation :normalize_curriculum
   before_validation :normalize_grade
 
-  after_commit :check_status_updates, on: [:create, :update]
+  after_commit :check_status_updates, on: :update
   after_commit :update_discounts_if_needed, on: [:create, :update]
   after_update :send_end_date_notifications, if: :saved_change_to_end_date?
 
