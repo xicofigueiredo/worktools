@@ -60,51 +60,51 @@ export default class extends Controller {
     }
   }
 
-  validateRequiredFields(formData) {
+  validateRequiredFields() {
     const errors = []
 
-    // Get field values
-    const programme = formData.get('learner_info[programme]')
-    const hubId = formData.get('learner_info[hub_id]')
-    const curriculum = formData.get('learner_info[curriculum_course_option]')
-    const gradeYear = formData.get('learner_info[grade_year]')
-    const learningCoachId = formData.get('learner_info[learning_coach_id]')
-
-    // Get DOM elements for error display
+    // Get DOM elements
     const programmeSelect = this.form.querySelector('select[name="learner_info[programme]"]')
     const hubSelect = this.form.querySelector('select[name="learner_info[hub_id]"]')
     const curriculumSelect = this.form.querySelector('select[name="learner_info[curriculum_course_option]"]')
     const gradeSelect = this.form.querySelector('select[name="learner_info[grade_year]"]')
-    const lcField = this.form.querySelector('#learning-coach-field')
+    const lcHidden = this.form.querySelector('input[name="learner_info[learning_coach_id]"]')
     const lcDisplayInput = this.form.querySelector('#learning-coach-display')
+    const changeBtn = this.form.querySelector('#change-coach-btn')
+
+    // Get values directly from elements
+    const programme = programmeSelect ? programmeSelect.value : ''
+    const hubId = hubSelect ? hubSelect.value : ''
+    const curriculum = curriculumSelect ? curriculumSelect.value : ''
+    const gradeYear = gradeSelect ? gradeSelect.value : ''
+    const learningCoachId = lcHidden ? lcHidden.value : ''
 
     // Clear previous errors
     this.clearAllErrors()
 
     // Validate programme
-    if (!programme || programme === '') {
+    if (programmeSelect && !programmeSelect.disabled && !programme) {
       errors.push({ field: programmeSelect, message: 'Please select a programme.' })
     }
 
     // Validate hub
-    if (!hubId || hubId === '') {
+    if (hubSelect && !hubSelect.disabled && !hubId) {
       errors.push({ field: hubSelect, message: 'Please select a hub.' })
     }
 
     // Validate curriculum
-    if (!curriculum || curriculum === '') {
+    if (curriculumSelect && !curriculumSelect.disabled && !curriculum) {
       errors.push({ field: curriculumSelect, message: 'Please select a curriculum/course option.' })
     }
 
     // Validate grade/year
-    if (!gradeYear || gradeYear === '') {
+    if (gradeSelect && !gradeSelect.disabled && !gradeYear) {
       errors.push({ field: gradeSelect, message: 'Please select a Grade/Year.' })
     }
 
-    // Validate learning coach (only if programme is Online)
+    // Validate learning coach (only if programme is Online and editable)
     if (programme === 'Online') {
-      if (!learningCoachId || learningCoachId === '') {
-        // Use the visible display input for error display
+      if (changeBtn && !changeBtn.disabled && !learningCoachId) {
         errors.push({ field: lcDisplayInput, message: 'Please assign a Learning Coach.', isLearningCoach: true })
       }
     }
@@ -210,17 +210,17 @@ export default class extends Controller {
     errorMessages.forEach(msg => msg.remove())
   }
 
-  async handleSubmit(event) {
+  async   handleSubmit(event) {
     event.preventDefault()
     event.stopPropagation()
 
-    const formData = new FormData(this.form)
-
-    // First, validate required fields
-    if (!this.validateRequiredFields(formData)) {
+    // First, validate required fields using DOM values
+    if (!this.validateRequiredFields()) {
       console.log('Form validation failed, aborting submission')
       return
     }
+
+    const formData = new FormData(this.form)
 
     const newCurriculum = formData.get('learner_info[curriculum_course_option]')
     const newProgramme = formData.get('learner_info[programme]')
@@ -240,9 +240,10 @@ export default class extends Controller {
     })
 
     // Check if curriculum, programme, or hub changed
-    const curriculumChanged = newCurriculum !== this.originalCurriculum
-    const programmeChanged = newProgramme !== this.originalProgramme
-    const hubChanged = newHubId != this.originalHubId // Use != for type coercion
+    // If field not in formData (null), treat as no change since not visible/editable
+    const curriculumChanged = newCurriculum !== null && newCurriculum !== this.originalCurriculum
+    const programmeChanged = newProgramme !== null && newProgramme !== this.originalProgramme
+    const hubChanged = newHubId !== null && newHubId != this.originalHubId // Use != for type coercion
 
     if (curriculumChanged || programmeChanged || hubChanged) {
       console.log('Pricing-relevant change detected')
@@ -253,7 +254,7 @@ export default class extends Controller {
       this.newProgramme = newProgramme
       this.newHubId = newHubId
       // Check if pricing is affected
-      await this.checkPricingImpact(newCurriculum, newProgramme, newHubId)
+      this.checkPricingImpact(newCurriculum, newProgramme, newHubId)
     } else {
       console.log('No pricing-relevant changes, submitting normally')
       // No relevant change, submit normally
@@ -262,6 +263,13 @@ export default class extends Controller {
   }
 
   async checkPricingImpact(newCurriculum, newProgramme, newHubId) {
+    // Skip if any param is null/blank
+    if (!newCurriculum || !newProgramme || !newHubId) {
+      console.log('Skipping pricing check due to missing params')
+      this.form.submit()
+      return
+    }
+
     try {
       const response = await fetch(
         `/admissions/${this.learnerInfoIdValue}/check_pricing_impact?` +
@@ -292,6 +300,8 @@ export default class extends Controller {
     } catch (error) {
       console.error('Error checking pricing impact:', error)
       alert('Error checking pricing information. Please try again.')
+      // Allow submission on error
+      this.form.submit()
     }
   }
 

@@ -389,7 +389,8 @@
                     class="btn btn-primary"
                     data-bs-toggle="modal"
                     data-bs-target="#learningCoachModal"
-                    id="change-coach-btn">
+                    id="change-coach-btn"
+                    <%= 'disabled' unless perm.editable_field?(:learning_coach_id) %>>
               <%= @learner_info.learning_coach ? "Change" : "Select" %> Learning Coach
             </button>
           </div>

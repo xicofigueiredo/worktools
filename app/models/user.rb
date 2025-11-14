@@ -47,7 +47,21 @@ class User < ApplicationRecord
 
   has_one :learner_info, dependent: :destroy
 
-  enum role: { admin: 'Admin', lc: 'Learning Coach', learner: 'Learner', rm: 'Regional Manager', guardian: 'Parent', cm: 'Course Manager', exams: 'Exams', edu: 'Edu', staff: 'Staff', admissions: 'Admissions' }
+  enum role: {
+    admin: 'Admin',
+    lc: 'Learning Coach',
+    learner: 'Learner',
+    rm: 'Regional Manager',
+    guardian: 'Parent',
+    cm: 'Course Manager',
+    exams: 'Exams',
+    edu: 'Edu',
+    staff: 'Staff',
+    admissions: 'Admissions',
+    finance: 'Finance',
+    ops: 'Operations',
+    it: 'IT Support'
+  }
   validate :email_domain_check, on: :create
 
   before_save :ensure_deactivated_if_graduated

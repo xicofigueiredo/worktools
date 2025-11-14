@@ -1,90 +1,89 @@
 <% perm = @permission || LearnerInfoPermission.new(current_user, @learner_info) %>
-
-<h3 class="h5 mb-2">Required documents</h3>
-<p class="text-muted mb-3">Contract, Special Needs (optional), Last term report, Proof of Payment, Learner ID, Parent's ID, Medical Form</p>
+<% uploader_perm = LearnerDocumentPermission.new(current_user) %>
 
 <div class="row gy-3 mb-3">
   <% LearnerDocument::DOCUMENT_TYPES.each do |doc_type| %>
-    <% human = doc_type.tr('_', ' ').titleize.gsub(/\bId\b/, 'ID') %>
-    <% existing_docs = @learner_info.learner_documents.where(document_type: doc_type) %>
+    <% if uploader_perm.visible?(doc_type) %>
+      <% human = doc_type.tr('_', ' ').titleize.gsub(/\bId\b/, 'ID') %>
+      <% existing_docs = @learner_info.learner_documents.where(document_type: doc_type) %>
 
-    <div class="col-12 col-md-6">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title mb-2"><%= human %>
-            <% if doc_type == 'special_needs' %>
-              <small class="text-muted">(optional)</small>
-            <% end %>
-          </h5>
+      <div class="col-12 col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title mb-2"><%= human %>
+              <% if doc_type == 'special_needs' %>
+                <small class="text-muted">(optional)</small>
+              <% end %>
+            </h5>
 
-          <% if existing_docs.any? %>
-            <h6 class="small mb-2">Existing Files (<%= existing_docs.size %>)</h6>
-            <% existing_docs.each do |existing| %>
-              <% doc_perm = LearnerDocumentPermission.new(current_user, existing) %>
-              <div class="mb-3 border-bottom pb-2">
-                <p class="mb-1"><strong>File:</strong> <%= existing.file.filename %></p>
+            <% if existing_docs.any? %>
+              <h6 class="small mb-2">Existing Files (<%= existing_docs.size %>)</h6>
+              <% existing_docs.each do |existing| %>
+                <% doc_perm = LearnerDocumentPermission.new(current_user, existing) %>
+                <div class="mb-3 border-bottom pb-2">
+                  <p class="mb-1"><strong>File:</strong> <%= existing.file.filename %></p>
 
-                <div class="d-flex gap-2 mb-1">
-                  <% if doc_perm.download? %>
-                    <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-primary' do %>
-                      <i class="fa fa-download" aria-hidden="true"></i>&nbsp;Download
+                  <div class="d-flex gap-2 mb-1">
+                    <% if doc_perm.download? %>
+                      <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-primary' do %>
+                        <i class="fa fa-download" aria-hidden="true"></i>&nbsp;Download
+                      <% end %>
                     <% end %>
-                  <% end %>
 
-                  <% if existing.file.blob.content_type.start_with?('image/') && doc_perm.download? %>
-                    <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-outline-secondary' do %>
-                      <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;Preview
+                    <% if existing.file.blob.content_type.start_with?('image/') && doc_perm.download? %>
+                      <%= link_to url_for(existing.file), target: '_blank', rel: 'noopener', class: 'btn btn-sm btn-outline-secondary' do %>
+                        <i class="fa fa-eye" aria-hidden="true"></i>&nbsp;Preview
+                      <% end %>
                     <% end %>
-                  <% end %>
 
-                  <% if doc_perm.destroy? %>
-                    <%= button_to document_admission_path(@learner_info, existing.id),
-                                  method: :delete,
-                                  data: { confirm: "Delete this #{human} file?" },
-                                  class: 'btn btn-sm btn-danger',
-                                  form: { style: 'display:inline' } do %>
-                      <i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Remove
+                    <% if doc_perm.destroy? %>
+                      <%= button_to document_admission_path(@learner_info, existing.id),
+                                    method: :delete,
+                                    data: { confirm: "Delete this #{human} file?" },
+                                    class: 'btn btn-sm btn-danger',
+                                    form: { style: 'display:inline' } do %>
+                        <i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Remove
+                      <% end %>
                     <% end %>
+                  </div>
+
+                  <% if existing.description.present? %>
+                    <p class="mb-0 small"><strong>Description:</strong> <%= existing.description %></p>
                   <% end %>
                 </div>
-
-                <% if existing.description.present? %>
-                  <p class="mb-0 small"><strong>Description:</strong> <%= existing.description %></p>
-                <% end %>
-              </div>
+              <% end %>
+            <% else %>
+              <p class="text-muted mb-2">No files uploaded yet.</p>
             <% end %>
-          <% else %>
-            <p class="text-muted mb-2">No files uploaded yet.</p>
-          <% end %>
 
-          <h6 class="small mb-2">Add File(s)</h6>
+            <h6 class="small mb-2">Add File(s)</h6>
 
-          <%# show upload form only if document-level permission allows creating this doc type %>
-          <% uploader_perm = LearnerDocumentPermission.new(current_user, nil) %>
-          <% if uploader_perm.create?(doc_type) %>
-            <%= form_with url: documents_admission_path(@learner_info), multipart: true, local: true do |f| %>
-              <%= hidden_field_tag 'learner_document[document_type]', doc_type %>
+            <%# show upload form only if document-level permission allows creating this doc type %>
+            <% if uploader_perm.create?(doc_type) %>
+              <%= form_with url: documents_admission_path(@learner_info), multipart: true, local: true do |f| %>
+                <%= hidden_field_tag 'learner_document[document_type]', doc_type %>
 
-              <div class="mb-2">
-                <label class="form-label small mb-1">Select file(s) (PDF / JPG / PNG) - multiple allowed</label>
-                <%= file_field_tag 'learner_document[file][]', accept: 'application/pdf,image/*', multiple: true, class: 'form-control form-control-sm' %>
-              </div>
+                <div class="mb-2">
+                  <label class="form-label small mb-1">Select file(s) (PDF / JPG / PNG) - multiple allowed</label>
+                  <%= file_field_tag 'learner_document[file][]', accept: 'application/pdf,image/*', multiple: true, class: 'form-control form-control-sm' %>
+                </div>
 
-              <div class="mb-2">
-                <label class="form-label small mb-1">Description (optional, applies to all selected files)</label>
-                <%= text_field_tag 'learner_document[description]', nil, placeholder: 'Notes about the file(s)', class: 'form-control form-control-sm' %>
-              </div>
+                <div class="mb-2">
+                  <label class="form-label small mb-1">Description (optional, applies to all selected files)</label>
+                  <%= text_field_tag 'learner_document[description]', nil, placeholder: 'Notes about the file(s)', class: 'form-control form-control-sm' %>
+                </div>
 
-              <div>
-                <%= submit_tag "Upload to #{human}", class: 'btn btn-sm btn-success' %>
-              </div>
+                <div>
+                  <%= submit_tag "Upload to #{human}", class: 'btn btn-sm btn-success' %>
+                </div>
+              <% end %>
+            <% else %>
+              <p class="text-muted small mb-0">You do not have permission to upload this type of document.</p>
             <% end %>
-          <% else %>
-            <p class="text-muted small mb-0">You do not have permission to upload this type of document.</p>
-          <% end %>
 
+          </div>
         </div>
       </div>
-    </div>
+    <% end %>
   <% end %>
 </div>
