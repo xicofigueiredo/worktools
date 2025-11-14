@@ -271,7 +271,8 @@ class LearnerInfo < ApplicationRecord
       create_institutional_user_if_needed
     end
 
-    send_status_notification(new_status)
+    # TO DO: ACTIVATE AFTER POPULATING
+    #send_status_notification(new_status)
   end
 
   def calculate_status
@@ -537,7 +538,7 @@ class LearnerInfo < ApplicationRecord
         UserMailer.admissions_notification(user, adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      # send_teams_message
+      send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipients(learning_coaches + curriculum_responsibles + regional_manager, message)
