@@ -378,7 +378,7 @@ class LearnerInfo < ApplicationRecord
   end
 
   def admissions_users
-    [User.find_by(email: "admissions@bravegenerationacademy.com")].compact
+    [User.find_by(email: "contact@bravegenerationacademy.com")].compact
   end
 
   def finance_users
