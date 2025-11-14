@@ -53,63 +53,98 @@
       </div>
     </div>
 
-    <!-- Activities Table -->
-    <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
-      <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
-        <h3 class="mb-3">Activities during Build Week</h3>
-        <div class="d-flex justify-content-end mb-3">
-          <%= link_to "Edit Activities", manage_activities_consents_path(date: @current_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-primary", style: "border-radius: 10px;" %>
+    <div class="row">
+      <!-- Left side: Activities Table -->
+      <div class="col-md-8">
+        <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
+          <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+            <h3 class="mb-3">Activities during Build Week</h3>
+            <div class="d-flex justify-content-end mb-3">
+              <%= link_to "Edit Activities", manage_activities_consents_path(date: @current_build_week.start_date, hub_id: @selected_hub&.id), class: "btn btn-primary", style: "border-radius: 10px;" %>
+            </div>
+          </div>
+
+          <% if @consent_activities&.any? %>
+            <div class="table-responsive">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Activity and Location</th>
+                    <th>Meeting and Pick-up</th>
+                    <th>Transport</th>
+                    <th>To bring along</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @consent_activities.each do |activity| %>
+                    <tr>
+                      <td><%= activity.day %></td>
+                      <td>
+                        <div class="mb-2">
+                          <strong><%= activity.name %></strong>
+                        </div>
+                        <div>
+                          <%= activity.activity_location %>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="mb-2">
+                          <label class="form-label small">Meeting @</label>
+                          <div><%= activity.meeting %></div>
+                        </div>
+                        <div class="mb-2">
+                          <label class="form-label small">Pick-up point @</label>
+                          <div><%= activity.pick_up %></div>
+                        </div>
+                        <div>
+                          <label class="form-label small">Location:</label>
+                          <div><%= activity.location %></div>
+                        </div>
+                      </td>
+                      <td><%= activity.transport %></td>
+                      <td><%= activity.bring_along %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="text-muted">No activities have been added for this build week yet.</p>
+          <% end %>
         </div>
       </div>
 
-      <% if @consent_activities&.any? %>
-        <div class="table-responsive">
-          <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>Day</th>
-                <th>Activity and Location</th>
-                <th>Meeting and Pick-up</th>
-                <th>Transport</th>
-                <th>To bring along</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @consent_activities.each do |activity| %>
-                <tr>
-                  <td><%= activity.day %></td>
-                  <td>
-                    <div class="mb-2">
-                      <strong><%= activity.name %></strong>
-                    </div>
-                    <div>
-                      <%= activity.activity_location %>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="mb-2">
-                      <label class="form-label small">Meeting @</label>
-                      <div><%= activity.meeting %></div>
-                    </div>
-                    <div class="mb-2">
-                      <label class="form-label small">Pick-up point @</label>
-                      <div><%= activity.pick_up %></div>
-                    </div>
-                    <div>
-                      <label class="form-label small">Location:</label>
-                      <div><%= activity.location %></div>
-                    </div>
-                  </td>
-                  <td><%= activity.transport %></td>
-                  <td><%= activity.bring_along %></td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
+      <!-- Right side: Study Hub Table -->
+      <div class="col-md-4">
+        <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
+          <h3 class="mb-3">Study Hub</h3>
+          <% if @consent_study_hub %>
+            <div class="table-responsive">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Hub</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].each do |day| %>
+                    <tr>
+                      <td><%= day %></td>
+                      <td>
+                        <%= @consent_study_hub.send(day.downcase).presence || '-' %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <p class="text-muted">No study hub information available for this build week.</p>
+          <% end %>
         </div>
-      <% else %>
-        <p class="text-muted">No activities have been added for this build week yet.</p>
-      <% end %>
+      </div>
     </div>
   </div>
 <% end %>

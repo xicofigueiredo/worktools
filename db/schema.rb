@@ -181,6 +181,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_11_142726) do
     t.index ["week_id"], name: "index_consent_activities_on_week_id"
   end
 
+  create_table "consent_study_hubs", force: :cascade do |t|
+    t.string "monday"
+    t.string "tuesday"
+    t.string "wednesday"
+    t.string "thursday"
+    t.string "friday"
+    t.bigint "week_id", null: false
+    t.bigint "hub_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["hub_id"], name: "index_consent_study_hubs_on_hub_id"
+    t.index ["week_id"], name: "index_consent_study_hubs_on_week_id"
+  end
+
   create_table "consents", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "sprint_id"
@@ -1183,6 +1197,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_11_142726) do
   add_foreign_key "confirmations", "users", column: "approver_id"
   add_foreign_key "consent_activities", "hubs"
   add_foreign_key "consent_activities", "weeks"
+  add_foreign_key "consent_study_hubs", "hubs"
+  add_foreign_key "consent_study_hubs", "weeks"
   add_foreign_key "consents", "sprints"
   add_foreign_key "consents", "users"
   add_foreign_key "consents", "weeks"

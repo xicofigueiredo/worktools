@@ -75,8 +75,33 @@
       <% end %>
 
       <p>
-        We believe that a Build Week is essential to every learner’s development, but we also understand that it is not always possible to attend all the various activities due to explicit circumstances. It is for this reason that the <strong> <%= @bw_consent.hub || @hub %></strong> Hub will be open during the week of <%= @bw_consent.start_date || @nearest_build_week.start_date.strftime('%d %B, %Y') %> to <%= @bw_consent.end_date || @nearest_build_week.end_date.strftime('%d %B, %Y') %> as the dedicated study hub for that day from 9:00 – 17:00.
+        We believe that a Build Week is essential to every learner's development, but we also understand that it is not always possible to attend all the various activities due to explicit circumstances. It is for this reason that these hubs will be open during the week to study from 9:00 – 17:00.
       </p>
+
+      <% if @consent_study_hub %>
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><%= @consent_study_hub.monday.presence || '-' %></td>
+                <td><%= @consent_study_hub.tuesday.presence || '-' %></td>
+                <td><%= @consent_study_hub.wednesday.presence || '-' %></td>
+                <td><%= @consent_study_hub.thursday.presence || '-' %></td>
+                <td><%= @consent_study_hub.friday.presence || '-' %></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
     </div>
 
     <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">

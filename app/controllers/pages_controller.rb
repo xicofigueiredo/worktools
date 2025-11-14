@@ -189,10 +189,14 @@ class PagesController < ApplicationController
 
       @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
-      nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+      current_date = Date.today
+
+      # First, try to find a build week that contains the current date
+      @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+      @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
+
       @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
-      @bw_consent = Consent.find_by(user_id: @learner.id, week_id: nearest_build_week&.id)
-      @activities = @bw_consent.consent_activities.any? if @bw_consent
+      @bw_consent = Consent.where(user_id: @learner.id, sprint_id: nil).order(created_at: :desc).first
 
       get_kda_averages(@learner.kdas, @current_sprint)
       redirect_to some_fallback_path, alert: "Learner not found." unless @learner
@@ -228,10 +232,15 @@ class PagesController < ApplicationController
       @report = @learner.reports.order(updated_at: :asc).where(parent: true).last
       @last_report_sprint = @report&.sprint&.name || ""
     end
-    nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+
+    current_date = Date.today
+
+    @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+
+
     @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
-    @bw_consent = Consent.find_by(user_id: @learner.id, week_id: nearest_build_week&.id)
-    @activities = @bw_consent.consent_activities.any? if @bw_consent
+    @bw_consent = Consent.where(user_id: @learner.id, sprint_id: nil).order(created_at: :desc).first
+    @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
     # The bulk of the setup is already handled in prepare_dashboard_data.
   end
 

@@ -18,6 +18,7 @@
           <% previous_unit = nil %>
           <% @timeline.subject.topics.order(:order, :id).each do |topic| %>
             <% user_topic = topic.user_topics.find_by(user: @learner) %>
+              <% if user_topic && user_topic.deadline.present? %>
             <% background_color = if user_topic && !user_topic.done && user_topic.deadline && user_topic.deadline < Date.today && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)
                                     '#ff193499'
                                   elsif user_topic && !user_topic.done && user_topic.deadline && Date.today.monday? && user_topic.deadline < (Date.today + ((5 - Date.today.wday) % 7)) && !['lws7', 'lws8', 'lws9'].include?(@timeline.subject.category)
@@ -35,14 +36,11 @@
                 <% end %>
               </td>
               <td style="background-color: <%= background_color %>;"><%= topic.name %></td>
-              <% if user_topic && user_topic.deadline.present? %>
                 <% unless @timeline.subject.category.include?("lws") %>
                   <td style="background-color: <%= background_color %>;"><%= topic.time %></td>
                   <td style="background-color: <%= background_color %>;"><%= user_topic.deadline.strftime('%d-%m-%Y') %></td>
                 <% end %>
-              <% else %>
-                <td style="background-color: <%= background_color %>;">Update Dates</td>
-              <% end %>
+\              <% end %>
               <td style="background-color: <%= background_color %>;">
                 <div class="d-flex justify-content-center align-items-center" data-controller="toggle-done">
                   <% if user_topic.present? %>

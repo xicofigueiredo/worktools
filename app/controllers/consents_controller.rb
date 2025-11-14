@@ -9,7 +9,7 @@ class ConsentsController < ApplicationController
       redirect_back fallback_location: root_path, alert: "Learner not found" and return
     end
     # Find the nearest build week week.name.include?("Build") and start_date is before or equal to Date.today
-    @nearest_build_week = Week.where("start_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+    @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     bw_existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
 
     if bw_existing
@@ -37,7 +37,17 @@ class ConsentsController < ApplicationController
         Rails.logger.debug "After populate - emergency contact name: #{@bw_consent.emergency_contact_name}" if Rails.env.development?
       end
     end
-    @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
+    @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id)
+                                 .order(meeting: :ASC)
+                                 .order(Arel.sql("CASE day
+                                                   WHEN 'Monday' THEN 1
+                                                   WHEN 'Tuesday' THEN 2
+                                                   WHEN 'Wednesday' THEN 3
+                                                   WHEN 'Thursday' THEN 4
+                                                   WHEN 'Friday' THEN 5
+                                                   ELSE 6
+                                                 END"))
+    @consent_study_hub = ConsentStudyHub.find_by(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id)
   end
 
   def create_build_week
@@ -52,18 +62,39 @@ class ConsentsController < ApplicationController
     unless over_confirmed || under_confirmed || approver_present
       @bw_consent = Consent.new
       flash.now[:alert] = "Please tick one of the confirmations or fill the name field."
+      # Set required instance variables for the view
+      @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+      @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id)
+                                   .order(meeting: :ASC)
+                                   .order(Arel.sql("CASE day
+                                                    WHEN 'Monday' THEN 1
+                                                    WHEN 'Tuesday' THEN 2
+                                                    WHEN 'Wednesday' THEN 3
+                                                    WHEN 'Thursday' THEN 4
+                                                    WHEN 'Friday' THEN 5
+                                                    ELSE 6
+                                                  END"))
+      @consent_study_hub = ConsentStudyHub.find_by(week_id: @nearest_build_week&.id)
       render :build_week and return
     end
 
-    @nearest_build_week = Week.where("start_date <= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+    # Use the same query as build_week to ensure consistency
+    @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
     existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
 
     consent_attrs = consent_params.merge(user: @learner, week: @nearest_build_week, hub: @learner.main_hub&.name)
 
+    # Explicitly convert checkbox values to booleans
+    # Rails checkboxes send "1" for checked, "0" or nothing for unchecked
+    consent_attrs[:confirmation_over_18] = params.dig(:consent, :confirmation_over_18) == '1'
+    consent_attrs[:confirmation_under_18] = params.dig(:consent, :confirmation_under_18) == '1'
+
     if existing
+      # If there's an existing consent, update it with the form values
       @bw_consent = existing
       @bw_consent.assign_attributes(consent_attrs)
     else
+      # First time filling - create new consent (fields already pre-populated from last consent in build_week method)
       @bw_consent = Consent.new(consent_attrs)
     end
 
@@ -71,6 +102,18 @@ class ConsentsController < ApplicationController
       redirect_to learner_profile_path(@learner), notice: "Consent saved."
     else
       flash.now[:alert] = @bw_consent.errors.full_messages.to_sentence
+      # Set required instance variables for the view when rendering after error
+      @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id)
+                                   .order(meeting: :ASC)
+                                   .order(Arel.sql("CASE day
+                                                    WHEN 'Monday' THEN 1
+                                                    WHEN 'Tuesday' THEN 2
+                                                    WHEN 'Wednesday' THEN 3
+                                                    WHEN 'Thursday' THEN 4
+                                                    WHEN 'Friday' THEN 5
+                                                    ELSE 6
+                                                   END"))
+      @consent_study_hub = ConsentStudyHub.find_by(week_id: @nearest_build_week&.id)
       render :build_week
     end
   end
@@ -196,11 +239,22 @@ class ConsentsController < ApplicationController
       @selected_hub = @available_hubs.find_by(id: selected_hub_id) || @available_hubs.first || current_user.main_hub
 
       # Find consent activities for the selected hub and build week
-      @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
+      @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(Arel.sql("CASE day
+                                                    WHEN 'Monday' THEN 1
+                                                    WHEN 'Tuesday' THEN 2
+                                                    WHEN 'Wednesday' THEN 3
+                                                    WHEN 'Thursday' THEN 4
+                                                    WHEN 'Friday' THEN 5
+                                                    ELSE 6
+                                                   END"))
+
+      # Find consent study hub for this week and selected hub
+      @consent_study_hub = ConsentStudyHub.find_by(week_id: @current_build_week.id, hub_id: @selected_hub&.id)
     else
       @prev_build_week = nil
       @next_build_week = nil
       @consent_activities = []
+      @consent_study_hub = nil
       @available_hubs = current_user.hubs.order(:name)
       @selected_hub = current_user.main_hub || @available_hubs.first
     end
@@ -251,13 +305,24 @@ class ConsentsController < ApplicationController
 
     # Get available hubs for the current user
     @available_hubs = current_user.hubs.order(:name)
+    @all_hubs = Hub.order(:name) # All hubs for the study hub dropdown
 
     # Get selected hub (default to main hub)
     selected_hub_id = params[:hub_id].presence || current_user.main_hub&.id
     @selected_hub = @available_hubs.find_by(id: selected_hub_id) || @available_hubs.first || current_user.main_hub
 
     # Find consent activities for the selected hub and build week
-    @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
+    @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(Arel.sql("CASE day
+                                                    WHEN 'Monday' THEN 1
+                                                    WHEN 'Tuesday' THEN 2
+                                                    WHEN 'Wednesday' THEN 3
+                                                    WHEN 'Thursday' THEN 4
+                                                    WHEN 'Friday' THEN 5
+                                                    ELSE 6
+                                                   END"))
+
+    # Find or initialize consent study hub for this week and selected hub
+    @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id, hub_id: @selected_hub&.id)
   end
 
   def update_activities
@@ -317,14 +382,39 @@ class ConsentsController < ApplicationController
       end
     end
 
+    # Process consent study hub - always try to save, even if params are empty
+    study_hub_params = params.fetch(:consent_study_hub, {}).permit(:monday, :tuesday, :wednesday, :thursday, :friday, :hub_id)
+
+    # Always set hub_id to the selected hub from the dropdown (required by model)
+    selected_hub_id = selected_hub&.id
+
+    # Find or initialize by both week_id and hub_id to create separate records for each hub
+    @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id, hub_id: selected_hub_id)
+    @consent_study_hub.assign_attributes(study_hub_params)
+    @consent_study_hub.week_id = @current_build_week.id
+    @consent_study_hub.hub_id = selected_hub_id
+
+    unless @consent_study_hub.save
+      errors.concat(@consent_study_hub.errors.full_messages)
+    end
+
     if errors.empty?
       redirect_to navigator_consents_path(date: @current_build_week.start_date, hub_id: selected_hub_id), notice: "Activities saved successfully."
     else
       @available_hubs = current_user.hubs.order(:name)
+      @all_hubs = Hub.order(:name)
       @selected_hub = selected_hub
       @prev_build_week = Week.where("start_date < ? AND name ILIKE ?", @current_build_week.start_date, "%Build%").order(start_date: :desc).first
       @next_build_week = Week.where("start_date > ? AND name ILIKE ?", @current_build_week.end_date, "%Build%").order(:start_date).first
-      @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(:day)
+      @consent_activities = ConsentActivity.where(week_id: @current_build_week.id, hub_id: @selected_hub&.id).order(Arel.sql("CASE day
+                                                    WHEN 'Monday' THEN 1
+                                                    WHEN 'Tuesday' THEN 2
+                                                    WHEN 'Wednesday' THEN 3
+                                                    WHEN 'Thursday' THEN 4
+                                                    WHEN 'Friday' THEN 5
+                                                    ELSE 6
+                                                   END"))
+      @consent_study_hub = ConsentStudyHub.find_or_initialize_by(week_id: @current_build_week.id)
       flash.now[:alert] = errors.join(", ")
       render :manage_activities, status: :unprocessable_entity
     end
