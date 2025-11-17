@@ -4,6 +4,7 @@ class AdmissionListController < ApplicationController
   before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document, :check_pricing_impact]
   before_action :set_learning_coaches, only: [:show]
   before_action :require_staff
+  before_action :require_admin_or_admissions, only: [:fetch_from_hubspot]
 
   def index
     @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
@@ -509,5 +510,11 @@ class AdmissionListController < ApplicationController
     Rails.logger.debug "Permitting: #{permit_hash.inspect}"
 
     params[:learner_info].present? ? params.require(:learner_info).permit(*permit_hash) : {}
+  end
+
+  def require_admin_or_admissions
+    unless current_user.admin? || current_user.admissions?
+      render json: { success: false, message: 'Access denied.' }, status: :forbidden
+    end
   end
 end

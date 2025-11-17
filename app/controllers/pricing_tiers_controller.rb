@@ -1,4 +1,6 @@
 class PricingTiersController < ApplicationController
+  before_action :require_admin_or_admissions
+
   def index
     @pricing_tiers = PricingTier.all
 
@@ -39,5 +41,11 @@ class PricingTiersController < ApplicationController
       :invoice_recipient,
       :notes
     )
+  end
+
+  def require_admin_or_admissions
+    unless current_user.admin? || current_user.admissions?
+      redirect_to root_path, alert: 'Access denied: Admins or admissions users only.'
+    end
   end
 end

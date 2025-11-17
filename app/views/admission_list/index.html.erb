@@ -131,14 +131,6 @@
           <%= link_to "Clear All", admissions_path,
               style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
 
-          <button id="fetchHubspotBtn"
-                  type="button"
-                  onclick="fetchFromHubspot()"
-                  style="padding:7px 12px; border-radius:6px; background:#6f42c1; color:white; border:1px solid #6f42c1; display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <i class="fa fa-sync" aria-hidden="true" style="font-size:14px;"></i>
-            Sync HubSpot
-          </button>
-
           <button type="button"
                   onclick="openExportModal()"
                   style="padding:7px 12px; border-radius:6px; background:#28a745; color:white; border:1px solid #28a745; display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -146,8 +138,18 @@
             Export CSV
           </button>
 
-          <%= link_to "Manage Pricing Tiers", pricing_tiers_path, data: { turbo: false },
-              style: "padding:7px 12px; border-radius:6px; background:#0d6efd; color:white; border:1px solid #0d6efd; display:flex; align-items:center; gap:6px; cursor:pointer; text-decoration:none;" %>
+          <% if current_user.admin? || current_user.admissions? %>
+            <button id="fetchHubspotBtn"
+                    type="button"
+                    onclick="fetchFromHubspot()"
+                    style="padding:7px 12px; border-radius:6px; background:#6f42c1; color:white; border:1px solid #6f42c1; display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <i class="fa fa-sync" aria-hidden="true" style="font-size:14px;"></i>
+              Sync HubSpot
+            </button>
+
+            <%= link_to "Manage Pricing Tiers", pricing_tiers_path, data: { turbo: false },
+                style: "padding:7px 12px; border-radius:6px; background:#0d6efd; color:white; border:1px solid #0d6efd; display:flex; align-items:center; gap:6px; cursor:pointer; text-decoration:none;" %>
+          <% end %>
         </div>
 
         <% chip_style = "display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; color:inherit; font-size:0.9rem; margin-top:12px;" %>
