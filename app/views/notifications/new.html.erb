@@ -80,7 +80,7 @@
                   <select name="user_ids[]" multiple class="form-select" size="6" id="user_select">
                     <% @users.each do |user| %>
                       <option value="<%= user.id %>">
-                        <%= user.full_name %> (<%= user.email %>) - <%= user.role.titleize %>
+                        <%= user.full_name %> (<%= user.email %>) - <%= user.role&.titleize || 'No Role' %>
                       </option>
                     <% end %>
                   </select>
