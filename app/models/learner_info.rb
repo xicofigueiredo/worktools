@@ -271,8 +271,7 @@ class LearnerInfo < ApplicationRecord
       create_institutional_user_if_needed
     end
 
-    # TO DO: ACTIVATE AFTER POPULATING
-    #send_status_notification(new_status)
+    send_status_notification(new_status)
   end
 
   def calculate_status
