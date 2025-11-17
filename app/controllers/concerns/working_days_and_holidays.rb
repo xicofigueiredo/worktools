@@ -7,8 +7,9 @@ module WorkingDaysAndHolidays
     hub_holidays ||= Holiday.where(country: timeline.user.users_hubs.find_by(main: true)&.hub.country).flat_map do |holiday|
       (holiday.start_date..holiday.end_date).to_a
     end
+    build_weeks ||= Week.where("name ILIKE ?", "%Build Week%").flat_map { |week| (week.start_date..week.end_date).to_a }
 
-    @holidays_array = (user_holidays + bga_holidays + hub_holidays).uniq
+    @holidays_array = (user_holidays + bga_holidays + hub_holidays + build_weeks).uniq
   end
 
   # Works for timeline as well as sprint and week as long as model has start and end date

@@ -106,12 +106,7 @@ class TimelinesController < ApplicationController
       @timeline.notify_users(current_user) if relevant_changes.present?
 
       @timeline.save
-      # if current_user.hub_ids.include?(147)
-      if false
-        moodle_generate_topic_deadlines(@timeline)
-      else
-        generate_topic_deadlines(@timeline)
-      end
+      generate_topic_deadlines(@timeline)
 
       @timeline.save
 
