@@ -271,8 +271,7 @@ class LearnerInfo < ApplicationRecord
       create_institutional_user_if_needed
     end
 
-    # TO DO: ACTIVATE AFTER POPULATING
-    #send_status_notification(new_status)
+    send_status_notification(new_status)
   end
 
   def calculate_status
@@ -549,6 +548,9 @@ class LearnerInfo < ApplicationRecord
       # Notify finance users when a learner becomes Inactive
       message = "#{full_name} status has been changed to Inactive."
       notify_recipients(finance_users, message)
+
+      lc_message = "#{full_name} has become Inactive. Please ensure the parents are removed from the WhatsApp group."
+      notify_recipients(learning_coaches, lc_message)
     end
   end
 

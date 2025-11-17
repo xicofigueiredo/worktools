@@ -17,52 +17,52 @@ export default class extends Controller {
   ];
 
   connect() {
-    this.timeout = null;
-    // initial toggle based on current form values
+    this.searchTimeout = null;
     this._updateClearForAll();
-
-    // optional: observe input changes that might not fire events (rare)
-    // not necessary in most cases; left out for simplicity
-    // debug
-    // console.log("admission_search controller connected");
   }
 
-  submit() {
-    // update clear buttons immediately so UI feels responsive
+  // Dynamic search with minimal debounce (200ms) for smooth typing
+  searchInput() {
     this._updateClearForAll();
 
-    clearTimeout(this.timeout);
-    this.timeout = setTimeout(() => {
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
       this._requestSubmit();
-    }, 500);
+    }, 200); // Very short debounce - feels instant but prevents excessive requests
+  }
+
+  // Instant submit for dropdowns (no debounce needed)
+  submit() {
+    this._updateClearForAll();
+    this._requestSubmit();
   }
 
   clearSearch(event) {
     event.preventDefault();
     this.searchInputTarget.value = "";
     this._updateClearForAll();
-    this._submitNow();
+    this._requestSubmit();
   }
 
   clearStatus(event) {
     event.preventDefault();
     this.statusSelectTarget.value = "";
     this._updateClearForAll();
-    this._submitNow();
+    this._requestSubmit();
   }
 
   clearCurriculum(event) {
     event.preventDefault();
     this.curriculumSelectTarget.value = "";
     this._updateClearForAll();
-    this._submitNow();
+    this._requestSubmit();
   }
 
   clearGrade(event) {
     event.preventDefault();
     this.gradeSelectTarget.value = "";
     this._updateClearForAll();
-    this._submitNow();
+    this._requestSubmit();
   }
 
   clearProgramme(event) {
@@ -71,7 +71,7 @@ export default class extends Controller {
       this.programmeSelectTarget.value = "";
     }
     this._updateClearForAll();
-    this._submitNow();
+    this._requestSubmit();
   }
 
   clearHub(event) {
@@ -80,10 +80,10 @@ export default class extends Controller {
       this.hubSelectTarget.value = "";
     }
     this._updateClearForAll();
-    this._submitNow();
+    this._requestSubmit();
   }
 
-  // helpers ------------------------------------------------
+  // Private helpers ------------------------------------------------
 
   _requestSubmit() {
     if (typeof this.element.requestSubmit === "function") {
@@ -93,13 +93,7 @@ export default class extends Controller {
     }
   }
 
-  _submitNow() {
-    // immediate submit used after clearing a filter
-    this._requestSubmit();
-  }
-
   _updateClearForAll() {
-    // safely update each clear button if target exists
     if (this.hasSearchInputTarget && this.hasSearchClearTarget) {
       this._updateClear(this.searchInputTarget, this.searchClearTarget);
     }
@@ -126,13 +120,10 @@ export default class extends Controller {
   }
 
   _updateClear(fieldEl, clearButtonEl) {
-    // Show clear button only when field has a non-empty value
     let hasValue = false;
 
     if (fieldEl.tagName === "SELECT") {
       hasValue = (fieldEl.value != null && String(fieldEl.value).trim() !== "");
-    } else if (fieldEl.tagName === "INPUT" || fieldEl.tagName === "TEXTAREA") {
-      hasValue = String(fieldEl.value).trim().length > 0;
     } else {
       hasValue = String(fieldEl.value).trim().length > 0;
     }

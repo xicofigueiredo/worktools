@@ -17,120 +17,132 @@
 
 <div style="padding: 0 24px;">
   <h1>Admissions List</h1>
-  <%= turbo_frame_tag "learner_infos" do %>
 
-    <div style="margin-bottom: 12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-      <%= form_with url: admissions_path,
-                    method: :get,
-                    local: true,
-                    data: { controller: "admission-search", turbo_frame: "learner_infos" },
-                    html: { style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" } do |f| %>
+  <div style="margin-bottom: 12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <%= form_with url: admissions_path,
+                  method: :get,
+                  local: true,
+                  data: { controller: "admission-search", turbo_frame: "learner_infos" },
+                  html: { style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" } do |f| %>
 
-        <div style="position: relative;">
-          <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Search</label>
-          <%= f.text_field :search,
-                value: params[:search],
-                placeholder: "Search learner/parent name or email...",
-                data: { admission_search_target: "searchInput", action: "input->admission-search#submit" },
-                style: 'min-width:220px; padding:6px 30px 6px 6px; border-radius:6px; border:1px solid #ccc;' %>
+      <div style="position: relative;">
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Search</label>
+        <%= f.text_field :search,
+              value: params[:search],
+              placeholder: "Search learner/parent name or email...",
+              data: {
+                admission_search_target: "searchInput",
+                action: "input->admission-search#searchInput"
+              },
+              style: 'min-width:220px; padding:6px 30px 6px 6px; border-radius:6px; border:1px solid #ccc;',
+              autocomplete: 'off' %>
 
-          <button type="button"
-                  data-action="click->admission-search#clearSearch"
-                  data-admission-search-target="searchClear"
-                  aria-label="Clear search"
-                  style="position: absolute; right: 8px; top: 30px; background: none; border: none; cursor: pointer; color: #888; font-size: 16px;">
-            ✕
-          </button>
-        </div>
+        <button type="button"
+                data-action="click->admission-search#clearSearch"
+                data-admission-search-target="searchClear"
+                aria-label="Clear search"
+                style="position: absolute; right: 8px; top: 30px; background: none; border: none; cursor: pointer; color: #888; font-size: 16px; display: none;">
+          ✕
+        </button>
+      </div>
 
-        <div style="position: relative;">
-          <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Status</label>
-          <%= select_tag :status,
-                options_for_select([['All', '']] + @statuses.map { |s| [s, s] }, params[:status]),
-                include_blank: false,
-                data: { admission_search_target: "statusSelect", action: "change->admission-search#submit" },
-                style: 'min-width:160px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+      <div style="position: relative;">
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Status</label>
+        <%= select_tag :status,
+              options_for_select([['All', '']] + @statuses.map { |s| [s, s] }, params[:status]),
+              include_blank: false,
+              data: { admission_search_target: "statusSelect", action: "change->admission-search#submit" },
+              style: 'min-width:160px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
 
-          <button type="button"
-                  data-action="click->admission-search#clearStatus"
-                  data-admission-search-target="statusClear"
-                  aria-label="Clear status"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
-            ✕
-          </button>
-        </div>
+        <button type="button"
+                data-action="click->admission-search#clearStatus"
+                data-admission-search-target="statusClear"
+                aria-label="Clear status"
+                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
+          ✕
+        </button>
+      </div>
 
-        <div style="position: relative;">
-          <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Hub</label>
-          <%= select_tag :hub,
-                options_for_select([['All', '']] + @hubs.map { |h| [h, h] }, params[:hub]),
-                include_blank: false,
-                data: { admission_search_target: "hubSelect", action: "change->admission-search#submit" },
-                style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+      <div style="position: relative;">
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Hub</label>
+        <%= select_tag :hub,
+              options_for_select([['All', '']] + @hubs.map { |h| [h, h] }, params[:hub]),
+              include_blank: false,
+              data: { admission_search_target: "hubSelect", action: "change->admission-search#submit" },
+              style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
 
-          <button type="button"
-                  data-action="click->admission-search#clearHub"
-                  data-admission-search-target="hubClear"
-                  aria-label="Clear hub"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
-            ✕
-          </button>
-        </div>
+        <button type="button"
+                data-action="click->admission-search#clearHub"
+                data-admission-search-target="hubClear"
+                aria-label="Clear hub"
+                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
+          ✕
+        </button>
+      </div>
 
-        <div style="position: relative;">
-          <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Programme</label>
-          <%= select_tag :programme,
-                options_for_select([['All', '']] + @programmes.map { |p| [p, p] }, params[:programme]),
-                include_blank: false,
-                data: { admission_search_target: "programmeSelect", action: "change->admission-search#submit" },
-                style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+      <div style="position: relative;">
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Programme</label>
+        <%= select_tag :programme,
+              options_for_select([['All', '']] + @programmes.map { |p| [p, p] }, params[:programme]),
+              include_blank: false,
+              data: { admission_search_target: "programmeSelect", action: "change->admission-search#submit" },
+              style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
 
-          <button type="button"
-                  data-action="click->admission-search#clearProgramme"
-                  data-admission-search-target="programmeClear"
-                  aria-label="Clear programme"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
-            ✕
-          </button>
-        </div>
+        <button type="button"
+                data-action="click->admission-search#clearProgramme"
+                data-admission-search-target="programmeClear"
+                aria-label="Clear programme"
+                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
+          ✕
+        </button>
+      </div>
 
-        <div style="position: relative;">
-          <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Curriculum</label>
-          <%= select_tag :curriculum,
-                options_for_select([['All', '']] + @curricula.map { |c| [c, c] }, params[:curriculum]),
-                include_blank: false,
-                data: { admission_search_target: "curriculumSelect", action: "change->admission-search#submit" },
-                style: 'min-width:220px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+      <div style="position: relative;">
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Curriculum</label>
+        <%= select_tag :curriculum,
+              options_for_select([['All', '']] + @curricula.map { |c| [c, c] }, params[:curriculum]),
+              include_blank: false,
+              data: { admission_search_target: "curriculumSelect", action: "change->admission-search#submit" },
+              style: 'min-width:220px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
 
-          <button type="button"
-                  data-action="click->admission-search#clearCurriculum"
-                  data-admission-search-target="curriculumClear"
-                  aria-label="Clear curriculum"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
-            ✕
-          </button>
-        </div>
+        <button type="button"
+                data-action="click->admission-search#clearCurriculum"
+                data-admission-search-target="curriculumClear"
+                aria-label="Clear curriculum"
+                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
+          ✕
+        </button>
+      </div>
 
-        <div style="position: relative;">
-          <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Grade / Year</label>
-          <%= select_tag :grade_year,
-                options_for_select([['All', '']] + @grades.map { |g| [g, g] }, params[:grade_year]),
-                include_blank: false,
-                data: { admission_search_target: "gradeSelect", action: "change->admission-search#submit" },
-                style: 'min-width:140px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+      <div style="position: relative;">
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Grade / Year</label>
+        <%= select_tag :grade_year,
+              options_for_select([['All', '']] + @grades.map { |g| [g, g] }, params[:grade_year]),
+              include_blank: false,
+              data: { admission_search_target: "gradeSelect", action: "change->admission-search#submit" },
+              style: 'min-width:140px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
 
-          <button type="button"
-                  data-action="click->admission-search#clearGrade"
-                  data-admission-search-target="gradeClear"
-                  aria-label="Clear grade"
-                  style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888;">
-            ✕
-          </button>
-        </div>
-        <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
-          <%= link_to "Clear All", admissions_path,
-              style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
+        <button type="button"
+                data-action="click->admission-search#clearGrade"
+                data-admission-search-target="gradeClear"
+                aria-label="Clear grade"
+                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
+          ✕
+        </button>
+      </div>
 
+      <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
+        <%= link_to "Clear All", admissions_path,
+            style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
+
+        <button type="button"
+                onclick="openExportModal()"
+                style="padding:7px 12px; border-radius:6px; background:#28a745; color:white; border:1px solid #28a745; display:flex; align-items:center; gap:6px; cursor:pointer;">
+          <i class="fa fa-download" aria-hidden="true"></i>
+          Export CSV
+        </button>
+
+        <% if current_user.admin? || current_user.admissions? %>
           <button id="fetchHubspotBtn"
                   type="button"
                   onclick="fetchFromHubspot()"
@@ -139,102 +151,104 @@
             Sync HubSpot
           </button>
 
-          <button type="button"
-                  onclick="openExportModal()"
-                  style="padding:7px 12px; border-radius:6px; background:#28a745; color:white; border:1px solid #28a745; display:flex; align-items:center; gap:6px; cursor:pointer;">
-            <i class="fa fa-download" aria-hidden="true"></i>
-            Export CSV
-          </button>
-
           <%= link_to "Manage Pricing Tiers", pricing_tiers_path, data: { turbo: false },
               style: "padding:7px 12px; border-radius:6px; background:#0d6efd; color:white; border:1px solid #0d6efd; display:flex; align-items:center; gap:6px; cursor:pointer; text-decoration:none;" %>
-        </div>
+        <% end %>
+      </div>
 
-        <% chip_style = "display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; color:inherit; font-size:0.9rem; margin-top:12px;" %>
+    <% end %>
+  </div>
 
-        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-          <div style="font-size:0.95rem; color:#333;">
-            Showing <strong><%= @filtered_count %></strong> learner<%= "s" if @filtered_count != 1 %>
-            <% if @filtered_count != @total_count %>
-              <span style="color:#666; margin-left:8px;">(filtered from <%= @total_count %>)</span>
-            <% end %>
-          </div>
+  <%= turbo_frame_tag "learner_infos" do %>
+    <% chip_style = "display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; color:inherit; font-size:0.9rem; margin-top:12px;" %>
 
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <% if params[:search].present? %>
-              <button type="button"
-                      class="filter-chip"
-                      style="<%= chip_style %>"
-                      aria-label="Remove search filter"
-                      data-action="click->admission-search#clearSearch">
-                <strong style="font-weight:600;">Search:</strong>
-                <span style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">&nbsp;"<%= h(params[:search]) %>"</span>
-                <span aria-hidden="true" style="margin-left:6px;">✕</span>
-              </button>
-            <% end %>
+    <div style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+      <div style="font-size:0.95rem; color:#333;">
+        Showing <strong><%= @filtered_count %></strong> learner<%= "s" if @filtered_count != 1 %>
+        <% if @filtered_count != @total_count %>
+          <span style="color:#666; margin-left:8px;">(filtered from <%= @total_count %>)</span>
+        <% end %>
+      </div>
 
-            <% if params[:status].present? %>
-              <button type="button"
-                      class="filter-chip"
-                      style="<%= chip_style %>"
-                      aria-label="Remove status filter"
-                      data-action="click->admission-search#clearStatus">
-                <strong style="font-weight:600;">Status:</strong>
-                <span><%= h(params[:status]) %></span>
-                <span aria-hidden="true" style="margin-left:6px;">✕</span>
-              </button>
-            <% end %>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <% if params[:search].present? %>
+          <button type="button"
+                  class="filter-chip"
+                  style="<%= chip_style %>"
+                  aria-label="Remove search filter"
+                  data-controller="admission-search-chip"
+                  data-action="click->admission-search-chip#clearSearch">
+            <strong style="font-weight:600;">Search:</strong>
+            <span style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">&nbsp;"<%= h(params[:search]) %>"</span>
+            <span aria-hidden="true" style="margin-left:6px;">✕</span>
+          </button>
+        <% end %>
 
-            <% if params[:hub].present? %>
-              <button type="button"
-                      class="filter-chip"
-                      style="<%= chip_style %>"
-                      aria-label="Remove hub filter"
-                      data-action="click->admission-search#clearHub">
-                <strong style="font-weight:600;">Hub:</strong>
-                <span><%= h(params[:hub]) %></span>
-                <span aria-hidden="true" style="margin-left:6px;">✕</span>
-              </button>
-            <% end %>
+        <% if params[:status].present? %>
+          <button type="button"
+                  class="filter-chip"
+                  style="<%= chip_style %>"
+                  aria-label="Remove status filter"
+                  data-controller="admission-search-chip"
+                  data-action="click->admission-search-chip#clearStatus">
+            <strong style="font-weight:600;">Status:</strong>
+            <span><%= h(params[:status]) %></span>
+            <span aria-hidden="true" style="margin-left:6px;">✕</span>
+          </button>
+        <% end %>
 
-            <% if params[:programme].present? %>
-              <button type="button"
-                      class="filter-chip"
-                      style="<%= chip_style %>"
-                      aria-label="Remove programme filter"
-                      data-action="click->admission-search#clearProgramme">
-                <strong style="font-weight:600;">Programme:</strong>
-                <span><%= h(params[:programme]) %></span>
-                <span aria-hidden="true" style="margin-left:6px;">✕</span>
-              </button>
-            <% end %>
+        <% if params[:hub].present? %>
+          <button type="button"
+                  class="filter-chip"
+                  style="<%= chip_style %>"
+                  aria-label="Remove hub filter"
+                  data-controller="admission-search-chip"
+                  data-action="click->admission-search-chip#clearHub">
+            <strong style="font-weight:600;">Hub:</strong>
+            <span><%= h(params[:hub]) %></span>
+            <span aria-hidden="true" style="margin-left:6px;">✕</span>
+          </button>
+        <% end %>
 
-            <% if params[:curriculum].present? %>
-              <button type="button"
-                      class="filter-chip"
-                      style="<%= chip_style %>"
-                      aria-label="Remove curriculum filter"
-                      data-action="click->admission-search#clearCurriculum">
-                <strong style="font-weight:600;">Curriculum:</strong>
-                <span><%= h(params[:curriculum]) %></span>
-                <span aria-hidden="true" style="margin-left:6px;">✕</span>
-              </button>
-            <% end %>
+        <% if params[:programme].present? %>
+          <button type="button"
+                  class="filter-chip"
+                  style="<%= chip_style %>"
+                  aria-label="Remove programme filter"
+                  data-controller="admission-search-chip"
+                  data-action="click->admission-search-chip#clearProgramme">
+            <strong style="font-weight:600;">Programme:</strong>
+            <span><%= h(params[:programme]) %></span>
+            <span aria-hidden="true" style="margin-left:6px;">✕</span>
+          </button>
+        <% end %>
 
-            <% if params[:grade_year].present? %>
-              <button type="button"
-                      class="filter-chip"
-                      style="<%= chip_style %>"
-                      aria-label="Remove grade filter"
-                      data-action="click->admission-search#clearGrade">
-                <strong style="font-weight:600;">Grade:</strong>
-                <span><%= h(params[:grade_year]) %></span>
-                <span aria-hidden="true" style="margin-left:6px;">✕</span>
-              </button>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
+        <% if params[:curriculum].present? %>
+          <button type="button"
+                  class="filter-chip"
+                  style="<%= chip_style %>"
+                  aria-label="Remove curriculum filter"
+                  data-controller="admission-search-chip"
+                  data-action="click->admission-search-chip#clearCurriculum">
+            <strong style="font-weight:600;">Curriculum:</strong>
+            <span><%= h(params[:curriculum]) %></span>
+            <span aria-hidden="true" style="margin-left:6px;">✕</span>
+          </button>
+        <% end %>
+
+        <% if params[:grade_year].present? %>
+          <button type="button"
+                  class="filter-chip"
+                  style="<%= chip_style %>"
+                  aria-label="Remove grade filter"
+                  data-controller="admission-search-chip"
+                  data-action="click->admission-search-chip#clearGrade">
+            <strong style="font-weight:600;">Grade:</strong>
+            <span><%= h(params[:grade_year]) %></span>
+            <span aria-hidden="true" style="margin-left:6px;">✕</span>
+          </button>
+        <% end %>
+      </div>
     </div>
 
     <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: auto;">
@@ -303,26 +317,23 @@
         </tbody>
       </table>
     </div>
-
   <% end %>
 
 </div>
 
 <div id="hubspotMessageModal"
-  style="display:none; position: fixed; left: 50%; top: 18%; transform: translateX(-50%); z-index: 10000; background: white; border-radius: 8px; padding: 18px 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); **position: relative; min-width: 250px;**">
+  style="display:none; position: fixed; left: 50%; top: 18%; transform: translateX(-50%); z-index: 10000; background: white; border-radius: 8px; padding: 18px 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); position: relative; min-width: 250px;">
   <button onclick="closeHubspotMessage()"
     style="position: absolute; top: 8px; right: 12px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #aaa;"
     aria-label="Close message">
     &times;
-    </button>
+  </button>
   <div id="hubspotMessageText" style="font-size: 1rem; color: #222; margin-right: 25px;">...</div>
 </div>
 
-<!-- Export Modal -->
 <div id="exportModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; overflow: auto;">
   <div style="position: relative; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
     <div id="exportModalContent" style="background: white; border-radius: 12px; max-width: 1200px; width: 100%; max-height: 90vh; overflow: auto; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-      <!-- Content will be loaded here -->
       <div style="padding: 40px; text-align: center;">
         <div class="spinner-border" role="status">
           <span class="visually-hidden">Loading...</span>
@@ -334,7 +345,6 @@
 </div>
 
 <script>
-  // Global select/deselect functions
   function selectAllFields() {
     document.querySelectorAll('.field-checkbox').forEach(cb => cb.checked = true);
   }
@@ -343,7 +353,6 @@
     document.querySelectorAll('.field-checkbox').forEach(cb => cb.checked = false);
   }
 
-  // Category-specific select/deselect
   function selectCategory(categoryId) {
     document.querySelectorAll(`.field-checkbox[data-category="${categoryId}"]`)
       .forEach(cb => cb.checked = true);
@@ -354,7 +363,6 @@
       .forEach(cb => cb.checked = false);
   }
 
-  // Submit the form
   function submitExport() {
     const form = document.getElementById('exportForm');
     const checkedBoxes = document.querySelectorAll('.field-checkbox:checked');
@@ -364,10 +372,8 @@
       return;
     }
 
-    // Submit the form (will trigger download)
     form.submit();
 
-    // Close modal after a brief delay
     setTimeout(() => {
       closeExportModal();
     }, 500);
@@ -377,15 +383,12 @@
     const modal = document.getElementById('exportModal');
     const content = document.getElementById('exportModalContent');
 
-    // Show modal
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
 
-    // Build URL with current filter params
     const params = new URLSearchParams(window.location.search);
     const exportUrl = '<%= export_admissions_path %>?' + params.toString();
 
-    // Fetch the form
     fetch(exportUrl, {
       headers: {
         'Accept': 'text/html',
@@ -408,7 +411,6 @@
     document.body.style.overflow = '';
   }
 
-  // Close on outside click
   document.addEventListener('click', function(event) {
     const modal = document.getElementById('exportModal');
     if (event.target === modal) {
@@ -416,7 +418,6 @@
     }
   });
 
-  // Close on Escape key
   document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
       const modal = document.getElementById('exportModal');
@@ -443,7 +444,6 @@
   let hubspotMessageTimeout;
 
   function showHubspotMessage(text) {
-    // Clear any existing timeout
     clearTimeout(hubspotMessageTimeout);
 
     var modal = document.getElementById('hubspotMessageModal');
@@ -452,20 +452,16 @@
     textEl.textContent = text;
     modal.style.display = 'block';
 
-    // Set new timeout for 5 seconds (5000 milliseconds)
     hubspotMessageTimeout = setTimeout(() => {
       closeHubspotMessage();
     }, 5000);
   }
 
   function closeHubspotMessage() {
-    // Clear the timeout when closing manually
     clearTimeout(hubspotMessageTimeout);
 
     var modal = document.getElementById('hubspotMessageModal');
     if (modal) {
-      // Use a proper fade-out or simply hide after the delay
-      // For simplicity here, we'll just hide it.
       modal.style.display = 'none';
     }
   }
@@ -482,7 +478,6 @@
     const url = '<%= fetch_from_hubspot_admissions_path %>';
     disableFetchBtn(true);
 
-    // show temporary feedback (inline spinner)
     var originalHtml = document.getElementById('fetchHubspotBtn').innerHTML;
     document.getElementById('fetchHubspotBtn').innerHTML = '<span class="spinner-border" role="status" aria-hidden="true" style="width:16px;height:16px;display:inline-block;border-radius:50%;border:2px solid rgba(255,255,255,0.3);border-top-color:white;margin-right:8px;"></span> Syncing...';
 
@@ -498,13 +493,9 @@
     .then(response => response.json().then(body => ({ status: response.status, body: body })))
     .then(({ status, body }) => {
       if (status >= 200 && status < 300 && body && body.success) {
-
-        // FIX: Directly use the message string prepared by the controller
         const message = body.message || 'Sync completed.';
-
         showHubspotMessage(message);
         refreshLearnerInfosFrame();
-
       } else {
         const err = (body && (body.error || body.message)) ? (body.error || body.message) : 'Unknown error';
         showHubspotMessage('Error: ' + err);
@@ -521,8 +512,6 @@
   }
 
   function refreshLearnerInfosFrame() {
-    // Try to fetch the page and replace the turbo-frame content to avoid a full reload
-    // Fallback to full reload if anything unexpected happens.
     try {
       const url = window.location.pathname + window.location.search;
       fetch(url, { headers: { 'Accept': 'text/html' } })
@@ -538,7 +527,6 @@
           if (newFrame && currentFrame) {
             currentFrame.innerHTML = newFrame.innerHTML;
           } else {
-            // If turbo frame not found, reload full page
             window.location.reload();
           }
         })
