@@ -16,6 +16,26 @@ class AdmissionListController < ApplicationController
     # build a scope purely for filtering/counting (no select/order)
     filter_scope = LearnerInfo.all
 
+    # LC only see hub learners
+    if current_user.lc?
+      lc_hub_ids = current_user.users_hubs.pluck(:hub_id)
+      if lc_hub_ids.any?
+        filter_scope = filter_scope.where(
+          "(learner_infos.hub_id IN (:hub_ids)) OR " \
+          "(learner_infos.hub_id IS NULL AND EXISTS (" \
+            "SELECT 1 FROM users_hubs uh " \
+            "WHERE uh.user_id = learner_infos.user_id " \
+            "AND uh.hub_id IN (:hub_ids) " \
+            "AND uh.main = TRUE" \
+          "))",
+          hub_ids: lc_hub_ids
+        )
+      else
+        # No hubs assigned to this LC, show nothing
+        filter_scope = filter_scope.where("1 = 0")
+      end
+    end
+
     if params[:search].present?
       search_term = "%#{params[:search].strip}%"
       filter_scope = filter_scope.where(
