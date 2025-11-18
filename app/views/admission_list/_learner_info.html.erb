@@ -76,7 +76,18 @@
   preferred_name: { col: '6' },
   full_name: { col: '6' },
   student_number: { col: '6' },
-  status: { col: '6' },
+  status: { type: :select, col: '6', choices: [
+    "Active",
+    "Inactive",
+    "Onboarded",
+    "Validated",
+    "In progress - ok",
+    "In progress",
+    "In progress conditional",
+    "Waitlist",
+    "Waitlist - ok",
+    "Graduated"
+  ]},
   curriculum_course_option: { type: :select, col: '6', choices: [
     "British Curriculum",
     "American Curriculum",
