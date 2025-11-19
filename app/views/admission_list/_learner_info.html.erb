@@ -155,6 +155,7 @@
   ], include_blank: true },
   withdrawal_reason: { type: :text_area, rows: 2, col: '12' },
   onboarding_meeting_notes: { type: :text_area, rows: 4, col: '12' },
+  notes: { type: :text_area, rows: 4, col: '12' },
   platform_username: { col: '6' },
   platform_password: { col: '6' }
 } %>
@@ -510,6 +511,7 @@
         <% render_input.call(f, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }) %>
         <% render_input.call(f, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }) %>
         <% render_input.call(f, :onboarding_meeting_notes, field_opts[:onboarding_meeting_notes] || { type: :text_area, rows: 4, col: '12' }) %>
+        <% render_input.call(f, :notes, field_opts[:notes] || { type: :text_area, rows: 4, col: '12' }) %>
       </div>
     </div>
 
@@ -774,6 +776,7 @@
       <% render_input.call(nil, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }, false, @learner_info) %>
       <% render_input.call(nil, :onboarding_meeting_notes, field_opts[:onboarding_meeting_notes] || { type: :text_area, rows: 4, col: '12' }, false, @learner_info) %>
+      <% render_input.call(nil, :notes, field_opts[:notes] || { type: :text_area, rows: 4, col: '12' }, false, @learner_info) %>
     </div>
   </div>
 <% end %>

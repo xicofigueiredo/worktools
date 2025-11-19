@@ -15,7 +15,7 @@ class LearnerInfoPermission
       fiscal_number start_date transfer_of_programme_date end_date
       end_day_communication platform_username platform_password
       use_of_image_authorisation emergency_protocol_choice data_validated
-      withdrawal_category withdrawal_reason onboarding_meeting_notes
+      withdrawal_category withdrawal_reason onboarding_meeting_notes notes
     ],
     'admissions' => %i[
       full_name preferred_name student_number status birthdate programme
@@ -30,7 +30,7 @@ class LearnerInfoPermission
       fiscal_number start_date transfer_of_programme_date end_date
       end_day_communication platform_username platform_password
       use_of_image_authorisation emergency_protocol_choice data_validated
-      withdrawal_category withdrawal_reason onboarding_meeting_notes
+      withdrawal_category withdrawal_reason onboarding_meeting_notes notes
     ],
     'edu' => %i[
       full_name preferred_name student_number status birthdate programme
@@ -45,7 +45,7 @@ class LearnerInfoPermission
       start_date transfer_of_programme_date end_date
       end_day_communication platform_username platform_password
       use_of_image_authorisation emergency_protocol_choice
-      withdrawal_reason onboarding_meeting_notes
+      withdrawal_reason onboarding_meeting_notes notes
     ],
     'finance' => %i[
       full_name preferred_name student_number status birthdate programme
@@ -60,7 +60,7 @@ class LearnerInfoPermission
       fiscal_number start_date transfer_of_programme_date end_date
       end_day_communication platform_username platform_password
       use_of_image_authorisation emergency_protocol_choice data_validated
-      withdrawal_category withdrawal_reason onboarding_meeting_notes
+      withdrawal_category withdrawal_reason onboarding_meeting_notes notes
     ],
     'ops' => %i[
       full_name preferred_name student_number status birthdate programme
@@ -75,7 +75,7 @@ class LearnerInfoPermission
       fiscal_number start_date transfer_of_programme_date end_date
       end_day_communication platform_username platform_password
       use_of_image_authorisation emergency_protocol_choice data_validated
-      withdrawal_category withdrawal_reason onboarding_meeting_notes
+      withdrawal_category withdrawal_reason onboarding_meeting_notes notes
     ],
     'it' => %i[
       full_name preferred_name student_number status birthdate programme
@@ -88,7 +88,7 @@ class LearnerInfoPermission
       start_date transfer_of_programme_date end_date
       end_day_communication platform_username platform_password
       use_of_image_authorisation emergency_protocol_choice
-      onboarding_meeting_notes
+      onboarding_meeting_notes notes
     ],
     'lc' => %i[
       full_name preferred_name student_number status birthdate programme
@@ -103,14 +103,14 @@ class LearnerInfoPermission
       start_date transfer_of_programme_date end_date
       end_day_communication platform_username platform_password
       use_of_image_authorisation emergency_protocol_choice
-      onboarding_meeting_notes
+      onboarding_meeting_notes notes
     ]
   }.freeze
 
   LEARNER_EDIT_BY_ROLE = {
     'admin' => LEARNER_VIEW_BY_ROLE['admin'],
     'admissions' => LEARNER_VIEW_BY_ROLE['admissions'],
-    'edu' => %i[preferred_name learning_coach_id personal_email phone_number english_proficiency],
+    'edu' => %i[preferred_name learning_coach_id personal_email phone_number english_proficiency notes],
     'finance' => %i[preferred_name],
     'ops' => [],
     'it' => %i[preferred_name platform_username platform_password],
