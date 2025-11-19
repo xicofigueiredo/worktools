@@ -267,11 +267,15 @@ class LearnerInfo < ApplicationRecord
       log_update(nil, { 'status' => [old_status, new_status] }, note: "Automated status update to #{new_status}")
     end
 
+    if new_status == "Onboarded" && user&.deactivate
+      user.update_columns(deactivate: false)
+    end
+
     if new_status == "In progress" && old_status == "In progress conditional"
       create_institutional_user_if_needed
     end
 
-    send_status_notification(new_status)
+    #send_status_notification(new_status)
   end
 
   def calculate_status
@@ -639,6 +643,16 @@ class LearnerInfo < ApplicationRecord
         deactivate: true,
         confirmed_at: Time.now
       )
+
+      LearnerFlag.create!(
+          user_id: new_user.id,
+          asks_for_help: false,
+          takes_notes: false,
+          goes_to_live_lessons: false,
+          does_p2p: false,
+          action_plan: "",
+          life_experiences: false
+        )
 
       # Associate user
       update_column(:user_id, new_user.id)
