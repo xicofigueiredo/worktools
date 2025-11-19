@@ -545,9 +545,6 @@ class LearnerInfo < ApplicationRecord
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipients(learning_coaches + curriculum_responsibles + regional_manager, message)
-
-      # Send email to parents based on curriculum and hub type
-      UserMailer.onboarding_email(self).deliver_now
     when "Inactive"
       # Notify finance users when a learner becomes Inactive
       message = "#{full_name} status has been changed to Inactive."
@@ -561,40 +558,46 @@ class LearnerInfo < ApplicationRecord
   def self.sync_date_based_statuses!(run_at: Time.current)
     today = run_at.to_date
 
-    # Find candidates for activation
     activation_candidates = where(status: "Onboarded")
                             .where("start_date IS NOT NULL AND start_date <= ?", today)
 
-    # Find candidates for inactivation
     inactivation_candidates = where(status: "Active")
                               .where("end_date IS NOT NULL AND end_date < ?", today)
 
-    # Find candidates for user account activation (start date within next 15 days)
     user_activation_candidates = where(status: "Onboarded")
                                 .where("start_date IS NOT NULL AND start_date > ? AND start_date <= ?", today, today + 15)
 
-    # Combine and dedupe
-    candidates = (activation_candidates + inactivation_candidates + user_activation_candidates).uniq
+    onboarding_email_candidates = where(status: "Onboarded")
+                                  .where(onboarding_email_sent: false)
+                                  .where("start_date IS NOT NULL AND start_date > ? AND start_date <= ?", today, today + 7)
+
+    candidates = (activation_candidates + inactivation_candidates + user_activation_candidates + onboarding_email_candidates).uniq
 
     updated_count = 0
     user_activated_count = 0
+    emails_sent_count = 0
 
     candidates.each do |learner|
       learner.check_status_updates
       updated_count += 1 if learner.saved_change_to_status?
 
-      # Activate user account if start date is within 15 days and user is deactivated
       if learner.user && learner.start_date && (today + 1..today + 15).cover?(learner.start_date) && learner.user.deactivate
         learner.user.update(deactivate: false)
         user_activated_count += 1
       end
+
+      if learner.status == "Onboarded" && learner.start_date && learner.start_date > today && learner.start_date <= today + 7 && !learner.onboarding_email_sent
+        UserMailer.onboarding_email(learner).deliver_now
+        learner.update(onboarding_email_sent: true)
+        emails_sent_count += 1
+      end
     end
 
     Rails.logger.info(
-      "[LearnerInfo.sync_date_based_statuses!] Processed #{candidates.size} candidates – #{updated_count} statuses synced (activations/inactivations), #{user_activated_count} user accounts activated."
+      "[LearnerInfo.sync_date_based_statuses!] Processed #{candidates.size} candidates – #{updated_count} statuses synced (activations/inactivations), #{user_activated_count} user accounts activated, #{emails_sent_count} onboarding emails sent."
     )
 
-    { updated_statuses: updated_count, activated_users: user_activated_count }
+    { updated_statuses: updated_count, activated_users: user_activated_count, emails_sent: emails_sent_count }
   end
 
   private

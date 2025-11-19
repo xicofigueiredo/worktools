@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_19_155537) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_19_175938) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -573,6 +573,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_19_155537) do
     t.string "platform_username"
     t.string "platform_password"
     t.text "notes"
+    t.boolean "onboarding_email_sent", default: false
     t.index ["hub_id"], name: "index_learner_infos_on_hub_id"
     t.index ["institutional_email"], name: "index_learner_infos_on_institutional_email"
     t.index ["learning_coach_id"], name: "index_learner_infos_on_learning_coach_id"
