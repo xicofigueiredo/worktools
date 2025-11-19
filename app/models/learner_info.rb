@@ -501,7 +501,7 @@ class LearnerInfo < ApplicationRecord
 
         Rails.logger.info("[LearnerInfo##{id}] Sent UP enrolment email notification to #{responsible.size} curriculum responsible(s).")
       else
-        message = "New Learner has filled the application forms."
+        message = "New Learner (#{full_name}) has filled the application forms."
         notify_recipients(admissions_users, message)
       end
     when "In progress"
@@ -512,8 +512,8 @@ class LearnerInfo < ApplicationRecord
       link = Rails.application.routes.url_helpers.admission_url(self)
 
       if curr.start_with?('up')
-        adm_message = "New learner for UP has been validated. Check Profile here: #{link}"
-        subject = "New Learner for UP Validated"
+        adm_message = "New learner (#{full_name}) for UP has been validated. Check Profile here: #{link}"
+        subject = "New Learner (#{full_name}) for UP Validated"
 
         notify_recipients(admissions_users, adm_message)
 
