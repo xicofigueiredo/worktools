@@ -11,14 +11,25 @@ class AdmissionListController < ApplicationController
     @curricula = LearnerInfo.distinct.pluck(:curriculum_course_option).compact.sort
     @grades    = LearnerInfo.distinct.pluck(:grade_year).compact.sort
     @programmes = LearnerInfo.distinct.pluck(:programme).compact.sort
-    @hubs = Hub.order(:name).pluck(:name)
+
+    # Determine hubs scope (limit for LC users)
+    hubs_scope = Hub.all
+    lc_hub_ids = nil
+    if current_user.lc?
+      lc_hub_ids = current_user.users_hubs.pluck(:hub_id)
+      hubs_scope = hubs_scope.where(id: lc_hub_ids) if lc_hub_ids.any?
+    end
+
+    # Prepare grouped hubs (assume Hub has :country column)
+    hubs_data = hubs_scope.select(:country, :name).distinct.order(:country, :name)
+    @hubs_grouped = hubs_data.group_by { |h| h.country || 'Other' }
+    @hubs_grouped.transform_values! { |v| v.map { |h| [h.name, h.name] } }
 
     # build a scope purely for filtering/counting (no select/order)
     filter_scope = LearnerInfo.all
 
     # LC only see hub learners
     if current_user.lc?
-      lc_hub_ids = current_user.users_hubs.pluck(:hub_id)
       if lc_hub_ids.any?
         filter_scope = filter_scope.where(
           "(learner_infos.hub_id IN (:hub_ids)) OR " \

@@ -66,8 +66,8 @@
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Hub</label>
         <%= select_tag :hub,
-              options_for_select([['All', '']] + @hubs.map { |h| [h, h] }, params[:hub]),
-              include_blank: false,
+              grouped_options_for_select(@hubs_grouped, params[:hub]),
+              include_blank: 'All',
               data: { admission_search_target: "hubSelect", action: "change->admission-search#submit" },
               style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
 
