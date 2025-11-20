@@ -95,7 +95,7 @@ class AdmissionListController < ApplicationController
     scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme, Arel.sql(hub_id_subquery), Arel.sql(hub_name_subquery))
     scope = scope.order(Arel.sql("COALESCE(student_number, 99999999), id"))
 
-    @learner_infos = scope
+    @learner_infos = scope.reverse
   end
 
   def show
