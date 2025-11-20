@@ -1,4 +1,8 @@
-# app/models/learner_info.rb
+# TO DO: REFACTOR
+# ADD CONCERNS FOR NORMALIZATION, NOTIFICATIONS, FINANCES
+# MAYBE EXTRACT STATUS LOGIC TO A SERVICE?
+# CREATE INSTITUTIONAL USER ALSO CAN GO TO A SERVICE?
+# SEND MESSAGE TEAMS TO A JOB?
 class LearnerInfo < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :hub, optional: true
@@ -258,17 +262,21 @@ class LearnerInfo < ApplicationRecord
     return if new_status == status && !saved_change_to_status?
 
     old_status = status
+    changes = { 'status' => [old_status, new_status] }
+
     if new_status == "Onboarded" && student_number.blank?
       gen_number = generate_student_number
-      update_columns(status: new_status, student_number: gen_number)
-      log_update(nil, { 'status' => [old_status, new_status], 'student_number' => [nil, gen_number] }, note: "Automated status update to #{new_status} with student number generation")
-    else
-      update_column(:status, new_status)
-      log_update(nil, { 'status' => [old_status, new_status] }, note: "Automated status update to #{new_status}")
+      self.student_number = gen_number
+      changes['student_number'] = [nil, gen_number]
     end
 
+    self.status = new_status
+    save!
+
+    log_update(nil, changes, note: "Automated status update to #{new_status}" + (gen_number ? " with student number generation" : ""))
+
     if new_status == "Onboarded" && user&.deactivate
-      user.update_columns(deactivate: false)
+      user.update(deactivate: false)
     end
 
     if new_status == "In progress" && old_status == "In progress conditional"
@@ -558,6 +566,7 @@ class LearnerInfo < ApplicationRecord
   def self.sync_date_based_statuses!(run_at: Time.current)
     today = run_at.to_date
 
+    # Existing activation/inactivation/user activation candidates...
     activation_candidates = where(status: "Onboarded")
                             .where("start_date IS NOT NULL AND start_date <= ?", today)
 
@@ -567,17 +576,22 @@ class LearnerInfo < ApplicationRecord
     user_activation_candidates = where(status: "Onboarded")
                                 .where("start_date IS NOT NULL AND start_date > ? AND start_date <= ?", today, today + 15)
 
+    # Existing: Onboarding email candidates (start_date within next 7 days, inclusive of today +1 to today +7)
     onboarding_email_candidates = where(status: "Onboarded")
                                   .where(onboarding_email_sent: false)
                                   .where("start_date IS NOT NULL AND start_date > ? AND start_date <= ?", today, today + 7)
 
+    # Combine and dedupe all candidates
     candidates = (activation_candidates + inactivation_candidates + user_activation_candidates + onboarding_email_candidates).uniq
 
     updated_count = 0
     user_activated_count = 0
     emails_sent_count = 0
+    inactivated_learners = []
 
     candidates.each do |learner|
+      previous_status = learner.status
+
       learner.check_status_updates
       updated_count += 1 if learner.saved_change_to_status?
 
@@ -587,17 +601,62 @@ class LearnerInfo < ApplicationRecord
       end
 
       if learner.status == "Onboarded" && learner.start_date && learner.start_date > today && learner.start_date <= today + 7 && !learner.onboarding_email_sent
-        UserMailer.onboarding_email(learner).deliver_now
+        # UserMailer.onboarding_email(learner).deliver_now
         learner.update(onboarding_email_sent: true)
         emails_sent_count += 1
       end
+
+      if learner.status == "Inactive" && previous_status != "Inactive"
+        inactivated_learners << learner
+      end
     end
+
+    check_hub_capacity_and_notify!(inactivated_learners)
 
     Rails.logger.info(
       "[LearnerInfo.sync_date_based_statuses!] Processed #{candidates.size} candidates – #{updated_count} statuses synced (activations/inactivations), #{user_activated_count} user accounts activated, #{emails_sent_count} onboarding emails sent."
     )
 
     { updated_statuses: updated_count, activated_users: user_activated_count, emails_sent: emails_sent_count }
+  end
+
+  def self.check_hub_capacity_and_notify!(inactivated_learners = [])
+    Rails.logger.info("ENTER HERE")
+    return if inactivated_learners.blank?
+
+    affected_hubs = inactivated_learners.map(&:hub).compact.uniq
+
+    affected_hubs.each do |hub|
+      Rails.logger.info("ENTER HERE AND HERE")
+      next unless hub.free_spots && hub.free_spots > 0
+
+      waitlisted_learners = LearnerInfo.where(hub_id: hub.id, status: ["Waitlist", "Waitlist - ok"])
+      Rails.logger.info("ENTER HERE HERE ALSO")
+      next if waitlisted_learners.none?
+
+      message = "Hub #{hub.name} now has #{hub.free_spots} free spots available after recent deactivations. There are #{waitlisted_learners.count} learners on the waitlist for this hub. Please review and process as needed."
+      notify_recipients(admissions_users, message)
+
+      Rails.logger.info("[Hub##{hub.id}] Notified #{admissions_users.size} admissions users about available capacity and waitlist.")
+    end
+  end
+
+  # DUPLICATE CODE - REMOVE WHEN REFACTOR (SEPARATION BETWEEN CLASS AND INSTANCE METHODS)
+  def self.admissions_users
+    # Class-level version of the user getter
+    [User.find_by(email: "contact@bravegenerationacademy.com")].compact
+  end
+
+  def self.notify_recipients(recipient, message)
+    # Class-level notification that doesn't require a learner instance link
+    recipients = Array.wrap(recipient)
+    return if recipients.blank? || message.blank?
+
+    recipients.each do |user|
+      # We don't pass a 'link' here because it's a generic Hub notification, not a specific learner profile
+      Notification.create!(user: user, message: message, read: false)
+    end
+    Rails.logger.info("[LearnerInfo Class] Sent notifications to #{recipients.size} users.")
   end
 
   private
