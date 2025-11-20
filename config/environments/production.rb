@@ -15,6 +15,7 @@ Rails.application.configure do
 
     config.action_mailer.default_url_options = { host: 'worktools.site', protocol: 'https' }
     config.action_controller.default_url_options = { host: 'worktools.site', protocol: 'https' }
+    Rails.application.routes.default_url_options = { host: 'worktools.site', protocol: 'https' }
     config.action_mailer.raise_delivery_errors = true
     config.action_mailer.perform_deliveries = true
 

@@ -269,12 +269,17 @@
               <% active = row.status.to_s.downcase == "active" %>
               <tr class="<%= 'muted' unless active %>">
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
-                  <%= (
-                    name = row.full_name.to_s.strip.gsub(/\s+/, ' ');
-                    parts = name.split(' ');
-                    display = [parts.first, parts.length > 1 ? parts.last : nil].compact.map { |p| p.downcase.capitalize }.join(' ');
-                    display.presence || '-'
-                  ) %>
+                  <%= link_to admission_path(row),
+                              title: "View #{row.full_name}",
+                              data: { turbo_frame: "_top" },
+                              style: "color: inherit; text-decoration: none;" do %>
+                    <%= (
+                      name = row.full_name.to_s.strip.gsub(/\s+/, ' ');
+                      parts = name.split(' ');
+                      display = [parts.first, parts.length > 1 ? parts.last : nil].compact.map { |p| p.downcase.capitalize }.join(' ');
+                      display.presence || '-'
+                    ) %>
+                  <% end %>
                 </td>
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
                   <% if row.hub_id.present? && row.hub_name.present? %>
