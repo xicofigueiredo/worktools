@@ -225,7 +225,7 @@ class MoodleTimeline < ApplicationRecord
 
         MoodleTopic.create!(
           moodle_timeline_id: self.id,
-          time: activity[:ect] || 0,  # Default to 1 if ect is nil or 0
+          time: activity[:ect].nil? ? 0 : activity[:ect].to_s.gsub(',', '.').to_f,  # Preserve 0, 0.1, 1, etc. (handles comma as decimal separator)
           name: activity[:name],
           unit: activity[:section_name],  # Store section name as unit
           order: index + 1,  # Use index to maintain order
