@@ -161,7 +161,7 @@
 } %>
 
 <% field_opts.merge!({
-  payment_plan: { type: :select, col: '6', choices: [
+  payment_plan: { type: :select, col: '12', choices: [
     "N/A",
     "Monthly",
     "Annually",
@@ -184,7 +184,8 @@
   billable_af: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Admission Fee (#{@currency_symbol})" },
   renewal_fee: { type: :number, col: '4', step: 1, label: "Renewal Fee (#{@currency_symbol})" },
   discount_rf: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
-  billable_rf: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Renewal Fee (#{@currency_symbol})" }
+  billable_rf: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Renewal Fee (#{@currency_symbol})" },
+  notes: { type: :text_area, rows: 4, col: '12' }
 }) %>
 
 <% render_input = lambda do |f, attr, opts = {}, is_finance = false, object = @learner_info| %>
@@ -454,7 +455,7 @@
         <% if @learner_finance.present? %>
           <%= f.fields_for :learner_finance, @learner_finance do |ff| %>
             <div class="row gx-3">
-              <% render_input.call(ff, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true) %>
+              <% render_input.call(ff, :payment_plan, field_opts[:payment_plan] || { col: '12' }, true) %>
               <% render_input.call(ff, :financial_responsibility, field_opts[:financial_responsibility] || { col: '6' }, true) %>
               <% render_input.call(ff, :invoice_email, field_opts[:invoice_email] || { type: :email, col: '6' }, true) %>
             </div>
@@ -479,6 +480,10 @@
               <% render_input.call(ff, :renewal_fee, field_opts[:renewal_fee] || { col: '4' }, true) %>
               <% render_input.call(ff, :discount_rf, field_opts[:discount_rf] || { col: '4' }, true) %>
               <% render_input.call(ff, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true) %>
+            </div>
+
+            <div class="row gx-3">
+              <% render_input.call(ff, :notes, field_opts[:notes] || { type: :text_area, rows: 4, col: '12' }, true) %>
             </div>
           <% end %>
         <% else %>
@@ -721,7 +726,7 @@
       <h4>Financial / Payments</h4>
       <% if @learner_finance.present? %>
         <div class="row gx-3">
-          <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true, @learner_finance) %>
+          <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '12' }, true, @learner_finance) %>
           <% render_input.call(nil, :financial_responsibility, field_opts[:financial_responsibility] || { col: '6' }, true, @learner_finance) %>
           <% render_input.call(nil, :invoice_email, field_opts[:invoice_email] || { type: :email, col: '6' }, true, @learner_finance) %>
         </div>
@@ -746,6 +751,10 @@
           <% render_input.call(nil, :renewal_fee, field_opts[:renewal_fee] || { col: '4' }, true, @learner_finance) %>
           <% render_input.call(nil, :discount_rf, field_opts[:discount_rf] || { col: '4' }, true, @learner_finance) %>
           <% render_input.call(nil, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true, @learner_finance) %>
+        </div>
+
+        <div class="row gx-3">
+          <% render_input.call(nil, :notes, field_opts[:notes] || { type: :text_area, rows: 4, col: '12' }, true, @learner_finance) %>
         </div>
       <% else %>
         <div class="alert alert-warning text-center" style="margin-top: 20px;">
