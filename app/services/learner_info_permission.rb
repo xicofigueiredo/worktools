@@ -120,23 +120,23 @@ class LearnerInfoPermission
   FINANCE_VIEW_BY_ROLE = {
     'admin' => %i[
       payment_plan financial_responsibility monthly_fee discount_mf scholarship
-      billable_mf admission_fee discount_af billable_af
+      billable_mf admission_fee discount_af billable_af has_debt
       renewal_fee discount_rf billable_rf invoice_email notes
     ],
     'admissions' => %i[
       payment_plan financial_responsibility monthly_fee discount_mf scholarship
-      billable_mf admission_fee discount_af billable_af
+      billable_mf admission_fee discount_af billable_af has_debt
       renewal_fee discount_rf billable_rf invoice_email notes
     ],
     'edu' => [],
     'finance' => %i[
       payment_plan financial_responsibility monthly_fee discount_mf scholarship
-      billable_mf admission_fee discount_af billable_af
+      billable_mf admission_fee discount_af billable_af has_debt
       renewal_fee discount_rf billable_rf invoice_email notes
     ],
     'ops' => %i[
       payment_plan financial_responsibility monthly_fee discount_mf scholarship
-      billable_mf admission_fee discount_af billable_af
+      billable_mf admission_fee discount_af billable_af has_debt
       renewal_fee discount_rf billable_rf invoice_email notes
     ],
     'it' => [],
@@ -147,7 +147,7 @@ class LearnerInfoPermission
     'admin' => FINANCE_VIEW_BY_ROLE['admin'],
     'admissions' => FINANCE_VIEW_BY_ROLE['admissions'],
     'edu' => [],
-    'finance' => %i[payment_plan financial_responsibility discount_mf scholarship discount_af discount_rf invoice_email notes],
+    'finance' => %i[payment_plan financial_responsibility discount_mf scholarship discount_af discount_rf invoice_email notes has_debt],
     'ops' => [],
     'it' => [],
     'lc' => []

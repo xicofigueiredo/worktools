@@ -91,8 +91,12 @@ class AdmissionListController < ApplicationController
       END AS hub_id
     SQL
 
+    has_debt_subquery = <<~SQL.squish
+      (SELECT lf.has_debt FROM learner_finances lf WHERE lf.learner_info_id = learner_infos.id LIMIT 1) AS has_debt
+    SQL
+
     # final scope used to render table (add select/order as you had before)
-    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme, Arel.sql(hub_id_subquery), Arel.sql(hub_name_subquery))
+    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme, Arel.sql(hub_id_subquery), Arel.sql(hub_name_subquery), Arel.sql(has_debt_subquery))
     scope = scope.order(Arel.sql("COALESCE(student_number, 99999999), id"))
 
     @learner_infos = scope.reverse

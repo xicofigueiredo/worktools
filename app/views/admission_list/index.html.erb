@@ -13,6 +13,19 @@
     opacity: 0.6;
     pointer-events: auto;
   }
+
+  /* Debt styling */
+  tr.has-debt {
+    background-color: #fff3e0 !important;
+  }
+
+  tr.has-debt td {
+    border-left: 3px solid #ff9800;
+  }
+
+  tr.has-debt td:first-child {
+    border-left: 4px solid #ff9800;
+  }
 </style>
 
 <div style="padding: 0 24px;">
@@ -267,7 +280,8 @@
           <% if @learner_infos.any? %>
             <% @learner_infos.each do |row| %>
               <% active = row.status.to_s.downcase == "active" %>
-              <tr class="<%= 'muted' unless active %>">
+              <% has_debt = row.try(:has_debt) %>
+              <tr class="<%= 'muted' unless active %> <%= 'has-debt' if has_debt %>">
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
                   <%= link_to admission_path(row),
                               title: "View #{row.full_name}",

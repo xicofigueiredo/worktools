@@ -98,7 +98,8 @@
     "UPx Business",
     "UP Sports Management",
     "UP Sports Exercise",
-    "UP Computing"
+    "UP Computing",
+    "UP Business (GENEX)"
   ]},
   grade_year: { type: :select, col: '6', choices: grades_per_curriculum[@learner_info.curriculum_course_option] || [], prompt: 'Select Grade/Year' },
   start_date: { type: :date, col: '3' },
@@ -161,7 +162,8 @@
 } %>
 
 <% field_opts.merge!({
-  payment_plan: { type: :select, col: '12', choices: [
+  has_debt: { type: :toggle, col: '6', label: "Has Debt" },
+  payment_plan: { type: :select, col: '6', choices: [
     "N/A",
     "Monthly",
     "Annually",
@@ -455,7 +457,8 @@
         <% if @learner_finance.present? %>
           <%= f.fields_for :learner_finance, @learner_finance do |ff| %>
             <div class="row gx-3">
-              <% render_input.call(ff, :payment_plan, field_opts[:payment_plan] || { col: '12' }, true) %>
+              <% render_input.call(ff, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true) %>
+              <% render_input.call(ff, :has_debt, field_opts[:has_debt] || { type: :toggle, col: '6' }, true) %>
               <% render_input.call(ff, :financial_responsibility, field_opts[:financial_responsibility] || { col: '6' }, true) %>
               <% render_input.call(ff, :invoice_email, field_opts[:invoice_email] || { type: :email, col: '6' }, true) %>
             </div>
@@ -726,7 +729,8 @@
       <h4>Financial / Payments</h4>
       <% if @learner_finance.present? %>
         <div class="row gx-3">
-          <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '12' }, true, @learner_finance) %>
+          <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true, @learner_finance) %>
+          <% render_input.call(nil, :has_debt, field_opts[:has_debt] || { type: :toggle, col: '6' }, true, @learner_finance) %>
           <% render_input.call(nil, :financial_responsibility, field_opts[:financial_responsibility] || { col: '6' }, true, @learner_finance) %>
           <% render_input.call(nil, :invoice_email, field_opts[:invoice_email] || { type: :email, col: '6' }, true, @learner_finance) %>
         </div>
