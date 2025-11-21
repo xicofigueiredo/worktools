@@ -200,13 +200,7 @@
   <% col = opts[:col] || '12' %>
   <% value = f ? f.object.send(attr) : object.send(attr) %>
 
-  <% # Force disable main fees in edit mode for finance %>
-  <% forced_disabled = false %>
-  <% if edit_mode && f && is_finance && ['monthly_fee', 'admission_fee', 'renewal_fee'].include?(attr_sym.to_s) %>
-    <% forced_disabled = true %>
-  <% end %>
-
-  <% disabled_flag = forced_disabled || (!editable_list.include?(attr_sym)) %>
+  <% disabled_flag = (!editable_list.include?(attr_sym)) %>
 
   <% if edit_mode && f %>
     <% input_classes = "form-control" %>
