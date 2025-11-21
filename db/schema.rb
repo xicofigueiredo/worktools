@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_19_175938) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_21_152904) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -489,6 +489,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_19_175938) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.text "financial_responsibility"
+    t.string "invoice_email"
+    t.text "notes"
     t.index ["learner_info_id"], name: "index_learner_finances_on_learner_info_id"
   end
 

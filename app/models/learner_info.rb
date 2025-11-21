@@ -5,10 +5,12 @@
 # SEND MESSAGE TEAMS TO A JOB?
 class LearnerInfo < ApplicationRecord
   include LearnerNormalization
+  include LearnerNotifications
 
   belongs_to :user, optional: true
   belongs_to :hub, optional: true
   belongs_to :learning_coach, class_name: 'User', optional: true
+
   has_many :learner_documents, dependent: :destroy
   has_many :learner_info_logs, dependent: :delete_all
   has_one :learner_finance, dependent: :destroy
@@ -18,17 +20,14 @@ class LearnerInfo < ApplicationRecord
   attr_accessor :skip_email_validation
 
   INACTIVE_STATUSES = %w[Waitlist Waitlist\ -\ ok In\ progress\ conditional Inactive Graduated].freeze
-
   scope :active, -> { where.not(status: INACTIVE_STATUSES) }
 
   after_commit :check_status_updates, on: :update
   after_commit :update_discounts_if_needed, on: [:create, :update]
-  after_update :send_end_date_notifications, if: :saved_change_to_end_date?
+  after_commit :check_date_updates, on: :update
 
-  VALID_EMAIL_REGEX = URI::MailTo::EMAIL_REGEXP
-
-  validates *EMAIL_FIELDS.map(&:to_sym),
-            format: { with: VALID_EMAIL_REGEX, message: "is not a valid email" },
+  validates *LearnerNormalization::EMAIL_FIELDS.map(&:to_sym),
+            format: { with: URI::MailTo::EMAIL_REGEXP, message: "is not a valid email" },
             allow_blank: true,
             unless: :skip_email_validation
 
@@ -68,14 +67,17 @@ class LearnerInfo < ApplicationRecord
     old_status = status
     changes = { 'status' => [old_status, new_status] }
 
+    attributes_to_update = { status: new_status }
+
     if new_status == "Onboarded" && student_number.blank?
       gen_number = generate_student_number
       self.student_number = gen_number
       changes['student_number'] = [nil, gen_number]
+      attributes_to_update[:student_number] = gen_number
     end
 
+    update_columns(attributes_to_update)
     self.status = new_status
-    save!
 
     log_update(nil, changes, note: "Automated status update to #{new_status}" + (gen_number ? " with student number generation" : ""))
 
@@ -87,7 +89,7 @@ class LearnerInfo < ApplicationRecord
       create_institutional_user_if_needed
     end
 
-    #send_status_notification(new_status)
+    send_status_notification(new_status)
   end
 
   def calculate_status
@@ -192,26 +194,6 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
-  def admissions_users
-    [User.find_by(email: "contact@bravegenerationacademy.com")].compact
-  end
-
-  def finance_users
-    [User.find_by(email: "maria.m@bravegenerationacademy.com")].compact
-  end
-
-  def curriculum_responsibles
-    curr = curriculum_course_option.to_s.strip.downcase
-    case
-    when curr.include?('portuguese')
-      User.where(email: ['luis@bravegenerationacademy.com', 'goncalo.meireles@edubga.com']).to_a
-    when curr.start_with?('up')
-      [User.find_by(email: 'esther@bravegenerationacademy.com')].compact
-    else
-      [User.find_by(email: 'danielle@bravegenerationacademy.com')].compact
-    end
-  end
-
   def regional_manager
     return [] unless hub && hub.respond_to?(:regional_manager) && hub.regional_manager.present?
     [hub.regional_manager]
@@ -269,31 +251,21 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
-  def notify_recipients(recipient, message, link: nil)
-    recipients = Array.wrap(recipient)
-    raise ArgumentError, "message is required" if message.blank?
+  def check_date_updates
+    if saved_change_to_start_date? || saved_change_to_end_date?
 
-    link ||= Rails.application.routes.url_helpers.admission_path(self)
+      parts = []
+      if saved_change_to_start_date?
+        parts << "Start Date changed to #{start_date&.strftime('%d-%m-%Y')}"
+      end
+      if saved_change_to_end_date?
+        parts << "End Date changed to #{end_date&.strftime('%d-%m-%Y')}"
+      end
 
-    if recipients.blank?
-      Rails.logger.warn("[LearnerInfo##{id}] No recipients found for notification; none created.")
-      return
+      message = "Date updates for #{full_name}: #{parts.join(', ')}."
+
+      notify_recipients(self.class.finance_users, message)
     end
-
-    recipients.each do |user|
-      Notification.create!(user: user, message: message, link: link, read: false)
-    end
-
-    Rails.logger.info("[LearnerInfo##{id}] Created notifications for #{recipients.size} recipient(s). Message: #{message}")
-  end
-
-  def send_end_date_notifications
-    return unless end_date.present?
-
-    message = "End date has been set for learner #{full_name} to #{end_date.strftime('%d-%m-%Y')}."
-    notify_recipients(finance_users, message)
-
-    # TO DO: Schedule reminder if more than 1 month away
   end
 
   def send_status_notification(new_status)
@@ -303,7 +275,7 @@ class LearnerInfo < ApplicationRecord
       link = Rails.application.routes.url_helpers.admission_url(self)
 
       if curr.start_with?('up')
-        responsible = curriculum_responsibles
+        responsible = self.class.curriculum_responsibles(self.curriculum_course_option)
         message = "New enrolment for UP. Please validate the data please. Check profile here: #{link}"
         subject = "New Enrolment for UP"
 
@@ -314,11 +286,11 @@ class LearnerInfo < ApplicationRecord
         Rails.logger.info("[LearnerInfo##{id}] Sent UP enrolment email notification to #{responsible.size} curriculum responsible(s).")
       else
         message = "New Learner (#{full_name}) has filled the application forms."
-        notify_recipients(admissions_users, message)
+        notify_recipients(self.class.admissions_users, message)
       end
     when "In progress"
       message = "#{full_name} is enrolling for: #{hub&.name}. Check the profile on the link."
-      notify_recipients(learning_coaches + finance_users, message)
+      notify_recipients(learning_coaches + self.class.finance_users, message)
 
       curr = curriculum_course_option.to_s.strip.downcase
       link = Rails.application.routes.url_helpers.admission_url(self)
@@ -327,40 +299,40 @@ class LearnerInfo < ApplicationRecord
         adm_message = "New learner (#{full_name}) for UP has been validated. Check Profile here: #{link}"
         subject = "New Learner (#{full_name}) for UP Validated"
 
-        notify_recipients(admissions_users, adm_message)
+        notify_recipients(self.class.admissions_users, adm_message)
 
-        admissions_users.each do |user|
+        self.class.admissions_users.each do |user|
           UserMailer.admissions_notification(user, adm_message, subject).deliver_now
         end
 
         Rails.logger.info("[LearnerInfo##{id}] Sent UP validation notification and email to #{admissions_users.size} admissions user(s).")
       else
         curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
-        notify_recipients(curriculum_responsibles, curr_message)
+        notify_recipients(self.class.curriculum_responsibles(self.curriculum_course_option), curr_message)
       end
 
       rm_message = "#{full_name} is enrolling for: #{hub&.name}."
       notify_recipients(regional_manager, rm_message)
     when "In progress - ok"
       message = "#{full_name} had the onboarding meeting. Check here."
-      notify_recipients(learning_coaches + regional_manager, message)
+      notify_recipients(learning_coaches + regional_manager + self.class.finance_users, message)
 
       link = Rails.application.routes.url_helpers.admission_url(self)
       adm_message = "The learner #{full_name} had the onboarding meeting today. Check his profile here: #{link}"
       adm_subject = "#{full_name} had the onboarding meeting"
 
-      admissions_users.each do |user|
+      self.class.admissions_users.each do |user|
         UserMailer.admissions_notification(user, adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      send_teams_message
+      # send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
-      notify_recipients(learning_coaches + curriculum_responsibles + regional_manager, message)
+      notify_recipients(learning_coaches + self.class.curriculum_responsibles(self.curriculum_course_option) + regional_manager, message)
     when "Inactive"
       # Notify finance users when a learner becomes Inactive
       message = "#{full_name} status has been changed to Inactive."
-      notify_recipients(finance_users, message)
+      notify_recipients(self.class.finance_users, message)
 
       lc_message = "#{full_name} has become Inactive. Please ensure the parents are removed from the WhatsApp group."
       notify_recipients(learning_coaches, lc_message)
@@ -439,28 +411,10 @@ class LearnerInfo < ApplicationRecord
       next if waitlisted_learners.none?
 
       message = "Hub #{hub.name} now has #{hub.free_spots} free spots available after recent deactivations. There are #{waitlisted_learners.count} learners on the waitlist for this hub. Please review and process as needed."
-      notify_recipients(admissions_users, message)
+      notify_recipients(self.class.admissions_users, message)
 
       Rails.logger.info("[Hub##{hub.id}] Notified #{admissions_users.size} admissions users about available capacity and waitlist.")
     end
-  end
-
-  # DUPLICATE CODE - REMOVE WHEN REFACTOR (SEPARATION BETWEEN CLASS AND INSTANCE METHODS)
-  def self.admissions_users
-    # Class-level version of the user getter
-    [User.find_by(email: "contact@bravegenerationacademy.com")].compact
-  end
-
-  def self.notify_recipients(recipient, message)
-    # Class-level notification that doesn't require a learner instance link
-    recipients = Array.wrap(recipient)
-    return if recipients.blank? || message.blank?
-
-    recipients.each do |user|
-      # We don't pass a 'link' here because it's a generic Hub notification, not a specific learner profile
-      Notification.create!(user: user, message: message, read: false)
-    end
-    Rails.logger.info("[LearnerInfo Class] Sent notifications to #{recipients.size} users.")
   end
 
   private

@@ -168,7 +168,13 @@
     "Semi Annual",
     "Quarterly"
   ]},
-  financial_responsibility: { type: :text_area, rows: 2, col: '12' },
+  financial_responsibility: { type: :select, col: '6', choices: [
+    "Parent 1",
+    "Parent 2",
+    "Learner",
+    "Other"
+  ]},
+  invoice_email: { type: :email, col: '6' },
   monthly_fee: { type: :number, col: '3', step: 1, label: "Monthly Fee (#{@currency_symbol})" },
   discount_mf: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   scholarship: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Scholarship (%)" },
@@ -449,7 +455,8 @@
           <%= f.fields_for :learner_finance, @learner_finance do |ff| %>
             <div class="row gx-3">
               <% render_input.call(ff, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true) %>
-              <% render_input.call(ff, :financial_responsibility, field_opts[:financial_responsibility] || { type: :text_area, rows: 2, col: '12' }, true) %>
+              <% render_input.call(ff, :financial_responsibility, field_opts[:financial_responsibility] || { col: '6' }, true) %>
+              <% render_input.call(ff, :invoice_email, field_opts[:invoice_email] || { type: :email, col: '6' }, true) %>
             </div>
 
             <h5 style="margin-top: 20px; margin-bottom: 10px;">Monthly Fees</h5>
@@ -715,7 +722,8 @@
       <% if @learner_finance.present? %>
         <div class="row gx-3">
           <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true, @learner_finance) %>
-          <% render_input.call(nil, :financial_responsibility, field_opts[:financial_responsibility] || { type: :text_area, rows: 2, col: '12' }, true, @learner_finance) %>
+          <% render_input.call(nil, :financial_responsibility, field_opts[:financial_responsibility] || { col: '6' }, true, @learner_finance) %>
+          <% render_input.call(nil, :invoice_email, field_opts[:invoice_email] || { type: :email, col: '6' }, true, @learner_finance) %>
         </div>
 
         <h5 style="margin-top: 20px; margin-bottom: 10px;">Monthly Fees</h5>
@@ -1046,6 +1054,7 @@
     setupGradeYearHandler();
     setupProgrammeHubHandler();
     setupLearningCoachSelection();
+    setupInvoiceEmailHandler();
   });
   // Run on Turbo page loads (if using Turbo)
   document.addEventListener('turbo:load', function() {
@@ -1054,6 +1063,7 @@
     setupGradeYearHandler();
     setupProgrammeHubHandler();
     setupLearningCoachSelection();
+    setupInvoiceEmailHandler();
   });
   // Run immediately if DOM is already loaded
   if (document.readyState === 'loading') {
@@ -1064,5 +1074,108 @@
     setupPaymentPlanHandler();
     setupGradeYearHandler();
     setupProgrammeHubHandler();
+    setupInvoiceEmailHandler();
+  }
+
+  function setupInvoiceEmailHandler() {
+    const financialResponsibilitySelect = document.getElementById('learner_info_learner_finance_attributes_financial_responsibility');
+    const invoiceEmailInput = document.getElementById('learner_info_learner_finance_attributes_invoice_email');
+
+    if (!financialResponsibilitySelect || !invoiceEmailInput) return;
+
+    // Get references to email input fields
+    const parent1Input = document.getElementById('learner_info_parent1_email');
+    const parent2Input = document.getElementById('learner_info_parent2_email');
+    const personalInput = document.getElementById('learner_info_personal_email');
+
+    // Check if invoice_email is in the editable list (has editable-input class initially)
+    const isInvoiceEmailEditable = invoiceEmailInput.classList.contains('editable-input') ||
+                                    !invoiceEmailInput.hasAttribute('disabled');
+
+    function getEmailValues() {
+      return {
+        parent1: parent1Input?.value || '',
+        parent2: parent2Input?.value || '',
+        personal: personalInput?.value || ''
+      };
+    }
+
+    function updateInvoiceEmail() {
+      if (!isInvoiceEmailEditable) return; // User doesn't have permission to edit this field at all
+
+      const responsibility = financialResponsibilitySelect.value;
+      const emails = getEmailValues();
+
+      switch(responsibility) {
+        case 'Parent 1':
+          invoiceEmailInput.value = emails.parent1;
+          invoiceEmailInput.readOnly = true;
+          invoiceEmailInput.classList.remove('editable-input');
+          invoiceEmailInput.classList.add('bg-light');
+          invoiceEmailInput.style.cursor = 'not-allowed';
+          break;
+        case 'Parent 2':
+          invoiceEmailInput.value = emails.parent2;
+          invoiceEmailInput.readOnly = true;
+          invoiceEmailInput.classList.remove('editable-input');
+          invoiceEmailInput.classList.add('bg-light');
+          invoiceEmailInput.style.cursor = 'not-allowed';
+          break;
+        case 'Learner':
+          invoiceEmailInput.value = emails.personal;
+          invoiceEmailInput.readOnly = true;
+          invoiceEmailInput.classList.remove('editable-input');
+          invoiceEmailInput.classList.add('bg-light');
+          invoiceEmailInput.style.cursor = 'not-allowed';
+          break;
+        case 'Other':
+          invoiceEmailInput.readOnly = false;
+          invoiceEmailInput.classList.add('editable-input');
+          invoiceEmailInput.classList.remove('bg-light');
+          invoiceEmailInput.style.cursor = 'text';
+          // Keep current value when switching to Other, unless it's empty
+          if (!invoiceEmailInput.value) {
+            invoiceEmailInput.value = '';
+          }
+          break;
+        default:
+          // No selection yet
+          invoiceEmailInput.readOnly = false;
+          invoiceEmailInput.classList.add('editable-input');
+          invoiceEmailInput.classList.remove('bg-light');
+          invoiceEmailInput.style.cursor = 'text';
+      }
+    }
+
+    // Listen for changes to financial responsibility
+    financialResponsibilitySelect.addEventListener('change', updateInvoiceEmail);
+
+    // Listen for changes to parent/learner emails and update invoice email in real-time
+    if (parent1Input) {
+      parent1Input.addEventListener('input', function() {
+        if (financialResponsibilitySelect.value === 'Parent 1') {
+          invoiceEmailInput.value = this.value;
+        }
+      });
+    }
+
+    if (parent2Input) {
+      parent2Input.addEventListener('input', function() {
+        if (financialResponsibilitySelect.value === 'Parent 2') {
+          invoiceEmailInput.value = this.value;
+        }
+      });
+    }
+
+    if (personalInput) {
+      personalInput.addEventListener('input', function() {
+        if (financialResponsibilitySelect.value === 'Learner') {
+          invoiceEmailInput.value = this.value;
+        }
+      });
+    }
+
+    // Initialize on page load
+    updateInvoiceEmail();
   }
 </script>

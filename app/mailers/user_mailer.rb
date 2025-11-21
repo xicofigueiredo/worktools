@@ -73,7 +73,8 @@ class UserMailer < Devise::Mailer
   def admissions_notification(user, message, subject)
     @user = user
     @message = message
-    mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
+    # mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
+    mail(to: "guilherme@bravegenerationacademy.com", from: 'worktools@bravegenerationacademy.com', subject: subject)
   end
 
   def onboarding_email(learner_info)
@@ -180,7 +181,7 @@ class UserMailer < Devise::Mailer
 
     # --- Send email ---
     mail(
-      to: to,
+      to: "guilherme@bravegenerationacademy.com", #to,
       from:          'worktools@bravegenerationacademy.com',
       subject:       subject,
       template_name: template_path
