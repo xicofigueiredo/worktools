@@ -811,6 +811,30 @@
   });
 </script>
 
+<%# Start Date Year Warning Modal %>
+<div class="modal fade" id="startDateWarningModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">⚠️ Start Date Year Warning</h5>
+      </div>
+      <div class="modal-body">
+        <p>The start date you selected is for <strong id="selected-year-display"></strong>, not the current year (<%= Date.today.year %>).</p>
+        <p class="mb-0"><strong>Did you update the pricing accordingly?</strong></p>
+        <p class="text-muted small">Different years may have different pricing tiers. Please ensure the financial information is correct for the selected year.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="start-date-go-back-btn">
+          No, Go Back & Fix
+        </button>
+        <button type="button" class="btn btn-warning" id="start-date-confirm-btn">
+          Yes, Save Anyway
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal for Learning Coach Selection  -->
 <% if @sorted_coaches %>
   <div class="modal fade" id="learningCoachModal" tabindex="-1" aria-hidden="true">
@@ -1060,36 +1084,6 @@
     });
   }
 
-  // Run on page load
-  document.addEventListener('DOMContentLoaded', function() {
-    setupFinanceCalculations();
-    setupPaymentPlanHandler();
-    setupGradeYearHandler();
-    setupProgrammeHubHandler();
-    setupLearningCoachSelection();
-    setupInvoiceEmailHandler();
-  });
-  // Run on Turbo page loads (if using Turbo)
-  document.addEventListener('turbo:load', function() {
-    setupFinanceCalculations();
-    setupPaymentPlanHandler();
-    setupGradeYearHandler();
-    setupProgrammeHubHandler();
-    setupLearningCoachSelection();
-    setupInvoiceEmailHandler();
-  });
-  // Run immediately if DOM is already loaded
-  if (document.readyState === 'loading') {
-    // Still loading, wait for DOMContentLoaded
-  } else {
-    // DOM is already ready
-    setupFinanceCalculations();
-    setupPaymentPlanHandler();
-    setupGradeYearHandler();
-    setupProgrammeHubHandler();
-    setupInvoiceEmailHandler();
-  }
-
   function setupInvoiceEmailHandler() {
     const financialResponsibilitySelect = document.getElementById('learner_info_learner_finance_attributes_financial_responsibility');
     const invoiceEmailInput = document.getElementById('learner_info_learner_finance_attributes_invoice_email');
@@ -1190,5 +1184,218 @@
 
     // Initialize on page load
     updateInvoiceEmail();
+  }
+
+  // --- Unified form checks: pricing & start-date ---
+  function setupFormChecks() {
+    const form = document.getElementById('learner-info-form');
+    if (!form) return;
+
+    // Elements for start-date modal/check
+    const startDateInput = document.getElementById('learner_info_start_date');
+    const startModalElement = document.getElementById('startDateWarningModal');
+    const startConfirmBtn = document.getElementById('start-date-confirm-btn');
+    const startGoBackBtn = document.getElementById('start-date-go-back-btn');
+
+    // Elements for pricing modal/check
+    const pricingModalElement = document.getElementById('pricingConfirmationModal');
+    const pricingConfirmBtn = document.getElementById('pricing-confirm-btn');
+    const pricingCancelBtn = document.getElementById('pricing-cancel-btn');
+
+    // Pricing "changes details" target in modal
+    const pricingChangesDetails = document.querySelector('[data-curriculum-pricing-target="changesDetails"]');
+
+    // Flags so we don't loop
+    let pricingConfirmed = false;
+    let startConfirmed = false;
+
+    const currentYear = new Date().getFullYear();
+
+    function checkStartDateNeeded() {
+      if (!startDateInput) return false;
+      const val = startDateInput.value;
+      if (!val) return false;
+      return new Date(val).getFullYear() !== currentYear;
+    }
+
+    function updateStartModalYear() {
+      if (!startDateInput || !startModalElement) return;
+      const val = startDateInput.value;
+      const display = startModalElement.querySelector('#selected-year-display');
+      if (display && val) display.textContent = new Date(val).getFullYear();
+    }
+
+    // Determine whether pricing confirmation is required.
+    function checkPricingNeeded() {
+      if (!pricingModalElement) return false;
+
+      // If your Stimulus controller exposes a hasChanges() function, prefer it.
+      if (window.curriculumPricingController && typeof window.curriculumPricingController.hasChanges === 'function') {
+        try {
+          return !!window.curriculumPricingController.hasChanges();
+        } catch (err) {
+          // fall through to other heuristics
+        }
+      }
+
+      // Fallback: check whether the changesDetails target has content
+      if (pricingChangesDetails) {
+        return pricingChangesDetails.textContent.trim().length > 0;
+      }
+
+      return false;
+    }
+
+    // Show a bootstrap modal instance
+    function showModal(el) {
+      if (!el) return null;
+      const inst = new bootstrap.Modal(el);
+      inst.show();
+      return inst;
+    }
+
+    // Hide & fully dispose modal + cleanup backdrop/body
+    function cleanupModal(el) {
+      if (!el) return;
+      const inst = bootstrap.Modal.getInstance(el);
+      if (inst) inst.dispose();
+      document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      el.classList.remove('show');
+      el.style.display = 'none';
+    }
+
+    // Submit listener: show modals in sequence as needed.
+    form.addEventListener('submit', function(e) {
+      // If both checks are already confirmed, allow submit
+      if (pricingConfirmed && startConfirmed) {
+        return; // let native submit proceed
+      }
+
+      // Priority: pricing first (you can swap order if you prefer start-date first)
+      if (!pricingConfirmed && checkPricingNeeded()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        // show pricing modal
+        showModal(pricingModalElement);
+        return;
+      }
+
+      // Next: start date
+      if (!startConfirmed && checkStartDateNeeded()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        updateStartModalYear();
+        showModal(startModalElement);
+        return;
+      }
+
+      // else nothing to block -> allow submit
+    });
+
+    // Pricing Confirmed -> either show next check or final submit
+    if (pricingConfirmBtn) {
+      pricingConfirmBtn.addEventListener('click', function() {
+        // Prevent Turbo-restore weirdness if you had that issue previously
+        document.documentElement.setAttribute('data-turbo-restore', 'false');
+
+        cleanupModal(pricingModalElement);
+        pricingConfirmed = true;
+
+        // If start date check still required, show it now
+        if (!startConfirmed && checkStartDateNeeded()) {
+          updateStartModalYear();
+          showModal(startModalElement);
+          return;
+        }
+
+        // Otherwise final submit (bypass submit listener to avoid re-run)
+        try {
+          form.submit();
+        } catch (err) {
+          if (typeof form.requestSubmit === 'function') form.requestSubmit();
+          else {
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitBtn) submitBtn.click();
+          }
+        }
+      });
+    }
+
+    // Pricing Cancel -> just hide modal and leave form blocked for edits
+    if (pricingCancelBtn) {
+      pricingCancelBtn.addEventListener('click', function() {
+        cleanupModal(pricingModalElement);
+      });
+    }
+
+    // Start date Confirmed -> either show pricing (if still needed) or submit
+    if (startConfirmBtn) {
+      startConfirmBtn.addEventListener('click', function() {
+        document.documentElement.setAttribute('data-turbo-restore', 'false');
+
+        cleanupModal(startModalElement);
+        startConfirmed = true;
+
+        // If pricing still needs confirming, show pricing modal
+        if (!pricingConfirmed && checkPricingNeeded()) {
+          showModal(pricingModalElement);
+          return;
+        }
+
+        // Otherwise final submit
+        try {
+          form.submit();
+        } catch (err) {
+          if (typeof form.requestSubmit === 'function') form.requestSubmit();
+          else {
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitBtn) submitBtn.click();
+          }
+        }
+      });
+    }
+
+    // Start date Go Back -> hide and let user fix start date
+    if (startGoBackBtn) {
+      startGoBackBtn.addEventListener('click', function() {
+        cleanupModal(startModalElement);
+      });
+    }
+  }
+
+  // Run on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    setupFinanceCalculations();
+    setupPaymentPlanHandler();
+    setupGradeYearHandler();
+    setupProgrammeHubHandler();
+    setupLearningCoachSelection();
+    setupInvoiceEmailHandler();
+    setupFormChecks(); // <-- unified checks
+  });
+  // Run on Turbo page loads (if using Turbo)
+  document.addEventListener('turbo:load', function() {
+    setupFinanceCalculations();
+    setupPaymentPlanHandler();
+    setupGradeYearHandler();
+    setupProgrammeHubHandler();
+    setupLearningCoachSelection();
+    setupInvoiceEmailHandler();
+    setupFormChecks(); // <-- unified checks
+  });
+  // Run immediately if DOM is already loaded
+  if (document.readyState === 'loading') {
+    // Still loading, wait for DOMContentLoaded
+  } else {
+    // DOM is already ready
+    setupFinanceCalculations();
+    setupPaymentPlanHandler();
+    setupGradeYearHandler();
+    setupProgrammeHubHandler();
+    setupInvoiceEmailHandler();
+    setupFormChecks(); // <-- unified checks
   }
 </script>
