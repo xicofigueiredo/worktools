@@ -1,8 +1,16 @@
-# app/models/learner_info.rb
+# TO DO: REFACTOR
+# ADD CONCERNS FOR NORMALIZATION, NOTIFICATIONS, FINANCES
+# MAYBE EXTRACT STATUS LOGIC TO A SERVICE?
+# CREATE INSTITUTIONAL USER ALSO CAN GO TO A SERVICE?
+# SEND MESSAGE TEAMS TO A JOB?
 class LearnerInfo < ApplicationRecord
+  include LearnerNormalization
+  include LearnerNotifications
+
   belongs_to :user, optional: true
   belongs_to :hub, optional: true
   belongs_to :learning_coach, class_name: 'User', optional: true
+
   has_many :learner_documents, dependent: :destroy
   has_many :learner_info_logs, dependent: :delete_all
   has_one :learner_finance, dependent: :destroy
@@ -11,218 +19,17 @@ class LearnerInfo < ApplicationRecord
 
   attr_accessor :skip_email_validation
 
-  EMAIL_FIELDS = %w[
-    personal_email
-    institutional_email
-    parent1_email
-    parent2_email
-    previous_school_email
-  ].freeze
-
-  # Curriculum mapping constants
-  CURRICULUM_MAP = {
-    'american curriculum (fia)' => 'American Curriculum',
-    'british curriculum' => 'British Curriculum',
-    'alternative (own) curriculum' => 'Own Curriculum',
-    'up business' => 'UP Business',
-    'american curriculum (ecampus)' => 'Own Curriculum',
-    'up sports and leisure' => 'UP Sports Management',
-    'unsure' => nil,
-    'up computing' => 'UP Computing',
-    'american curriculum (flvs)' => 'Own Curriculum',
-    'up business (bga)' => 'UP Business',
-    'esl course' => 'ESL Course',
-    'portuguese curriculum' => 'Portuguese Curriculum',
-    'american curriculum' => 'American Curriculum',
-    'up business management' => 'UPx Business',
-    'own curriculum' => 'Own Curriculum',
-    'upx business management' => 'UPx Business',
-    'up business ; upx business management' => 'UPx Business'
-  }.freeze
-
-  GRADES_PER_CURRICULUM = {
-    "British Curriculum" => ["UK Year 13", "UK Year 12", "UK Year 11", "UK Year 10", "UK Year 9", "UK Year 8"],
-    "American Curriculum" => ["US Year 12", "US Year 11", "US Year 10", "US Year 9", "US Year 8", "US Year 7", "US Year 6", "US Year 5"],
-    "Portuguese Curriculum" => ["PT Year 12", "PT Year 11", "PT Year 10", "PT Year 9", "PT Year 8", "PT Year 7"],
-    "Own Curriculum" => ["N/A"],
-    "ESL Course" => ["N/A"],
-    "UP Business" => ["Level 3", "Level 4", "Level 5", "Level 6"],
-    "UPx Business" => ["Level 3", "Level 4", "Level 5", "Level 6"],
-    "UP Sports Management" => ["Level 3", "Level 4", "Level 5", "Level 6"],
-    "UP Sports Exercise" => ["Level 3", "Level 4", "Level 5", "Level 6"],
-    "UP Computing" => ["Level 3", "Level 4", "Level 5", "Level 6"]
-  }.freeze
-
-  # Grade conversion mappings
-  US_TO_UK_GRADE_MAP = {
-    12 => 13, 11 => 12, 10 => 11, 9 => 10, 8 => 9, 7 => 8
-  }.freeze
-
-  UK_TO_US_GRADE_MAP = {
-    13 => 12, 12 => 11, 11 => 10, 10 => 9, 9 => 8, 8 => 7
-  }.freeze
-
-  US_TO_PT_GRADE_MAP = US_TO_UK_GRADE_MAP # PT follows similar pattern to UK
-
-  US_TO_LEVEL_MAP = {
-    12 => 6, 11 => 5, 10 => 4, 9 => 3
-  }.freeze
-
   INACTIVE_STATUSES = %w[Waitlist Waitlist\ -\ ok In\ progress\ conditional Inactive Graduated].freeze
-
   scope :active, -> { where.not(status: INACTIVE_STATUSES) }
-
-  before_validation :normalize_emails
-  before_validation :normalize_curriculum
-  before_validation :normalize_grade
 
   after_commit :check_status_updates, on: :update
   after_commit :update_discounts_if_needed, on: [:create, :update]
-  after_update :send_end_date_notifications, if: :saved_change_to_end_date?
+  after_commit :check_date_updates, on: :update
 
-  VALID_EMAIL_REGEX = URI::MailTo::EMAIL_REGEXP
-
-  validates *EMAIL_FIELDS.map(&:to_sym),
-            format: { with: VALID_EMAIL_REGEX, message: "is not a valid email" },
+  validates *LearnerNormalization::EMAIL_FIELDS.map(&:to_sym),
+            format: { with: URI::MailTo::EMAIL_REGEXP, message: "is not a valid email" },
             allow_blank: true,
             unless: :skip_email_validation
-
-  # Class methods for normalization (can be used independently)
-  class << self
-    def normalize_curriculum_value(raw_curriculum)
-      return nil if raw_curriculum.nil? || raw_curriculum.to_s.strip.empty?
-
-      normalized_key = raw_curriculum.to_s.strip.downcase
-      mapped = CURRICULUM_MAP[normalized_key]
-
-      return mapped if mapped || CURRICULUM_MAP.key?(normalized_key)
-
-      # Fallback patterns
-      if normalized_key.include?('upx') && normalized_key.include?('business')
-        return 'UPx Business'
-      elsif normalized_key.include?('up') && normalized_key.include?('business')
-        return 'UP Business'
-      elsif normalized_key.include?('ecampus') || normalized_key.include?('flvs')
-        return 'Own Curriculum'
-      end
-
-      # Return original if no mapping found
-      raw_curriculum.to_s.strip
-    end
-
-    def normalize_grade_value(raw_grade, curriculum)
-      return nil if raw_grade.nil? || raw_grade.to_s.strip.empty?
-      return nil if curriculum.nil?
-
-      grade_str = raw_grade.to_s.strip
-
-      # Extract year/grade numbers from various formats
-      us_match = grade_str.match(/US\s+(?:Grade|Year)\s+(\d+)/i)
-      uk_match = grade_str.match(/UK\s+Year\s+(\d+)/i)
-      pt_match = grade_str.match(/PT\s+Year\s+(\d+)/i)
-      level_match = grade_str.match(/Level\s+(\d+)/i)
-      simple_number = grade_str.match(/^\d+$/) ? grade_str.to_i : nil
-
-      case curriculum
-      when 'British Curriculum'
-        if uk_match
-          "UK Year #{uk_match[1].to_i}"
-        elsif us_match
-          us_grade = us_match[1].to_i
-          uk_year = US_TO_UK_GRADE_MAP[us_grade] || us_grade
-          "UK Year #{uk_year}"
-        elsif simple_number
-          "UK Year #{simple_number}"
-        else
-          raw_grade
-        end
-
-      when 'American Curriculum'
-        if us_match
-          "US Year #{us_match[1].to_i}"
-        elsif uk_match
-          uk_year = uk_match[1].to_i
-          us_grade = UK_TO_US_GRADE_MAP[uk_year] || uk_year
-          "US Year #{us_grade}"
-        elsif simple_number
-          "US Year #{simple_number}"
-        else
-          raw_grade
-        end
-
-      when 'Portuguese Curriculum'
-        if pt_match
-          "PT Year #{pt_match[1].to_i}"
-        elsif us_match
-          us_grade = us_match[1].to_i
-          pt_year = US_TO_PT_GRADE_MAP[us_grade] || us_grade
-          "PT Year #{pt_year}"
-        elsif simple_number
-          "PT Year #{simple_number}"
-        else
-          raw_grade
-        end
-
-      when 'UP Business', 'UPx Business', 'UP Computing', 'UP Sports Management', 'UP Sports Exercise'
-        if level_match
-          "Level #{level_match[1].to_i}"
-        elsif us_match
-          us_grade = us_match[1].to_i
-          level = US_TO_LEVEL_MAP[us_grade]
-          level ? "Level #{level}" : raw_grade
-        elsif simple_number && simple_number >= 3 && simple_number <= 6
-          "Level #{simple_number}"
-        else
-          raw_grade
-        end
-
-      when 'Own Curriculum', 'ESL Course'
-        nil
-
-      else
-        raw_grade
-      end
-    end
-
-    # Calculate grade from HubSpot format (e.g., "Year 11 (grade 10) - IGCSEs")
-    def calculate_grade_from_hubspot(raw_grade_string, curriculum)
-      return nil if curriculum.nil? || raw_grade_string.nil? || raw_grade_string.strip.empty?
-
-      # Clean the grade string: "Year 11 (grade 10) - IGCSEs" -> "Year 11 (grade 10)"
-      cleaned_grade_string = raw_grade_string.split(' - ').first.to_s.strip
-
-      # Extract the year number (e.g., "Year 11 (grade 10)" -> 11)
-      match = cleaned_grade_string.match(/Year\s*(\d+)/i)
-      base_year = match ? match[1].to_i : nil
-
-      return nil if base_year.nil?
-
-      # UP courses, Own, and ESL use first level/value
-      if curriculum.include?("UP") || ["Own Curriculum", "ESL Course"].include?(curriculum)
-        return GRADES_PER_CURRICULUM[curriculum]&.first
-      end
-
-      # Calculate final year based on curriculum
-      final_year = base_year
-      prefix = ''
-
-      case curriculum
-      when "British Curriculum"
-        prefix = 'UK Year '
-      when "American Curriculum"
-        final_year -= 1 unless final_year.zero?
-        prefix = 'US Year '
-      when "Portuguese Curriculum"
-        final_year -= 1 unless final_year.zero?
-        prefix = 'PT Year '
-      else
-        Rails.logger.warn("Unhandled curriculum in HubSpot calculation: #{curriculum}")
-        prefix = 'Unknown Year '
-      end
-
-      "#{prefix}#{final_year}"
-    end
-  end
 
   def log_update(by_user = nil, saved_changes_hash = nil, note: nil)
     saved_changes_hash ||= saved_changes
@@ -258,13 +65,24 @@ class LearnerInfo < ApplicationRecord
     return if new_status == status && !saved_change_to_status?
 
     old_status = status
+    changes = { 'status' => [old_status, new_status] }
+
+    attributes_to_update = { status: new_status }
+
     if new_status == "Onboarded" && student_number.blank?
       gen_number = generate_student_number
-      update_columns(status: new_status, student_number: gen_number)
-      log_update(nil, { 'status' => [old_status, new_status], 'student_number' => [nil, gen_number] }, note: "Automated status update to #{new_status} with student number generation")
-    else
-      update_column(:status, new_status)
-      log_update(nil, { 'status' => [old_status, new_status] }, note: "Automated status update to #{new_status}")
+      self.student_number = gen_number
+      changes['student_number'] = [nil, gen_number]
+      attributes_to_update[:student_number] = gen_number
+    end
+
+    update_columns(attributes_to_update)
+    self.status = new_status
+
+    log_update(nil, changes, note: "Automated status update to #{new_status}" + (gen_number ? " with student number generation" : ""))
+
+    if new_status == "Onboarded" && user&.deactivate
+      user.update(deactivate: false)
     end
 
     if new_status == "In progress" && old_status == "In progress conditional"
@@ -376,26 +194,6 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
-  def admissions_users
-    [User.find_by(email: "contact@bravegenerationacademy.com")].compact
-  end
-
-  def finance_users
-    [User.find_by(email: "maria.m@bravegenerationacademy.com")].compact
-  end
-
-  def curriculum_responsibles
-    curr = curriculum_course_option.to_s.strip.downcase
-    case
-    when curr.include?('portuguese')
-      User.where(email: ['luis@bravegenerationacademy.com', 'goncalo.meireles@edubga.com']).to_a
-    when curr.start_with?('up')
-      [User.find_by(email: 'esther@bravegenerationacademy.com')].compact
-    else
-      [User.find_by(email: 'danielle@bravegenerationacademy.com')].compact
-    end
-  end
-
   def regional_manager
     return [] unless hub && hub.respond_to?(:regional_manager) && hub.regional_manager.present?
     [hub.regional_manager]
@@ -453,31 +251,21 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
-  def notify_recipients(recipient, message, link: nil)
-    recipients = Array.wrap(recipient)
-    raise ArgumentError, "message is required" if message.blank?
+  def check_date_updates
+    if saved_change_to_start_date? || saved_change_to_end_date?
 
-    link ||= Rails.application.routes.url_helpers.admission_path(self)
+      parts = []
+      if saved_change_to_start_date?
+        parts << "Start Date changed to #{start_date&.strftime('%d-%m-%Y')}"
+      end
+      if saved_change_to_end_date?
+        parts << "End Date changed to #{end_date&.strftime('%d-%m-%Y')}"
+      end
 
-    if recipients.blank?
-      Rails.logger.warn("[LearnerInfo##{id}] No recipients found for notification; none created.")
-      return
+      message = "Date updates for #{full_name}: #{parts.join(', ')}."
+
+      notify_recipients(self.class.finance_users, message)
     end
-
-    recipients.each do |user|
-      Notification.create!(user: user, message: message, link: link, read: false)
-    end
-
-    Rails.logger.info("[LearnerInfo##{id}] Created notifications for #{recipients.size} recipient(s). Message: #{message}")
-  end
-
-  def send_end_date_notifications
-    return unless end_date.present?
-
-    message = "End date has been set for learner #{full_name} to #{end_date.strftime('%d-%m-%Y')}."
-    notify_recipients(finance_users, message)
-
-    # TO DO: Schedule reminder if more than 1 month away
   end
 
   def send_status_notification(new_status)
@@ -487,8 +275,8 @@ class LearnerInfo < ApplicationRecord
       link = Rails.application.routes.url_helpers.admission_url(self)
 
       if curr.start_with?('up')
-        responsible = curriculum_responsibles
-        message = "New enrolment for UP. Please validate the data please. Check profile here: #{link}"
+        responsible = self.class.curriculum_responsibles(self.curriculum_course_option)
+        message = "New enrolment for UP. Please validate the data please. Check profile here: <a href='#{link}' target='_blank' rel='noopener'>#{link}</a>"
         subject = "New Enrolment for UP"
 
         responsible.each do |user|
@@ -497,103 +285,178 @@ class LearnerInfo < ApplicationRecord
 
         Rails.logger.info("[LearnerInfo##{id}] Sent UP enrolment email notification to #{responsible.size} curriculum responsible(s).")
       else
-        message = "New Learner has filled the application forms."
-        notify_recipients(admissions_users, message)
+        message = "New Learner (#{full_name}) has filled the application forms."
+        notify_recipients(self.class.admissions_users, message)
       end
     when "In progress"
       message = "#{full_name} is enrolling for: #{hub&.name}. Check the profile on the link."
-      notify_recipients(learning_coaches + finance_users, message)
+      notify_recipients(learning_coaches + self.class.finance_users, message)
 
       curr = curriculum_course_option.to_s.strip.downcase
       link = Rails.application.routes.url_helpers.admission_url(self)
 
       if curr.start_with?('up')
-        adm_message = "New learner for UP has been validated. Check Profile here: #{link}"
-        subject = "New Learner for UP Validated"
+        adm_message = "New learner (#{full_name}) for UP has been validated. Check Profile here: #{link}"
+        subject = "New Learner (#{full_name}) for UP Validated"
 
-        notify_recipients(admissions_users, adm_message)
+        notify_recipients(self.class.admissions_users, adm_message)
 
-        admissions_users.each do |user|
+        self.class.admissions_users.each do |user|
           UserMailer.admissions_notification(user, adm_message, subject).deliver_now
         end
 
         Rails.logger.info("[LearnerInfo##{id}] Sent UP validation notification and email to #{admissions_users.size} admissions user(s).")
       else
         curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
-        notify_recipients(curriculum_responsibles, curr_message)
+        notify_recipients(self.class.curriculum_responsibles(self.curriculum_course_option), curr_message)
       end
 
       rm_message = "#{full_name} is enrolling for: #{hub&.name}."
       notify_recipients(regional_manager, rm_message)
     when "In progress - ok"
       message = "#{full_name} had the onboarding meeting. Check here."
-      notify_recipients(learning_coaches + regional_manager, message)
+      notify_recipients(learning_coaches + regional_manager + self.class.finance_users, message)
 
       link = Rails.application.routes.url_helpers.admission_url(self)
       adm_message = "The learner #{full_name} had the onboarding meeting today. Check his profile here: #{link}"
       adm_subject = "#{full_name} had the onboarding meeting"
 
-      admissions_users.each do |user|
+      self.class.admissions_users.each do |user|
         UserMailer.admissions_notification(user, adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      send_teams_message
+      # send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
-      notify_recipients(learning_coaches + curriculum_responsibles + regional_manager, message)
-
-      # Send email to parents based on curriculum and hub type
-      UserMailer.onboarding_email(self).deliver_now
+      notify_recipients(learning_coaches + self.class.curriculum_responsibles(self.curriculum_course_option) + regional_manager, message)
     when "Inactive"
       # Notify finance users when a learner becomes Inactive
       message = "#{full_name} status has been changed to Inactive."
-      notify_recipients(finance_users, message)
+      notify_recipients(self.class.finance_users, message)
 
       lc_message = "#{full_name} has become Inactive. Please ensure the parents are removed from the WhatsApp group."
       notify_recipients(learning_coaches, lc_message)
     end
   end
 
-  def self.sync_date_based_statuses!(run_at: Time.current)
+  def self.perform_daily_maintenance!(run_at: Time.current)
     today = run_at.to_date
+    Rails.logger.info "[DailyMaintenance] Starting maintenance for #{today}..."
 
-    # Find candidates for activation
-    activation_candidates = where(status: "Onboarded")
-                            .where("start_date IS NOT NULL AND start_date <= ?", today)
+    # 1. Sync with external services
+    sync_hubspot_submissions
 
-    # Find candidates for inactivation
-    inactivation_candidates = where(status: "Active")
-                              .where("end_date IS NOT NULL AND end_date < ?", today)
+    # 2. Update Statuses (Onboarded -> Active, Active -> Inactive)
+    sync_learner_statuses!(today)
 
-    # Find candidates for user account activation (start date within next 15 days)
-    user_activation_candidates = where(status: "Onboarded")
-                                .where("start_date IS NOT NULL AND start_date > ? AND start_date <= ?", today, today + 15)
+    # 3. Activate User Accounts (Access preparation)
+    activate_upcoming_users!(today)
 
-    # Combine and dedupe
-    candidates = (activation_candidates + inactivation_candidates + user_activation_candidates).uniq
+    # 4. Send Emails
+    send_onboarding_emails!(today)
+    send_renewal_reminders!(today)
 
-    updated_count = 0
-    user_activated_count = 0
+    Rails.logger.info "[DailyMaintenance] Completed."
+  end
 
-    candidates.each do |learner|
-      learner.check_status_updates
-      updated_count += 1 if learner.saved_change_to_status?
+  def self.check_hub_capacity_and_notify!(inactivated_learners = [])
+    Rails.logger.info("ENTER HERE")
+    return if inactivated_learners.blank?
 
-      # Activate user account if start date is within 15 days and user is deactivated
-      if learner.user && learner.start_date && (today + 1..today + 15).cover?(learner.start_date) && learner.user.deactivate
-        learner.user.update(deactivate: false)
-        user_activated_count += 1
-      end
+    affected_hubs = inactivated_learners.map(&:hub).compact.uniq
+
+    affected_hubs.each do |hub|
+      Rails.logger.info("ENTER HERE AND HERE")
+      next unless hub.free_spots && hub.free_spots > 0
+
+      waitlisted_learners = LearnerInfo.where(hub_id: hub.id, status: ["Waitlist", "Waitlist - ok"])
+      Rails.logger.info("ENTER HERE HERE ALSO")
+      next if waitlisted_learners.none?
+
+      message = "Hub #{hub.name} now has #{hub.free_spots} free spots available after recent deactivations. There are #{waitlisted_learners.count} learners on the waitlist for this hub. Please review and process as needed."
+      notify_recipients(self.class.admissions_users, message)
+
+      Rails.logger.info("[Hub##{hub.id}] Notified #{admissions_users.size} admissions users about available capacity and waitlist.")
     end
-
-    Rails.logger.info(
-      "[LearnerInfo.sync_date_based_statuses!] Processed #{candidates.size} candidates – #{updated_count} statuses synced (activations/inactivations), #{user_activated_count} user accounts activated."
-    )
-
-    { updated_statuses: updated_count, activated_users: user_activated_count }
   end
 
   private
+
+  def self.sync_hubspot_submissions
+    Rails.logger.info "[DailyMaintenance] Fetching HubSpot submissions..."
+    HubspotService.fetch_new_submissions
+  rescue StandardError => e
+    Rails.logger.error "[DailyMaintenance] HubSpot Sync Failed: #{e.message}"
+  end
+
+  def self.sync_learner_statuses!(today)
+    updated_count = 0
+    inactivated_learners = []
+
+    candidates = where(status: "Onboarded").where("start_date <= ?", today)
+                 .or(where(status: "Active").where("end_date < ?", today))
+
+    candidates.find_each do |learner|
+      previous_status = learner.status
+      learner.check_status_updates
+
+      if learner.saved_change_to_status?
+        updated_count += 1
+
+        # Track Inactivations for notification
+        if learner.status == "Inactive" && previous_status != "Inactive"
+          inactivated_learners << learner
+        end
+      end
+    end
+
+    check_hub_capacity_and_notify!(inactivated_learners) if inactivated_learners.any?
+    Rails.logger.info "[DailyMaintenance] Statuses synced: #{updated_count}. Inactivated: #{inactivated_learners.count}"
+  end
+
+  def self.activate_upcoming_users!(today)
+    candidates = where(status: "Onboarded")
+                 .where(start_date: (today + 1.day)..(today + 15.days))
+                 .joins(:user)
+                 .where(users: { deactivate: true })
+
+    count = 0
+    candidates.find_each do |learner|
+      learner.user.update(deactivate: false)
+      count += 1
+    end
+    Rails.logger.info "[DailyMaintenance] Users activated: #{count}"
+  end
+
+  def self.send_onboarding_emails!(today)
+    # Find Onboarded learners starting in next 7 days who haven't received the email
+    candidates = where(status: "Onboarded", onboarding_email_sent: false)
+                 .where(start_date: (today + 1.day)..(today + 7.days))
+
+    count = 0
+    candidates.find_each do |learner|
+      # UserMailer.onboarding_email(learner).deliver_now
+      learner.update(onboarding_email_sent: true)
+      count += 1
+    end
+    Rails.logger.info "[DailyMaintenance] Onboarding emails sent: #{count}"
+  end
+
+  def self.send_renewal_reminders!(today)
+    target_month = (today + 1.month).month
+    target_day   = today.day
+
+    candidates = where(status: "Active").where("extract(day from start_date) = ?", target_day)
+
+    count = 0
+    candidates.find_each do |learner|
+      if learner.start_date.month == target_month
+        # UserMailer.renewal_fee_email(learner).deliver_now
+        count += 1
+      end
+    end
+    Rails.logger.info "[DailyMaintenance] Renewal emails sent: #{count}"
+  end
 
   def status_was_waitlist_ok?
     # Helper to infer path for revert; can be improved with a persisted path flag if needed
@@ -640,6 +503,16 @@ class LearnerInfo < ApplicationRecord
         confirmed_at: Time.now
       )
 
+      LearnerFlag.create!(
+          user_id: new_user.id,
+          asks_for_help: false,
+          takes_notes: false,
+          goes_to_live_lessons: false,
+          does_p2p: false,
+          action_plan: "",
+          life_experiences: false
+        )
+
       # Associate user
       update_column(:user_id, new_user.id)
       update_column(:institutional_email, generated_email)
@@ -655,38 +528,6 @@ class LearnerInfo < ApplicationRecord
     rescue ActiveRecord::RecordInvalid => e
       Rails.logger.error("[LearnerInfo##{id}] Failed to create institutional user: #{e.message}")
       # Optionally rollback or notify
-    end
-  end
-
-  def normalize_emails
-    EMAIL_FIELDS.each do |attr|
-      next unless (val = self[attr]).present?
-      self[attr] = val.strip.downcase
-    end
-  end
-
-  def normalize_curriculum
-    return unless curriculum_course_option_changed? && curriculum_course_option.present?
-
-    old_value = curriculum_course_option
-    normalized = self.class.normalize_curriculum_value(old_value)
-
-    if normalized != old_value
-      self.curriculum_course_option = normalized
-      Rails.logger.info("Normalized curriculum: #{old_value.inspect} -> #{normalized.inspect}")
-    end
-  end
-
-  def normalize_grade
-    return unless (grade_year_changed? || curriculum_course_option_changed?) &&
-                  grade_year.present? && curriculum_course_option.present?
-
-    old_value = grade_year
-    normalized = self.class.normalize_grade_value(old_value, curriculum_course_option)
-
-    if normalized != old_value
-      self.grade_year = normalized
-      Rails.logger.info("Normalized grade: #{old_value.inspect} -> #{normalized.inspect} (curriculum: #{curriculum_course_option})")
     end
   end
 

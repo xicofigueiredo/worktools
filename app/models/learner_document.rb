@@ -10,6 +10,7 @@ class LearnerDocument < ApplicationRecord
     letter_of_interest
     picture
     credentials
+    exam_certificates
   ].freeze
 
   belongs_to :learner_info

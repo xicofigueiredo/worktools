@@ -11,14 +11,25 @@ class AdmissionListController < ApplicationController
     @curricula = LearnerInfo.distinct.pluck(:curriculum_course_option).compact.sort
     @grades    = LearnerInfo.distinct.pluck(:grade_year).compact.sort
     @programmes = LearnerInfo.distinct.pluck(:programme).compact.sort
-    @hubs = Hub.order(:name).pluck(:name)
+
+    # Determine hubs scope (limit for LC users)
+    hubs_scope = Hub.all
+    lc_hub_ids = nil
+    if current_user.lc?
+      lc_hub_ids = current_user.users_hubs.pluck(:hub_id)
+      hubs_scope = hubs_scope.where(id: lc_hub_ids) if lc_hub_ids.any?
+    end
+
+    # Prepare grouped hubs (assume Hub has :country column)
+    hubs_data = hubs_scope.select(:country, :name).distinct.order(:country, :name)
+    @hubs_grouped = hubs_data.group_by { |h| h.country || 'Other' }
+    @hubs_grouped.transform_values! { |v| v.map { |h| [h.name, h.name] } }
 
     # build a scope purely for filtering/counting (no select/order)
     filter_scope = LearnerInfo.all
 
     # LC only see hub learners
     if current_user.lc?
-      lc_hub_ids = current_user.users_hubs.pluck(:hub_id)
       if lc_hub_ids.any?
         filter_scope = filter_scope.where(
           "(learner_infos.hub_id IN (:hub_ids)) OR " \
@@ -36,6 +47,7 @@ class AdmissionListController < ApplicationController
       end
     end
 
+    # Search filter (unchanged)
     if params[:search].present?
       search_term = "%#{params[:search].strip}%"
       filter_scope = filter_scope.where(
@@ -46,19 +58,40 @@ class AdmissionListController < ApplicationController
       )
     end
 
-    filter_scope = filter_scope.where(status: params[:status]) if params[:status].present?
-    filter_scope = filter_scope.where(curriculum_course_option: params[:curriculum]) if params[:curriculum].present?
-    filter_scope = filter_scope.where(grade_year: params[:grade_year]) if params[:grade_year].present?
-    filter_scope = filter_scope.where(programme: params[:programme]) if params[:programme].present?
+    # Multi-select filters - UPDATED
+    if params[:status].present?
+      statuses = Array(params[:status]).reject(&:blank?)
+      filter_scope = filter_scope.where(status: statuses) if statuses.any?
+    end
+
+    if params[:curriculum].present?
+      curricula = Array(params[:curriculum]).reject(&:blank?)
+      filter_scope = filter_scope.where(curriculum_course_option: curricula) if curricula.any?
+    end
+
+    if params[:grade_year].present?
+      grades = Array(params[:grade_year]).reject(&:blank?)
+      filter_scope = filter_scope.where(grade_year: grades) if grades.any?
+    end
+
+    if params[:programme].present?
+      programmes = Array(params[:programme]).reject(&:blank?)
+      filter_scope = filter_scope.where(programme: programmes) if programmes.any?
+    end
+
     if params[:hub].present?
-      hub = Hub.find_by(name: params[:hub])
-      if hub
-        filter_scope = filter_scope.where(
-          "(learner_infos.hub_id = :hub_id) OR (learner_infos.hub_id IS NULL AND EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id = :hub_id AND uh.main = TRUE))",
-          hub_id: hub.id
-        )
-      else
-        filter_scope = filter_scope.where("1 = 0")
+      hub_names = Array(params[:hub]).reject(&:blank?)
+      if hub_names.any?
+        hubs = Hub.where(name: hub_names)
+        if hubs.any?
+          hub_ids = hubs.pluck(:id)
+          filter_scope = filter_scope.where(
+            "(learner_infos.hub_id IN (:hub_ids)) OR (learner_infos.hub_id IS NULL AND EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id IN (:hub_ids) AND uh.main = TRUE))",
+            hub_ids: hub_ids
+          )
+        else
+          filter_scope = filter_scope.where("1 = 0")
+        end
       end
     end
 
@@ -80,11 +113,15 @@ class AdmissionListController < ApplicationController
       END AS hub_id
     SQL
 
+    has_debt_subquery = <<~SQL.squish
+      (SELECT lf.has_debt FROM learner_finances lf WHERE lf.learner_info_id = learner_infos.id LIMIT 1) AS has_debt
+    SQL
+
     # final scope used to render table (add select/order as you had before)
-    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme, Arel.sql(hub_id_subquery), Arel.sql(hub_name_subquery))
+    scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme, Arel.sql(hub_id_subquery), Arel.sql(hub_name_subquery), Arel.sql(has_debt_subquery))
     scope = scope.order(Arel.sql("COALESCE(student_number, 99999999), id"))
 
-    @learner_infos = scope
+    @learner_infos = scope.reverse
   end
 
   def show
@@ -407,7 +444,7 @@ class AdmissionListController < ApplicationController
     end
 
     # Generate CSV
-    csv_string = CSV.generate(headers: true) do |csv|
+    csv_string = "\xEF\xBB\xBF" + CSV.generate(headers: true) do |csv|
       # Add headers (humanized field names)
       csv << selected_fields.map { |f| f.to_s.humanize }
 
