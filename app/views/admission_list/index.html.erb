@@ -13,6 +13,23 @@
     opacity: 0.6;
     pointer-events: auto;
   }
+
+  /* Debt styling */
+  tr.has-debt {
+    background-color: #fff3e0 !important;
+  }
+
+  tr.has-debt td {
+    border-left: 3px solid #ff9800;
+  }
+
+  tr.has-debt td:first-child {
+    border-left: 4px solid #ff9800;
+  }
+
+  .hidden {
+    display: none !important;
+  }
 </style>
 
 <div style="padding: 0 24px;">
@@ -48,87 +65,244 @@
 
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Status</label>
-        <%= select_tag :status,
-              options_for_select([['All', '']] + @statuses.map { |s| [s, s] }, params[:status]),
-              include_blank: false,
-              data: { admission_search_target: "statusSelect", action: "change->admission-search#submit" },
-              style: 'min-width:160px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+        <div data-controller="multi-select"
+            data-multi-select-name-value="status"
+            data-multi-select-placeholder-value="All"
+            style="position: relative;">
 
-        <button type="button"
-                data-action="click->admission-search#clearStatus"
-                data-admission-search-target="statusClear"
-                aria-label="Clear status"
-                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
-          ✕
-        </button>
+          <button type="button"
+                  data-multi-select-target="button"
+                  data-action="click->multi-select#toggle"
+                  style="min-width:160px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
+            <span class="button-text" style="color:#6b7280;">All</span>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <div data-multi-select-target="dropdown"
+              class="hidden"
+              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:200px; max-height:300px; overflow-y:auto; z-index:1000;">
+
+            <div style="padding:8px; border-bottom:1px solid #eee;">
+              <button type="button"
+                      data-action="click->multi-select#clearAll"
+                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
+                Clear All
+              </button>
+            </div>
+
+            <% @statuses.each do |status| %>
+              <label style="display:flex; align-items:center; padding:8px 12px; cursor:pointer; hover:background:#f9fafb;">
+                <input type="checkbox"
+                      value="<%= status %>"
+                      data-multi-select-target="checkbox"
+                      data-label="<%= status %>"
+                      data-action="change->multi-select#checkboxChanged"
+                      <%= 'checked' if Array(params[:status]).include?(status) %>
+                      style="margin-right:8px; cursor:pointer;">
+                <span style="font-size:0.9rem;"><%= status %></span>
+              </label>
+            <% end %>
+          </div>
+
+          <div data-multi-select-target="hiddenContainer"></div>
+        </div>
       </div>
 
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Hub</label>
-        <%= select_tag :hub,
-              options_for_select([['All', '']] + @hubs.map { |h| [h, h] }, params[:hub]),
-              include_blank: false,
-              data: { admission_search_target: "hubSelect", action: "change->admission-search#submit" },
-              style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+        <div data-controller="multi-select"
+            data-multi-select-name-value="hub"
+            data-multi-select-placeholder-value="All"
+            style="position: relative;">
 
-        <button type="button"
-                data-action="click->admission-search#clearHub"
-                data-admission-search-target="hubClear"
-                aria-label="Clear hub"
-                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
-          ✕
-        </button>
+          <button type="button"
+                  data-multi-select-target="button"
+                  data-action="click->multi-select#toggle"
+                  style="min-width:200px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
+            <span class="button-text" style="color:#6b7280;">All</span>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <div data-multi-select-target="dropdown"
+              class="hidden"
+              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:250px; max-height:300px; overflow-y:auto; z-index:1000;">
+
+            <div style="padding:8px; border-bottom:1px solid #eee;">
+              <button type="button"
+                      data-action="click->multi-select#clearAll"
+                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
+                Clear All
+              </button>
+            </div>
+
+            <% @hubs_grouped.each do |country, hubs| %>
+              <div style="padding-top:8px;">
+                <div style="padding:4px 12px; font-size:0.8rem; font-weight:600; color:#6b7280; text-transform:uppercase;">
+                  <%= country %>
+                </div>
+                <% hubs.each do |hub_name, hub_value| %>
+                  <label style="display:flex; align-items:center; padding:6px 12px 6px 24px; cursor:pointer; hover:background:#f9fafb;">
+                    <input type="checkbox"
+                          value="<%= hub_value %>"
+                          data-multi-select-target="checkbox"
+                          data-label="<%= hub_name %>"
+                          data-action="change->multi-select#checkboxChanged"
+                          <%= 'checked' if Array(params[:hub]).include?(hub_value) %>
+                          style="margin-right:8px; cursor:pointer;">
+                    <span style="font-size:0.9rem;"><%= hub_name %></span>
+                  </label>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <div data-multi-select-target="hiddenContainer"></div>
+        </div>
       </div>
 
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Programme</label>
-        <%= select_tag :programme,
-              options_for_select([['All', '']] + @programmes.map { |p| [p, p] }, params[:programme]),
-              include_blank: false,
-              data: { admission_search_target: "programmeSelect", action: "change->admission-search#submit" },
-              style: 'min-width:200px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+        <div data-controller="multi-select"
+            data-multi-select-name-value="programme"
+            data-multi-select-placeholder-value="All"
+            style="position: relative;">
 
-        <button type="button"
-                data-action="click->admission-search#clearProgramme"
-                data-admission-search-target="programmeClear"
-                aria-label="Clear programme"
-                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
-          ✕
-        </button>
+          <button type="button"
+                  data-multi-select-target="button"
+                  data-action="click->multi-select#toggle"
+                  style="min-width:200px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
+            <span class="button-text" style="color:#6b7280;">All</span>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <div data-multi-select-target="dropdown"
+              class="hidden"
+              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:220px; max-height:300px; overflow-y:auto; z-index:1000;">
+
+            <div style="padding:8px; border-bottom:1px solid #eee;">
+              <button type="button"
+                      data-action="click->multi-select#clearAll"
+                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
+                Clear All
+              </button>
+            </div>
+
+            <% @programmes.each do |programme| %>
+              <label style="display:flex; align-items:center; padding:8px 12px; cursor:pointer; hover:background:#f9fafb;">
+                <input type="checkbox"
+                      value="<%= programme %>"
+                      data-multi-select-target="checkbox"
+                      data-label="<%= programme %>"
+                      data-action="change->multi-select#checkboxChanged"
+                      <%= 'checked' if Array(params[:programme]).include?(programme) %>
+                      style="margin-right:8px; cursor:pointer;">
+                <span style="font-size:0.9rem;"><%= programme %></span>
+              </label>
+            <% end %>
+          </div>
+
+          <div data-multi-select-target="hiddenContainer"></div>
+        </div>
       </div>
 
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Curriculum</label>
-        <%= select_tag :curriculum,
-              options_for_select([['All', '']] + @curricula.map { |c| [c, c] }, params[:curriculum]),
-              include_blank: false,
-              data: { admission_search_target: "curriculumSelect", action: "change->admission-search#submit" },
-              style: 'min-width:220px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+        <div data-controller="multi-select"
+            data-multi-select-name-value="curriculum"
+            data-multi-select-placeholder-value="All"
+            style="position: relative;">
 
-        <button type="button"
-                data-action="click->admission-search#clearCurriculum"
-                data-admission-search-target="curriculumClear"
-                aria-label="Clear curriculum"
-                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
-          ✕
-        </button>
+          <button type="button"
+                  data-multi-select-target="button"
+                  data-action="click->multi-select#toggle"
+                  style="min-width:220px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
+            <span class="button-text" style="color:#6b7280;">All</span>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <div data-multi-select-target="dropdown"
+              class="hidden"
+              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:250px; max-height:300px; overflow-y:auto; z-index:1000;">
+
+            <div style="padding:8px; border-bottom:1px solid #eee;">
+              <button type="button"
+                      data-action="click->multi-select#clearAll"
+                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
+                Clear All
+              </button>
+            </div>
+
+            <% @curricula.each do |curriculum| %>
+              <label style="display:flex; align-items:center; padding:8px 12px; cursor:pointer; hover:background:#f9fafb;">
+                <input type="checkbox"
+                      value="<%= curriculum %>"
+                      data-multi-select-target="checkbox"
+                      data-label="<%= curriculum %>"
+                      data-action="change->multi-select#checkboxChanged"
+                      <%= 'checked' if Array(params[:curriculum]).include?(curriculum) %>
+                      style="margin-right:8px; cursor:pointer;">
+                <span style="font-size:0.9rem;"><%= curriculum %></span>
+              </label>
+            <% end %>
+          </div>
+
+          <div data-multi-select-target="hiddenContainer"></div>
+        </div>
       </div>
 
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Grade / Year</label>
-        <%= select_tag :grade_year,
-              options_for_select([['All', '']] + @grades.map { |g| [g, g] }, params[:grade_year]),
-              include_blank: false,
-              data: { admission_search_target: "gradeSelect", action: "change->admission-search#submit" },
-              style: 'min-width:140px; padding:6px; border-radius:6px; border:1px solid #ccc;' %>
+        <div data-controller="multi-select"
+            data-multi-select-name-value="grade_year"
+            data-multi-select-placeholder-value="All"
+            style="position: relative;">
 
-        <button type="button"
-                data-action="click->admission-search#clearGrade"
-                data-admission-search-target="gradeClear"
-                aria-label="Clear grade"
-                style="position: absolute; right: 8px; top: 28px; background: none; border: none; cursor: pointer; color: #888; display: none;">
-          ✕
-        </button>
+          <button type="button"
+                  data-multi-select-target="button"
+                  data-action="click->multi-select#toggle"
+                  style="min-width:140px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
+            <span class="button-text" style="color:#6b7280;">All</span>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <div data-multi-select-target="dropdown"
+              class="hidden"
+              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:160px; max-height:300px; overflow-y:auto; z-index:1000;">
+
+            <div style="padding:8px; border-bottom:1px solid #eee;">
+              <button type="button"
+                      data-action="click->multi-select#clearAll"
+                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
+                Clear All
+              </button>
+            </div>
+
+            <% @grades.each do |grade| %>
+              <label style="display:flex; align-items:center; padding:8px 12px; cursor:pointer; hover:background:#f9fafb;">
+                <input type="checkbox"
+                      value="<%= grade %>"
+                      data-multi-select-target="checkbox"
+                      data-label="<%= grade %>"
+                      data-action="change->multi-select#checkboxChanged"
+                      <%= 'checked' if Array(params[:grade_year]).include?(grade) %>
+                      style="margin-right:8px; cursor:pointer;">
+                <span style="font-size:0.9rem;"><%= grade %></span>
+              </label>
+            <% end %>
+          </div>
+
+          <div data-multi-select-target="hiddenContainer"></div>
+        </div>
       </div>
 
       <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
@@ -170,87 +344,7 @@
         <% end %>
       </div>
 
-      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <% if params[:search].present? %>
-          <button type="button"
-                  class="filter-chip"
-                  style="<%= chip_style %>"
-                  aria-label="Remove search filter"
-                  data-controller="admission-search-chip"
-                  data-action="click->admission-search-chip#clearSearch">
-            <strong style="font-weight:600;">Search:</strong>
-            <span style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">&nbsp;"<%= h(params[:search]) %>"</span>
-            <span aria-hidden="true" style="margin-left:6px;">✕</span>
-          </button>
-        <% end %>
-
-        <% if params[:status].present? %>
-          <button type="button"
-                  class="filter-chip"
-                  style="<%= chip_style %>"
-                  aria-label="Remove status filter"
-                  data-controller="admission-search-chip"
-                  data-action="click->admission-search-chip#clearStatus">
-            <strong style="font-weight:600;">Status:</strong>
-            <span><%= h(params[:status]) %></span>
-            <span aria-hidden="true" style="margin-left:6px;">✕</span>
-          </button>
-        <% end %>
-
-        <% if params[:hub].present? %>
-          <button type="button"
-                  class="filter-chip"
-                  style="<%= chip_style %>"
-                  aria-label="Remove hub filter"
-                  data-controller="admission-search-chip"
-                  data-action="click->admission-search-chip#clearHub">
-            <strong style="font-weight:600;">Hub:</strong>
-            <span><%= h(params[:hub]) %></span>
-            <span aria-hidden="true" style="margin-left:6px;">✕</span>
-          </button>
-        <% end %>
-
-        <% if params[:programme].present? %>
-          <button type="button"
-                  class="filter-chip"
-                  style="<%= chip_style %>"
-                  aria-label="Remove programme filter"
-                  data-controller="admission-search-chip"
-                  data-action="click->admission-search-chip#clearProgramme">
-            <strong style="font-weight:600;">Programme:</strong>
-            <span><%= h(params[:programme]) %></span>
-            <span aria-hidden="true" style="margin-left:6px;">✕</span>
-          </button>
-        <% end %>
-
-        <% if params[:curriculum].present? %>
-          <button type="button"
-                  class="filter-chip"
-                  style="<%= chip_style %>"
-                  aria-label="Remove curriculum filter"
-                  data-controller="admission-search-chip"
-                  data-action="click->admission-search-chip#clearCurriculum">
-            <strong style="font-weight:600;">Curriculum:</strong>
-            <span><%= h(params[:curriculum]) %></span>
-            <span aria-hidden="true" style="margin-left:6px;">✕</span>
-          </button>
-        <% end %>
-
-        <% if params[:grade_year].present? %>
-          <button type="button"
-                  class="filter-chip"
-                  style="<%= chip_style %>"
-                  aria-label="Remove grade filter"
-                  data-controller="admission-search-chip"
-                  data-action="click->admission-search-chip#clearGrade">
-            <strong style="font-weight:600;">Grade:</strong>
-            <span><%= h(params[:grade_year]) %></span>
-            <span aria-hidden="true" style="margin-left:6px;">✕</span>
-          </button>
-        <% end %>
-      </div>
     </div>
-
     <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: auto;">
       <table style="width:100%; border-collapse:collapse; min-width:800px;">
         <thead>
@@ -267,7 +361,8 @@
           <% if @learner_infos.any? %>
             <% @learner_infos.each do |row| %>
               <% active = row.status.to_s.downcase == "active" %>
-              <tr class="<%= 'muted' unless active %>">
+              <% has_debt = row.try(:has_debt) %>
+              <tr class="<%= 'muted' unless active %> <%= 'has-debt' if has_debt %>">
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
                   <%= link_to admission_path(row),
                               title: "View #{row.full_name}",
