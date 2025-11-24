@@ -854,16 +854,17 @@
             </thead>
             <tbody>
               <% if @sorted_coaches.empty? %>
-                <tr><td colspan="8">No learning coaches available.</td></tr>
+                <tr><td colspan="8">No suggested learning coaches available.</td></tr>
               <% else %>
                 <% @sorted_coaches.each do |data| %>
                   <% coach = data[:coach] %>
                   <tr>
                     <td>
                       <input type="radio"
-                             name="temp_learning_coach_id"
-                             value="<%= coach.id %>"
-                             <%= 'checked' if @learner_info.learning_coach_id == coach.id %>>
+                            class="lc-radio"
+                            name="temp_learning_coach_id"
+                            value="<%= coach.id %>"
+                            <%= 'checked' if @learner_info.learning_coach_id == coach.id %>>
                     </td>
                     <td><%= coach.full_name %></td>
                     <td><%= coach.email %></td>
@@ -875,6 +876,29 @@
                   </tr>
                 <% end %>
               <% end %>
+
+              <tr class="table-warning"> <td>
+                  <input type="radio"
+                        name="temp_learning_coach_id"
+                        id="other_coach_radio"
+                        value=""
+                        class="lc-radio">
+                </td>
+                <td colspan="8">
+                  <div class="d-flex align-items-center">
+                    <strong class="me-3">Other:</strong>
+
+                    <select class="form-select" id="other_coach_select" style="max-width: 900px;">
+                      <option value="" selected disabled>Select a different coach...</option>
+                      <% @all_coaches.each do |coach| %>
+                        <option value="<%= coach.id %>">
+                          <%= coach.full_name %> (<%= coach.email %>)
+                        </option>
+                      <% end %>
+                    </select>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -986,13 +1010,66 @@
     const displayField = document.getElementById('learning-coach-display');
     const changeBtn = document.getElementById('change-coach-btn');
 
+    // --- NEW ELEMENTS FOR "OTHER" LOGIC ---
+    const otherRadio = document.getElementById('other_coach_radio');
+    const otherSelect = document.getElementById('other_coach_select');
+    const standardRadios = document.querySelectorAll('.lc-radio:not(#other_coach_radio)');
+
     if (!modal || !confirmBtn || !hiddenField) return;
 
+    // 1. SYNC LOGIC: Handle Dropdown vs Radio interactions
+    if (otherSelect && otherRadio) {
+      // When dropdown changes, select the radio and update its value
+      otherSelect.addEventListener('change', function() {
+        if (this.value) {
+          otherRadio.checked = true;
+          otherRadio.value = this.value; // Set radio value to the Coach ID
+        }
+      });
+
+      // If user clicks the empty "Other" radio, focus the dropdown
+      otherRadio.addEventListener('click', function() {
+        if (otherSelect.value === "") {
+          otherSelect.focus();
+        }
+      });
+    }
+
+    // If a standard radio is clicked, reset the dropdown
+    if (standardRadios.length > 0 && otherSelect) {
+      standardRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+          otherSelect.value = "";
+          otherRadio.value = ""; // Clear value so it doesn't hold old data
+        });
+      });
+    }
+
+    // 2. CONFIRM LOGIC
     confirmBtn.addEventListener('click', function() {
       const selectedRadio = modal.querySelector('input[name="temp_learning_coach_id"]:checked');
+
       if (selectedRadio) {
         const coachId = selectedRadio.value;
-        const coachName = selectedRadio.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+        let coachName = '';
+
+        // Check if the user selected the "Other" radio
+        if (selectedRadio.id === 'other_coach_radio' && otherSelect) {
+           // Get text from the selected dropdown option
+           const selectedOption = otherSelect.options[otherSelect.selectedIndex];
+           // Remove the email part if you only want the name, or keep it all.
+           // Assuming format: "Name (email@test.com)" -> split to get just Name
+           coachName = selectedOption.text.split('(')[0].trim();
+        } else {
+           // Standard logic: Get text from the 2nd column of the row
+           coachName = selectedRadio.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+        }
+
+        // Validate that an ID is actually present (e.g. if they clicked "Other" but didn't pick from dropdown)
+        if (!coachId) {
+            alert('Please select a valid coach from the list.');
+            return;
+        }
 
         // Update hidden field
         hiddenField.value = coachId;
@@ -1030,7 +1107,22 @@
         // Pre-select current coach
         const currentId = hiddenField.value;
         if (currentId) {
-          const radio = modal.querySelector(`input[value="${currentId}"]`);
+          // Check if it's a standard radio
+          let radio = modal.querySelector(`.lc-radio[value="${currentId}"]`);
+
+          // If not found in standard list, it might be in the "Other" list
+          if (!radio && otherSelect) {
+             // Check if the ID exists in the dropdown
+             const option = otherSelect.querySelector(`option[value="${currentId}"]`);
+             if (option) {
+               otherSelect.value = currentId; // Set dropdown
+               otherRadio.value = currentId;  // Set radio value
+               otherRadio.checked = true;     // Check radio
+               return; // Exit
+             }
+          }
+
+          // If found in standard list
           if (radio) radio.checked = true;
         }
       });

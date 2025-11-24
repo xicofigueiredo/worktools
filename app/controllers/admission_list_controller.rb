@@ -546,6 +546,7 @@ class AdmissionListController < ApplicationController
     end.compact
 
     @sorted_coaches.sort_by! { |data| data[:ratio] }
+    @all_coaches = User.where(role: 'lc', deactivate: false)
   end
 
   # Use permission-defined attributes for strong params
