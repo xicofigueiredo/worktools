@@ -3,10 +3,10 @@ require './app/controllers/concerns/generate_topic_deadlines'
 # lib/tasks/simulate_update.rake
 include GenerateTopicDeadlines
 
-namespace :timelines do
-  desc "Update timelines that have exam season nil"
-  task simulate_update: :environment do
-    timelines = Timeline.where(hidden: false, end_date: Date.today..Date.today + 3.year)
+namespace :moodle_timelines do
+  desc "Update moodle timelines"
+  task update_timelines: :environment do
+    timelines = MoodleTimeline.where(hidden: false, end_date: Date.today..Date.today + 3.year)
     array_of_timelines = timelines.to_a
 
     successful_updates = 0

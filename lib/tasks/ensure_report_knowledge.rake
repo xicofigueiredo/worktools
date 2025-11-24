@@ -7,8 +7,8 @@ namespace :db do
 
 
     User.where(role: "learner", deactivate: false).find_each do |learner|
-      report = learner.reports.find_by(sprint: 13)
-      sprint_goal = learner.sprint_goals.find_by(sprint: 13)
+      report = learner.reports.find_by(sprint: 14)
+      sprint_goal = learner.sprint_goals.find_by(sprint: 14)
 
       # Skip if no report or sprint_goal
       next unless report && sprint_goal

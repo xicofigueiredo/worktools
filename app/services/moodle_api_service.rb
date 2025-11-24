@@ -415,7 +415,7 @@ class MoodleApiService
                   name: activity[:name],
                   unit: activity[:section_name],
                   moodle_id: activity[:id],
-                  time: activity[:ect] || 0,
+                  time: activity[:ect].nil? ? 0 : activity[:ect].to_s.gsub(',', '.').to_f,  # Preserve 0, 0.1, 1, etc. (handles comma as decimal separator)
                   order: index + 1,
                   grade: activity[:grade].present? ? activity[:grade].round(2) : nil,
                   done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),
@@ -669,7 +669,7 @@ class MoodleApiService
             rescue
               nil
             end,
-            time: activity[:ect].to_f || 1,
+            time: activity[:ect].nil? ? 0 : activity[:ect].to_s.gsub(',', '.').to_f,  # Preserve 0, 0.1, 1, etc. (handles comma as decimal separator)
             unit: activity[:section_name],
             mock50: activity[:mock50].to_i == 1,
             mock100: activity[:mock100].to_i == 1,
