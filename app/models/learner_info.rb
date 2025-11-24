@@ -325,7 +325,7 @@ class LearnerInfo < ApplicationRecord
         UserMailer.admissions_notification(user, adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      # send_teams_message
+      send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipients(learning_coaches + self.class.curriculum_responsibles(self.curriculum_course_option) + regional_manager, message)
@@ -353,8 +353,8 @@ class LearnerInfo < ApplicationRecord
     activate_upcoming_users!(today)
 
     # 4. Send Emails
-    send_onboarding_emails!(today)
-    send_renewal_reminders!(today)
+    # send_onboarding_emails!(today)
+    # send_renewal_reminders!(today)
 
     Rails.logger.info "[DailyMaintenance] Completed."
   end
