@@ -83,6 +83,7 @@ class UserMailer < Devise::Mailer
     to = learner_info.learner_finances.invoice_email
     message = "Renewal Fee"
     mail(to: to, from: 'worktools@bravegenerationacademy.com', subject: "Renewal Fee")
+  end
 
   def onboarding_email(learner_info)
     @learner = learner_info
