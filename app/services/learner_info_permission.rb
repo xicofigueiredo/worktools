@@ -104,6 +104,21 @@ class LearnerInfoPermission
       end_day_communication platform_username platform_password
       use_of_image_authorisation emergency_protocol_choice
       onboarding_meeting_notes notes
+    ],
+    'exams' => %i[
+      full_name preferred_name student_number status birthdate programme
+      learning_coach_id hub_id curriculum_course_option grade_year
+      personal_email institutional_email phone_number
+      nationality gender native_language english_proficiency
+      parent1_full_name parent1_email parent1_phone_number
+      parent2_full_name parent2_email parent2_phone_number
+      parent2_info_not_to_be_contacted registering_school_pt_plus
+      previous_schooling previous_school_status previous_school_name
+      previous_school_email previous_school_grade_year
+      start_date transfer_of_programme_date end_date
+      end_day_communication platform_username platform_password
+      use_of_image_authorisation emergency_protocol_choice
+      onboarding_meeting_notes notes
     ]
   }.freeze
 
@@ -114,7 +129,8 @@ class LearnerInfoPermission
     'finance' => %i[preferred_name],
     'ops' => [],
     'it' => %i[preferred_name platform_username platform_password],
-    'lc' => %i[preferred_name learning_coach_id personal_email phone_number parent1_phone_number parent2_phone_number]
+    'lc' => %i[preferred_name learning_coach_id personal_email phone_number parent1_phone_number parent2_phone_number],
+    'exams' => []
   }.freeze
 
   FINANCE_VIEW_BY_ROLE = {
@@ -140,7 +156,8 @@ class LearnerInfoPermission
       renewal_fee discount_rf billable_rf invoice_email notes
     ],
     'it' => [],
-    'lc' => []
+    'lc' => [],
+    'exams' => []
   }.freeze
 
   FINANCE_EDIT_BY_ROLE = {
@@ -150,7 +167,8 @@ class LearnerInfoPermission
     'finance' => %i[payment_plan financial_responsibility discount_mf scholarship discount_af discount_rf invoice_email notes has_debt],
     'ops' => [],
     'it' => [],
-    'lc' => []
+    'lc' => [],
+    'exams' => []
   }.freeze
 
   def initialize(user, record)
@@ -160,7 +178,7 @@ class LearnerInfoPermission
   end
 
   def show?
-    admin? || admissions? || edu? || finance? || ops? || it? || lc?
+    admin? || admissions? || edu? || finance? || ops? || it? || lc? || exams?
   end
 
   def update?
@@ -204,4 +222,5 @@ class LearnerInfoPermission
   def ops? = @role == 'ops'
   def it? = @role == 'it'
   def lc? = @role == 'lc'
+  def exams? = role == 'exams'
 end

@@ -2,13 +2,14 @@ class LearnerDocumentPermission
   attr_reader :user, :record, :role
 
   DOC_VIEW_BY_ROLE = {
-    'admin' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials],
-    'admissions' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials],
-    'edu' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials],
-    'finance' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials],
-    'ops' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials],
-    'it' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials],
-    'lc' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials]
+    'admin' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates],
+    'admissions' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates],
+    'edu' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates],
+    'finance' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates],
+    'ops' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates],
+    'it' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates],
+    'lc' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates],
+    'exams' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates]
   }.freeze
 
   DOC_EDIT_BY_ROLE = {
@@ -18,7 +19,8 @@ class LearnerDocumentPermission
     'finance' => [],
     'ops' => [],
     'it' => %w[credentials],
-    'lc' => %w[last_term_report]
+    'lc' => %w[last_term_report exam_certificates],
+    'exams' => %w[exam_certificates]
   }.freeze
 
   def initialize(user, record = nil)
