@@ -529,7 +529,7 @@ class AdmissionListController < ApplicationController
       # Use hub model methods
       lc_count = main_hub.learning_coaches_count
       kids_count = main_hub.learners_excluding_statuses(excluded_statuses).count
-      remote_count = LearnerInfo.where(learning_coach_id: coach.id).count
+      remote_count = LearnerInfo.where(learning_coach_id: coach.id).where.not(status: excluded_statuses).count
 
       # Calculate ratio
       base_ratio = lc_count > 0 ? (kids_count.to_f / lc_count) : 0.0
