@@ -182,7 +182,7 @@ class MoodleTimeline < ApplicationRecord
       course_id = self.moodle_id
 
       # Create topics for admin user worktools = 2617; Xico = 2245
-      user_id = 2245
+      user_id = 2617
 
       completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
 
@@ -291,7 +291,7 @@ class MoodleTimeline < ApplicationRecord
         # Prefer id match, but fallback by name and backfill moodle_id like sync
         moodle_topic = existing_topics[activity[:id]]
         if moodle_topic.nil?
-          moodle_topic = self.moodle_topics.where(hidden: false).find_by(moodle_id: activity[:id])
+          moodle_topic = self.moodle_topics.where(hidden: false).find_by(name: activity[:name], unit: activity[:section_name])
           if moodle_topic && activity[:id].present? && moodle_topic.moodle_id.nil?
             moodle_topic.update_column(:moodle_id, activity[:id])
             existing_topics[activity[:id]] = moodle_topic
