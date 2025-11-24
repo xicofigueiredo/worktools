@@ -339,61 +339,24 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
-  def self.sync_date_based_statuses!(run_at: Time.current)
+  def self.perform_daily_maintenance!(run_at: Time.current)
     today = run_at.to_date
+    Rails.logger.info "[DailyMaintenance] Starting maintenance for #{today}..."
 
-    # Existing activation/inactivation/user activation candidates...
-    activation_candidates = where(status: "Onboarded")
-                            .where("start_date IS NOT NULL AND start_date <= ?", today)
+    # 1. Sync with external services
+    sync_hubspot_submissions
 
-    inactivation_candidates = where(status: "Active")
-                              .where("end_date IS NOT NULL AND end_date < ?", today)
+    # 2. Update Statuses (Onboarded -> Active, Active -> Inactive)
+    sync_learner_statuses!(today)
 
-    user_activation_candidates = where(status: "Onboarded")
-                                .where("start_date IS NOT NULL AND start_date > ? AND start_date <= ?", today, today + 15)
+    # 3. Activate User Accounts (Access preparation)
+    activate_upcoming_users!(today)
 
-    # Existing: Onboarding email candidates (start_date within next 7 days, inclusive of today +1 to today +7)
-    onboarding_email_candidates = where(status: "Onboarded")
-                                  .where(onboarding_email_sent: false)
-                                  .where("start_date IS NOT NULL AND start_date > ? AND start_date <= ?", today, today + 7)
+    # 4. Send Emails
+    send_onboarding_emails!(today)
+    send_renewal_reminders!(today)
 
-    # Combine and dedupe all candidates
-    candidates = (activation_candidates + inactivation_candidates + user_activation_candidates + onboarding_email_candidates).uniq
-
-    updated_count = 0
-    user_activated_count = 0
-    emails_sent_count = 0
-    inactivated_learners = []
-
-    candidates.each do |learner|
-      previous_status = learner.status
-
-      learner.check_status_updates
-      updated_count += 1 if learner.saved_change_to_status?
-
-      if learner.user && learner.start_date && (today + 1..today + 15).cover?(learner.start_date) && learner.user.deactivate
-        learner.user.update(deactivate: false)
-        user_activated_count += 1
-      end
-
-      if learner.status == "Onboarded" && learner.start_date && learner.start_date > today && learner.start_date <= today + 7 && !learner.onboarding_email_sent
-        # UserMailer.onboarding_email(learner).deliver_now
-        learner.update(onboarding_email_sent: true)
-        emails_sent_count += 1
-      end
-
-      if learner.status == "Inactive" && previous_status != "Inactive"
-        inactivated_learners << learner
-      end
-    end
-
-    check_hub_capacity_and_notify!(inactivated_learners)
-
-    Rails.logger.info(
-      "[LearnerInfo.sync_date_based_statuses!] Processed #{candidates.size} candidates – #{updated_count} statuses synced (activations/inactivations), #{user_activated_count} user accounts activated, #{emails_sent_count} onboarding emails sent."
-    )
-
-    { updated_statuses: updated_count, activated_users: user_activated_count, emails_sent: emails_sent_count }
+    Rails.logger.info "[DailyMaintenance] Completed."
   end
 
   def self.check_hub_capacity_and_notify!(inactivated_learners = [])
@@ -418,6 +381,82 @@ class LearnerInfo < ApplicationRecord
   end
 
   private
+
+  def self.sync_hubspot_submissions
+    Rails.logger.info "[DailyMaintenance] Fetching HubSpot submissions..."
+    HubspotService.fetch_new_submissions
+  rescue StandardError => e
+    Rails.logger.error "[DailyMaintenance] HubSpot Sync Failed: #{e.message}"
+  end
+
+  def self.sync_learner_statuses!(today)
+    updated_count = 0
+    inactivated_learners = []
+
+    candidates = where(status: "Onboarded").where("start_date <= ?", today)
+                 .or(where(status: "Active").where("end_date < ?", today))
+
+    candidates.find_each do |learner|
+      previous_status = learner.status
+      learner.check_status_updates
+
+      if learner.saved_change_to_status?
+        updated_count += 1
+
+        # Track Inactivations for notification
+        if learner.status == "Inactive" && previous_status != "Inactive"
+          inactivated_learners << learner
+        end
+      end
+    end
+
+    check_hub_capacity_and_notify!(inactivated_learners) if inactivated_learners.any?
+    Rails.logger.info "[DailyMaintenance] Statuses synced: #{updated_count}. Inactivated: #{inactivated_learners.count}"
+  end
+
+  def self.activate_upcoming_users!(today)
+    candidates = where(status: "Onboarded")
+                 .where(start_date: (today + 1.day)..(today + 15.days))
+                 .joins(:user)
+                 .where(users: { deactivate: true })
+
+    count = 0
+    candidates.find_each do |learner|
+      learner.user.update(deactivate: false)
+      count += 1
+    end
+    Rails.logger.info "[DailyMaintenance] Users activated: #{count}"
+  end
+
+  def self.send_onboarding_emails!(today)
+    # Find Onboarded learners starting in next 7 days who haven't received the email
+    candidates = where(status: "Onboarded", onboarding_email_sent: false)
+                 .where(start_date: (today + 1.day)..(today + 7.days))
+
+    count = 0
+    candidates.find_each do |learner|
+      # UserMailer.onboarding_email(learner).deliver_now
+      learner.update(onboarding_email_sent: true)
+      count += 1
+    end
+    Rails.logger.info "[DailyMaintenance] Onboarding emails sent: #{count}"
+  end
+
+  def self.send_renewal_reminders!(today)
+    target_month = (today + 1.month).month
+    target_day   = today.day
+
+    candidates = where(status: "Active").where("extract(day from start_date) = ?", target_day)
+
+    count = 0
+    candidates.find_each do |learner|
+      if learner.start_date.month == target_month
+        # UserMailer.renewal_fee_email(learner).deliver_now
+        count += 1
+      end
+    end
+    Rails.logger.info "[DailyMaintenance] Renewal emails sent: #{count}"
+  end
 
   def status_was_waitlist_ok?
     # Helper to infer path for revert; can be improved with a persisted path flag if needed

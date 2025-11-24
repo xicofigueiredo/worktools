@@ -70,12 +70,19 @@ class UserMailer < Devise::Mailer
     )
   end
 
+  # TO DO: SWAP MAIL
   def admissions_notification(user, message, subject)
     @user = user
     @message = message
     # mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
     mail(to: "guilherme@bravegenerationacademy.com", from: 'worktools@bravegenerationacademy.com', subject: subject)
   end
+
+  # TO DO: What is the template? How does it work for up?
+  def renewal_fee_email(learner_info)
+    to = learner_info.learner_finances.invoice_email
+    message = "Renewal Fee"
+    mail(to: to, from: 'worktools@bravegenerationacademy.com', subject: "Renewal Fee")
 
   def onboarding_email(learner_info)
     @learner = learner_info
@@ -179,7 +186,7 @@ class UserMailer < Devise::Mailer
       attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
     end
 
-    # --- Send email ---
+    # --- Send email --- TO DO: SWAP TO
     mail(
       to: "guilherme@bravegenerationacademy.com", #to,
       from:          'worktools@bravegenerationacademy.com',
