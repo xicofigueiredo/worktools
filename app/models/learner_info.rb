@@ -276,7 +276,7 @@ class LearnerInfo < ApplicationRecord
 
       if curr.start_with?('up')
         responsible = self.class.curriculum_responsibles(self.curriculum_course_option)
-        message = "New enrolment for UP. Please validate the data please. <a href='#{link}' target='_blank' rel='noopener'>Check profile</a>"
+        message = "New enrolment for UP. Please validate the data please. Check profile here: <a href='#{link}' target='_blank' rel='noopener'>#{link}</a>"
         subject = "New Enrolment for UP"
 
         responsible.each do |user|
