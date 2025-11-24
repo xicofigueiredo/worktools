@@ -1,6 +1,10 @@
 module LearnerNotifications
   extend ActiveSupport::Concern
 
+  included do
+    after_update :notify_up_curriculum_responsible_if_changed
+  end
+
   # CLASS METHODS
   class_methods do
     def admissions_users
@@ -48,5 +52,22 @@ module LearnerNotifications
     end
 
     Rails.logger.info("[Notification] Sent to #{recipients.size} users about #{target_learner.full_name}.")
+  end
+
+  private
+
+  def notify_up_curriculum_responsible_if_changed
+    relevant_fields = ['hub_id', 'grade_year', 'curriculum_course_option']
+    relevant_changes = saved_changes.slice(*relevant_fields)
+    return if relevant_changes.blank?
+
+    old_curr = saved_changes['curriculum_course_option'] ? saved_changes['curriculum_course_option'][0] : curriculum_course_option
+    new_curr = curriculum_course_option
+
+    if old_curr.to_s.strip.downcase.start_with?('up') || new_curr.to_s.strip.downcase.start_with?('up')
+      change_details = relevant_changes.map { |k, v| "#{k.gsub('_', ' ').titleize} changed from #{v[0].inspect} to #{v[1].inspect}" }.join(', ')
+      message = "UP Learner #{full_name} has updates: #{change_details}."
+      notify_recipients(self.class.curriculum_responsibles('up'), message)
+    end
   end
 end
