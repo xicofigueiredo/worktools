@@ -444,7 +444,7 @@ class AdmissionListController < ApplicationController
     end
 
     # Generate CSV
-    csv_string = CSV.generate(headers: true) do |csv|
+    csv_string = "\xEF\xBB\xBF" + CSV.generate(headers: true) do |csv|
       # Add headers (humanized field names)
       csv << selected_fields.map { |f| f.to_s.humanize }
 
