@@ -47,6 +47,7 @@ class AdmissionListController < ApplicationController
       end
     end
 
+    # Search filter (unchanged)
     if params[:search].present?
       search_term = "%#{params[:search].strip}%"
       filter_scope = filter_scope.where(
@@ -57,19 +58,40 @@ class AdmissionListController < ApplicationController
       )
     end
 
-    filter_scope = filter_scope.where(status: params[:status]) if params[:status].present?
-    filter_scope = filter_scope.where(curriculum_course_option: params[:curriculum]) if params[:curriculum].present?
-    filter_scope = filter_scope.where(grade_year: params[:grade_year]) if params[:grade_year].present?
-    filter_scope = filter_scope.where(programme: params[:programme]) if params[:programme].present?
+    # Multi-select filters - UPDATED
+    if params[:status].present?
+      statuses = Array(params[:status]).reject(&:blank?)
+      filter_scope = filter_scope.where(status: statuses) if statuses.any?
+    end
+
+    if params[:curriculum].present?
+      curricula = Array(params[:curriculum]).reject(&:blank?)
+      filter_scope = filter_scope.where(curriculum_course_option: curricula) if curricula.any?
+    end
+
+    if params[:grade_year].present?
+      grades = Array(params[:grade_year]).reject(&:blank?)
+      filter_scope = filter_scope.where(grade_year: grades) if grades.any?
+    end
+
+    if params[:programme].present?
+      programmes = Array(params[:programme]).reject(&:blank?)
+      filter_scope = filter_scope.where(programme: programmes) if programmes.any?
+    end
+
     if params[:hub].present?
-      hub = Hub.find_by(name: params[:hub])
-      if hub
-        filter_scope = filter_scope.where(
-          "(learner_infos.hub_id = :hub_id) OR (learner_infos.hub_id IS NULL AND EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id = :hub_id AND uh.main = TRUE))",
-          hub_id: hub.id
-        )
-      else
-        filter_scope = filter_scope.where("1 = 0")
+      hub_names = Array(params[:hub]).reject(&:blank?)
+      if hub_names.any?
+        hubs = Hub.where(name: hub_names)
+        if hubs.any?
+          hub_ids = hubs.pluck(:id)
+          filter_scope = filter_scope.where(
+            "(learner_infos.hub_id IN (:hub_ids)) OR (learner_infos.hub_id IS NULL AND EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id IN (:hub_ids) AND uh.main = TRUE))",
+            hub_ids: hub_ids
+          )
+        else
+          filter_scope = filter_scope.where("1 = 0")
+        end
       end
     end
 
