@@ -73,8 +73,8 @@ class UserMailer < Devise::Mailer
   def admissions_notification(user, message, subject)
     @user = user
     @message = message
-    mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
-    #mail(to: "guilherme@bravegenerationacademy.com", from: 'worktools@bravegenerationacademy.com', subject: subject)
+    # mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
+    mail(to: "guilherme@bravegenerationacademy.com", from: 'worktools@bravegenerationacademy.com', subject: subject)
   end
 
   # TO DO: What is the template? How does it work for up?
@@ -130,19 +130,28 @@ class UserMailer < Devise::Mailer
       return
     end
 
+    @platform_details = [
+        "Username: #{@learner.platform_username}",
+        "Password: #{@learner.platform_password}"
+      ].join("<br>").html_safe
+
     # --- Recipient & subject ---
     to      = @parent_emails
     subject = "Onboarding Day - #{@learner.full_name}"
+
+    # --- Attachments for everyone ---
     attachments['Calendar.pdf'] = File.read(Rails.root.join('public', 'documents', 'calendar_2025.pdf'))
+    credentials = @learner.learner_documents.find_by(document_type: 'credentials')
+    if credentials&.file&.attached?
+      attachments["Credentials_Document.pdf"] = {
+        mime_type: credentials.file.blob.content_type,
+        content: credentials.file.download
+      }
+    end
 
     if template.start_with?('onboarded_up_')
       to      = @learner_email
       subject = "Welcome to the UP Program!"
-
-      @platform_details = [
-        "Username: #{@learner.platform_username}",
-        "Password: #{@learner.platform_password}"
-      ].join("<br>").html_safe
 
       # --- Assign mentors based on program and level ---
       case up_program
@@ -161,14 +170,6 @@ class UserMailer < Devise::Mailer
       when 'sports'
         @mentor_name = "Aubrey Stout"
         @mentor_email = "aubrey.stout@etacollege.com"
-      end
-
-      credentials = @learner.learner_documents.find_by(document_type: 'credentials')
-      if credentials&.file&.attached?
-        attachments["Credentials_Document.pdf"] = {
-          mime_type: credentials.file.blob.content_type,
-          content:   credentials.file.download
-        }
       end
 
     else

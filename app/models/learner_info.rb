@@ -81,14 +81,6 @@ class LearnerInfo < ApplicationRecord
 
     log_update(nil, changes, note: "Automated status update to #{new_status}" + (gen_number ? " with student number generation" : ""))
 
-    if new_status == "Onboarded" && user&.deactivate
-      user.update(deactivate: false)
-    end
-
-    if new_status == "In progress" && old_status == "In progress conditional"
-      create_institutional_user_if_needed
-    end
-
     send_status_notification(new_status)
   end
 
@@ -100,6 +92,7 @@ class LearnerInfo < ApplicationRecord
     has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
     has_documents = has_contract && has_proof
     has_credentials = learner_documents.exists?(document_type: 'credentials') || !curriculum_course_option.to_s.strip.downcase.start_with?('up')
+    has_institutional_email = institutional_email.present?
     has_start_date = start_date.present?
     has_started = has_start_date && start_date <= Date.today
     end_date_passed = end_date.present? && end_date < Date.today
@@ -126,13 +119,13 @@ class LearnerInfo < ApplicationRecord
       when "Onboarded"
         if has_started
           "Active"
-        elsif !has_start_date || !has_platform_info || !has_credentials
+        elsif !has_start_date || !has_platform_info || !has_credentials || !has_institutional_email
           "Validated"
         else
           "Onboarded"
         end
       when "Validated"
-        if has_start_date && has_platform_info && has_credentials
+        if has_start_date && has_platform_info && has_credentials && has_institutional_email
           "Onboarded"
         elsif !has_documents
           if is_up_curriculum
@@ -325,7 +318,7 @@ class LearnerInfo < ApplicationRecord
         UserMailer.admissions_notification(user, adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      send_teams_message
+      # send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipients(learning_coaches + self.class.curriculum_responsibles(self.curriculum_course_option) + regional_manager, message)
@@ -353,7 +346,7 @@ class LearnerInfo < ApplicationRecord
     activate_upcoming_users!(today)
 
     # 4. Send Emails
-    # send_onboarding_emails!(today)
+    send_onboarding_emails!(today)
     # send_renewal_reminders!(today)
 
     Rails.logger.info "[DailyMaintenance] Completed."
@@ -380,7 +373,100 @@ class LearnerInfo < ApplicationRecord
     end
   end
 
+  def ensure_worktools_accounts!
+    ActiveRecord::Base.transaction do
+      create_or_link_learner_user!
+      sync_parents_with_kids!
+    end
+  rescue => e
+    Rails.logger.error "[LearnerInfo##{id}] Failed to ensure Worktools accounts: #{e.message}"
+    raise if Rails.env.development?
+  end
+
   private
+
+  def create_or_link_learner_user!
+    return if user.present?
+
+    email = institutional_email.strip.downcase
+    existing_user = User.find_by(email: email)
+
+    if existing_user
+      update_column(:user_id, existing_user.id)
+      return
+    end
+
+    new_user = User.create!(
+      full_name: full_name,
+      email: email,
+      password: platform_password,
+      password_confirmation: platform_password,
+      role: "learner",
+      confirmed_at: Time.current,
+      deactivate: false
+    )
+
+    LearnerFlag.create!(
+          user_id: new_user.id,
+          asks_for_help: false,
+          takes_notes: false,
+          goes_to_live_lessons: false,
+          does_p2p: false,
+          action_plan: "",
+          life_experiences: false
+    )
+
+    # Link back
+    update_column(:user_id, new_user.id)
+
+    # Associate with hub if present
+    if hub_id.present?
+      UsersHub.find_or_create_by!(user: new_user, hub_id: hub_id, main: true)
+    end
+
+    Rails.logger.info "[LearnerInfo##{id}] Created learner User: #{email}"
+  end
+
+  def sync_parents_with_kids!
+    kid_user = user
+    return unless kid_user
+
+    return if kid_user.deactivate?
+
+    password = platform_password
+
+    [
+      { name: parent1_full_name, email: parent1_email },
+      { name: parent2_full_name, email: parent2_email }
+    ].each do |data|
+      email = data[:email]&.strip&.downcase
+      next if email.blank?
+
+      full_name = data[:name]&.strip.presence || email.split("@").first.humanize
+
+      parent = User.find_or_initialize_by(email: email)
+      parent.assign_attributes(
+        full_name: full_name,
+        password: password,
+        password_confirmation: password,
+        confirmed_at: Time.current,
+        role: "Parent"
+      )
+
+      # Temporarily bypass email domain validation
+      parent.define_singleton_method(:email_domain_check) { true } if parent.new_record?
+
+      if parent.save
+        unless parent.kids.include?(kid_user)
+          parent.kids << kid_user.id if kid_user && !parent.kids.include?(kid_user.id)
+          parent.save!
+          Rails.logger.info "[LearnerInfo##{id}] Linked parent #{email} to kid #{kid_user.email}"
+        end
+      else
+        Rails.logger.warn "[LearnerInfo##{id}] Failed to save parent #{email}: #{parent.errors.full_messages}"
+      end
+    end
+  end
 
   def self.sync_hubspot_submissions
     Rails.logger.info "[DailyMaintenance] Fetching HubSpot submissions..."
@@ -435,7 +521,8 @@ class LearnerInfo < ApplicationRecord
 
     count = 0
     candidates.find_each do |learner|
-      # UserMailer.onboarding_email(learner).deliver_now
+      learner.ensure_worktools_accounts!
+      UserMailer.onboarding_email(learner).deliver_now
       learner.update(onboarding_email_sent: true)
       count += 1
     end
