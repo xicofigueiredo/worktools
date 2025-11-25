@@ -363,7 +363,8 @@
       curriculum_pricing_model_value: @main_hub.hub_type == 'Online' ? 'Online' : 'Hybrid',
       curriculum_pricing_country_value: @main_hub.country,
       curriculum_pricing_hub_name_value: @main_hub.name,
-      curriculum_pricing_currency_symbol_value: @currency_symbol
+      curriculum_pricing_currency_symbol_value: @currency_symbol,
+      curriculum_pricing_original_start_date_value: @learner_info.start_date&.strftime("%Y-%m-%d") || ""
     } %>
   <% end %>
 
@@ -813,7 +814,7 @@
         <h5 class="modal-title">⚠️ Start Date Year Warning</h5>
       </div>
       <div class="modal-body">
-        <p>The start date you selected is for <strong id="selected-year-display"></strong>, not the current year (<%= Date.today.year %>).</p>
+        <p>The start date you changed to is for <strong id="selected-year-display"></strong>, not the current year (<%= Date.current.year %>).</p>
         <p class="mb-0"><strong>Did you update the pricing accordingly?</strong></p>
         <p class="text-muted small">Different years may have different pricing tiers. Please ensure the financial information is correct for the selected year.</p>
       </div>
@@ -1282,6 +1283,8 @@
     const form = document.getElementById('learner-info-form');
     if (!form) return;
 
+    const originalStartDate = form.dataset.curriculumPricingOriginalStartDateValue || "";
+
     // Elements for start-date modal/check
     const startDateInput = document.getElementById('learner_info_start_date');
     const startModalElement = document.getElementById('startDateWarningModal');
@@ -1299,14 +1302,18 @@
     // Flags so we don't loop
     let pricingConfirmed = false;
     let startConfirmed = false;
-
     const currentYear = new Date().getFullYear();
 
     function checkStartDateNeeded() {
       if (!startDateInput) return false;
       const val = startDateInput.value;
       if (!val) return false;
-      return new Date(val).getFullYear() !== currentYear;
+
+      if (val === originalStartDate) return false;
+
+      const newDate = new Date(val);
+      const newYear = newDate.getFullYear();
+      return newYear !== currentYear;
     }
 
     function updateStartModalYear() {
