@@ -51,7 +51,7 @@ class Hub < ApplicationRecord
   def learning_coaches_count
     User.joins(:users_hubs)
         .where(users_hubs: { hub_id: id })
-        .where(role: 'lc')
+        .where(role: 'lc', deactivate: false)
         .distinct
         .count
   end
