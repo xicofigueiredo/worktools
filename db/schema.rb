@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_25_131935) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -132,6 +132,15 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_131935) do
     t.datetime "updated_at", null: false
     t.index ["subject_id"], name: "index_chats_on_subject_id"
     t.index ["user_id"], name: "index_chats_on_user_id"
+  end
+
+  create_table "collaborator_infos", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.boolean "can_teach_pt_plus", default: false
+    t.boolean "can_teach_remote", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_collaborator_infos_on_user_id"
   end
 
   create_table "communities", force: :cascade do |t|
@@ -1099,7 +1108,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_131935) do
     t.string "id_number"
     t.string "gender"
     t.boolean "native_language_english"
-    t.boolean "can_teach_pt_plus", default: false
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -1198,6 +1206,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_131935) do
   add_foreign_key "chat_messages", "chats"
   add_foreign_key "chats", "subjects"
   add_foreign_key "chats", "users"
+  add_foreign_key "collaborator_infos", "users"
   add_foreign_key "communities", "sprint_goals"
   add_foreign_key "confirmations", "staff_leaves", column: "staff_leave_id"
   add_foreign_key "confirmations", "users", column: "approver_id"

@@ -879,7 +879,7 @@
                     </td>
                     <td>
                       <%= coach.full_name %>
-                      <% if coach.can_teach_pt_plus %>
+                      <% if coach.can_teach_pt_plus? %>
                         <span class="badge bg-success ms-1" title="Can teach PT+ curriculum">PT+</span>
                       <% end %>
                     </td>
@@ -909,7 +909,7 @@
                       <option value="" selected disabled>Select a different coach...</option>
                       <% @all_coaches.each do |coach| %>
                         <option value="<%= coach.id %>">
-                          <%= coach.full_name %><%= " [PT+]" if coach.can_teach_pt_plus %> (<%= coach.email %>)
+                          <%= coach.full_name %><%= " [PT+]" if coach.can_teach_pt_plus? %> (<%= coach.email %>)
                         </option>
                       <% end %>
                     </select>
