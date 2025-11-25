@@ -655,12 +655,23 @@
               </div>
 
             </div>
+            <div class="card mb-3 mx-3 border-warning bg-light">
+              <div class="card-body">
+                <h6 class="text-warning">Option to Keep Previous Pricing</h6>
+                <p class="mb-0 small">
+                  If you want to acknowledge the change but retain the existing fees, discounts, and billables (ignoring the new pricing tier), use the "Keep Previous Pricing & Save" button below.
+                </p>
+              </div>
+            </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="pricing-cancel-btn">
                 Cancel
               </button>
-              <button type="button" class="btn btn-primary" id="pricing-confirm-btn">
-                Confirm & Save Changes
+              <button type="button" class="btn btn-warning" id="pricing-keep-previous-btn">
+                Keep Previous Pricing & Save
+              </button>
+              <button type="button" class="btn btn-primary" id="pricing-apply-new-btn">
+                Apply New Pricing & Save
               </button>
             </div>
           </div>
