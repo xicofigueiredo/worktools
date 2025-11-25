@@ -3,7 +3,7 @@ namespace :moodle do
   task recreate_topics_by_ids: :environment do
     # Define the array of moodle timeline IDs here
     timeline_ids = [
-      18577
+      17467
     ]
 
     if timeline_ids.empty?
