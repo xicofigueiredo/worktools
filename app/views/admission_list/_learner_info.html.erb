@@ -841,7 +841,7 @@
   </div>
 </div>
 
-<% if @sorted_coaches %>
+<% if @remote_lcs %>
   <div class="modal fade" id="learningCoachModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
       <div class="modal-content">
@@ -864,10 +864,10 @@
               </tr>
             </thead>
             <tbody>
-              <% if @sorted_coaches.empty? %>
+              <% if @remote_lcs.empty? %>
                 <tr><td colspan="8">No suggested learning coaches available.</td></tr>
               <% else %>
-                <% @sorted_coaches.each do |data| %>
+                <% @remote_lcs.each do |data| %>
                   <% coach = data[:coach] %>
                   <tr>
                     <td>
@@ -906,10 +906,10 @@
                     <strong class="me-3">Other:</strong>
 
                     <select class="form-select" id="other_coach_select" style="max-width: 900px;">
-                      <option value="" selected disabled>Select a different coach...</option>
-                      <% @all_coaches.each do |coach| %>
-                        <option value="<%= coach.id %>">
-                          <%= coach.full_name %><%= " [PT+]" if coach.can_teach_pt_plus? %> (<%= coach.email %>)
+                      <option value="" selected disabled>Select a different learning coach...</option>
+                      <% @all_lcs.each do |lc| %>
+                        <option value="<%= lc.id %>">
+                          <%= lc.full_name %><%= " [PT+]" if lc.can_teach_pt_plus? %> (<%= lc.email %>)
                         </option>
                       <% end %>
                     </select>

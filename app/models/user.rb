@@ -162,6 +162,12 @@ class User < ApplicationRecord
     STAFF_ROLES.include?(role.to_sym)
   end
 
+  def online_learners
+    User.joins(:learner_info)
+        .merge(LearnerInfo.active)
+        .where(learner_infos: { learning_coach_id: id, programme: "Online" })
+  end
+
   private
 
   def associate_with_hubs
