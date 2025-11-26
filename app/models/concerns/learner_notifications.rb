@@ -3,6 +3,7 @@ module LearnerNotifications
 
   included do
     after_update :notify_up_curriculum_responsible_if_changed
+    after_update :notify_new_lc_and_manager_if_changed
   end
 
   # CLASS METHODS
@@ -68,6 +69,32 @@ module LearnerNotifications
       change_details = relevant_changes.map { |k, v| "#{k.gsub('_', ' ').titleize} changed from #{v[0].inspect} to #{v[1].inspect}" }.join(', ')
       message = "UP Learner #{full_name} has updates: #{change_details}."
       notify_recipients(self.class.curriculum_responsibles('up'), message)
+    end
+  end
+
+  def notify_new_lc_and_manager_if_changed
+    # Only run if the specific column 'learning_coach_id' changed
+    return unless saved_change_to_learning_coach_id?
+
+    # Get the new ID from the changes array [old_val, new_val]
+    new_lc_id = saved_change_to_learning_coach_id[1]
+
+    # Return if there is no new coach (e.g. coach was removed/set to nil)
+    return unless new_lc_id
+
+    # Fetch Users
+    new_lc = User.find_by(id: new_lc_id)
+    # TO DO: WHEN THIS FUNCTION CHANGE TO HAVE HUB LOGIC CHANGE HOW WE GET THE RM
+    rm = User.find_by(email: "michi@edubga.com")
+
+    # Notify New LC
+    if new_lc
+      notify_recipients(new_lc, "You have been assigned as the Learning Coach for #{full_name}.")
+    end
+
+    # Notify Regional Manager
+    if rm && new_lc
+      notify_recipients(rm, "Learner #{full_name} has been assigned to Learning Coach #{new_lc.full_name}.")
     end
   end
 end
