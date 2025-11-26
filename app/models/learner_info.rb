@@ -318,7 +318,7 @@ class LearnerInfo < ApplicationRecord
         UserMailer.admissions_notification(user, adm_message, adm_subject).deliver_now
       end
     when "Validated"
-      # send_teams_message
+      send_teams_message
     when "Onboarded"
       message = "#{full_name} is ready to roll at #{start_date}"
       notify_recipients(learning_coaches + self.class.curriculum_responsibles(self.curriculum_course_option) + regional_manager, message)
@@ -353,17 +353,14 @@ class LearnerInfo < ApplicationRecord
   end
 
   def self.check_hub_capacity_and_notify!(inactivated_learners = [])
-    Rails.logger.info("ENTER HERE")
     return if inactivated_learners.blank?
 
     affected_hubs = inactivated_learners.map(&:hub).compact.uniq
 
     affected_hubs.each do |hub|
-      Rails.logger.info("ENTER HERE AND HERE")
       next unless hub.free_spots && hub.free_spots > 0
 
       waitlisted_learners = LearnerInfo.where(hub_id: hub.id, status: ["Waitlist", "Waitlist - ok"])
-      Rails.logger.info("ENTER HERE HERE ALSO")
       next if waitlisted_learners.none?
 
       message = "Hub #{hub.name} now has #{hub.free_spots} free spots available after recent deactivations. There are #{waitlisted_learners.count} learners on the waitlist for this hub. Please review and process as needed."
@@ -538,7 +535,7 @@ class LearnerInfo < ApplicationRecord
     count = 0
     candidates.find_each do |learner|
       if learner.start_date.month == target_month
-        # UserMailer.renewal_fee_email(learner).deliver_now
+        UserMailer.renewal_fee_email(learner).deliver_now
         count += 1
       end
     end

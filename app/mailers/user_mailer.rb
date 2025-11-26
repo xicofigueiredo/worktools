@@ -73,8 +73,8 @@ class UserMailer < Devise::Mailer
   def admissions_notification(user, message, subject)
     @user = user
     @message = message
-    # mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
-    mail(to: "guilherme@bravegenerationacademy.com", from: 'worktools@bravegenerationacademy.com', subject: subject)
+    mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
+    #mail(to: "guilherme@bravegenerationacademy.com", from: 'worktools@bravegenerationacademy.com', subject: subject)
   end
 
   # TO DO: What is the template? How does it work for up?
@@ -189,7 +189,7 @@ class UserMailer < Devise::Mailer
 
     # --- Send email --- TO DO: SWAP TO
     mail(
-      to: "guilherme@bravegenerationacademy.com", #to,
+      to: to, #"guilherme@bravegenerationacademy.com"
       from:          'worktools@bravegenerationacademy.com',
       subject:       subject,
       template_name: template_path
