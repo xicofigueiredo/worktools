@@ -13,7 +13,6 @@
     <p>Password: Please find the password attached</p>
 
     <p>Please wait until your first day to set up the account with your Learning Coach. You can find the tutorial document on how to proceed with the authentication of the account: <a href="https://hubs.ly/Q03RhZGL0">https://hubs.ly/Q03RhZGL0</a></p>
-    <p>Tutorial: Watch Here</p>
   </li>
 
   <li>
@@ -26,6 +25,12 @@
 
     <p>Your Mentor is:</p>
     <p><%= @mentor_name %> : <%= @mentor_email %></p>
+  </li>
+
+  <li>
+    <strong>Hub Address:</strong>
+    <p>The BGA Hub is located at <%= @hub.address %>.</p>
+    <p><strong>What to bring:</strong> laptop, charger, water bottle, headphones, a notebook, and stationery (including a calculator).</p>
   </li>
 
   <li>
@@ -45,7 +50,11 @@
 
   <li>
     <strong>Invitation WhatsApp Group</strong>
-    <p>We have a WhatsApp group for all UP Learners, and we encourage you to join to get to know other Learners.</p>
+    <p>At BGA, each Hub has a Parent WhatsApp group to facilitate communication and create a bigger sense of community among the BGA Family. Therefore, in case your parents wish to be a part of it, they can click the link on your mobile phone and join the group!</p>
+
+    <p><strong>Parent WhatsApp Group:</strong> <a href="<%= @hub.parents_whatsapp_group %>"><%= @hub.parents_whatsapp_group %></a></p>
+
+    <p>We also have a WhatsApp group for all UP Learners, and we encourage you to join to get to know other Learners.</p>
     <p><strong>UP Learners WhatsApp Group:</strong> <a href="https://chat.whatsapp.com/GexbP1IIMx0ICc8uAvRMDr">https://chat.whatsapp.com/GexbP1IIMx0ICc8uAvRMDr</a></p>
   </li>
 </ol>
