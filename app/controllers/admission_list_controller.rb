@@ -513,30 +513,29 @@ class AdmissionListController < ApplicationController
   end
 
   def set_learning_coaches
-    @online_hubs = Hub.where(hub_type: 'Online')
-    return if @online_hubs.empty?
+    # Get all LCs who can teach remote
+    @remote_lcs = User.joins(:collaborator_info)
+                            .where(role: 'lc', deactivate: false)
+                            .where(collaborator_infos: { can_teach_remote: true })
+                            .includes(:users_hubs)
 
-    @learning_coaches = User.joins(:users_hubs).where(users_hubs: { hub_id: @online_hubs.pluck(:id) }).where(role: 'lc').distinct
-
-    excluded_statuses = ['Waitlist', 'Waitlist - OK', 'In progress conditional', 'Inactive', 'Graduated']
-
-    @sorted_coaches = @learning_coaches.map do |coach|
-      # Find the main hub for this coach
-      main_users_hub = coach.users_hubs.find_by(main: true)
+    @remote_lcs = @remote_lcs.map do |lc|
+      # Find the main hub for this lc
+      main_users_hub = lc.users_hubs.find_by(main: true)
       main_hub = main_users_hub&.hub
       next unless main_hub
 
       # Use hub model methods
       lc_count = main_hub.learning_coaches_count
-      kids_count = main_hub.learners_excluding_statuses(excluded_statuses).count
-      remote_count = LearnerInfo.where(learning_coach_id: coach.id).where.not(status: excluded_statuses).count
+      kids_count = main_hub.learners_excluding_statuses(LearnerInfo::INACTIVE_STATUSES).count
+      remote_count = LearnerInfo.where(learning_coach_id: lc.id).active.count
 
       # Calculate ratio
-      base_ratio = lc_count > 0 ? (kids_count.to_f / lc_count) : 0.0
+      base_ratio = lc_count.positive? ? (kids_count.to_f / lc_count) : 0.0
       ratio = base_ratio + remote_count
 
       {
-        coach: coach,
+        coach: lc,
         main_hub: main_hub,
         lc_count: lc_count,
         kids_count: kids_count,
@@ -545,8 +544,8 @@ class AdmissionListController < ApplicationController
       }
     end.compact
 
-    @sorted_coaches.sort_by! { |data| data[:ratio] }
-    @all_coaches = User.where(role: 'lc', deactivate: false)
+    @remote_lcs.sort_by! { |data| data[:ratio] }
+    @all_lcs = User.where(role: 'lc', deactivate: false).includes(:collaborator_info)
   end
 
   # Use permission-defined attributes for strong params

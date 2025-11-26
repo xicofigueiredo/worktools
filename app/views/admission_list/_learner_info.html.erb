@@ -363,7 +363,8 @@
       curriculum_pricing_model_value: @main_hub.hub_type == 'Online' ? 'Online' : 'Hybrid',
       curriculum_pricing_country_value: @main_hub.country,
       curriculum_pricing_hub_name_value: @main_hub.name,
-      curriculum_pricing_currency_symbol_value: @currency_symbol
+      curriculum_pricing_currency_symbol_value: @currency_symbol,
+      curriculum_pricing_original_start_date_value: @learner_info.start_date&.strftime("%Y-%m-%d") || ""
     } %>
   <% end %>
 
@@ -654,12 +655,23 @@
               </div>
 
             </div>
+            <div class="card mb-3 mx-3 border-warning bg-light">
+              <div class="card-body">
+                <h6 class="text-warning">Option to Keep Previous Pricing</h6>
+                <p class="mb-0 small">
+                  If you want to acknowledge the change but retain the existing fees, discounts, and billables (ignoring the new pricing tier), use the "Keep Previous Pricing & Save" button below.
+                </p>
+              </div>
+            </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="pricing-cancel-btn">
                 Cancel
               </button>
-              <button type="button" class="btn btn-primary" id="pricing-confirm-btn">
-                Confirm & Save Changes
+              <button type="button" class="btn btn-warning" id="pricing-keep-previous-btn">
+                Keep Previous Pricing & Save
+              </button>
+              <button type="button" class="btn btn-primary" id="pricing-apply-new-btn">
+                Apply New Pricing & Save
               </button>
             </div>
           </div>
@@ -813,7 +825,7 @@
         <h5 class="modal-title">⚠️ Start Date Year Warning</h5>
       </div>
       <div class="modal-body">
-        <p>The start date you selected is for <strong id="selected-year-display"></strong>, not the current year (<%= Date.today.year %>).</p>
+        <p>The start date you changed to is for <strong id="selected-year-display"></strong>, not the current year (<%= Date.current.year %>).</p>
         <p class="mb-0"><strong>Did you update the pricing accordingly?</strong></p>
         <p class="text-muted small">Different years may have different pricing tiers. Please ensure the financial information is correct for the selected year.</p>
       </div>
@@ -829,8 +841,7 @@
   </div>
 </div>
 
-<!-- Modal for Learning Coach Selection  -->
-<% if @sorted_coaches %>
+<% if @remote_lcs %>
   <div class="modal fade" id="learningCoachModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
       <div class="modal-content">
@@ -853,10 +864,10 @@
               </tr>
             </thead>
             <tbody>
-              <% if @sorted_coaches.empty? %>
+              <% if @remote_lcs.empty? %>
                 <tr><td colspan="8">No suggested learning coaches available.</td></tr>
               <% else %>
-                <% @sorted_coaches.each do |data| %>
+                <% @remote_lcs.each do |data| %>
                   <% coach = data[:coach] %>
                   <tr>
                     <td>
@@ -866,7 +877,12 @@
                             value="<%= coach.id %>"
                             <%= 'checked' if @learner_info.learning_coach_id == coach.id %>>
                     </td>
-                    <td><%= coach.full_name %></td>
+                    <td>
+                      <%= coach.full_name %>
+                      <% if coach.can_teach_pt_plus? %>
+                        <span class="badge bg-success ms-1" title="Can teach PT+ curriculum">PT+</span>
+                      <% end %>
+                    </td>
                     <td><%= coach.email %></td>
                     <td><%= data[:main_hub].name %></td>
                     <td><%= data[:lc_count] %></td>
@@ -877,7 +893,8 @@
                 <% end %>
               <% end %>
 
-              <tr class="table-warning"> <td>
+              <tr class="table-warning">
+                <td>
                   <input type="radio"
                         name="temp_learning_coach_id"
                         id="other_coach_radio"
@@ -889,10 +906,10 @@
                     <strong class="me-3">Other:</strong>
 
                     <select class="form-select" id="other_coach_select" style="max-width: 900px;">
-                      <option value="" selected disabled>Select a different coach...</option>
-                      <% @all_coaches.each do |coach| %>
-                        <option value="<%= coach.id %>">
-                          <%= coach.full_name %> (<%= coach.email %>)
+                      <option value="" selected disabled>Select a different learning coach...</option>
+                      <% @all_lcs.each do |lc| %>
+                        <option value="<%= lc.id %>">
+                          <%= lc.full_name %><%= " [PT+]" if lc.can_teach_pt_plus? %> (<%= lc.email %>)
                         </option>
                       <% end %>
                     </select>
@@ -1277,6 +1294,8 @@
     const form = document.getElementById('learner-info-form');
     if (!form) return;
 
+    const originalStartDate = form.dataset.curriculumPricingOriginalStartDateValue || "";
+
     // Elements for start-date modal/check
     const startDateInput = document.getElementById('learner_info_start_date');
     const startModalElement = document.getElementById('startDateWarningModal');
@@ -1294,14 +1313,18 @@
     // Flags so we don't loop
     let pricingConfirmed = false;
     let startConfirmed = false;
-
     const currentYear = new Date().getFullYear();
 
     function checkStartDateNeeded() {
       if (!startDateInput) return false;
       const val = startDateInput.value;
       if (!val) return false;
-      return new Date(val).getFullYear() !== currentYear;
+
+      if (val === originalStartDate) return false;
+
+      const newDate = new Date(val);
+      const newYear = newDate.getFullYear();
+      return newYear !== currentYear;
     }
 
     function updateStartModalYear() {

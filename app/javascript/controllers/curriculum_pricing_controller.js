@@ -379,22 +379,30 @@ export default class extends Controller {
     this.modalDiscountAfInput = discountAfInput
     this.modalDiscountRfInput = discountRfInput
 
+    // Store the response for old values
+    this.lastPricingResponse = data;
+
     // Calculate initial billables
     this.calculateBillables()
 
     // Add event listeners for confirm and cancel buttons
-    const confirmBtn = modal.querySelector('#pricing-confirm-btn')
-    const cancelBtn = modal.querySelector('#pricing-cancel-btn')
+    const applyNewBtn = document.querySelector('#pricing-apply-new-btn');
+    const keepPreviousBtn = document.querySelector('#pricing-keep-previous-btn');
+    const cancelBtn = document.querySelector('#pricing-cancel-btn');
 
     // Remove any existing listeners to prevent duplicates
-    confirmBtn.removeEventListener('click', this.boundConfirmChanges)
-    cancelBtn.removeEventListener('click', this.boundCancelChanges)
+    applyNewBtn.removeEventListener('click', this.boundApplyNew);
+    keepPreviousBtn.removeEventListener('click', this.boundKeepPrevious);
+    cancelBtn.removeEventListener('click', this.boundCancelChanges);
 
     // Bind methods to preserve 'this' context
-    this.boundConfirmChanges = this.confirmChanges.bind(this)
-    this.boundCancelChanges = this.cancelChanges.bind(this)
-    confirmBtn.addEventListener('click', this.boundConfirmChanges)
-    cancelBtn.addEventListener('click', this.boundCancelChanges)
+    this.boundApplyNew = this.confirmChanges.bind(this, false);  // false = apply new
+    this.boundKeepPrevious = this.confirmChanges.bind(this, true);  // true = keep previous
+    this.boundCancelChanges = this.cancelChanges.bind(this);
+
+    applyNewBtn.addEventListener('click', this.boundApplyNew);
+    keepPreviousBtn.addEventListener('click', this.boundKeepPrevious);
+    cancelBtn.addEventListener('click', this.boundCancelChanges);
 
     // Show modal
     this.bootstrapModal = new bootstrap.Modal(modal)
@@ -402,9 +410,10 @@ export default class extends Controller {
 
     // Clean up listeners when modal is hidden
     modal.addEventListener('hidden.bs.modal', () => {
-      confirmBtn.removeEventListener('click', this.boundConfirmChanges)
-      cancelBtn.removeEventListener('click', this.boundCancelChanges)
-    }, { once: true })
+      applyNewBtn.removeEventListener('click', this.boundApplyNew);
+      keepPreviousBtn.removeEventListener('click', this.boundKeepPrevious);
+      cancelBtn.removeEventListener('click', this.boundCancelChanges);
+    }, { once: true });
   }
 
   calculateBillables() {
@@ -431,46 +440,48 @@ export default class extends Controller {
     document.getElementById('billable-rf').textContent = this.formatCurrency(billableRf, this.newCurrencySymbol);
   }
 
-  confirmChanges() {
-    console.log('Confirming changes...')
+  confirmChanges(isKeepPrevious) {
+    console.log(`Confirming changes - Keep previous: ${isKeepPrevious}`);
 
-    // Get the edited values from the modal
-    const monthlyFee = this.newMonthlyFee;
-    const admissionFee = this.newAdmissionFee;
-    const renewalFee = this.newRenewalFee;
-    const discountMf = this.modalDiscountMfInput.value;
-    const scholarship = this.modalScholarshipInput.value;
-    const discountAf = this.modalDiscountAfInput.value;
-    const discountRf = this.modalDiscountRfInput.value;
+    if (!isKeepPrevious) {
+      const monthlyFee = this.newMonthlyFee;
+      const admissionFee = this.newAdmissionFee;
+      const renewalFee = this.newRenewalFee;
+      const discountMf = this.modalDiscountMfInput.value;
+      const scholarship = this.modalScholarshipInput.value;
+      const discountAf = this.modalDiscountAfInput.value;
+      const discountRf = this.modalDiscountRfInput.value;
 
-    // Calculate billable values
-    const billableMf = monthlyFee * (1 - (parseFloat(discountMf) + parseFloat(scholarship)) / 100);
-    const billableAf = admissionFee * (1 - parseFloat(discountAf) / 100);
-    const billableRf = renewalFee * (1 - parseFloat(discountRf) / 100);
+      const billableMf = monthlyFee * (1 - (parseFloat(discountMf) + parseFloat(scholarship)) / 100);
+      const billableAf = admissionFee * (1 - parseFloat(discountAf) / 100);
+      const billableRf = renewalFee * (1 - parseFloat(discountRf) / 100);
 
-    // Update form data with confirmed values
-    this.pendingFormData.set('learner_info[learner_finance_attributes][monthly_fee]', monthlyFee)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][admission_fee]', admissionFee)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][renewal_fee]', renewalFee)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][discount_mf]', discountMf)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][scholarship]', scholarship)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][discount_af]', discountAf)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][discount_rf]', discountRf)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][billable_mf]', billableMf.toFixed(2))
-    this.pendingFormData.set('learner_info[learner_finance_attributes][billable_af]', billableAf.toFixed(2))
-    this.pendingFormData.set('learner_info[learner_finance_attributes][billable_rf]', billableRf.toFixed(2))
-
-    // Get the finance record ID if it exists
-    const financeId = document.querySelector('input[name="learner_info[learner_finance_attributes][id]"]')?.value
-    if (financeId) {
-      this.pendingFormData.set('learner_info[learner_finance_attributes][id]', financeId)
+      this.pendingFormData.set('learner_info[learner_finance_attributes][monthly_fee]', monthlyFee);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][admission_fee]', admissionFee);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][renewal_fee]', renewalFee);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][discount_mf]', discountMf);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][scholarship]', scholarship);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][discount_af]', discountAf);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][discount_rf]', discountRf);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][billable_mf]', billableMf.toFixed(2));
+      this.pendingFormData.set('learner_info[learner_finance_attributes][billable_af]', billableAf.toFixed(2));
+      this.pendingFormData.set('learner_info[learner_finance_attributes][billable_rf]', billableRf.toFixed(2));
+    } else {
+      // Keep previous pricing: Do NOT set any finance fields (Rails will not overwrite existing records)
+      console.log('Keeping previous finances – no changes to learner_finance_attributes');
     }
 
-    // Close the modal before submitting
-    this.bootstrapModal.hide()
+    // Always include the finance ID if it exists (to update the existing record without changing fees)
+    const financeId = document.querySelector('input[name="learner_info[learner_finance_attributes][id]"]')?.value;
+    if (financeId) {
+      this.pendingFormData.set('learner_info[learner_finance_attributes][id]', financeId);
+    }
 
-    // Submit form with updated data
-    this.submitFormWithData(this.pendingFormData)
+    // Close the modal
+    this.bootstrapModal.hide();
+
+    // Submit the form with the (un)modified data
+    this.submitFormWithData(this.pendingFormData);
   }
 
   cancelChanges() {
