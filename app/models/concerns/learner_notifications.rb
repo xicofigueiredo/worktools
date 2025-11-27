@@ -73,6 +73,9 @@ module LearnerNotifications
   end
 
   def notify_new_lc_and_manager_if_changed
+    # Only run if the update was on LearnerInfo
+    return unless self.is_a?(LearnerInfo)
+
     # Only run if the specific column 'learning_coach_id' changed
     return unless saved_change_to_learning_coach_id?
 
