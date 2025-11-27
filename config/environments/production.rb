@@ -2,7 +2,13 @@ require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
 
-  config.action_mailer.delivery_method = :smtp
+  # Custom delivery method that switches between SMTP accounts based on 'from' address
+  # Set these environment variables:
+  # - OUTLOOK_USERNAME / OUTLOOK_PASSWORD (for worktools@bravegenerationacademy.com)
+  # - OUTLOOK_CONTACT_USERNAME / OUTLOOK_CONTACT_PASSWORD (for contact@bravegenerationacademy.com)
+  config.action_mailer.delivery_method = MultiSmtpDelivery.new
+
+  # Fallback SMTP settings (not used when MultiSmtpDelivery is active)
   config.action_mailer.smtp_settings = {
     address:              'smtp.office365.com',
     port:                 587,
@@ -11,7 +17,8 @@ Rails.application.configure do
     password:             ENV['OUTLOOK_PASSWORD'],
     open_timeout:         30,
     read_timeout:         300,
-    enable_starttls_auto: true}
+    enable_starttls_auto: true
+  }
 
     config.action_mailer.default_url_options = { host: 'worktools.site', protocol: 'https' }
     config.action_controller.default_url_options = { host: 'worktools.site', protocol: 'https' }

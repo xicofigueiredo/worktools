@@ -6,17 +6,24 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: 'localhost', port: 3000, protocol: 'http' }
   Rails.application.routes.default_url_options = { host: 'localhost', port: 3000, protocol: 'http' }
 
-  config.action_mailer.delivery_method = :smtp
+  # Custom delivery method that switches between SMTP accounts based on 'from' address
+  # Set these environment variables:
+  # - OUTLOOK_USERNAME / OUTLOOK_PASSWORD (for worktools@bravegenerationacademy.com)
+  # - OUTLOOK_CONTACT_USERNAME / OUTLOOK_CONTACT_PASSWORD (for contact@bravegenerationacademy.com)
+  config.action_mailer.delivery_method = MultiSmtpDelivery.new
+
+  # Fallback SMTP settings (not used when MultiSmtpDelivery is active)
   config.action_mailer.smtp_settings = {
     address:              'smtp.office365.com',
     port:                 587,
     authentication:       'login',
     user_name:            ENV['OUTLOOK_USERNAME'],
     password:             ENV['OUTLOOK_PASSWORD'],
-    enable_starttls_auto: true}
-    #config.action_mailer.default_url_options = {:host =>'localhost:3000'}  # Settings specified here will take precedence over those in config/application.rb.
-    config.action_mailer.raise_delivery_errors = true
-    config.action_mailer.perform_deliveries = true
+    enable_starttls_auto: true
+  }
+  #config.action_mailer.default_url_options = {:host =>'localhost:3000'}  # Settings specified here will take precedence over those in config/application.rb.
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.perform_deliveries = true
 
   # In the development environment your application's code is reloaded any time
   # it changes. This slows down response time but is perfect for development
