@@ -197,7 +197,7 @@ class UserMailer < Devise::Mailer
 
     # --- Send email --- TO DO: SWAP TO
     mail(
-      to: "guilherme@bravegenerationacademy.com",#to,
+      to: "francisco@bravegenerationacademy.com",
       from:          ApplicationMailer::FROM_CONTACT,
       subject:       subject,
       template_name: template_path
