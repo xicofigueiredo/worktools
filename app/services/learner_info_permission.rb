@@ -128,7 +128,7 @@ class LearnerInfoPermission
     'edu' => %i[preferred_name learning_coach_id personal_email phone_number english_proficiency notes],
     'finance' => %i[preferred_name],
     'ops' => [],
-    'it' => %i[preferred_name platform_username platform_password],
+    'it' => %i[preferred_name institutional_email platform_username platform_password],
     'lc' => %i[preferred_name learning_coach_id personal_email phone_number parent1_phone_number parent2_phone_number],
     'exams' => []
   }.freeze
