@@ -99,7 +99,7 @@ class UserMailer < Devise::Mailer
     return if @parent_emails.blank? && @learner_email.blank?
 
     @parent_names       = [@learner.parent1_full_name, @learner.parent2_full_name].compact.join(' & ')
-    @learning_coaches   = @learner.learning_coaches
+    @learning_coaches   = @learner.learning_coaches || []
     @hub                = @learner.hub
     @regional_manager   = @hub.regional_manager
 
@@ -144,8 +144,22 @@ class UserMailer < Devise::Mailer
       ].join("<br>").html_safe
 
     # --- Recipient & subject ---
-    to      = @parent_emails
-    subject = "Onboarding Day - #{@learner.full_name}"
+    real_to = []
+    real_to << @learner_email if @learner_email.present?
+
+    # Only add parents if NOT UP program
+    unless is_up
+      real_to.concat(@parent_emails)
+    end
+
+    real_to.map!(&:to_s)
+    real_to.uniq!
+
+    learning_coach_emails = @learning_coaches.map { |u| u&.email }.compact
+    regional_manager_email = @regional_manager&.email
+    real_cc = (learning_coach_emails + [regional_manager_email]).compact.uniq
+
+    subject = is_up ? "Welcome to the UP Program!" : "Onboarding Day - #{@learner.full_name}"
 
     # --- Attachments for everyone ---
     attachments['Calendar.pdf'] = File.read(Rails.root.join('public', 'documents', 'calendar_2025.pdf'))
@@ -158,9 +172,6 @@ class UserMailer < Devise::Mailer
     end
 
     if template.start_with?('onboarded_up_')
-      to      = @learner_email
-      subject = "Welcome to the UP Program!"
-
       # --- Assign mentors based on program and level ---
       case up_program
       when 'business'
@@ -195,10 +206,22 @@ class UserMailer < Devise::Mailer
       attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
     end
 
-    # --- Send email --- TO DO: SWAP TO
+    Rails.logger.info("Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}")
+    puts "Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}"
+
+    # --- Send email --- Prod
+    # mail(
+    #   to: real_to,
+    #   cc: real_cc,
+    #   from:          ApplicationMailer::FROM_CONTACT,
+    #   subject:       subject,
+    #   template_name: template_path
+    # )
+
+    # --- Send email --- Dev
     mail(
-      to: "guilherme@bravegenerationacademy.com",#to,
-      from:          ApplicationMailer::FROM_CONTACT,
+      to: "guilherme@bravegenerationacademy.com",
+      from:          'worktools@bravegenerationacademy.com',
       subject:       subject,
       template_name: template_path
     )
