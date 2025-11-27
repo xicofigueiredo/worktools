@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require_relative '../../app/mailers/multi_smtp_delivery'
 
 Rails.application.configure do
 
@@ -6,7 +7,7 @@ Rails.application.configure do
   # Set these environment variables:
   # - OUTLOOK_USERNAME / OUTLOOK_PASSWORD (for worktools@bravegenerationacademy.com)
   # - OUTLOOK_CONTACT_USERNAME / OUTLOOK_CONTACT_PASSWORD (for contact@bravegenerationacademy.com)
-  config.action_mailer.delivery_method = MultiSmtpDelivery.new
+  config.action_mailer.delivery_method = MultiSmtpDelivery
 
   # Fallback SMTP settings (not used when MultiSmtpDelivery is active)
   config.action_mailer.smtp_settings = {

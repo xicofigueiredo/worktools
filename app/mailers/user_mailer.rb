@@ -221,7 +221,7 @@ class UserMailer < Devise::Mailer
     # --- Send email --- Dev
     mail(
       to: "guilherme@bravegenerationacademy.com",
-      from:          'worktools@bravegenerationacademy.com',
+      from:          ApplicationMailer::FROM_CONTACT,
       subject:       subject,
       template_name: template_path
     )
