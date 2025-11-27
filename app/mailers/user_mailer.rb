@@ -102,22 +102,23 @@ class UserMailer < Devise::Mailer
     # --- Detect UP program ---
     is_up = curriculum_raw.include?('up')
     up_program = if curriculum_raw.include?('business')
-                  'business'
-                elsif curriculum_raw.include?('computing')
-                  'computing'
-                elsif curriculum_raw.include?('sports')
-                  'sports'
-                end
+                   'business'
+                 elsif curriculum_raw.include?('computing')
+                   'computing'
+                 elsif curriculum_raw.include?('sports')
+                   'sports'
+                 end
 
-    # --- Delivery mode: online = exact, hybrid = everything else ---
-    up_mode = hub_type_raw == 'online' ? 'online' : 'hybrid'
+    # --- Standardize variables for template naming ---
+    hub_type   = hub_type_raw.gsub(' ', '_')
 
     # --- Build template name ---
     if is_up && up_program
-      template = "onboarded_up_#{up_program}_#{up_mode}"
+      # UP programs now use the standard hub_type in the name (e.g., onboarded_up_business_online)
+      template = "onboarded_up_#{up_program}_#{hub_type}"
     else
+      # Standard curriculum naming (e.g., onboarded_portuguese_independent_hybrid)
       curriculum = curriculum_raw.gsub(' ', '_')
-      hub_type   = hub_type_raw.gsub(' ', '_')
       template   = "onboarded_#{curriculum}_#{hub_type}"
     end
 
@@ -190,8 +191,8 @@ class UserMailer < Devise::Mailer
     # --- Send email --- TO DO: SWAP TO
     mail(
       to: to, #"guilherme@bravegenerationacademy.com"
-      from:          'worktools@bravegenerationacademy.com',
-      subject:       subject,
+      from:         'worktools@bravegenerationacademy.com',
+      subject:      subject,
       template_name: template_path
     )
   end

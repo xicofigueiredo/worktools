@@ -68,16 +68,12 @@ export default class extends Controller {
     const hubSelect = this.form.querySelector('select[name="learner_info[hub_id]"]')
     const curriculumSelect = this.form.querySelector('select[name="learner_info[curriculum_course_option]"]')
     const gradeSelect = this.form.querySelector('select[name="learner_info[grade_year]"]')
-    const lcHidden = this.form.querySelector('input[name="learner_info[learning_coach_id]"]')
-    const lcDisplayInput = this.form.querySelector('#learning-coach-display')
-    const changeBtn = this.form.querySelector('#change-coach-btn')
 
     // Get values directly from elements
     const programme = programmeSelect ? programmeSelect.value : ''
     const hubId = hubSelect ? hubSelect.value : ''
     const curriculum = curriculumSelect ? curriculumSelect.value : ''
     const gradeYear = gradeSelect ? gradeSelect.value : ''
-    const learningCoachId = lcHidden ? lcHidden.value : ''
 
     // Clear previous errors
     this.clearAllErrors()
@@ -102,13 +98,6 @@ export default class extends Controller {
       errors.push({ field: gradeSelect, message: 'Please select a Grade/Year.' })
     }
 
-    // Validate learning coach (only if programme is Online and editable)
-    if (programme === 'Online') {
-      if (changeBtn && !changeBtn.disabled && !learningCoachId) {
-        errors.push({ field: lcDisplayInput, message: 'Please assign a Learning Coach.', isLearningCoach: true })
-      }
-    }
-
     // Display errors if any
     if (errors.length > 0) {
       errors.forEach(error => {
@@ -130,48 +119,15 @@ export default class extends Controller {
   showError(element, message, isLearningCoach = false) {
     if (!element) return
 
-    // For learning coach field, we need special handling since it's an input group
-    if (isLearningCoach) {
-      // The structure is: div.mb-3.col-md-6 > label + div.input-group > input + button
-      // We need to find the parent div.mb-3 to append the error message
-      const lcFieldContainer = element.closest('.mb-3')
-      if (!lcFieldContainer) {
-        console.error('Could not find Learning Coach field container')
-        return
-      }
-
-      // Remove any existing error message first
-      const existingError = lcFieldContainer.querySelector('.invalid-feedback')
-      if (existingError) existingError.remove()
-
-      // Create and append new error message
-      const errorMsg = document.createElement('div')
+    let errorMsg = element.parentElement.querySelector('.invalid-feedback')
+    if (!errorMsg) {
+      errorMsg = document.createElement('div')
       errorMsg.className = 'invalid-feedback'
       errorMsg.style.display = 'block'
-      errorMsg.textContent = message
-      lcFieldContainer.appendChild(errorMsg)
-
-      // Add invalid class to the input
-      element.classList.add('is-invalid')
-
-      // Also highlight the button
-      const inputGroup = element.parentElement
-      const button = inputGroup.querySelector('button')
-      if (button) {
-        button.classList.add('btn-danger')
-        button.classList.remove('btn-primary')
-      }
-    } else {
-      let errorMsg = element.parentElement.querySelector('.invalid-feedback')
-      if (!errorMsg) {
-        errorMsg = document.createElement('div')
-        errorMsg.className = 'invalid-feedback'
-        errorMsg.style.display = 'block'
-        element.parentElement.appendChild(errorMsg)
-      }
-      errorMsg.textContent = message
-      element.classList.add('is-invalid')
+      element.parentElement.appendChild(errorMsg)
     }
+    errorMsg.textContent = message
+    element.classList.add('is-invalid')
   }
 
   clearError(element) {
@@ -179,26 +135,8 @@ export default class extends Controller {
 
     element.classList.remove('is-invalid')
 
-    // Check if this is the learning coach display input by checking if parent is input-group
-    const inputGroup = element.parentElement
-    if (inputGroup && inputGroup.classList.contains('input-group')) {
-      // Find the container div.mb-3
-      const lcFieldContainer = element.closest('.mb-3')
-      if (lcFieldContainer) {
-        const errorMsg = lcFieldContainer.querySelector('.invalid-feedback')
-        if (errorMsg) errorMsg.remove()
-      }
-
-      // Reset button styling
-      const button = inputGroup.querySelector('button')
-      if (button && button.classList.contains('btn-danger')) {
-        button.classList.remove('btn-danger')
-        button.classList.add('btn-primary')
-      }
-    } else {
-      const errorMsg = element.parentElement.querySelector('.invalid-feedback')
-      if (errorMsg) errorMsg.remove()
-    }
+    const errorMsg = element.parentElement.querySelector('.invalid-feedback')
+    if (errorMsg) errorMsg.remove()
   }
 
   clearAllErrors() {

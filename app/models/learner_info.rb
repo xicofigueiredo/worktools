@@ -98,6 +98,7 @@ class LearnerInfo < ApplicationRecord
     end_date_passed = end_date.present? && end_date < Date.today
     is_up_curriculum = curriculum_course_option.to_s.strip.downcase.start_with?('up')
     has_platform_info = platform_username.present? && platform_password.present?
+    has_lc = learning_coaches.count.positive?
 
     case status
       when "Inactive"
@@ -167,7 +168,7 @@ class LearnerInfo < ApplicationRecord
           end
         end
       when "In progress conditional"
-        data_validated ? "In progress" : "In progress conditional"
+        (data_validated && has_lc) ? "In progress" : "In progress conditional"
       when "Waitlist"
         has_notes ? "Waitlist - ok" : "Waitlist"
       else
@@ -298,7 +299,7 @@ class LearnerInfo < ApplicationRecord
           UserMailer.admissions_notification(user, adm_message, subject).deliver_now
         end
 
-        Rails.logger.info("[LearnerInfo##{id}] Sent UP validation notification and email to #{admissions_users.size} admissions user(s).")
+        Rails.logger.info("[LearnerInfo##{id}] Sent UP validation notification and email to #{self.class.admissions_users.size} admissions user(s).")
       else
         curr_message = "#{full_name} is ready for onboarding process. Check the profile on the link."
         notify_recipients(self.class.curriculum_responsibles(self.curriculum_course_option), curr_message)
