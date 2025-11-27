@@ -1,4 +1,11 @@
 class UserMailer < Devise::Mailer
+  # To send from contact@bravegenerationacademy.com, use:
+  # mail(..., from: ApplicationMailer::FROM_CONTACT, ...)
+  #
+  # To send from worktools@bravegenerationacademy.com (default), use:
+  # mail(..., from: ApplicationMailer::FROM_WORKTOOLS, ...)
+  # or simply omit the 'from' parameter to use the default
+
   def confirmation_instructions(record, token, opts = {})
     @token = token
     devise_mail(record, :confirmation_instructions, opts)
@@ -27,7 +34,7 @@ class UserMailer < Devise::Mailer
     @password = password
     mail(to: @parent.email,
          cc: lcs.map(&:email),
-         from: 'worktools@bravegenerationacademy.com',
+         from: ApplicationMailer::FROM_WORKTOOLS,
          subject: 'Welcome to the new BGA App!')
   end
 
@@ -35,7 +42,7 @@ class UserMailer < Devise::Mailer
     @cm = cm
     @password = password
     mail(to: @cm.email,
-         from: 'worktools@bravegenerationacademy.com',
+         from: ApplicationMailer::FROM_WORKTOOLS,
          subject: 'Welcome to the new BGA App!')
   end
 
@@ -46,7 +53,7 @@ class UserMailer < Devise::Mailer
     mail(
       to: @user.email,
       cc: lcs_emails,
-      from: 'worktools@bravegenerationacademy.com',
+      from: ApplicationMailer::FROM_WORKTOOLS,
       subject: "Notification Summary: You have #{notifications.size} unread notifications"
     )
   end
@@ -65,15 +72,15 @@ class UserMailer < Devise::Mailer
     mail(
       to: @email,
       # cc: lcs.map(&:email),
-      from: 'worktools@bravegenerationacademy.com',
-      subject: "Don’t Miss Out – Follow Your Child’s Journey on Worktools"
+      from: ApplicationMailer::FROM_WORKTOOLS,
+      subject: "Don't Miss Out – Follow Your Child's Journey on Worktools"
     )
   end
 
   def admissions_notification(user, message, subject)
     @user = user
     @message = message
-    mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
+    mail(to: @user.email, from: ApplicationMailer::FROM_WORKTOOLS, subject: subject)
   end
 
   def onboarding_email(learner_info)
@@ -181,7 +188,7 @@ class UserMailer < Devise::Mailer
     # --- Send email ---
     mail(
       to: to,
-      from:          'worktools@bravegenerationacademy.com',
+      from:          ApplicationMailer::FROM_CONTACT,
       subject:       subject,
       template_name: template_path
     )
