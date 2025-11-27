@@ -159,16 +159,42 @@ class UserMailer < Devise::Mailer
     regional_manager_email = @regional_manager&.email
     real_cc = (learning_coach_emails + [regional_manager_email]).compact.uniq
 
+    if is_up
+      real_cc << "esther@bravegenerationacademy.com"
+    end
+
+    real_cc.uniq!
+
     subject = is_up ? "Welcome to the UP Program!" : "Onboarding Day - #{@learner.full_name}"
 
     # --- Attachments for everyone ---
     attachments['Calendar.pdf'] = File.read(Rails.root.join('public', 'documents', 'calendar_2025.pdf'))
+    attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
     credentials = @learner.learner_documents.find_by(document_type: 'credentials')
     if credentials&.file&.attached?
       attachments["Credentials_Document.pdf"] = {
         mime_type: credentials.file.blob.content_type,
         content: credentials.file.download
       }
+    end
+
+    # --- Curriculum-specific attachments ---
+    handbook_curricula = %w(portuguese british own american)
+    welcome_letter_curricula = %w(british american own)
+
+    unless is_up
+      if handbook_curricula.any? { |k| curriculum_raw.include?(k) }
+        attachments['Handbook.pdf'] = File.read(Rails.root.join('public', 'documents', 'handbook.pdf'))
+      end
+
+      if welcome_letter_curricula.any? { |k| curriculum_raw.include?(k) }
+        begin
+          generator = WelcomeLetterGenerator.new(@learner.full_name.split.first)
+          attachments['Welcome_Letter.pdf'] = generator.generate
+        rescue => e
+          Rails.logger.error("Failed to generate welcome letter for #{@learner.full_name}: #{e.message}")
+        end
+      end
     end
 
     if template.start_with?('onboarded_up_')
@@ -190,40 +216,26 @@ class UserMailer < Devise::Mailer
         @mentor_name = "Aubrey Stout"
         @mentor_email = "aubrey.stout@etacollege.com"
       end
-
-    else
-      # Non-UP specific documents
-
-      # Generate personalized welcome letter
-      begin
-        generator = WelcomeLetterGenerator.new(@learner.full_name.split.first)
-        attachments['Welcome_Letter.pdf'] = generator.generate
-      rescue => e
-        Rails.logger.error("Failed to generate welcome letter for #{@learner.full_name}: #{e.message}")
-      end
-
-      attachments['Handbook.pdf'] = File.read(Rails.root.join('public', 'documents', 'handbook.pdf'))
-      attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
     end
 
     Rails.logger.info("Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}")
     puts "Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}"
 
     # --- Send email --- Prod
-    # mail(
-    #   to: real_to,
-    #   cc: real_cc,
-    #   from:          ApplicationMailer::FROM_CONTACT,
-    #   subject:       subject,
-    #   template_name: template_path
-    # )
-
-    # --- Send email --- Dev
     mail(
-      to: "guilherme@bravegenerationacademy.com",
+      to: real_to,
+      cc: real_cc,
       from:          ApplicationMailer::FROM_CONTACT,
       subject:       subject,
       template_name: template_path
     )
+
+    #--- Send email --- Dev
+    # mail(
+    #   to: "guilherme@bravegenerationacademy.com",
+    #   from:          ApplicationMailer::FROM_CONTACT,
+    #   subject:       subject,
+    #   template_name: template_path
+    # )
   end
 end
