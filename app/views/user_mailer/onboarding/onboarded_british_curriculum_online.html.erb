@@ -1,0 +1,55 @@
+<p>Dear Brave Family,</p>
+
+<p>Thank you for meeting with our team. We look forward to having <%= @learner.full_name.split.first %> with us and are happy to be part of their learning journey!</p>
+
+<p>Below you will find a recap of important information regarding <%= @learner.full_name.split.first %>'s access to our community, as well as the extended platform access to their academic level. Please read through it carefully and do not hesitate to contact us in case you have any questions.</p>
+
+<ol>
+  <li>
+    <strong>Getting Started - Tutorial Video:</strong><br>
+    To help you get started, we've prepared a brief video guide that will walk you through your first steps in logging into your Microsoft account and accessing your virtual Hub on Teams. This video will provide you with all the information you need to navigate our platform seamlessly and begin your learning adventure with confidence.<br><br>
+    Simply click on the link below to watch the video:<br>
+    <a href="https://www.youtube.com/watch?v=BjU8BwvXrm8&feature=youtu.be">https://www.youtube.com/watch?v=BjU8BwvXrm8&feature=youtu.be</a><br><br>
+    Once you've watched the video, you'll be ready to dive into your virtual Hub, where you'll find everything you need to connect with your peers, engage with your learning coaches, and access your course materials. We've created a welcoming and supportive environment where you can thrive academically and personally.
+  </li>
+  <br>
+  <li>
+    <strong>BGA Email:</strong><br>
+    Email: <strong><%= @learner.institutional_email %></strong><br>
+    Password: Please find the password attached<br><br>
+    Please wait until your first day to set up the account with your Learning Coach. You can find the tutorial document on how to proceed with the authentication of the account: <a href="https://hubs.ly/Q03RhZGL0">https://hubs.ly/Q03RhZGL0</a>
+  </li>
+  <br>
+  <li>
+    <strong>Platform Access:</strong><br>
+    <%= @learner.full_name.split.first %> will start <%= @learner.curriculum_course_option %> : <%= @learner.grade_year %> and below you can find the login credentials for access to our platform. Please wait for the Learning Coach in order to access it for the first time.<br><br>
+    <p>
+      Username: <strong><%= @learner.platform_username %></strong><br>
+      Password: a password was automatically created and sent to the learner's Microsoft email account.
+    </p>
+  </li>
+  <br>
+  <li>
+    <strong>Important Contacts:</strong><br>
+    If you have any questions or need further assistance, don't hesitate to reach out to your Learning Coach:<br>
+    <% @learning_coaches.each do |lc| %>
+      <%= lc.full_name %> : <%= lc.email %><br>
+    <% end %>
+  </li>
+  <br>
+  <li>
+    <strong>Invitation for Parents WhatsApp Group</strong><br>
+    At BGA, each Hub has a Parent WhatsApp group to facilitate communication and create a bigger sense of community among the BGA Family. Therefore, in case you wish to be a part of it, you can click the link on your mobile phone and join the group!<br>
+    <strong>BGA Remote Parents WhatsApp Group Link:</strong> <a href="<%= @hub.parents_whatsapp_group %>"><%= @hub.parents_whatsapp_group %></a>
+  </li>
+  <br>
+  <li>
+    <strong>Additional Platform Registration:</strong><br>
+    UNIFROG: Unifrog is an online platform that will help learners to search and connect with universities across the globe, as well as to find career opportunities with MOOCs, CV, personal statement and recommendation letter preparation, and more. It really is a one-stop-shop for finding and applying for any opportunity taught in English, anywhere in the world. Unifrog encompasses apprenticeships and Further Education colleges in the UK, as well as US and Canadian universities, and degrees taught in English in Europe, Asia, and Australasia. In practice, it supports learners to plan their career pathways, find opportunities, as well as helps with all the steps involved in the university application process. Register by completing <a href="https://d114wx04.na1.hs-sales-engage.com/Ctc/ZU+23284/d114wX04/JkM2-6qcW6N1vHY6lZ3q6W43C-hK4yqstsW10g98_3FzX-YW5NwKRF1M6PYRW3t729V78VMJnW3nhyc45sSB5dW2BgnPy4130JQW4c07c18_cLvNW8z7BXR7wXKZZW2ZsSvy7zr96QW7FWPbt4Smn95W8kq2nV13MNnRW99s3Cz4sRF80W7-swxT8_3wFxW4nXxp61Ghb75W8f3LBF4JkZrzW2D2BB21RcqXTW31TB5h6BS5tNW7lZwCQ41x30wW4D6pH96B7CD0W6RydL96w7SSsMHS55xgd_RlW3RvwZr5czjTVf586Spg04">this form</a>.
+  </li>
+</ol>
+
+<p>--</p>
+<p>Welcome aboard, <%= @learner.full_name.split.first %>! We can't wait to see all that you'll achieve with us.</p>
+<p>Kind regards,</p>
+<p>BGA Admissions Team | (+351) 913 578 362</p>
