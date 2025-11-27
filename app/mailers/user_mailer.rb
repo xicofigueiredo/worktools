@@ -80,10 +80,7 @@ class UserMailer < Devise::Mailer
   def admissions_notification(user, message, subject)
     @user = user
     @message = message
-<<<<<<< HEAD
     mail(to: @user.email, from: ApplicationMailer::FROM_WORKTOOLS, subject: subject)
-=======
-    mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
     #mail(to: "guilherme@bravegenerationacademy.com", from: 'worktools@bravegenerationacademy.com', subject: subject)
   end
 
@@ -92,7 +89,6 @@ class UserMailer < Devise::Mailer
     to = learner_info.learner_finances.invoice_email
     message = "Renewal Fee"
     mail(to: to, from: 'worktools@bravegenerationacademy.com', subject: "Renewal Fee")
->>>>>>> dd8169e08b90567f80b8f5d8065684a18f7e1940
   end
 
   def onboarding_email(learner_info)
@@ -201,15 +197,9 @@ class UserMailer < Devise::Mailer
 
     # --- Send email --- TO DO: SWAP TO
     mail(
-<<<<<<< HEAD
-      to: to,
+      to: "guilherme@bravegenerationacademy.com",#to,
       from:          ApplicationMailer::FROM_CONTACT,
       subject:       subject,
-=======
-      to: to, #"guilherme@bravegenerationacademy.com"
-      from:         'worktools@bravegenerationacademy.com',
-      subject:      subject,
->>>>>>> dd8169e08b90567f80b8f5d8065684a18f7e1940
       template_name: template_path
     )
   end
