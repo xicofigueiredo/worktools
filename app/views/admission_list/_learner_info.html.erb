@@ -893,7 +893,18 @@
                   </tr>
                 <% end %>
               <% end %>
-
+              <tr class="table-info">
+                <td>
+                  <input type="radio"
+                        class="lc-radio"
+                        name="temp_learning_coach_id"
+                        value="none"
+                        id="none_coach_radio">
+                </td>
+                <td colspan="7">
+                  <strong>No Learning Coach Assigned</strong>
+                </td>
+              </tr>
               <tr class="table-warning">
                 <td>
                   <input type="radio"
@@ -902,7 +913,7 @@
                         value=""
                         class="lc-radio">
                 </td>
-                <td colspan="8">
+                <td colspan="7">
                   <div class="d-flex align-items-center">
                     <strong class="me-3">Other:</strong>
 
@@ -1027,25 +1038,23 @@
     const hiddenField = document.getElementById('hidden-learning-coach-id');
     const displayField = document.getElementById('learning-coach-display');
     const changeBtn = document.getElementById('change-coach-btn');
-
-    // --- NEW ELEMENTS FOR "OTHER" LOGIC ---
+    // --- "NONE" LOGIC ---
+    const noneRadio = document.getElementById('none_coach_radio');
+    // --- OTHER LOGIC ---
     const otherRadio = document.getElementById('other_coach_radio');
     const otherSelect = document.getElementById('other_coach_select');
-    const standardRadios = document.querySelectorAll('.lc-radio:not(#other_coach_radio)');
+    const standardRadios = document.querySelectorAll('.lc-radio:not(#other_coach_radio):not(#none_coach_radio)');  // Updated to exclude none
 
     if (!modal || !confirmBtn || !hiddenField) return;
 
     // 1. SYNC LOGIC: Handle Dropdown vs Radio interactions
     if (otherSelect && otherRadio) {
-      // When dropdown changes, select the radio and update its value
       otherSelect.addEventListener('change', function() {
         if (this.value) {
           otherRadio.checked = true;
           otherRadio.value = this.value; // Set radio value to the Coach ID
         }
       });
-
-      // If user clicks the empty "Other" radio, focus the dropdown
       otherRadio.addEventListener('click', function() {
         if (otherSelect.value === "") {
           otherSelect.focus();
@@ -1053,7 +1062,7 @@
       });
     }
 
-    // If a standard radio is clicked, reset the dropdown
+    // If a standard radio or none is clicked, reset the dropdown (updated to include none)
     if (standardRadios.length > 0 && otherSelect) {
       standardRadios.forEach(radio => {
         radio.addEventListener('change', function() {
@@ -1061,42 +1070,46 @@
           otherRadio.value = ""; // Clear value so it doesn't hold old data
         });
       });
+      if (noneRadio) {
+        noneRadio.addEventListener('change', function() {
+          otherSelect.value = "";
+          otherRadio.value = "";
+        });
+      }
     }
 
     // 2. CONFIRM LOGIC
     confirmBtn.addEventListener('click', function() {
       const selectedRadio = modal.querySelector('input[name="temp_learning_coach_id"]:checked');
-
       if (selectedRadio) {
         const coachId = selectedRadio.value;
         let coachName = '';
 
-        // Check if the user selected the "Other" radio
-        if (selectedRadio.id === 'other_coach_radio' && otherSelect) {
-           // Get text from the selected dropdown option
-           const selectedOption = otherSelect.options[otherSelect.selectedIndex];
-           // Remove the email part if you only want the name, or keep it all.
-           // Assuming format: "Name (email@test.com)" -> split to get just Name
-           coachName = selectedOption.text.split('(')[0].trim();
+        // Handle "none" explicitly
+        if (coachId === 'none') {
+          hiddenField.value = '';  // Clear ID
+          displayField.value = '-';
+          changeBtn.textContent = 'Select Learning Coach';
         } else {
-           // Standard logic: Get text from the 2nd column of the row
-           coachName = selectedRadio.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+          // Handle "Other"
+          if (selectedRadio.id === 'other_coach_radio' && otherSelect) {
+            if (!otherSelect.value) {
+              alert('Please select a coach from the "Other" dropdown.');
+              return;
+            }
+            hiddenField.value = otherSelect.value;
+            const selectedOption = otherSelect.options[otherSelect.selectedIndex];
+            coachName = selectedOption.text.split('(')[0].trim();
+            displayField.value = coachName;
+            changeBtn.textContent = 'Change Learning Coach';
+          } else {
+            // Standard coach
+            hiddenField.value = coachId;
+            coachName = selectedRadio.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+            displayField.value = coachName;
+            changeBtn.textContent = 'Change Learning Coach';
+          }
         }
-
-        // Validate that an ID is actually present (e.g. if they clicked "Other" but didn't pick from dropdown)
-        if (!coachId) {
-            alert('Please select a valid coach from the list.');
-            return;
-        }
-
-        // Update hidden field
-        hiddenField.value = coachId;
-
-        // Update display
-        displayField.value = coachName;
-
-        // Update button text
-        changeBtn.textContent = 'Change Learning Coach';
 
         // Clear any validation errors
         if (displayField) {
@@ -1104,44 +1117,36 @@
           const inputGroup = displayField.parentElement;
           const errorMsg = inputGroup.parentElement.querySelector('.invalid-feedback');
           if (errorMsg) errorMsg.remove();
-
-          // Reset button styling
           if (changeBtn) {
             changeBtn.classList.remove('btn-danger');
             changeBtn.classList.add('btn-primary');
           }
         }
-
         // Close modal
         bootstrap.Modal.getInstance(modal).hide();
       } else {
-        alert('Please select a Learning Coach.');
+        alert('Please select a Learning Coach or "No Learning Coach Assigned".');
       }
     });
 
-    // Optional: Re-open modal with current selection
+    // 3. Pre-select current (updated to handle none)
     if (changeBtn) {
       changeBtn.addEventListener('click', function() {
-        // Pre-select current coach
         const currentId = hiddenField.value;
         if (currentId) {
-          // Check if it's a standard radio
           let radio = modal.querySelector(`.lc-radio[value="${currentId}"]`);
-
-          // If not found in standard list, it might be in the "Other" list
           if (!radio && otherSelect) {
-             // Check if the ID exists in the dropdown
-             const option = otherSelect.querySelector(`option[value="${currentId}"]`);
-             if (option) {
-               otherSelect.value = currentId; // Set dropdown
-               otherRadio.value = currentId;  // Set radio value
-               otherRadio.checked = true;     // Check radio
-               return; // Exit
-             }
+            const option = otherSelect.querySelector(`option[value="${currentId}"]`);
+            if (option) {
+              otherSelect.value = currentId;
+              otherRadio.value = currentId;
+              otherRadio.checked = true;
+              return;
+            }
           }
-
-          // If found in standard list
           if (radio) radio.checked = true;
+        } else {
+          if (noneRadio) noneRadio.checked = true;
         }
       });
     }
