@@ -1,6 +1,6 @@
-<p>Dear <%= @parent_names %></p>
+<p>Dear Brave Family,</p>
 
-<p>We are looking forward to welcoming <%= @learner.full_name %> to the start of his BGA journey!</p>
+<p>The big day is coming and we are looking forward to having <%= @learner.full_name.split.first %> with us on <%= @learner.start_date.strftime("%d/%m/%Y") %>!</p>
 
 <p>Below you will find some important information regarding <%= @learner.full_name.split.first %>'s first day. Please read through it carefully and do not hesitate to contact us in case you have any questions.</p>
 
@@ -20,13 +20,8 @@
   </li>
   <li>
     <strong>Hub Address:</strong><br>
-    <%= @hub.address %> (<a href="<%= @hub.google_map_link %>">Google Maps</a>)
+    The BGA Hub is located at <%= @hub.address %> (<a href="<%= @hub.google_map_link %>">Google Maps</a>)
   </li>
-  <li>
-    <strong>Platform access:</strong><br><br>
-    <%= @learner.full_name.split.first %> will start <%= @learner.grade_year %>, and below you can find the login credentials for access to the onboarding platform. Please wait for the Learning Coach in order to access it for the first time.<br><br>
-    <p><%= @platform_details %></p>
-  </li><br>
   <li>
     <strong>Additional Platform Registration:</strong><br>
     UNIFROG: Unifrog is an online platform that will help learners to search and connect with universities across the globe, as well as to find career opportunities with MOOCs, CV, personal statement and recommendation letter preparation, and more. It really is a one-stop-shop for finding and applying for any opportunity taught in English, anywhere in the world. Unifrog encompasses apprenticeships and Further Education colleges in the UK, as well as US and Canadian universities, and degrees taught in English in Europe, Asia, and Australasia. In practice, it supports learners to plan their career pathways, find opportunities, as well as helps with all the steps involved in the university application process. Register by completing <a href="https://d114wx04.na1.hs-sales-engage.com/Ctc/ZU+23284/d114wX04/JkM2-6qcW6N1vHY6lZ3q6W43C-hK4yqstsW10g98_3FzX-YW5NwKRF1M6PYRW3t729V78VMJnW3nhyc45sSB5dW2BgnPy4130JQW4c07c18_cLvNW8z7BXR7wXKZZW2ZsSvy7zr96QW7FWPbt4Smn95W8kq2nV13MNnRW99s3Cz4sRF80W7-swxT8_3wFxW4nXxp61Ghb75W8f3LBF4JkZrzW2D2BB21RcqXTW31TB5h6BS5tNW7lZwCQ41x30wW4D6pH96B7CD0W6RydL96w7SSsMHS55xgd_RlW3RvwZr5czjTVf586Spg04">this form</a>.
@@ -45,24 +40,14 @@
       N/A
     <% end %>
   </li>
-  <li>
-    <strong>Invitation for Parents WhatsApp Group</strong><br>
-    At BGA, each Hub has a Parent WhatsApp group to facilitate communication and create a bigger sense of community among the BGA Family. Therefore, in case you wish to be a part of it, you can click the link on your mobile phone and join the group!<br><br>
-    <u>Parents WhatsApp Group:</u><br>
-    <a href="<%= @hub.parents_whatsapp_group %>"><%= @hub.parents_whatsapp_group %></a><br>
-  </li>
-  <li>
-    <strong>Lunch:</strong><br>
-    Learners are welcome to bring their own packed lunch from home or purchase lunch at any of the surrounding restaurants or cafes.
-  </li>
 </ol>
 
-<p>Approximately one month after the start date, you will be contacted by the Learning Coaches for an individual meeting, and at the end of each term/sprint, you will receive via email a personalised report on the learner's progress and goals.</p>
+<p>After approximately one month you will be contacted by the Learning Coaches for an individual meeting and at the end of each term/sprint you will receive via email a personalised report on the learner's progress and goals.</p>
 
 <p>--</p>
 
-<p>We wish <%= @learner.full_name.split.first %> all the best for the start of his Brave Journey and are pleased to welcome him to the BGA Family!</p>
+<p>We wish <%= @learner.full_name.split.first %> all the best for the start of their Brave Journey and are pleased to welcome them to the BGA Family!</p>
 
 <p>Kind regards,</p>
 
-<p>Admissions Team</p>
+<p>BGA Admissions Team | (+351) 913 578 362</p>

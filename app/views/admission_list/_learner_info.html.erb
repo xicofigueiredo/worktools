@@ -54,6 +54,7 @@
   "Own Curriculum" => ["N/A"],
   "ESL Course" => ["N/A"],
   "UP Business" => ["Level 3", "Level 4", "Level 5", "Level 6"],
+  "UP Business (GENEX)" => ["Level 3", "Level 4", "Level 5", "Level 6"],
   "UPx Business" => ["Level 3", "Level 4", "Level 5", "Level 6"],
   "UP Sports Management" => ["Level 3", "Level 4", "Level 5", "Level 6"],
   "UP Sports Exercise" => ["Level 3", "Level 4", "Level 5", "Level 6"],
@@ -98,7 +99,8 @@
     "UPx Business",
     "UP Sports Management",
     "UP Sports Exercise",
-    "UP Computing"
+    "UP Computing",
+    "UP Business (GENEX)"
   ]},
   grade_year: { type: :select, col: '6', choices: grades_per_curriculum[@learner_info.curriculum_course_option] || [], prompt: 'Select Grade/Year' },
   start_date: { type: :date, col: '3' },
@@ -155,11 +157,13 @@
   ], include_blank: true },
   withdrawal_reason: { type: :text_area, rows: 2, col: '12' },
   onboarding_meeting_notes: { type: :text_area, rows: 4, col: '12' },
+  notes: { type: :text_area, rows: 4, col: '12' },
   platform_username: { col: '6' },
   platform_password: { col: '6' }
 } %>
 
 <% field_opts.merge!({
+  has_debt: { type: :toggle, col: '6', label: "Has Debt" },
   payment_plan: { type: :select, col: '6', choices: [
     "N/A",
     "Monthly",
@@ -167,7 +171,13 @@
     "Semi Annual",
     "Quarterly"
   ]},
-  financial_responsibility: { type: :text_area, rows: 2, col: '12' },
+  financial_responsibility: { type: :select, col: '6', choices: [
+    "Parent 1",
+    "Parent 2",
+    "Learner",
+    "Other"
+  ]},
+  invoice_email: { type: :email, col: '6' },
   monthly_fee: { type: :number, col: '3', step: 1, label: "Monthly Fee (#{@currency_symbol})" },
   discount_mf: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   scholarship: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Scholarship (%)" },
@@ -177,7 +187,8 @@
   billable_af: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Admission Fee (#{@currency_symbol})" },
   renewal_fee: { type: :number, col: '4', step: 1, label: "Renewal Fee (#{@currency_symbol})" },
   discount_rf: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
-  billable_rf: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Renewal Fee (#{@currency_symbol})" }
+  billable_rf: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Renewal Fee (#{@currency_symbol})" },
+  notes: { type: :text_area, rows: 4, col: '12' }
 }) %>
 
 <% render_input = lambda do |f, attr, opts = {}, is_finance = false, object = @learner_info| %>
@@ -190,13 +201,7 @@
   <% col = opts[:col] || '12' %>
   <% value = f ? f.object.send(attr) : object.send(attr) %>
 
-  <% # Force disable main fees in edit mode for finance %>
-  <% forced_disabled = false %>
-  <% if edit_mode && f && is_finance && ['monthly_fee', 'admission_fee', 'renewal_fee'].include?(attr_sym.to_s) %>
-    <% forced_disabled = true %>
-  <% end %>
-
-  <% disabled_flag = forced_disabled || (!editable_list.include?(attr_sym)) %>
+  <% disabled_flag = (!editable_list.include?(attr_sym)) %>
 
   <% if edit_mode && f %>
     <% input_classes = "form-control" %>
@@ -359,7 +364,8 @@
       curriculum_pricing_model_value: @main_hub.hub_type == 'Online' ? 'Online' : 'Hybrid',
       curriculum_pricing_country_value: @main_hub.country,
       curriculum_pricing_hub_name_value: @main_hub.name,
-      curriculum_pricing_currency_symbol_value: @currency_symbol
+      curriculum_pricing_currency_symbol_value: @currency_symbol,
+      curriculum_pricing_original_start_date_value: @learner_info.start_date&.strftime("%Y-%m-%d") || ""
     } %>
   <% end %>
 
@@ -448,7 +454,9 @@
           <%= f.fields_for :learner_finance, @learner_finance do |ff| %>
             <div class="row gx-3">
               <% render_input.call(ff, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true) %>
-              <% render_input.call(ff, :financial_responsibility, field_opts[:financial_responsibility] || { type: :text_area, rows: 2, col: '12' }, true) %>
+              <% render_input.call(ff, :has_debt, field_opts[:has_debt] || { type: :toggle, col: '6' }, true) %>
+              <% render_input.call(ff, :financial_responsibility, field_opts[:financial_responsibility] || { col: '6' }, true) %>
+              <% render_input.call(ff, :invoice_email, field_opts[:invoice_email] || { type: :email, col: '6' }, true) %>
             </div>
 
             <h5 style="margin-top: 20px; margin-bottom: 10px;">Monthly Fees</h5>
@@ -471,6 +479,10 @@
               <% render_input.call(ff, :renewal_fee, field_opts[:renewal_fee] || { col: '4' }, true) %>
               <% render_input.call(ff, :discount_rf, field_opts[:discount_rf] || { col: '4' }, true) %>
               <% render_input.call(ff, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true) %>
+            </div>
+
+            <div class="row gx-3">
+              <% render_input.call(ff, :notes, field_opts[:notes] || { type: :text_area, rows: 4, col: '12' }, true) %>
             </div>
           <% end %>
         <% else %>
@@ -510,6 +522,7 @@
         <% render_input.call(f, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }) %>
         <% render_input.call(f, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }) %>
         <% render_input.call(f, :onboarding_meeting_notes, field_opts[:onboarding_meeting_notes] || { type: :text_area, rows: 4, col: '12' }) %>
+        <% render_input.call(f, :notes, field_opts[:notes] || { type: :text_area, rows: 4, col: '12' }) %>
       </div>
     </div>
 
@@ -643,12 +656,23 @@
               </div>
 
             </div>
+            <div class="card mb-3 mx-3 border-warning bg-light">
+              <div class="card-body">
+                <h6 class="text-warning">Option to Keep Previous Pricing</h6>
+                <p class="mb-0 small">
+                  If you want to acknowledge the change but retain the existing fees, discounts, and billables (ignoring the new pricing tier), use the "Keep Previous Pricing & Save" button below.
+                </p>
+              </div>
+            </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="pricing-cancel-btn">
                 Cancel
               </button>
-              <button type="button" class="btn btn-primary" id="pricing-confirm-btn">
-                Confirm & Save Changes
+              <button type="button" class="btn btn-warning" id="pricing-keep-previous-btn">
+                Keep Previous Pricing & Save
+              </button>
+              <button type="button" class="btn btn-primary" id="pricing-apply-new-btn">
+                Apply New Pricing & Save
               </button>
             </div>
           </div>
@@ -713,7 +737,9 @@
       <% if @learner_finance.present? %>
         <div class="row gx-3">
           <% render_input.call(nil, :payment_plan, field_opts[:payment_plan] || { col: '6' }, true, @learner_finance) %>
-          <% render_input.call(nil, :financial_responsibility, field_opts[:financial_responsibility] || { type: :text_area, rows: 2, col: '12' }, true, @learner_finance) %>
+          <% render_input.call(nil, :has_debt, field_opts[:has_debt] || { type: :toggle, col: '6' }, true, @learner_finance) %>
+          <% render_input.call(nil, :financial_responsibility, field_opts[:financial_responsibility] || { col: '6' }, true, @learner_finance) %>
+          <% render_input.call(nil, :invoice_email, field_opts[:invoice_email] || { type: :email, col: '6' }, true, @learner_finance) %>
         </div>
 
         <h5 style="margin-top: 20px; margin-bottom: 10px;">Monthly Fees</h5>
@@ -736,6 +762,10 @@
           <% render_input.call(nil, :renewal_fee, field_opts[:renewal_fee] || { col: '4' }, true, @learner_finance) %>
           <% render_input.call(nil, :discount_rf, field_opts[:discount_rf] || { col: '4' }, true, @learner_finance) %>
           <% render_input.call(nil, :billable_rf, field_opts[:billable_rf] || { col: '4' }, true, @learner_finance) %>
+        </div>
+
+        <div class="row gx-3">
+          <% render_input.call(nil, :notes, field_opts[:notes] || { type: :text_area, rows: 4, col: '12' }, true, @learner_finance) %>
         </div>
       <% else %>
         <div class="alert alert-warning text-center" style="margin-top: 20px;">
@@ -774,6 +804,7 @@
       <% render_input.call(nil, :withdrawal_category, field_opts[:withdrawal_category] || { col: '6' }, false, @learner_info) %>
       <% render_input.call(nil, :withdrawal_reason, field_opts[:withdrawal_reason] || { type: :text_area, rows: 2, col: '12' }, false, @learner_info) %>
       <% render_input.call(nil, :onboarding_meeting_notes, field_opts[:onboarding_meeting_notes] || { type: :text_area, rows: 4, col: '12' }, false, @learner_info) %>
+      <% render_input.call(nil, :notes, field_opts[:notes] || { type: :text_area, rows: 4, col: '12' }, false, @learner_info) %>
     </div>
   </div>
 <% end %>
@@ -787,8 +818,31 @@
   });
 </script>
 
-<!-- Modal for Learning Coach Selection  -->
-<% if @sorted_coaches %>
+<%# Start Date Year Warning Modal %>
+<div class="modal fade" id="startDateWarningModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">⚠️ Start Date Year Warning</h5>
+      </div>
+      <div class="modal-body">
+        <p>The start date you changed to is for <strong id="selected-year-display"></strong>, not the current year (<%= Date.current.year %>).</p>
+        <p class="mb-0"><strong>Did you update the pricing accordingly?</strong></p>
+        <p class="text-muted small">Different years may have different pricing tiers. Please ensure the financial information is correct for the selected year.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="start-date-go-back-btn">
+          No, Go Back & Fix
+        </button>
+        <button type="button" class="btn btn-warning" id="start-date-confirm-btn">
+          Yes, Save Anyway
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if @remote_lcs %>
   <div class="modal fade" id="learningCoachModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
       <div class="modal-content">
@@ -811,19 +865,25 @@
               </tr>
             </thead>
             <tbody>
-              <% if @sorted_coaches.empty? %>
-                <tr><td colspan="8">No learning coaches available.</td></tr>
+              <% if @remote_lcs.empty? %>
+                <tr><td colspan="8">No suggested learning coaches available.</td></tr>
               <% else %>
-                <% @sorted_coaches.each do |data| %>
+                <% @remote_lcs.each do |data| %>
                   <% coach = data[:coach] %>
                   <tr>
                     <td>
                       <input type="radio"
-                             name="temp_learning_coach_id"
-                             value="<%= coach.id %>"
-                             <%= 'checked' if @learner_info.learning_coach_id == coach.id %>>
+                            class="lc-radio"
+                            name="temp_learning_coach_id"
+                            value="<%= coach.id %>"
+                            <%= 'checked' if @learner_info.learning_coach_id == coach.id %>>
                     </td>
-                    <td><%= coach.full_name %></td>
+                    <td>
+                      <%= coach.full_name %>
+                      <% if coach.can_teach_pt_plus? %>
+                        <span class="badge bg-success ms-1" title="Can teach PT+ curriculum">PT+</span>
+                      <% end %>
+                    </td>
                     <td><%= coach.email %></td>
                     <td><%= data[:main_hub].name %></td>
                     <td><%= data[:lc_count] %></td>
@@ -833,6 +893,41 @@
                   </tr>
                 <% end %>
               <% end %>
+              <tr class="table-info">
+                <td>
+                  <input type="radio"
+                        class="lc-radio"
+                        name="temp_learning_coach_id"
+                        value="none"
+                        id="none_coach_radio">
+                </td>
+                <td colspan="7">
+                  <strong>No Learning Coach Assigned</strong>
+                </td>
+              </tr>
+              <tr class="table-warning">
+                <td>
+                  <input type="radio"
+                        name="temp_learning_coach_id"
+                        id="other_coach_radio"
+                        value=""
+                        class="lc-radio">
+                </td>
+                <td colspan="7">
+                  <div class="d-flex align-items-center">
+                    <strong class="me-3">Other:</strong>
+
+                    <select class="form-select" id="other_coach_select" style="max-width: 900px;">
+                      <option value="" selected disabled>Select a different learning coach...</option>
+                      <% @all_lcs.each do |lc| %>
+                        <option value="<%= lc.id %>">
+                          <%= lc.full_name %><%= " [PT+]" if lc.can_teach_pt_plus? %> (<%= lc.email %>)
+                        </option>
+                      <% end %>
+                    </select>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -943,23 +1038,78 @@
     const hiddenField = document.getElementById('hidden-learning-coach-id');
     const displayField = document.getElementById('learning-coach-display');
     const changeBtn = document.getElementById('change-coach-btn');
+    // --- "NONE" LOGIC ---
+    const noneRadio = document.getElementById('none_coach_radio');
+    // --- OTHER LOGIC ---
+    const otherRadio = document.getElementById('other_coach_radio');
+    const otherSelect = document.getElementById('other_coach_select');
+    const standardRadios = document.querySelectorAll('.lc-radio:not(#other_coach_radio):not(#none_coach_radio)');  // Updated to exclude none
 
     if (!modal || !confirmBtn || !hiddenField) return;
 
+    // 1. SYNC LOGIC: Handle Dropdown vs Radio interactions
+    if (otherSelect && otherRadio) {
+      otherSelect.addEventListener('change', function() {
+        if (this.value) {
+          otherRadio.checked = true;
+          otherRadio.value = this.value; // Set radio value to the Coach ID
+        }
+      });
+      otherRadio.addEventListener('click', function() {
+        if (otherSelect.value === "") {
+          otherSelect.focus();
+        }
+      });
+    }
+
+    // If a standard radio or none is clicked, reset the dropdown (updated to include none)
+    if (standardRadios.length > 0 && otherSelect) {
+      standardRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+          otherSelect.value = "";
+          otherRadio.value = ""; // Clear value so it doesn't hold old data
+        });
+      });
+      if (noneRadio) {
+        noneRadio.addEventListener('change', function() {
+          otherSelect.value = "";
+          otherRadio.value = "";
+        });
+      }
+    }
+
+    // 2. CONFIRM LOGIC
     confirmBtn.addEventListener('click', function() {
       const selectedRadio = modal.querySelector('input[name="temp_learning_coach_id"]:checked');
       if (selectedRadio) {
         const coachId = selectedRadio.value;
-        const coachName = selectedRadio.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+        let coachName = '';
 
-        // Update hidden field
-        hiddenField.value = coachId;
-
-        // Update display
-        displayField.value = coachName;
-
-        // Update button text
-        changeBtn.textContent = 'Change Learning Coach';
+        // Handle "none" explicitly
+        if (coachId === 'none') {
+          hiddenField.value = '';  // Clear ID
+          displayField.value = '-';
+          changeBtn.textContent = 'Select Learning Coach';
+        } else {
+          // Handle "Other"
+          if (selectedRadio.id === 'other_coach_radio' && otherSelect) {
+            if (!otherSelect.value) {
+              alert('Please select a coach from the "Other" dropdown.');
+              return;
+            }
+            hiddenField.value = otherSelect.value;
+            const selectedOption = otherSelect.options[otherSelect.selectedIndex];
+            coachName = selectedOption.text.split('(')[0].trim();
+            displayField.value = coachName;
+            changeBtn.textContent = 'Change Learning Coach';
+          } else {
+            // Standard coach
+            hiddenField.value = coachId;
+            coachName = selectedRadio.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+            displayField.value = coachName;
+            changeBtn.textContent = 'Change Learning Coach';
+          }
+        }
 
         // Clear any validation errors
         if (displayField) {
@@ -967,29 +1117,36 @@
           const inputGroup = displayField.parentElement;
           const errorMsg = inputGroup.parentElement.querySelector('.invalid-feedback');
           if (errorMsg) errorMsg.remove();
-
-          // Reset button styling
           if (changeBtn) {
             changeBtn.classList.remove('btn-danger');
             changeBtn.classList.add('btn-primary');
           }
         }
-
         // Close modal
         bootstrap.Modal.getInstance(modal).hide();
       } else {
-        alert('Please select a Learning Coach.');
+        alert('Please select a Learning Coach or "No Learning Coach Assigned".');
       }
     });
 
-    // Optional: Re-open modal with current selection
+    // 3. Pre-select current (updated to handle none)
     if (changeBtn) {
       changeBtn.addEventListener('click', function() {
-        // Pre-select current coach
         const currentId = hiddenField.value;
         if (currentId) {
-          const radio = modal.querySelector(`input[value="${currentId}"]`);
+          let radio = modal.querySelector(`.lc-radio[value="${currentId}"]`);
+          if (!radio && otherSelect) {
+            const option = otherSelect.querySelector(`option[value="${currentId}"]`);
+            if (option) {
+              otherSelect.value = currentId;
+              otherRadio.value = currentId;
+              otherRadio.checked = true;
+              return;
+            }
+          }
           if (radio) radio.checked = true;
+        } else {
+          if (noneRadio) noneRadio.checked = true;
         }
       });
     }
@@ -1036,6 +1193,294 @@
     });
   }
 
+  function setupInvoiceEmailHandler() {
+    const financialResponsibilitySelect = document.getElementById('learner_info_learner_finance_attributes_financial_responsibility');
+    const invoiceEmailInput = document.getElementById('learner_info_learner_finance_attributes_invoice_email');
+
+    if (!financialResponsibilitySelect || !invoiceEmailInput) return;
+
+    // Get references to email input fields
+    const parent1Input = document.getElementById('learner_info_parent1_email');
+    const parent2Input = document.getElementById('learner_info_parent2_email');
+    const personalInput = document.getElementById('learner_info_personal_email');
+
+    // Check if invoice_email is in the editable list (has editable-input class initially)
+    const isInvoiceEmailEditable = invoiceEmailInput.classList.contains('editable-input') ||
+                                    !invoiceEmailInput.hasAttribute('disabled');
+
+    function getEmailValues() {
+      return {
+        parent1: parent1Input?.value || '',
+        parent2: parent2Input?.value || '',
+        personal: personalInput?.value || ''
+      };
+    }
+
+    function updateInvoiceEmail() {
+      if (!isInvoiceEmailEditable) return; // User doesn't have permission to edit this field at all
+
+      const responsibility = financialResponsibilitySelect.value;
+      const emails = getEmailValues();
+
+      switch(responsibility) {
+        case 'Parent 1':
+          invoiceEmailInput.value = emails.parent1;
+          invoiceEmailInput.readOnly = true;
+          invoiceEmailInput.classList.remove('editable-input');
+          invoiceEmailInput.classList.add('bg-light');
+          invoiceEmailInput.style.cursor = 'not-allowed';
+          break;
+        case 'Parent 2':
+          invoiceEmailInput.value = emails.parent2;
+          invoiceEmailInput.readOnly = true;
+          invoiceEmailInput.classList.remove('editable-input');
+          invoiceEmailInput.classList.add('bg-light');
+          invoiceEmailInput.style.cursor = 'not-allowed';
+          break;
+        case 'Learner':
+          invoiceEmailInput.value = emails.personal;
+          invoiceEmailInput.readOnly = true;
+          invoiceEmailInput.classList.remove('editable-input');
+          invoiceEmailInput.classList.add('bg-light');
+          invoiceEmailInput.style.cursor = 'not-allowed';
+          break;
+        case 'Other':
+          invoiceEmailInput.readOnly = false;
+          invoiceEmailInput.classList.add('editable-input');
+          invoiceEmailInput.classList.remove('bg-light');
+          invoiceEmailInput.style.cursor = 'text';
+          // Keep current value when switching to Other, unless it's empty
+          if (!invoiceEmailInput.value) {
+            invoiceEmailInput.value = '';
+          }
+          break;
+        default:
+          // No selection yet
+          invoiceEmailInput.readOnly = false;
+          invoiceEmailInput.classList.add('editable-input');
+          invoiceEmailInput.classList.remove('bg-light');
+          invoiceEmailInput.style.cursor = 'text';
+      }
+    }
+
+    // Listen for changes to financial responsibility
+    financialResponsibilitySelect.addEventListener('change', updateInvoiceEmail);
+
+    // Listen for changes to parent/learner emails and update invoice email in real-time
+    if (parent1Input) {
+      parent1Input.addEventListener('input', function() {
+        if (financialResponsibilitySelect.value === 'Parent 1') {
+          invoiceEmailInput.value = this.value;
+        }
+      });
+    }
+
+    if (parent2Input) {
+      parent2Input.addEventListener('input', function() {
+        if (financialResponsibilitySelect.value === 'Parent 2') {
+          invoiceEmailInput.value = this.value;
+        }
+      });
+    }
+
+    if (personalInput) {
+      personalInput.addEventListener('input', function() {
+        if (financialResponsibilitySelect.value === 'Learner') {
+          invoiceEmailInput.value = this.value;
+        }
+      });
+    }
+
+    // Initialize on page load
+    updateInvoiceEmail();
+  }
+
+  // --- Unified form checks: pricing & start-date ---
+  function setupFormChecks() {
+    const form = document.getElementById('learner-info-form');
+    if (!form) return;
+
+    const originalStartDate = form.dataset.curriculumPricingOriginalStartDateValue || "";
+
+    // Elements for start-date modal/check
+    const startDateInput = document.getElementById('learner_info_start_date');
+    const startModalElement = document.getElementById('startDateWarningModal');
+    const startConfirmBtn = document.getElementById('start-date-confirm-btn');
+    const startGoBackBtn = document.getElementById('start-date-go-back-btn');
+
+    // Elements for pricing modal/check
+    const pricingModalElement = document.getElementById('pricingConfirmationModal');
+    const pricingConfirmBtn = document.getElementById('pricing-confirm-btn');
+    const pricingCancelBtn = document.getElementById('pricing-cancel-btn');
+
+    // Pricing "changes details" target in modal
+    const pricingChangesDetails = document.querySelector('[data-curriculum-pricing-target="changesDetails"]');
+
+    // Flags so we don't loop
+    let pricingConfirmed = false;
+    let startConfirmed = false;
+    const currentYear = new Date().getFullYear();
+
+    function checkStartDateNeeded() {
+      if (!startDateInput) return false;
+      const val = startDateInput.value;
+      if (!val) return false;
+
+      if (val === originalStartDate) return false;
+
+      const newDate = new Date(val);
+      const newYear = newDate.getFullYear();
+      return newYear !== currentYear;
+    }
+
+    function updateStartModalYear() {
+      if (!startDateInput || !startModalElement) return;
+      const val = startDateInput.value;
+      const display = startModalElement.querySelector('#selected-year-display');
+      if (display && val) display.textContent = new Date(val).getFullYear();
+    }
+
+    // Determine whether pricing confirmation is required.
+    function checkPricingNeeded() {
+      if (!pricingModalElement) return false;
+
+      // If your Stimulus controller exposes a hasChanges() function, prefer it.
+      if (window.curriculumPricingController && typeof window.curriculumPricingController.hasChanges === 'function') {
+        try {
+          return !!window.curriculumPricingController.hasChanges();
+        } catch (err) {
+          // fall through to other heuristics
+        }
+      }
+
+      // Fallback: check whether the changesDetails target has content
+      if (pricingChangesDetails) {
+        return pricingChangesDetails.textContent.trim().length > 0;
+      }
+
+      return false;
+    }
+
+    // Show a bootstrap modal instance
+    function showModal(el) {
+      if (!el) return null;
+      const inst = new bootstrap.Modal(el);
+      inst.show();
+      return inst;
+    }
+
+    // Hide & fully dispose modal + cleanup backdrop/body
+    function cleanupModal(el) {
+      if (!el) return;
+      const inst = bootstrap.Modal.getInstance(el);
+      if (inst) inst.dispose();
+      document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      el.classList.remove('show');
+      el.style.display = 'none';
+    }
+
+    // Submit listener: show modals in sequence as needed.
+    form.addEventListener('submit', function(e) {
+      // If both checks are already confirmed, allow submit
+      if (pricingConfirmed && startConfirmed) {
+        return; // let native submit proceed
+      }
+
+      // Priority: pricing first (you can swap order if you prefer start-date first)
+      if (!pricingConfirmed && checkPricingNeeded()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        // show pricing modal
+        showModal(pricingModalElement);
+        return;
+      }
+
+      // Next: start date
+      if (!startConfirmed && checkStartDateNeeded()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        updateStartModalYear();
+        showModal(startModalElement);
+        return;
+      }
+
+      // else nothing to block -> allow submit
+    });
+
+    // Pricing Confirmed -> either show next check or final submit
+    if (pricingConfirmBtn) {
+      pricingConfirmBtn.addEventListener('click', function() {
+        // Prevent Turbo-restore weirdness if you had that issue previously
+        document.documentElement.setAttribute('data-turbo-restore', 'false');
+
+        cleanupModal(pricingModalElement);
+        pricingConfirmed = true;
+
+        // If start date check still required, show it now
+        if (!startConfirmed && checkStartDateNeeded()) {
+          updateStartModalYear();
+          showModal(startModalElement);
+          return;
+        }
+
+        // Otherwise final submit (bypass submit listener to avoid re-run)
+        try {
+          form.submit();
+        } catch (err) {
+          if (typeof form.requestSubmit === 'function') form.requestSubmit();
+          else {
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitBtn) submitBtn.click();
+          }
+        }
+      });
+    }
+
+    // Pricing Cancel -> just hide modal and leave form blocked for edits
+    if (pricingCancelBtn) {
+      pricingCancelBtn.addEventListener('click', function() {
+        cleanupModal(pricingModalElement);
+      });
+    }
+
+    // Start date Confirmed -> either show pricing (if still needed) or submit
+    if (startConfirmBtn) {
+      startConfirmBtn.addEventListener('click', function() {
+        document.documentElement.setAttribute('data-turbo-restore', 'false');
+
+        cleanupModal(startModalElement);
+        startConfirmed = true;
+
+        // If pricing still needs confirming, show pricing modal
+        if (!pricingConfirmed && checkPricingNeeded()) {
+          showModal(pricingModalElement);
+          return;
+        }
+
+        // Otherwise final submit
+        try {
+          form.submit();
+        } catch (err) {
+          if (typeof form.requestSubmit === 'function') form.requestSubmit();
+          else {
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitBtn) submitBtn.click();
+          }
+        }
+      });
+    }
+
+    // Start date Go Back -> hide and let user fix start date
+    if (startGoBackBtn) {
+      startGoBackBtn.addEventListener('click', function() {
+        cleanupModal(startModalElement);
+      });
+    }
+  }
+
   // Run on page load
   document.addEventListener('DOMContentLoaded', function() {
     setupFinanceCalculations();
@@ -1043,6 +1488,8 @@
     setupGradeYearHandler();
     setupProgrammeHubHandler();
     setupLearningCoachSelection();
+    setupInvoiceEmailHandler();
+    setupFormChecks(); // <-- unified checks
   });
   // Run on Turbo page loads (if using Turbo)
   document.addEventListener('turbo:load', function() {
@@ -1051,6 +1498,8 @@
     setupGradeYearHandler();
     setupProgrammeHubHandler();
     setupLearningCoachSelection();
+    setupInvoiceEmailHandler();
+    setupFormChecks(); // <-- unified checks
   });
   // Run immediately if DOM is already loaded
   if (document.readyState === 'loading') {
@@ -1061,5 +1510,7 @@
     setupPaymentPlanHandler();
     setupGradeYearHandler();
     setupProgrammeHubHandler();
+    setupInvoiceEmailHandler();
+    setupFormChecks(); // <-- unified checks
   }
 </script>

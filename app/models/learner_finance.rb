@@ -1,4 +1,6 @@
 class LearnerFinance < ApplicationRecord
+  include LearnerNotifications
+
   belongs_to :learner_info
 
   validates :admission_fee, :monthly_fee, :renewal_fee,
@@ -6,8 +8,8 @@ class LearnerFinance < ApplicationRecord
   validates :discount_mf, :scholarship, :discount_af, :discount_rf,
             numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100, allow_nil: true }
 
+  after_commit :notify_finance_update, on: :update
   after_create :notify_finance_created
-  after_update :send_pricing_change_notification, if: :pricing_changed?
 
   before_save :calculate_billable_amounts
 
@@ -30,33 +32,21 @@ class LearnerFinance < ApplicationRecord
     end
   end
 
-  def pricing_changed?
-    saved_change_to_discount_mf? ||
-    saved_change_to_scholarship? ||
-    saved_change_to_discount_af? ||
-    saved_change_to_discount_rf? ||
-    saved_change_to_monthly_fee? ||
-    saved_change_to_admission_fee? ||
-    saved_change_to_renewal_fee?
-  end
+  def notify_finance_update
+    ignored_keys = %w[updated_at created_at]
 
-  def send_pricing_change_notification
-    return unless learner_info.present?
-    allowed_statuses = %w[In progress conditional In progress In progress - ok Waitlist Waitlist - ok Validated Onboarded]
-    return unless learner_info.status.in?(allowed_statuses)
+    real_changes = saved_changes.keys - ignored_keys
 
-    message = "Pricing updated for #{learner_info.full_name}."
-    learner_info.notify_recipients(learner_info.finance_users, message)
+    if real_changes.any?
+      changed_list = real_changes.map { |k| k.humanize }.join(', ')
 
-    Rails.logger.info("[LearnerFinance##{id}] Sent pricing change notification for LearnerInfo ID #{learner_info.id}")
+      message = "Finance updated for #{learner_info.full_name}. Fields changed: #{changed_list}."
+
+      notify_recipients(self.class.finance_users, message)
+    end
   end
 
   def notify_finance_created
-    return unless learner_info.present?
-
-    message = "Finance record created for #{learner_info.full_name}."
-    learner_info.notify_recipients(learner_info.finance_users, message)
-
-    Rails.logger.info("[LearnerFinance##{id}] Sent finance created notification for LearnerInfo ID #{learner_info.id}")
+    notify_recipients(self.class.finance_users, "Finance record created for #{learner_info.full_name}.")
   end
 end

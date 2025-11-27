@@ -13,6 +13,7 @@ class PagesController < ApplicationController
   before_action :set_learner, only: [:learner_profile]
   before_action :authorize_user, only: [:learner_profile]
   before_action :prepare_dashboard_data, only: [:learner_profile]
+  before_action :set_online_learners, only: [:dashboard_lc, :dashboard_dc]
 
   def dashboard_admin
     @deactivated = User.where(deactivate: true, role: 'learner')
@@ -45,7 +46,7 @@ class PagesController < ApplicationController
   end
 
   def dashboard_lc
-    redirect_to dashboard_dc_path if current_user.hubs.count > 1 && params[:hub_id].nil?
+    redirect_to dashboard_dc_path if (@online_learners_count >= 1 || current_user.hubs.count > 1) && params[:hub_id].nil?
 
     if params[:hub_id].nil?
       @selected_hub = current_user.users_hubs.find_by(main: true)&.hub
@@ -53,7 +54,7 @@ class PagesController < ApplicationController
       @selected_hub = Hub.find_by(id: params[:hub_id])
     end
 
-    @users = @selected_hub.users.where(role: 'learner', deactivate: [false, nil])
+    @users = @selected_hub&.name == "Remote" ? @online_learners : @selected_hub.users.where(role: 'learner', deactivate: [false, nil])
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
     @total_balance = {}
     @forms_completed = {} # Hash to store the number of forms completed by each learner
@@ -135,9 +136,13 @@ class PagesController < ApplicationController
 
   end
 
-
   def dashboard_dc
-    @hubs = current_user.hubs
+    @hubs = current_user.hubs.to_a
+
+    return unless @online_learners_count >= 1
+
+    remote_hub = Hub.find_by(name: "Remote")
+    @hubs << remote_hub if remote_hub && !@hubs.include?(remote_hub)
   end
 
   def profile
@@ -601,4 +606,8 @@ class PagesController < ApplicationController
     week || Week.find_by("start_date <= ? AND end_date >= ?", date + 14.days, date + 14.days)
   end
 
+  def set_online_learners
+    @online_learners = current_user.online_learners
+    @online_learners_count = @online_learners.count
+  end
 end

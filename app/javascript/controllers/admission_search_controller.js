@@ -123,7 +123,12 @@ export default class extends Controller {
     let hasValue = false;
 
     if (fieldEl.tagName === "SELECT") {
-      hasValue = (fieldEl.value != null && String(fieldEl.value).trim() !== "");
+      if (fieldEl.multiple) {
+        // For multi-select, check if any options are selected
+        hasValue = Array.from(fieldEl.selectedOptions).some(opt => opt.value && opt.value.trim() !== "");
+      } else {
+        hasValue = (fieldEl.value != null && String(fieldEl.value).trim() !== "");
+      }
     } else {
       hasValue = String(fieldEl.value).trim().length > 0;
     }

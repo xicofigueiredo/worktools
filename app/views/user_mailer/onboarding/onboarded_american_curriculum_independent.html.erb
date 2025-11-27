@@ -1,4 +1,4 @@
-<p>Dear <%= @parent_names %></p>
+<p>Dear Brave Family,</p>
 
 <p>We are looking forward to welcoming <%= @learner.full_name %> to the start of their BGA journey!</p>
 
@@ -6,48 +6,46 @@
 
 <ol>
   <li>
-    <strong>BGA Email Creation:</strong><br>
-    Our team will create a BGA email account for <%= @learner.full_name.split.first %>. Its password will be sent to the Learner's Learning Coaches (LCs) email address. Please view the tutorial document with your LCs on how to proceed with the authentication of the account.
+    <strong>BGA Email Creation:</strong><br><br>
+    Email: <strong><%= @learner.institutional_email %></strong><br>
+    Password: Please find the password attached<br><br>
+    Please wait until your first day to set up the account with your Learning Coach. You can find the tutorial document on how to proceed with the authentication of the account here:<br>
     <a href="https://hubs.ly/Q03RhZGL0">https://hubs.ly/Q03RhZGL0</a>
-  </li>
+  </li><br>
   <li>
-    <strong>Day and Time:</strong><br>
-    <%= @learner.full_name.split.first %>'s onboarding day is scheduled for <%= @learner.start_date.strftime("%d/%m/%Y") %>.<br>
-    For the first day only, <%= @learner.full_name.split.first %> is expected to be at the Hub at 10 am so that the Learning Coach can initiate the onboarding.<br>
-    <u>What to bring:</u> laptop, charger, headphones, a notebook, and stationery (including a calculator).
-  </li>
+    <strong>Day and Time:</strong><br><br>
+    <%= @learner.full_name.split.first %>'s onboarding day is scheduled for <strong><%= @learner.start_date.strftime("%d/%m/%Y") %></strong>.<br><br>
+    For the first day only, <%= @learner.full_name.split.first %> is expected to be at the Hub at <strong>10 am</strong> so that the Learning Coach can initiate the onboarding.<br><br>
+    <strong>What to bring:</strong> laptop, charger, headphones, a notebook, and stationery (including a calculator).
+  </li><br>
   <li>
     <strong>Hub Address:</strong><br>
     <%= @hub.address %> (<a href="<%= @hub.google_map_link %>">Google Maps</a>)
   </li>
   <li>
-    <strong>Platform access:</strong><br>
-    <%= @learner.full_name.split.first %> will start <%= @learner.grade_year %>, and below you can find the login credentials for access to our platform.
-    Please wait for the Learning Coach in order to access it for the first time.
-    <div style="margin-top: 0.5em; margin-bottom: 0.5em;">
-      <div>Username: <%= @learner.full_name.split.first.downcase %>.<%= @learner.full_name.split.last.downcase %></div>
-      <div>Password: A password will be automatically created and sent to the learner's Microsoft email account.</div>
-    </div>
-    *Credentials for the US Curriculum have been sent to Seth and the learning coaches.
-  </li>
+    <strong>Platform access:</strong><br><br>
+    <%= @learner.full_name.split.first %> will start <%= @learner.grade_year %>, and below you can find the login credentials for access to the onboarding platform. Please wait for the Learning Coach in order to access it for the first time.<br><br>
+    <p><%= @platform_details %></p>
+    <em>*Our partner is currently in the process of setting up the necessary credentials for US Curriculum platform access. Once this is finalised, they will send an email with the login details to both the Learner and the Learning Coaches. This process typically takes around five working days.</em>
+  </li><br>
   <li>
     <strong>Additional Platform Registration:</strong><br>
     UNIFROG: Unifrog is an online platform that will help learners to search and connect with universities across the globe, as well as to find career opportunities with MOOCs, CV, personal statement and recommendation letter preparation, and more. It really is a one-stop-shop for finding and applying for any opportunity taught in English, anywhere in the world. Unifrog encompasses apprenticeships and Further Education colleges in the UK, as well as US and Canadian universities, and degrees taught in English in Europe, Asia, and Australasia. In practice, it supports learners to plan their career pathways, find opportunities, as well as helps with all the steps involved in the university application process. Register by completing <a href="https://d114wx04.na1.hs-sales-engage.com/Ctc/ZU+23284/d114wX04/JkM2-6qcW6N1vHY6lZ3q6W43C-hK4yqstsW10g98_3FzX-YW5NwKRF1M6PYRW3t729V78VMJnW3nhyc45sSB5dW2BgnPy4130JQW4c07c18_cLvNW8z7BXR7wXKZZW2ZsSvy7zr96QW7FWPbt4Smn95W8kq2nV13MNnRW99s3Cz4sRF80W7-swxT8_3wFxW4nXxp61Ghb75W8f3LBF4JkZrzW2D2BB21RcqXTW31TB5h6BS5tNW7lZwCQ41x30wW4D6pH96B7CD0W6RydL96w7SSsMHS55xgd_RlW3RvwZr5czjTVf586Spg04">this form</a>.
   </li>
   <li>
-    <strong>Important Contacts:</strong><br>
-    <u>Learning Coaches:</u><br>
+    <strong>Important Contacts:</strong><br><br>
+    <strong>Learning Coaches:</strong><br>
     <% @learning_coaches.each do |lc| %>
-      <%= lc.full_name %>: <%= lc.email %><br>
+      • <%= lc.full_name %>: <%= lc.email %><br>
     <% end %>
     <br>
-    <u>Regional Manager:</u><br>
+    <strong>Regional Manager:</strong><br>
     <% if @regional_manager %>
       <%= @regional_manager.full_name %>: <%= @regional_manager.email %>
     <% else %>
       N/A
     <% end %>
-  </li>
+  </li><br>
   <li>
     <strong>Invitation for Parents WhatsApp Group</strong><br>
     At BGA, each Hub has a Parent WhatsApp group to facilitate communication and create a bigger sense of community among the BGA Family. Therefore, in case you wish to be a part of it, you can click the link on your mobile phone and join the group!<br><br>

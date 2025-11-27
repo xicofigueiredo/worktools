@@ -182,7 +182,7 @@ class MoodleTimeline < ApplicationRecord
       course_id = self.moodle_id
 
       # Create topics for admin user worktools = 2617; Xico = 2245
-      user_id = 2245
+      user_id = 2617
 
       completed_activities = MoodleApiService.new.get_all_course_activities(course_id, user_id)
 
@@ -224,30 +224,30 @@ class MoodleTimeline < ApplicationRecord
 
         MoodleTopic.create!(
           moodle_timeline_id: self.id,
-          time: activity[:ect].nil? ? 0 : activity[:ect].to_s.gsub(',', '.').to_f,  # Preserve 0, 0.1, 1, etc. (handles comma as decimal separator)
+          time: activity[:ect],  # Preserve 0, 0.1, 1, etc. (handles comma as decimal separator)
           name: activity[:name],
           unit: activity[:section_name],  # Store section name as unit
           order: index + 1,  # Use index to maintain order
-          grade: activity[:grade].present? ? activity[:grade].round(2) : nil,  # Grade is already a number from the API
-          done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),  # Mark as done if completed
-          completion_date: begin
-            if activity[:evaluation_date].present?
-              DateTime.parse(activity[:evaluation_date])
-            else
-              nil
-            end
-          rescue Date::Error
-            puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
-            nil
-          end,
+          # grade: activity[:grade].present? ? activity[:grade].round(2) : nil,  # Grade is already a number from the API
+          # done: (activity[:completiondata].to_i == 1 || activity[:completiondata].to_i == 2),  # Mark as done if completed
+          # completion_date: begin
+          #   if activity[:evaluation_date].present?
+          #     DateTime.parse(activity[:evaluation_date])
+          #   else
+          #     nil
+          #   end
+          # rescue Date::Error
+          #   puts "Warning: Invalid date format for activity #{activity[:name]}: #{activity[:evaluation_date]}"
+          #   nil
+          # end,
           moodle_id: activity[:id],
           deadline: Date.today + 1.year,  # Set a default deadline
           percentage: index * 0.001,
-          mock50: activity[:mock50].to_i == 1,
-          mock100: activity[:mock100].to_i == 1,
-          number_attempts: activity[:number_attempts],
-          submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
-          evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
+          # mock50: activity[:mock50].to_i == 1,
+          # mock100: activity[:mock100].to_i == 1,
+          # number_attempts: activity[:number_attempts],
+          # submission_date: Time.at(activity[:submission_date].to_i).strftime("%d/%m/%Y %H:%M"),
+          # evaluation_date: Time.at(activity[:evaluation_date].to_i).strftime("%d/%m/%Y %H:%M"),
           as1: as1,
           as2: as2
         )
@@ -291,7 +291,7 @@ class MoodleTimeline < ApplicationRecord
         # Prefer id match, but fallback by name and backfill moodle_id like sync
         moodle_topic = existing_topics[activity[:id]]
         if moodle_topic.nil?
-          moodle_topic = self.moodle_topics.where(hidden: false).find_by(moodle_id: activity[:id])
+          moodle_topic = self.moodle_topics.where(hidden: false).find_by(name: activity[:name], unit: activity[:section_name])
           if moodle_topic && activity[:id].present? && moodle_topic.moodle_id.nil?
             moodle_topic.update_column(:moodle_id, activity[:id])
             existing_topics[activity[:id]] = moodle_topic
@@ -302,6 +302,7 @@ class MoodleTimeline < ApplicationRecord
         # Check for mock result changes before updating
         mock50_changed = moodle_topic.mock50 != (activity[:mock50].to_i == 1)
         mock100_changed = moodle_topic.mock100 != (activity[:mock100].to_i == 1)
+
 
         # Only update the done flag to avoid touching other fields
         update_attrs = {

@@ -80,7 +80,19 @@ class UserMailer < Devise::Mailer
   def admissions_notification(user, message, subject)
     @user = user
     @message = message
+<<<<<<< HEAD
     mail(to: @user.email, from: ApplicationMailer::FROM_WORKTOOLS, subject: subject)
+=======
+    mail(to: @user.email, from: 'worktools@bravegenerationacademy.com', subject: subject)
+    #mail(to: "guilherme@bravegenerationacademy.com", from: 'worktools@bravegenerationacademy.com', subject: subject)
+  end
+
+  # TO DO: What is the template? How does it work for up?
+  def renewal_fee_email(learner_info)
+    to = learner_info.learner_finances.invoice_email
+    message = "Renewal Fee"
+    mail(to: to, from: 'worktools@bravegenerationacademy.com', subject: "Renewal Fee")
+>>>>>>> dd8169e08b90567f80b8f5d8065684a18f7e1940
   end
 
   def onboarding_email(learner_info)
@@ -101,22 +113,23 @@ class UserMailer < Devise::Mailer
     # --- Detect UP program ---
     is_up = curriculum_raw.include?('up')
     up_program = if curriculum_raw.include?('business')
-                  'business'
-                elsif curriculum_raw.include?('computing')
-                  'computing'
-                elsif curriculum_raw.include?('sports')
-                  'sports'
-                end
+                   'business'
+                 elsif curriculum_raw.include?('computing')
+                   'computing'
+                 elsif curriculum_raw.include?('sports')
+                   'sports'
+                 end
 
-    # --- Delivery mode: online = exact, hybrid = everything else ---
-    up_mode = hub_type_raw == 'online' ? 'online' : 'hybrid'
+    # --- Standardize variables for template naming ---
+    hub_type   = hub_type_raw.gsub(' ', '_')
 
     # --- Build template name ---
     if is_up && up_program
-      template = "onboarded_up_#{up_program}_#{up_mode}"
+      # UP programs now use the standard hub_type in the name (e.g., onboarded_up_business_online)
+      template = "onboarded_up_#{up_program}_#{hub_type}"
     else
+      # Standard curriculum naming (e.g., onboarded_portuguese_independent_hybrid)
       curriculum = curriculum_raw.gsub(' ', '_')
-      hub_type   = hub_type_raw.gsub(' ', '_')
       template   = "onboarded_#{curriculum}_#{hub_type}"
     end
 
@@ -129,19 +142,28 @@ class UserMailer < Devise::Mailer
       return
     end
 
+    @platform_details = [
+        "Username: #{@learner.platform_username}",
+        "Password: #{@learner.platform_password}"
+      ].join("<br>").html_safe
+
     # --- Recipient & subject ---
     to      = @parent_emails
     subject = "Onboarding Day - #{@learner.full_name}"
+
+    # --- Attachments for everyone ---
     attachments['Calendar.pdf'] = File.read(Rails.root.join('public', 'documents', 'calendar_2025.pdf'))
+    credentials = @learner.learner_documents.find_by(document_type: 'credentials')
+    if credentials&.file&.attached?
+      attachments["Credentials_Document.pdf"] = {
+        mime_type: credentials.file.blob.content_type,
+        content: credentials.file.download
+      }
+    end
 
     if template.start_with?('onboarded_up_')
       to      = @learner_email
       subject = "Welcome to the UP Program!"
-
-      @platform_details = [
-        "Username: #{@learner.platform_username}",
-        "Password: #{@learner.platform_password}"
-      ].join("<br>").html_safe
 
       # --- Assign mentors based on program and level ---
       case up_program
@@ -162,14 +184,6 @@ class UserMailer < Devise::Mailer
         @mentor_email = "aubrey.stout@etacollege.com"
       end
 
-      credentials = @learner.learner_documents.find_by(document_type: 'credentials')
-      if credentials&.file&.attached?
-        attachments["Credentials_Document.pdf"] = {
-          mime_type: credentials.file.blob.content_type,
-          content:   credentials.file.download
-        }
-      end
-
     else
       # Non-UP specific documents
 
@@ -185,11 +199,17 @@ class UserMailer < Devise::Mailer
       attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
     end
 
-    # --- Send email ---
+    # --- Send email --- TO DO: SWAP TO
     mail(
+<<<<<<< HEAD
       to: to,
       from:          ApplicationMailer::FROM_CONTACT,
       subject:       subject,
+=======
+      to: to, #"guilherme@bravegenerationacademy.com"
+      from:         'worktools@bravegenerationacademy.com',
+      subject:      subject,
+>>>>>>> dd8169e08b90567f80b8f5d8065684a18f7e1940
       template_name: template_path
     )
   end

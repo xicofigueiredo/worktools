@@ -46,6 +46,10 @@ class User < ApplicationRecord
   has_many :confirmations, foreign_key: 'approver_id'
 
   has_one :learner_info, dependent: :destroy
+  has_one :collaborator_info, dependent: :destroy
+  delegate :can_teach_pt_plus, :can_teach_pt_plus?,
+           :can_teach_remote, :can_teach_remote?,
+           to: :collaborator_info, allow_nil: true
 
   enum role: {
     admin: 'Admin',
@@ -70,6 +74,7 @@ class User < ApplicationRecord
   before_save :ensure_deactivated_if_graduated
 
   after_create :associate_with_hubs, :create_learner_flag
+  # after_create :create_collaborator_info_if_needed
   # after_commit :send_welcome_email, on: :create
   # after_commit :post_create_actions, on: :create
 
@@ -157,6 +162,12 @@ class User < ApplicationRecord
     STAFF_ROLES.include?(role.to_sym)
   end
 
+  def online_learners
+    User.joins(:learner_info)
+        .merge(LearnerInfo.active)
+        .where(learner_infos: { learning_coach_id: id, programme: "Online" })
+  end
+
   private
 
   def associate_with_hubs
@@ -194,5 +205,12 @@ class User < ApplicationRecord
       self.deactivate = true
     end
   end
+
+  # INTERESSANTE FAZER COM SE O ROLE ESTIVER DENTRO DOS ROLES DE STAFF
+  # def create_collaborator_info_if_needed
+  #   if role == 'lc'
+  #     create_collaborator_info
+  #   end
+  # end
 
 end

@@ -68,16 +68,12 @@ export default class extends Controller {
     const hubSelect = this.form.querySelector('select[name="learner_info[hub_id]"]')
     const curriculumSelect = this.form.querySelector('select[name="learner_info[curriculum_course_option]"]')
     const gradeSelect = this.form.querySelector('select[name="learner_info[grade_year]"]')
-    const lcHidden = this.form.querySelector('input[name="learner_info[learning_coach_id]"]')
-    const lcDisplayInput = this.form.querySelector('#learning-coach-display')
-    const changeBtn = this.form.querySelector('#change-coach-btn')
 
     // Get values directly from elements
     const programme = programmeSelect ? programmeSelect.value : ''
     const hubId = hubSelect ? hubSelect.value : ''
     const curriculum = curriculumSelect ? curriculumSelect.value : ''
     const gradeYear = gradeSelect ? gradeSelect.value : ''
-    const learningCoachId = lcHidden ? lcHidden.value : ''
 
     // Clear previous errors
     this.clearAllErrors()
@@ -102,13 +98,6 @@ export default class extends Controller {
       errors.push({ field: gradeSelect, message: 'Please select a Grade/Year.' })
     }
 
-    // Validate learning coach (only if programme is Online and editable)
-    if (programme === 'Online') {
-      if (changeBtn && !changeBtn.disabled && !learningCoachId) {
-        errors.push({ field: lcDisplayInput, message: 'Please assign a Learning Coach.', isLearningCoach: true })
-      }
-    }
-
     // Display errors if any
     if (errors.length > 0) {
       errors.forEach(error => {
@@ -130,48 +119,15 @@ export default class extends Controller {
   showError(element, message, isLearningCoach = false) {
     if (!element) return
 
-    // For learning coach field, we need special handling since it's an input group
-    if (isLearningCoach) {
-      // The structure is: div.mb-3.col-md-6 > label + div.input-group > input + button
-      // We need to find the parent div.mb-3 to append the error message
-      const lcFieldContainer = element.closest('.mb-3')
-      if (!lcFieldContainer) {
-        console.error('Could not find Learning Coach field container')
-        return
-      }
-
-      // Remove any existing error message first
-      const existingError = lcFieldContainer.querySelector('.invalid-feedback')
-      if (existingError) existingError.remove()
-
-      // Create and append new error message
-      const errorMsg = document.createElement('div')
+    let errorMsg = element.parentElement.querySelector('.invalid-feedback')
+    if (!errorMsg) {
+      errorMsg = document.createElement('div')
       errorMsg.className = 'invalid-feedback'
       errorMsg.style.display = 'block'
-      errorMsg.textContent = message
-      lcFieldContainer.appendChild(errorMsg)
-
-      // Add invalid class to the input
-      element.classList.add('is-invalid')
-
-      // Also highlight the button
-      const inputGroup = element.parentElement
-      const button = inputGroup.querySelector('button')
-      if (button) {
-        button.classList.add('btn-danger')
-        button.classList.remove('btn-primary')
-      }
-    } else {
-      let errorMsg = element.parentElement.querySelector('.invalid-feedback')
-      if (!errorMsg) {
-        errorMsg = document.createElement('div')
-        errorMsg.className = 'invalid-feedback'
-        errorMsg.style.display = 'block'
-        element.parentElement.appendChild(errorMsg)
-      }
-      errorMsg.textContent = message
-      element.classList.add('is-invalid')
+      element.parentElement.appendChild(errorMsg)
     }
+    errorMsg.textContent = message
+    element.classList.add('is-invalid')
   }
 
   clearError(element) {
@@ -179,26 +135,8 @@ export default class extends Controller {
 
     element.classList.remove('is-invalid')
 
-    // Check if this is the learning coach display input by checking if parent is input-group
-    const inputGroup = element.parentElement
-    if (inputGroup && inputGroup.classList.contains('input-group')) {
-      // Find the container div.mb-3
-      const lcFieldContainer = element.closest('.mb-3')
-      if (lcFieldContainer) {
-        const errorMsg = lcFieldContainer.querySelector('.invalid-feedback')
-        if (errorMsg) errorMsg.remove()
-      }
-
-      // Reset button styling
-      const button = inputGroup.querySelector('button')
-      if (button && button.classList.contains('btn-danger')) {
-        button.classList.remove('btn-danger')
-        button.classList.add('btn-primary')
-      }
-    } else {
-      const errorMsg = element.parentElement.querySelector('.invalid-feedback')
-      if (errorMsg) errorMsg.remove()
-    }
+    const errorMsg = element.parentElement.querySelector('.invalid-feedback')
+    if (errorMsg) errorMsg.remove()
   }
 
   clearAllErrors() {
@@ -379,22 +317,30 @@ export default class extends Controller {
     this.modalDiscountAfInput = discountAfInput
     this.modalDiscountRfInput = discountRfInput
 
+    // Store the response for old values
+    this.lastPricingResponse = data;
+
     // Calculate initial billables
     this.calculateBillables()
 
     // Add event listeners for confirm and cancel buttons
-    const confirmBtn = modal.querySelector('#pricing-confirm-btn')
-    const cancelBtn = modal.querySelector('#pricing-cancel-btn')
+    const applyNewBtn = document.querySelector('#pricing-apply-new-btn');
+    const keepPreviousBtn = document.querySelector('#pricing-keep-previous-btn');
+    const cancelBtn = document.querySelector('#pricing-cancel-btn');
 
     // Remove any existing listeners to prevent duplicates
-    confirmBtn.removeEventListener('click', this.boundConfirmChanges)
-    cancelBtn.removeEventListener('click', this.boundCancelChanges)
+    applyNewBtn.removeEventListener('click', this.boundApplyNew);
+    keepPreviousBtn.removeEventListener('click', this.boundKeepPrevious);
+    cancelBtn.removeEventListener('click', this.boundCancelChanges);
 
     // Bind methods to preserve 'this' context
-    this.boundConfirmChanges = this.confirmChanges.bind(this)
-    this.boundCancelChanges = this.cancelChanges.bind(this)
-    confirmBtn.addEventListener('click', this.boundConfirmChanges)
-    cancelBtn.addEventListener('click', this.boundCancelChanges)
+    this.boundApplyNew = this.confirmChanges.bind(this, false);  // false = apply new
+    this.boundKeepPrevious = this.confirmChanges.bind(this, true);  // true = keep previous
+    this.boundCancelChanges = this.cancelChanges.bind(this);
+
+    applyNewBtn.addEventListener('click', this.boundApplyNew);
+    keepPreviousBtn.addEventListener('click', this.boundKeepPrevious);
+    cancelBtn.addEventListener('click', this.boundCancelChanges);
 
     // Show modal
     this.bootstrapModal = new bootstrap.Modal(modal)
@@ -402,9 +348,10 @@ export default class extends Controller {
 
     // Clean up listeners when modal is hidden
     modal.addEventListener('hidden.bs.modal', () => {
-      confirmBtn.removeEventListener('click', this.boundConfirmChanges)
-      cancelBtn.removeEventListener('click', this.boundCancelChanges)
-    }, { once: true })
+      applyNewBtn.removeEventListener('click', this.boundApplyNew);
+      keepPreviousBtn.removeEventListener('click', this.boundKeepPrevious);
+      cancelBtn.removeEventListener('click', this.boundCancelChanges);
+    }, { once: true });
   }
 
   calculateBillables() {
@@ -431,46 +378,48 @@ export default class extends Controller {
     document.getElementById('billable-rf').textContent = this.formatCurrency(billableRf, this.newCurrencySymbol);
   }
 
-  confirmChanges() {
-    console.log('Confirming changes...')
+  confirmChanges(isKeepPrevious) {
+    console.log(`Confirming changes - Keep previous: ${isKeepPrevious}`);
 
-    // Get the edited values from the modal
-    const monthlyFee = this.newMonthlyFee;
-    const admissionFee = this.newAdmissionFee;
-    const renewalFee = this.newRenewalFee;
-    const discountMf = this.modalDiscountMfInput.value;
-    const scholarship = this.modalScholarshipInput.value;
-    const discountAf = this.modalDiscountAfInput.value;
-    const discountRf = this.modalDiscountRfInput.value;
+    if (!isKeepPrevious) {
+      const monthlyFee = this.newMonthlyFee;
+      const admissionFee = this.newAdmissionFee;
+      const renewalFee = this.newRenewalFee;
+      const discountMf = this.modalDiscountMfInput.value;
+      const scholarship = this.modalScholarshipInput.value;
+      const discountAf = this.modalDiscountAfInput.value;
+      const discountRf = this.modalDiscountRfInput.value;
 
-    // Calculate billable values
-    const billableMf = monthlyFee * (1 - (parseFloat(discountMf) + parseFloat(scholarship)) / 100);
-    const billableAf = admissionFee * (1 - parseFloat(discountAf) / 100);
-    const billableRf = renewalFee * (1 - parseFloat(discountRf) / 100);
+      const billableMf = monthlyFee * (1 - (parseFloat(discountMf) + parseFloat(scholarship)) / 100);
+      const billableAf = admissionFee * (1 - parseFloat(discountAf) / 100);
+      const billableRf = renewalFee * (1 - parseFloat(discountRf) / 100);
 
-    // Update form data with confirmed values
-    this.pendingFormData.set('learner_info[learner_finance_attributes][monthly_fee]', monthlyFee)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][admission_fee]', admissionFee)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][renewal_fee]', renewalFee)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][discount_mf]', discountMf)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][scholarship]', scholarship)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][discount_af]', discountAf)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][discount_rf]', discountRf)
-    this.pendingFormData.set('learner_info[learner_finance_attributes][billable_mf]', billableMf.toFixed(2))
-    this.pendingFormData.set('learner_info[learner_finance_attributes][billable_af]', billableAf.toFixed(2))
-    this.pendingFormData.set('learner_info[learner_finance_attributes][billable_rf]', billableRf.toFixed(2))
-
-    // Get the finance record ID if it exists
-    const financeId = document.querySelector('input[name="learner_info[learner_finance_attributes][id]"]')?.value
-    if (financeId) {
-      this.pendingFormData.set('learner_info[learner_finance_attributes][id]', financeId)
+      this.pendingFormData.set('learner_info[learner_finance_attributes][monthly_fee]', monthlyFee);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][admission_fee]', admissionFee);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][renewal_fee]', renewalFee);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][discount_mf]', discountMf);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][scholarship]', scholarship);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][discount_af]', discountAf);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][discount_rf]', discountRf);
+      this.pendingFormData.set('learner_info[learner_finance_attributes][billable_mf]', billableMf.toFixed(2));
+      this.pendingFormData.set('learner_info[learner_finance_attributes][billable_af]', billableAf.toFixed(2));
+      this.pendingFormData.set('learner_info[learner_finance_attributes][billable_rf]', billableRf.toFixed(2));
+    } else {
+      // Keep previous pricing: Do NOT set any finance fields (Rails will not overwrite existing records)
+      console.log('Keeping previous finances – no changes to learner_finance_attributes');
     }
 
-    // Close the modal before submitting
-    this.bootstrapModal.hide()
+    // Always include the finance ID if it exists (to update the existing record without changing fees)
+    const financeId = document.querySelector('input[name="learner_info[learner_finance_attributes][id]"]')?.value;
+    if (financeId) {
+      this.pendingFormData.set('learner_info[learner_finance_attributes][id]', financeId);
+    }
 
-    // Submit form with updated data
-    this.submitFormWithData(this.pendingFormData)
+    // Close the modal
+    this.bootstrapModal.hide();
+
+    // Submit the form with the (un)modified data
+    this.submitFormWithData(this.pendingFormData);
   }
 
   cancelChanges() {

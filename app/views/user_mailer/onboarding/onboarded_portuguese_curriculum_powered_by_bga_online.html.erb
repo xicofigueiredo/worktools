@@ -1,0 +1,64 @@
+<p>Olá!</p>
+
+<p>Estamos muito entusiasmados por ter o/a <%= @learner.full_name.split.first %> connosco e felizes por fazer parte do seu percurso de aprendizagem!</p>
+
+<p>Em baixo encontram um resumo das informações importantes relativas ao acesso de à nossa comunidade, bem como ao acesso alargado à plataforma de acordo com o seu nível académico. Por favor, leiam atentamente e não hesitem em contactar-nos caso tenham alguma questão.</p>
+
+<ol>
+  <li>
+    <strong>Primeiros Passos – Vídeo Tutorial:</strong><br><br>
+    Para vos ajudar a começar, preparámos um breve vídeo-guia que vos orienta nos primeiros passos para iniciar sessão na vossa conta Microsoft e aceder ao vosso Hub virtual no Teams. Este vídeo fornece toda a informação necessária para navegar na nossa plataforma de forma simples e iniciar esta aventura de aprendizagem com confiança.<br><br>
+    Basta clicar no link abaixo para ver o vídeo:<br>
+    <a href="https://www.youtube.com/watch?v=BjU8BwvXrm8&feature=youtu.be">https://www.youtube.com/watch?v=BjU8BwvXrm8&feature=youtu.be</a><br><br>
+    Depois de visualizarem o vídeo, estarão prontos para explorar o vosso Hub virtual, onde encontrarão tudo o que precisam para se ligarem aos colegas, interagirem com os vossos Learning Coaches e acederem aos materiais do curso. Criámos um ambiente acolhedor e de apoio para que possam desenvolver-se tanto a nível académico como pessoal.
+  </li>
+  <br>
+  <li>
+    <strong>Email BGA:</strong><br><br>
+    Email: <strong><%= @learner.institutional_email %></strong><br>
+    Palavra-passe: Encontra no documento anexado<br><br>
+    Por favor, aguardem pelo primeiro dia para configurar a conta juntamente com o Learning Coach. Pode encontrar o documento de apoio para procederes à autenticação da conta aqui:<br>
+    Tutorial da Aplicação Microsoft Authenticator
+  </li>
+  <br>
+  <li>
+    <strong>Acesso à Plataforma:</strong><br><br>
+    Abaixo encontram as credenciais para acesso à nossa plataforma. Pedimos que aguardem pelo Learning Coach para aceder pela primeira vez.<br><br>
+    <p><%= @platform_details %></p>
+  </li>
+  <br>
+  <li>
+    <strong>Contactos Importantes:</strong><br>
+    <u>Learning Coaches:</u><br>
+    <% @learning_coaches.each do |lc| %>
+      <%= lc.full_name %>: <%= lc.email %><br>
+    <% end %>
+    <br>
+    <u>Regional Manager:</u><br>
+    <% if @regional_manager %>
+      <%= @regional_manager.full_name %>: <%= @regional_manager.email %>
+    <% else %>
+      N/A
+    <% end %>
+    <p>Após aproximadamente um mês, os Learning Coaches entrarão em contacto para marcar uma reunião individual. No final de cada trimestre/sprint, receberão por email um relatório personalizado sobre o progresso e objetivos do aluno.</p>
+  </li>
+  <br>
+  <li>
+    <strong>Convite para o Grupo de WhatsApp dos Pais</strong><br><br>
+    Na BGA, cada Hub tem um grupo de WhatsApp para Pais, de forma a facilitar a comunicação e criar um maior sentimento de comunidade entre a Família BGA. Assim, caso pretendam fazer parte, basta clicar no link no vosso telemóvel e juntar-se ao grupo!<br><br>
+    <strong>Link do Grupo de WhatsApp dos Pais BGA Remote:</strong> <a href="<%= @hub.parents_whatsapp_group %>"><%= @hub.parents_whatsapp_group %></a>
+  </li>
+  <br>
+  <li>
+    <strong>Registo Adicional em Plataforma:</strong><br><br>
+    UNIFROG: A Unifrog é uma plataforma online que ajuda os alunos a pesquisar e a estabelecer ligação com universidades de todo o mundo, bem como a encontrar oportunidades de carreira através de MOOCs, preparação de CV, carta de motivação, cartas de recomendação e muito mais. É, de facto, uma plataforma completa para encontrar e candidatar-se a qualquer oportunidade lecionada em inglês, em qualquer parte do mundo. A Unifrog inclui aprendizagens e instituições de Further Education no Reino Unido, bem como universidades nos EUA e no Canadá, e cursos lecionados em inglês na Europa, Ásia e Australásia. Na prática, apoia os alunos no planeamento dos seus percursos profissionais, na procura de oportunidades e em todas as etapas do processo de candidatura ao ensino superior. O registo deve ser feito através do preenchimento <a href="https://d114wx04.na1.hs-sales-engage.com/Ctc/ZU+23284/d114wX04/JkM2-6qcW6N1vHY6lZ3q6W43C-hK4yqstsW10g98_3FzX-YW5NwKRF1M6PYRW3t729V78VMJnW3nhyc45sSB5dW2BgnPy4130JQW4c07c18_cLvNW8z7BXR7wXKZZW2ZsSvy7zr96QW7FWPbt4Smn95W8kq2nV13MNnRW99s3Cz4sRF80W7-swxT8_3wFxW4nXxp61Ghb75W8f3LBF4JkZrzW2D2BB21RcqXTW31TB5h6BS5tNW7lZwCQ41x30wW4D6pH96B7CD0W6RydL96w7SSsMHS55xgd_RlW3RvwZr5czjTVf586Spg04">deste formulário</a>.
+  </li>
+</ol>
+
+<p>--</p>
+
+<p>Bem-vindo a esta nova aventura!</p>
+
+<p>Com os melhores cumprimentos,</p>
+
+<p>Equipa de Admissões BGA | (+351) 913 578 362</p>
