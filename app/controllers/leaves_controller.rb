@@ -423,35 +423,90 @@ class LeavesController < ApplicationController
     redirect_to leaves_path(active_tab: 'manager'), alert: "Could not reject confirmation: #{e.record.errors.full_messages.to_sentence}"
   end
 
-  def update_entitlement
-    user_id = params[:user_id]
-    year = params[:year].to_i
-    annual_total = [params[:annual_total].to_i, 0].max
-    new_holidays_left = [params[:new_holidays_left].to_i, 0].max
+  def create_entitlement
+    params = entitlement_params  # Use strong params
+    user = User.find_by(id: params[:user_id])
 
-    user = User.find(user_id)
-
-    # Authorize: check if user is in managed departments' subtree
-    authorized = current_user.managed_departments.any? do |d|
-      user.departments.any? { |ud| d.subtree_ids.include?(ud.id) }
+    unless user
+      render json: { error: 'User not found' }, status: :not_found
+      return
     end
 
-    unless authorized
-      render json: { error: 'Unauthorized' }, status: :unauthorized
+    result = StaffLeaveEntitlement.create_for_user(
+      user: user,
+      year: params[:year].to_i,
+      annual_holidays: [params[:annual_holidays].to_i, 0].max,
+      holidays_left: [params[:holidays_left].to_i, 0].max,
+      manager: current_user
+    )
+
+    if result[:success]
+      render json: { success: true }
+    else
+      render json: { error: result[:error] }, status: result[:status]
+    end
+  rescue => e
+    Rails.logger.error "Create entitlement error: #{e.message}"
+    render json: { error: 'Failed to create entitlement' }, status: :internal_server_error
+  end
+
+  def update_entitlement
+    params = entitlement_params  # Use strong params
+    user = User.find_by(id: params[:user_id])
+    year = params[:year].to_i
+
+    unless user
+      render json: { error: 'User not found' }, status: :not_found
       return
     end
 
     entitlement = StaffLeaveEntitlement.find_or_initialize_by(user: user, year: year)
-    entitlement.annual_holidays = annual_total
-    entitlement.holidays_left = new_holidays_left
-    if entitlement.save
+
+    if entitlement.new_record?
+      result = StaffLeaveEntitlement.create_for_user(
+        user: user,
+        year: year,
+        annual_holidays: [params[:annual_total].to_i, 0].max,
+        holidays_left: [params[:new_holidays_left].to_i, 0].max,
+        manager: current_user
+      )
+    else
+      result = entitlement.update_for_manager(
+        annual_holidays: [params[:annual_total].to_i, 0].max,
+        holidays_left: [params[:new_holidays_left].to_i, 0].max,
+        manager: current_user
+      )
+    end
+
+    if result[:success]
       render json: { success: true }
     else
-      render json: { error: entitlement.errors.full_messages.to_sentence }, status: :unprocessable_entity
+      render json: { error: result[:error] }, status: result[:status]
     end
+  rescue => e
+    Rails.logger.error "Update entitlement error: #{e.message}"
+    render json: { error: 'Failed to update entitlement' }, status: :internal_server_error
+  end
+
+  def users_without_entitlement
+    year = params[:year].presence&.to_i || Date.current.year  # Safety: Default to current year if missing
+    managed_ids = current_user.managed_departments.flat_map(&:subtree_ids).uniq
+
+    users = StaffLeaveEntitlement.users_without_entitlement(managed_ids, year)
+
+    render json: {
+      users: users.map { |u| { id: u.id, name: u.full_name } }
+    }
+  rescue => e
+    Rails.logger.error "Error fetching users without entitlement: #{e.message}"
+    render json: { error: 'Failed to load users' }, status: :internal_server_error
   end
 
   private
+
+  def entitlement_params
+    params.permit(:user_id, :year, :annual_holidays, :holidays_left, :annual_total, :new_holidays_left)
+  end
 
   def staff_leave_params
     params.require(:staff_leave).permit(:leave_type, :start_date, :end_date, :exception_requested, :exception_reason, :notes, :exception_errors, :days_from_previous_year)

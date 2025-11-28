@@ -100,20 +100,22 @@ Rails.application.routes.draw do
     resources :pricing_tiers, only: [:index, :update]
 
     resources :leaves, only: [:index, :new, :create, :show] do
-      collection do
-        post :preview
-        post :update_entitlement
-      end
-
-      member do
-        post :cancel
-        delete 'documents/:doc_id', to: 'leaves#delete_document', as: 'delete_document'
-        get 'documents/:doc_id/download', to: 'leaves#download_document', as: 'download_document'
-      end
+    collection do
+      post :preview
+      post :update_entitlement
+      post :create_entitlement
+      get :users_without_entitlement
     end
 
-    post 'leaves/approve_confirmation/:id', to: 'leaves#approve_confirmation', as: 'approve_confirmation'
-    post 'leaves/reject_confirmation/:id', to: 'leaves#reject_confirmation', as: 'reject_confirmation'
+    member do
+      post :cancel
+      delete 'documents/:doc_id', to: 'leaves#delete_document', as: 'delete_document'
+      get 'documents/:doc_id/download', to: 'leaves#download_document', as: 'download_document'
+    end
+  end
+
+  post 'leaves/approve_confirmation/:id', to: 'leaves#approve_confirmation', as: 'approve_confirmation'
+  post 'leaves/reject_confirmation/:id', to: 'leaves#reject_confirmation', as: 'reject_confirmation'
 
     resources :holidays, except: [:show, :index]
 

@@ -2,29 +2,39 @@
 <% show_actions = current_user.email == 'humanresources@bravegenerationacademy.com' %>
 
 <div class="card mb-4">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Department Entitlements — <%= year_now %></h5>
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h5 class="mb-0">Department Entitlements — <%= year_now %></h5>
 
-    <div class="d-flex gap-2 align-items-center">
-      <label class="mb-0 me-2 small text-muted">Filter</label>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <div class="d-flex gap-2 align-items-center">
+          <label class="mb-0 small text-muted">Filter</label>
+          <select id="client-dept-filter" class="form-select form-select-sm" style="width: auto; min-width: 150px;">
+            <option value="all">All departments</option>
+            <% @managed_departments.to_a.each do |d| %>
+              <option value="<%= d.id %>"><%= d.name %></option>
+            <% end %>
+          </select>
+        </div>
 
-      <!-- Client-side filter select -->
-      <select id="client-dept-filter" class="form-select form-select-sm">
-        <option value="all">All departments</option>
-        <% @managed_departments.to_a.each do |d| %>
-          <option value="<%= d.id %>"><%= d.name %></option>
-        <% end %>
-      </select>
+        <div class="btn-group" role="group" aria-label="Actions">
+          <% if show_actions %>
+            <button type="button"
+                    class="btn btn-sm btn-success me-2"
+                    id="create-entitlement-btn"
+                    title="Create new entitlement">
+              <i class="fa-solid fa-plus"></i> New
+            </button>
+          <% end %>
 
-      <!-- Excel-style export button (matches modal button styling) -->
-      <!-- Uses FontAwesome icon if available; otherwise shows "Export" text -->
-      <button id="export-xlsx-btn"
-              type="button"
-              class="btn btn-sm btn-outline-success ms-2"
-              title="Export visible rows to Excel"
-              aria-label="Export visible rows to Excel">
-        <i class="fa-solid fa-file-excel" aria-hidden="true"></i>
-      </button>
+          <button id="export-xlsx-btn"
+                  type="button"
+                  class="btn btn-sm btn-outline-success"
+                  title="Export visible rows to Excel">
+            <i class="fa-solid fa-file-excel"></i> Export
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -96,6 +106,53 @@
   </div>
 </div>
 
+<!-- Create New Entitlement Modal -->
+<div class="modal fade" id="create-entitlement-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Entitlement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="create-entitlement-form">
+          <input type="hidden" name="year" id="create-year" value="<%= year_now %>">
+
+          <div class="mb-3">
+            <label for="create-user-select" class="form-label">Select User <span class="text-danger">*</span></label>
+            <select class="form-select" id="create-user-select" name="user_id" required>
+              <option value="">Loading users...</option>
+            </select>
+            <small class="text-muted">Only staff members without an entitlement for <%= year_now %> are shown.</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="create-start-date" class="form-label">Start Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="create-start-date" name="start_date" required>
+            <small class="text-muted">The date when this person starts working (used to calculate pro-rated holidays).</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="create-annual-holidays" class="form-label">Annual Holidays <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="create-annual-holidays" name="annual_holidays" min="0" value="25" required>
+            <small class="text-muted">This will be auto-calculated based on start date, but you can adjust it.</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="create-holidays-left" class="form-label">Holidays Left <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="create-holidays-left" name="holidays_left" min="0" value="25" required>
+            <small class="text-muted">Usually same as annual holidays for new entitlements.</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="save-create-entitlement">Create Entitlement</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Edit Entitlement Modal -->
 <div class="modal fade" id="edit-entitlement-modal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
@@ -128,14 +185,16 @@
   </div>
 </div>
 
-<!-- Inline scripts: filter + client-side XLSX export (SheetJS) -->
+<!-- Inline scripts: filter + client-side XLSX export (SheetJS) + entitlement management -->
 <script>
   document.addEventListener('turbo:load', function () {
     var clientFilter = document.getElementById('client-dept-filter');
     var exportBtn = document.getElementById('export-xlsx-btn');
+    var createBtn = document.getElementById('create-entitlement-btn');
+
     if (!clientFilter) return;
 
-    // restore saved selection (optional)
+    // Restore saved selection (optional)
     try {
       var saved = localStorage.getItem('deptFilter');
       if (saved) clientFilter.value = saved;
@@ -186,7 +245,6 @@
       var visibleData = [];
 
       tbodyRows.forEach(function (row) {
-        // only export data rows that have data-dept-id and are visible
         if (!row.dataset.deptId) return;
         var style = window.getComputedStyle(row);
         if (style.display === 'none') return;
@@ -194,7 +252,6 @@
         var cols = Array.from(row.querySelectorAll('td'));
         if (cols.length === 0) return;
 
-        // Extract text content and trim, exclude actions column
         var cells = cols.slice(0, 6).map(function (td) {
           return (td.innerText || '').trim();
         });
@@ -208,11 +265,9 @@
 
       var aoa = [header].concat(visibleData);
 
-      // Use SheetJS to create workbook
       try {
         var ws = XLSX.utils.aoa_to_sheet(aoa);
 
-        // Optional: set column widths (characters)
         ws['!cols'] = [
           { wch: 25 }, // Department
           { wch: 30 }, // Name
@@ -246,6 +301,130 @@
     if (exportBtn) {
       exportBtn.addEventListener('click', function () {
         ensureXLSX(function () { exportVisibleRowsXLSX(); });
+      });
+    }
+
+    // Create Entitlement Modal Logic
+    if (createBtn) {
+      createBtn.addEventListener('click', function () {
+        var modal = new bootstrap.Modal(document.getElementById('create-entitlement-modal'));
+        var userSelect = document.getElementById('create-user-select');
+        var yearNow = <%= year_now %>;
+
+        // Reset form
+        document.getElementById('create-entitlement-form').reset();
+        document.getElementById('create-year').value = yearNow;
+
+        // Load users without entitlement
+        userSelect.innerHTML = '<option value="">Loading users...</option>';
+        userSelect.disabled = true;
+
+        fetch('/leaves/users_without_entitlement?year=' + yearNow, {
+          method: 'GET',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          userSelect.disabled = false;
+          if (data.users && data.users.length > 0) {
+            userSelect.innerHTML = '<option value="">-- Select a user --</option>';
+            data.users.forEach(user => {
+              var option = document.createElement('option');
+              option.value = user.id;
+              option.textContent = user.name;
+              userSelect.appendChild(option);
+            });
+          } else {
+            userSelect.innerHTML = '<option value="">No users available</option>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading users:', err);
+          userSelect.disabled = false;
+          userSelect.innerHTML = '<option value="">Error loading users - please try again</option>';
+          alert('Failed to load users. Please check your connection and try again.');
+        });
+
+        modal.show();
+      });
+    }
+
+    // Calculate pro-rated holidays based on start date
+    var startDateInput = document.getElementById('create-start-date');
+    var annualHolidaysInput = document.getElementById('create-annual-holidays');
+    var holidaysLeftInput = document.getElementById('create-holidays-left');
+
+    if (startDateInput && annualHolidaysInput && holidaysLeftInput) {
+      startDateInput.addEventListener('change', function () {
+        var startDate = new Date(this.value);
+        var yearNow = <%= year_now %>;
+        var yearStart = new Date(yearNow, 0, 1);
+        var yearEnd = new Date(yearNow, 11, 31);
+
+        if (startDate && !isNaN(startDate.getTime())) {
+          // Calculate pro-rated holidays based on remaining days in the year
+          var totalDaysInYear = (yearEnd - yearStart) / (1000 * 60 * 60 * 24) + 1;
+          var daysRemaining = Math.max(0, (yearEnd - startDate) / (1000 * 60 * 60 * 24) + 1);
+          var proRatedHolidays = Math.round((daysRemaining / totalDaysInYear) * 25);
+
+          annualHolidaysInput.value = proRatedHolidays;
+          holidaysLeftInput.value = proRatedHolidays;
+        }
+      });
+
+      // Also update holidays_left when annual_holidays changes
+      annualHolidaysInput.addEventListener('input', function () {
+        holidaysLeftInput.value = this.value;
+      });
+    }
+
+    // Save Create Entitlement
+    var saveCreateBtn = document.getElementById('save-create-entitlement');
+    if (saveCreateBtn) {
+      saveCreateBtn.addEventListener('click', function () {
+        var form = document.getElementById('create-entitlement-form');
+        var data = new FormData(form);
+
+        // Validate required fields
+        if (!data.get('user_id') || !data.get('start_date')) {
+          alert('Please fill in all required fields');
+          return;
+        }
+
+        // Disable button to prevent double-submit
+        saveCreateBtn.disabled = true;
+        saveCreateBtn.textContent = 'Creating...';
+
+        fetch('/leaves/create_entitlement', {
+          method: 'POST',
+          body: data,
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = '/leaves?active_tab=manager';
+          } else {
+            alert('Failed to create entitlement: ' + (data.error || 'Unknown error'));
+            saveCreateBtn.disabled = false;
+            saveCreateBtn.textContent = 'Create Entitlement';
+          }
+        })
+        .catch(err => {
+          alert('Error: ' + err.message);
+          saveCreateBtn.disabled = false;
+          saveCreateBtn.textContent = 'Create Entitlement';
+        });
       });
     }
 
@@ -289,6 +468,10 @@
         var form = document.getElementById('edit-entitlement-form');
         var data = new FormData(form);
 
+        // Disable button to prevent double-submit
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
         fetch('/leaves/update_entitlement', {
           method: 'POST',
           body: data,
@@ -296,13 +479,19 @@
             'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
           }
         }).then(function (response) {
-          if (response.ok) {
+          return response.json();
+        }).then(function (data) {
+          if (data.success) {
             window.location.href = '/leaves?active_tab=manager';
           } else {
-            alert('Failed to update entitlement.');
+            alert('Failed to update entitlement: ' + (data.error || 'Unknown error'));
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save changes';
           }
         }).catch(function (err) {
           alert('Error: ' + err.message);
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save changes';
         });
       });
     }
