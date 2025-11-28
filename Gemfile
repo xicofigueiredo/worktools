@@ -89,3 +89,5 @@ gem "browser", "~> 5.3"
 
 gem 'httparty'
 gem "down", "~> 5.0"
+
+gem 'whenever', require: false
