@@ -129,6 +129,3 @@ pricing:
 
 learner_info:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rails admissions:import_learner_infos"
-
-update_crontab: ## Update crontab with whenever schedule
-	ssh worktools_server_new "cd ~/worktools && bundle exec whenever --update-crontab"
