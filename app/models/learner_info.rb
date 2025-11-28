@@ -97,7 +97,8 @@ class LearnerInfo < ApplicationRecord
     has_started = has_start_date && start_date <= Date.today
     end_date_passed = end_date.present? && end_date < Date.today
     is_up_curriculum = curriculum_course_option.to_s.strip.downcase.start_with?('up')
-    has_platform_info = platform_username.present? && platform_password.present?
+    is_american_curriculum = curriculum_course_option.to_s.strip.downcase.start_with?('america')
+    has_platform_info = is_american_curriculum || (platform_username.present? && platform_password.present?)
     has_lc = learning_coaches.count.positive?
 
     case status
@@ -182,7 +183,7 @@ class LearnerInfo < ApplicationRecord
     when 'online'
       [learning_coach].compact
     when 'hybrid'
-      hub ? hub.learning_coaches.to_a : []
+      hub ? hub.learning_coaches_with_capacity.to_a : []
     else
       []
     end
