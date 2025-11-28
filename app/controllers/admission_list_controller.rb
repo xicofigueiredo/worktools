@@ -526,7 +526,7 @@ class AdmissionListController < ApplicationController
       next unless main_hub
 
       # Use hub model methods
-      lc_count = main_hub.learning_coaches_count
+      lc_count = main_hub.learning_coaches_with_capacity.to_a.count
       kids_count = main_hub.learners_excluding_statuses(LearnerInfo::INACTIVE_STATUSES).count
       remote_count = LearnerInfo.where(learning_coach_id: lc.id).active.count
 
