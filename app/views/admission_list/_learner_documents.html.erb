@@ -47,7 +47,17 @@
                     <% end %>
                   </div>
 
-                  <% if existing.description.present? %>
+                  <% if doc_perm.update? %>
+                    <%= form_with url: document_admission_path(@learner_info, existing.id), method: :patch, local: true do |f| %>
+                      <div class="mb-2">
+                        <label class="form-label small mb-1">Description (optional)</label>
+                        <%= text_field_tag 'learner_document[description]', existing.description, placeholder: 'Notes about the file', class: 'form-control form-control-sm' %>
+                      </div>
+                      <div>
+                        <%= submit_tag "Update Description", class: 'btn btn-sm btn-primary' %>
+                      </div>
+                    <% end %>
+                  <% elsif existing.description.present? %>
                     <p class="mb-0 small"><strong>Description:</strong> <%= existing.description %></p>
                   <% end %>
                 </div>
