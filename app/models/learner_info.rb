@@ -81,7 +81,7 @@ class LearnerInfo < ApplicationRecord
 
     log_update(nil, changes, note: "Automated status update to #{new_status}" + (gen_number ? " with student number generation" : ""))
 
-    send_status_notification(new_status)
+    #send_status_notification(new_status)
   end
 
   def calculate_status
@@ -89,7 +89,8 @@ class LearnerInfo < ApplicationRecord
 
     has_notes = onboarding_meeting_notes.present?
     has_contract = learner_documents.exists?(document_type: 'contract')
-    has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
+    is_powered_by_bga = hub.hub_type == 'Powered by BGA'
+    has_proof = is_powered_by_bga || learner_documents.exists?(document_type: 'proof_of_payment')
     has_documents = has_contract && has_proof
     has_credentials = learner_documents.exists?(document_type: 'credentials')
     has_institutional_email = institutional_email.present?
