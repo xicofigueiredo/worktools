@@ -81,7 +81,7 @@ class LearnerInfo < ApplicationRecord
 
     log_update(nil, changes, note: "Automated status update to #{new_status}" + (gen_number ? " with student number generation" : ""))
 
-    send_status_notification(new_status)
+    #send_status_notification(new_status)
   end
 
   def calculate_status
@@ -89,7 +89,8 @@ class LearnerInfo < ApplicationRecord
 
     has_notes = onboarding_meeting_notes.present?
     has_contract = learner_documents.exists?(document_type: 'contract')
-    has_proof = learner_documents.exists?(document_type: 'proof_of_payment')
+    is_powered_by_bga = hub.hub_type == 'Powered by BGA'
+    has_proof = is_powered_by_bga || learner_documents.exists?(document_type: 'proof_of_payment')
     has_documents = has_contract && has_proof
     has_credentials = learner_documents.exists?(document_type: 'credentials')
     has_institutional_email = institutional_email.present?
@@ -101,80 +102,88 @@ class LearnerInfo < ApplicationRecord
     has_platform_info = is_american_curriculum || (platform_username.present? && platform_password.present?)
     has_lc = learning_coaches.count.positive?
 
-    case status
-      when "Inactive"
-        if !end_date_passed
-          "Active"
-        else
-          "Inactive"
-        end
-      when "Active"
-        if end_date_passed
-          "Inactive"
-        elsif !has_started && has_start_date
-          has_credentials ? "Onboarded" : "Validated"
-        elsif !has_started && !has_start_date
-          "Validated"
-        else
-          "Active"
-        end
-      when "Onboarded"
-        if has_started
-          "Active"
-        elsif !has_start_date || !has_platform_info || !has_credentials || !has_institutional_email
-          "Validated"
-        else
-          "Onboarded"
-        end
-      when "Validated"
-        if has_start_date && has_platform_info && has_credentials && has_institutional_email
-          "Onboarded"
-        elsif !has_documents
-          if is_up_curriculum
-            status_was_waitlist_ok? ? "Waitlist" : "In progress"
+    current_status = status
+    loop do
+      new_status = case current_status
+        when "Inactive"
+          if !end_date_passed
+            "Active"
           else
-            status_was_waitlist_ok? ? "Waitlist - ok" : "In progress - ok"
+            "Inactive"
           end
-        else
-          "Validated"
-        end
-      when "In progress - ok"
-        if is_up_curriculum
-          if has_documents
+        when "Active"
+          if end_date_passed
+            "Inactive"
+          elsif !has_started && has_start_date
+            has_credentials ? "Onboarded" : "Validated"
+          elsif !has_started && !has_start_date
             "Validated"
           else
-            "In progress"
+            "Active"
           end
-        elsif !has_notes
-          "In progress"
-        elsif has_documents
-          "Validated"
-        else
-          "In progress - ok"
-        end
-      when "Waitlist - ok"
-        if !has_notes
-          "Waitlist"
-        else
-          "Waitlist - ok"
-        end
-      when "In progress"
-        if !data_validated
-          "In progress conditional"
-        else
-          if is_up_curriculum
-            has_documents ? "Validated" : "In progress"
+        when "Onboarded"
+          if has_started
+            "Active"
+          elsif !has_start_date || !has_platform_info || !has_credentials || !has_institutional_email
+            "Validated"
           else
-            has_notes ? "In progress - ok" : "In progress"
+            "Onboarded"
           end
+        when "Validated"
+          if has_start_date && has_platform_info && has_credentials && has_institutional_email
+            "Onboarded"
+          elsif !has_documents
+            if is_up_curriculum
+              status_was_waitlist_ok? ? "Waitlist" : "In progress"
+            else
+              status_was_waitlist_ok? ? "Waitlist - ok" : "In progress - ok"
+            end
+          else
+            "Validated"
+          end
+        when "In progress - ok"
+          if is_up_curriculum
+            if has_documents
+              "Validated"
+            else
+              "In progress"
+            end
+          elsif !has_notes
+            "In progress"
+          elsif has_documents
+            "Validated"
+          else
+            "In progress - ok"
+          end
+        when "Waitlist - ok"
+          if !has_notes
+            "Waitlist"
+          else
+            "Waitlist - ok"
+          end
+        when "In progress"
+          if !data_validated
+            "In progress conditional"
+          else
+            if is_up_curriculum
+              has_documents ? "Validated" : "In progress"
+            else
+              has_notes ? "In progress - ok" : "In progress"
+            end
+          end
+        when "In progress conditional"
+          (data_validated && has_lc) ? "In progress" : "In progress conditional"
+        when "Waitlist"
+          has_notes ? "Waitlist - ok" : "Waitlist"
+        else
+          current_status # Fallback for new or unknown
         end
-      when "In progress conditional"
-        (data_validated && has_lc) ? "In progress" : "In progress conditional"
-      when "Waitlist"
-        has_notes ? "Waitlist - ok" : "Waitlist"
-      else
-        status # Fallback for new or unknown
+
+      break if new_status == current_status
+      current_status = new_status
     end
+
+    current_status
   end
 
   def learning_coaches

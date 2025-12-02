@@ -1,7 +1,7 @@
 require 'csv'
 
 class AdmissionListController < ApplicationController
-  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document, :check_pricing_impact]
+  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document, :update_document, :check_pricing_impact]
   before_action :set_learning_coaches, only: [:show]
   before_action :require_staff
   before_action :require_admin_or_admissions, only: [:fetch_from_hubspot]
@@ -341,6 +341,45 @@ class AdmissionListController < ApplicationController
     end
 
     flash[:notice] = "#{saved_docs.first.human_type} uploaded (#{saved_docs.size} file(s))."
+    redirect_to admission_path(@learner_info, active_tab: 'documents')
+  end
+
+  def update_document
+    @document = @learner_info.learner_documents.find(params[:document_id])
+    doc_perm = LearnerDocumentPermission.new(current_user, @document)
+
+    unless doc_perm.update?
+      return redirect_to admission_path(@learner_info, active_tab: 'documents'), alert: "Not authorized to update this document."
+    end
+
+    permitted = params.require(:learner_document).permit(:description)
+
+    old_description = @document.description
+    if @document.update(permitted)
+      # Log update if changed
+      if @document.description != old_description
+        begin
+          @learner_info.learner_info_logs.create!(
+            user: current_user,
+            action: 'document_update',
+            changed_fields: ['description'],
+            changed_data: {
+              'document_type' => @document.document_type,
+              'old_description' => old_description,
+              'new_description' => @document.description
+            },
+            note: "Updated description for #{@document.human_type}"
+          )
+        rescue => e
+          Rails.logger.error "Failed to log document update: #{e.class}: #{e.message}"
+        end
+      end
+
+      flash[:notice] = "Description updated."
+    else
+      flash[:alert] = @document.errors.full_messages.to_sentence
+    end
+
     redirect_to admission_path(@learner_info, active_tab: 'documents')
   end
 
