@@ -62,6 +62,13 @@ class LearnerDocumentPermission
     allowed_types.include?(record.document_type)
   end
 
+  def update?
+    return false unless @role && record.present?
+
+    allowed_types = DOC_EDIT_BY_ROLE[@role] || []
+    allowed_types.include?(record.document_type)
+  end
+
   def visible?(doc_type)
     return false unless @role
 
