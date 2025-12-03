@@ -159,6 +159,10 @@
 
       holidays_by_date = {}
 
+      if hub_filter.present? && !country_filter.present?
+        country_filter = hub_countries[hub_filter]
+      end
+
       # Filter holidays based on type
       unless type_filter == 'blocked'
         filtered_holidays = @public_holidays.select do |h|
