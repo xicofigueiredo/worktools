@@ -9,11 +9,64 @@
     vertical-align: middle;
     height: 40px;
   }
+  .calendar-table td {
+    position: relative;
+    cursor: default;
+    transition: all 0.15s ease;
+  }
+  .calendar-table td:not(:empty):hover {
+    transform: scale(1.05);
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
   .holiday {
-    background-color: #d1e7dd !important; /* success-subtle */
+    background-color: #d1e7dd !important;
+    font-weight: 600;
   }
   .blocked {
-    background-image: linear-gradient(45deg, #f8d7da 25%, transparent 25%, transparent 50%, #f8d7da 50%, #f8d7da 75%, transparent 75%, transparent) !important; /* danger-subtle striped */
+    background-image: linear-gradient(45deg, #f8d7da 25%, transparent 25%, transparent 50%, #f8d7da 50%, #f8d7da 75%, transparent 75%, transparent) !important;
+    background-size: 8px 8px;
+  }
+  .holiday.blocked {
+    background: linear-gradient(135deg, #d1e7dd 50%, #f8d7da 50%) !important;
+  }
+  .weekend {
+    background-color: #f8f9fa;
+  }
+  .month-card {
+    transition: all 0.2s ease;
+  }
+  .month-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+  .filter-section {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: 1.5rem;
+  }
+  .legend-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid #dee2e6;
+  }
+  .legend-box.holiday {
+    background-color: #d1e7dd;
+  }
+  .legend-box.blocked {
+    background-image: linear-gradient(45deg, #f8d7da 25%, transparent 25%, transparent 50%, #f8d7da 50%, #f8d7da 75%, transparent 75%, transparent);
+    background-size: 8px 8px;
+  }
+  .legend-box.both {
+    background: linear-gradient(135deg, #d1e7dd 50%, #f8d7da 50%);
   }
 </style>
 
@@ -21,58 +74,212 @@
   <div class="card-header d-flex justify-content-between align-items-center">
     <h2 class="h5 mb-0">Public Holidays and Blocked Periods for <%= year %></h2>
     <div>
-      <%= link_to 'Previous Year', leaves_path(year: prev_year, month: params[:month], active_tab: 'manager'), class: 'btn btn-link btn-sm me-2' %>
-      <%= link_to 'Next Year', leaves_path(year: next_year, month: params[:month], active_tab: 'manager'), class: 'btn btn-link btn-sm' %>
+      <%= link_to 'Previous Year', leaves_path(year: prev_year, month: params[:month], active_tab: 'calendar'), class: 'btn btn-link btn-sm me-2' %>
+      <%= link_to 'Next Year', leaves_path(year: next_year, month: params[:month], active_tab: 'calendar'), class: 'btn btn-link btn-sm' %>
     </div>
   </div>
 
   <div class="card-body">
+    <!-- Filters Section -->
+    <div class="filter-section">
+      <form id="calendarFilters">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Country</label>
+            <select class="form-select form-select-sm" id="countryFilter" name="country_filter">
+              <option value="">All Countries</option>
+              <% countries = @hubs.map(&:country).compact.uniq.sort %>
+              <% countries.each do |country| %>
+                <option value="<%= country %>" <%= 'selected' if params[:country_filter] == country %>><%= country %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Hub</label>
+            <select class="form-select form-select-sm" id="hubFilter" name="hub_filter">
+              <option value="">All Hubs</option>
+              <% @hubs.each do |hub| %>
+                <option value="<%= hub.id %>" data-country="<%= hub.country %>" <%= 'selected' if params[:hub_filter].to_i == hub.id %>><%= hub.name %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Department</label>
+            <select class="form-select form-select-sm" id="departmentFilter" name="department_filter">
+              <option value="">All Departments</option>
+              <% @departments.each do |dept| %>
+                <option value="<%= dept.id %>" <%= 'selected' if params[:department_filter].to_i == dept.id %>><%= dept.name %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Type</label>
+            <select class="form-select form-select-sm" id="typeFilter" name="type_filter">
+              <option value="">All Types</option>
+              <option value="holidays" <%= 'selected' if params[:type_filter] == 'holidays' %>>Holidays Only</option>
+              <option value="blocked" <%= 'selected' if params[:type_filter] == 'blocked' %>>Blocked Periods Only</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Legend -->
+    <div class="mb-3 pb-2 border-bottom">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="small text-muted me-2">Legend:</span>
+        <div class="legend-item">
+          <div class="legend-box holiday"></div>
+          <span class="small">Public Holiday</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-box blocked"></div>
+          <span class="small">Blocked Period</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-box both"></div>
+          <span class="small">Both</span>
+        </div>
+      </div>
+    </div>
+
     <%
-      holidays_by_date = {}
-      # Specific holidays for the year
-      @public_holidays.reject(&:recurring).select { |h| h.date.year == year }.each do |h|
-        holidays_by_date[h.date] ||= []
-        holidays_by_date[h.date] << h
+      # Apply filters
+      country_filter = params[:country_filter] if params[:country_filter].present?
+      hub_filter = params[:hub_filter].to_i if params[:hub_filter].present?
+      dept_filter = params[:department_filter].to_i if params[:department_filter].present?
+      type_filter = params[:type_filter]
+
+      # Create a hash of hub_id => country for quick lookup
+      hub_countries = {}
+      @hubs.each { |h| hub_countries[h.id] = h.country }
+
+      # Get hub IDs for selected country
+      country_hub_ids = []
+      if country_filter.present?
+        country_hub_ids = @hubs.select { |h| h.country == country_filter }.map(&:id)
       end
-      # Recurring holidays applied to the year
-      @public_holidays.select(&:recurring).each do |h|
-        begin
-          d = Date.new(year, h.date.month, h.date.day)
-          holidays_by_date[d] ||= []
-          holidays_by_date[d] << h
-        rescue Date::Error
-          # Skip invalid dates (e.g., Feb 29 on non-leap year)
+
+      holidays_by_date = {}
+
+      # Filter holidays based on type
+      unless type_filter == 'blocked'
+        filtered_holidays = @public_holidays.select do |h|
+          # If no filters, show everything
+          next true if country_filter.blank? && hub_filter.blank?
+
+          # If holiday has a hub_id, check against filters
+          if h.respond_to?(:hub_id) && h.hub_id.present?
+            hub_match = true
+
+            # Check hub filter
+            if hub_filter.present?
+              hub_match = h.hub_id == hub_filter
+            end
+
+            # Check country filter
+            if country_filter.present?
+              hub_match = hub_match && country_hub_ids.include?(h.hub_id)
+            end
+
+            hub_match
+          else
+            # Global holiday (no hub_id) - always show unless specific hub is selected
+            hub_filter.blank?
+          end
+        end
+
+        # Process non-recurring holidays
+        filtered_holidays.reject(&:recurring).select { |h| h.date.year == year }.each do |h|
+          holidays_by_date[h.date] ||= []
+          holidays_by_date[h.date] << h
+        end
+
+        # Process recurring holidays
+        filtered_holidays.select(&:recurring).each do |h|
+          begin
+            d = Date.new(year, h.date.month, h.date.day)
+            holidays_by_date[d] ||= []
+            holidays_by_date[d] << h
+          rescue Date::Error
+            # Skip invalid dates (e.g., Feb 29 on non-leap year)
+          end
         end
       end
 
       blocked_by_date = {}
-      @blocked_periods.each do |b|
-        (b.start_date..b.end_date).each do |d|
-          next unless d.year == year
-          blocked_by_date[d] ||= []
-          blocked_by_date[d] << b
+
+      # Filter blocked periods based on type and other filters
+      unless type_filter == 'holidays'
+        filtered_blocked = @blocked_periods.select do |b|
+          # If no filters, show everything
+          next true if country_filter.blank? && hub_filter.blank? && dept_filter.blank?
+
+          match = true
+
+          # Check hub filter
+          if hub_filter.present?
+            # Show if matches hub OR if it's global (no hub_id)
+            if b.hub_id.present?
+              match = match && b.hub_id == hub_filter
+            end
+            # If hub_id is nil, it's global, so keep it
+          end
+
+          # Check country filter
+          if country_filter.present?
+            # Show if hub's country matches OR if it's global (no hub_id)
+            if b.hub_id.present?
+              match = match && country_hub_ids.include?(b.hub_id)
+            end
+            # If hub_id is nil, it's global, so keep it
+          end
+
+          # Check department filter
+          if dept_filter.present?
+            # Show if matches department OR if it's global (no department_id)
+            if b.department_id.present?
+              match = match && b.department_id == dept_filter
+            end
+            # If department_id is nil, it's global, so keep it
+          end
+
+          match
+        end
+
+        filtered_blocked.each do |b|
+          (b.start_date..b.end_date).each do |d|
+            next unless d.year == year
+            blocked_by_date[d] ||= []
+            blocked_by_date[d] << b
+          end
         end
       end
     %>
 
     <% if holidays_by_date.blank? && blocked_by_date.blank? %>
-      <p class="mb-0">No public holidays or blocked periods for <%= year %>.</p>
+      <div class="text-center py-5">
+        <p class="text-muted mb-0">No public holidays or blocked periods for <%= year %> with the selected filters.</p>
+      </div>
     <% else %>
       <div class="row">
         <% (1..12).each do |month| %>
-          <div class="col-md-4 mb-4">
-            <div class="card">
-              <div class="card-header">
-                <h5 class="mb-0"><%= Date::MONTHNAMES[month] %></h5>
+          <div class="col-md-4 mb-3">
+            <div class="card month-card">
+              <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><%= Date::MONTHNAMES[month] %></h6>
               </div>
               <div class="card-body p-0">
                 <%
                   first_day = Date.new(year, month, 1)
                   last_day = first_day.end_of_month
-                  start_wday = first_day.wday  # 0 = Sunday
+                  start_wday = first_day.wday
                   week = 0
                 %>
-                <table class="table table-bordered mb-0 calendar-table">
+                <table class="table table-bordered table-sm mb-0 calendar-table">
                   <thead class="table-light">
                     <tr>
                       <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
@@ -89,10 +296,12 @@
                             <% date = Date.new(year, month, actual_day) %>
                             <% classes = [] %>
                             <% title_parts = [] %>
+
                             <% if holidays = holidays_by_date[date] %>
                               <% classes << 'holiday' %>
-                              <% title_parts << "Holidays: #{holidays.map(&:name).join(', ')}" %>
+                              <% title_parts << "🎉 Holidays: #{holidays.map(&:name).join(', ')}" %>
                             <% end %>
+
                             <% if blocked = blocked_by_date[date] %>
                               <% classes << 'blocked' %>
                               <% blocked_titles = blocked.map do |b| %>
@@ -107,22 +316,35 @@
                                   <% entity = @hubs.find { |h| h.id == b.hub_id }&.name || 'Unknown Hub' %>
                                 <% else %>
                                   <% type = 'Global' %>
-                                  <% entity = '-' %>
+                                  <% entity = 'All' %>
                                 <% end %>
-                                <% "#{type} - #{entity}" %>
+                                <% "#{type}: #{entity}" %>
                               <% end %>
-                              <% title_parts << "Blocked: #{blocked_titles.join(', ')}" %>
+                              <% title_parts << "🚫 Blocked: #{blocked_titles.join(', ')}" %>
                             <% end %>
+
+                            <% if day_in_week == 0 || day_in_week == 6 %>
+                              <% classes << 'weekend' unless classes.any? %>
+                            <% end %>
+
                             <% title = title_parts.join(' | ') %>
-                            <% tooltip_attr = title.present? ? " data-bs-toggle=\"tooltip\" title=\"#{h(title)}\"" : '' %>
-                            <% class_attr = classes.any? ? " class=\"#{classes.join(' ')}\"" : '' %>
-                            <td<%= class_attr %><%= tooltip_attr %>><%= actual_day %></td>
+                            <% cell_classes = classes.join(' ') %>
+
+                            <td class="<%= cell_classes %>"
+                                <% if title.present? %>
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  data-bs-html="true"
+                                  title="<%= title.gsub(' | ', '<br>') %>"
+                                <% end %>>
+                              <%= actual_day %>
+                            </td>
                           <% end %>
                         <% end %>
                       </tr>
                       <% week += 1 %>
                     <% end %>
-                    <%# Add empty rows to make all calendars have 6 weeks for fixed height %>
+                    <%# Add empty rows to make all calendars have 6 weeks for consistency %>
                     <% (week...6).each do %>
                       <tr>
                         <% (0..6).each do %><td></td><% end %>
@@ -141,9 +363,68 @@
 
 <script>
   document.addEventListener('turbo:load', function () {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Handle country filter change - update hub dropdown
+    var countryFilter = document.getElementById('countryFilter');
+    var hubFilter = document.getElementById('hubFilter');
+
+    if (countryFilter && hubFilter) {
+      countryFilter.addEventListener('change', function() {
+        var selectedCountry = this.value;
+        var hubOptions = hubFilter.querySelectorAll('option');
+
+        hubOptions.forEach(function(option) {
+          if (option.value === '') {
+            option.style.display = '';
+            return;
+          }
+
+          var optionCountry = option.getAttribute('data-country');
+          if (!selectedCountry || optionCountry === selectedCountry) {
+            option.style.display = '';
+          } else {
+            option.style.display = 'none';
+          }
+        });
+
+        // Reset hub selection if it's now hidden
+        if (hubFilter.value && hubFilter.selectedOptions[0].style.display === 'none') {
+          hubFilter.value = '';
+        }
+      });
+    }
+
+    // Handle filter changes
+    var filterSelects = document.querySelectorAll('.filter-section select');
+    filterSelects.forEach(function(select) {
+      select.addEventListener('change', function() {
+        var form = document.getElementById('calendarFilters');
+        var formData = new FormData(form);
+        var params = new URLSearchParams(window.location.search);
+
+        // Update URL params with filter values
+        formData.forEach(function(value, key) {
+          if (value) {
+            params.set(key, value);
+          } else {
+            params.delete(key);
+          }
+        });
+
+        // Preserve year and active_tab
+        if (!params.has('year')) {
+          params.set('year', '<%= year %>');
+        }
+        params.set('active_tab', 'calendar');
+
+        // Redirect with new params
+        window.location.href = window.location.pathname + '?' + params.toString();
+      });
+    });
   });
 </script>
