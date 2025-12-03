@@ -110,6 +110,8 @@ class User < ApplicationRecord
     where(role: 'learner', deactivate: false)
   }
 
+  scope :staff, -> { where(role: STAFF_ROLES) }
+
   def subjects_without_timeline
     Subject.left_outer_joins(:timelines).where(timelines: { user_id: nil })
   end

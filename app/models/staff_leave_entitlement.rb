@@ -25,11 +25,17 @@ class StaffLeaveEntitlement < ApplicationRecord
   end
 
   # Get users without entitlement for a given year in specified departments
+  # If department_ids is nil or empty, returns users across all departments.
   def self.users_without_entitlement(department_ids, year)
-    User.joins(:users_departments)
-        .where(users_departments: { department_id: department_ids })
-        .where(role: User.roles[:staff])  # Fixed: Use enum value 'Staff' instead of 'staff'
-        .where.not(id: StaffLeaveEntitlement.where(year: year).select(:user_id))
+    base = User.where(role: User.roles[:staff]) # only staff users
+
+    # apply department filter only when department_ids is present
+    if department_ids.present?
+      base = base.joins(:users_departments)
+                .where(users_departments: { department_id: department_ids })
+    end
+
+    base.where.not(id: StaffLeaveEntitlement.where(year: year).select(:user_id))
         .distinct
         .order(:full_name)
         .select(:id, :full_name)

@@ -33,6 +33,9 @@
           <%= render 'pending_confirmations' %>
           <%= render 'department_entitlements' %>
           <%= render 'department_holidays' %>
+          <% if @show_hr_view %>
+            <%= render 'hr_calendar' %>
+          <% end %>
         </div>
       </div>
     </div>

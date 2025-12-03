@@ -9,6 +9,8 @@ class LeavesController < ApplicationController
     @next_month = @month.next_month
     @prev_month = @month.prev_month
 
+    @show_hr_view = current_user.email == 'humanresources@bravegenerationacademy.com' || current_user.role == 'admin'
+
     if current_user.managed_departments.present?
       prepare_manager_entitlements if current_user&.managed_departments&.present?
       @pending_confirmations = current_user.confirmations.pending
@@ -27,6 +29,14 @@ class LeavesController < ApplicationController
     else
       @pending_confirmations = []
       @department_leaves = []
+    end
+
+    if @show_hr_view
+      @public_holidays = PublicHoliday.all.order(date: :asc)
+      @blocked_periods = BlockedPeriod.all.order(start_date: :asc)
+      @hubs = Hub.all
+      @departments = Department.all
+      @users = User.staff
     end
   end
 
@@ -490,9 +500,8 @@ class LeavesController < ApplicationController
 
   def users_without_entitlement
     year = params[:year].presence&.to_i || Date.current.year  # Safety: Default to current year if missing
-    managed_ids = current_user.managed_departments.flat_map(&:subtree_ids).uniq
 
-    users = StaffLeaveEntitlement.users_without_entitlement(managed_ids, year)
+    users = StaffLeaveEntitlement.users_without_entitlement(nil, year)
 
     render json: {
       users: users.map { |u| { id: u.id, name: u.full_name } }

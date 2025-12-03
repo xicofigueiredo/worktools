@@ -1,0 +1,149 @@
+<% year = params[:year] ? params[:year].to_i : Date.current.year %>
+<% prev_year = year - 1 %>
+<% next_year = year + 1 %>
+
+<style>
+  .calendar-table th, .calendar-table td {
+    width: 14.28%;
+    text-align: center;
+    vertical-align: middle;
+    height: 40px;
+  }
+  .holiday {
+    background-color: #d1e7dd !important; /* success-subtle */
+  }
+  .blocked {
+    background-image: linear-gradient(45deg, #f8d7da 25%, transparent 25%, transparent 50%, #f8d7da 50%, #f8d7da 75%, transparent 75%, transparent) !important; /* danger-subtle striped */
+  }
+</style>
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h2 class="h5 mb-0">Public Holidays and Blocked Periods for <%= year %></h2>
+    <div>
+      <%= link_to 'Previous Year', leaves_path(year: prev_year, month: params[:month], active_tab: 'manager'), class: 'btn btn-link btn-sm me-2' %>
+      <%= link_to 'Next Year', leaves_path(year: next_year, month: params[:month], active_tab: 'manager'), class: 'btn btn-link btn-sm' %>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <%
+      holidays_by_date = {}
+      # Specific holidays for the year
+      @public_holidays.reject(&:recurring).select { |h| h.date.year == year }.each do |h|
+        holidays_by_date[h.date] ||= []
+        holidays_by_date[h.date] << h
+      end
+      # Recurring holidays applied to the year
+      @public_holidays.select(&:recurring).each do |h|
+        begin
+          d = Date.new(year, h.date.month, h.date.day)
+          holidays_by_date[d] ||= []
+          holidays_by_date[d] << h
+        rescue Date::Error
+          # Skip invalid dates (e.g., Feb 29 on non-leap year)
+        end
+      end
+
+      blocked_by_date = {}
+      @blocked_periods.each do |b|
+        (b.start_date..b.end_date).each do |d|
+          next unless d.year == year
+          blocked_by_date[d] ||= []
+          blocked_by_date[d] << b
+        end
+      end
+    %>
+
+    <% if holidays_by_date.blank? && blocked_by_date.blank? %>
+      <p class="mb-0">No public holidays or blocked periods for <%= year %>.</p>
+    <% else %>
+      <div class="row">
+        <% (1..12).each do |month| %>
+          <div class="col-md-4 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><%= Date::MONTHNAMES[month] %></h5>
+              </div>
+              <div class="card-body p-0">
+                <%
+                  first_day = Date.new(year, month, 1)
+                  last_day = first_day.end_of_month
+                  start_wday = first_day.wday  # 0 = Sunday
+                  week = 0
+                %>
+                <table class="table table-bordered mb-0 calendar-table">
+                  <thead class="table-light">
+                    <tr>
+                      <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% while week * 7 - start_wday < last_day.day %>
+                      <tr>
+                        <% (0..6).each do |day_in_week| %>
+                          <% actual_day = week * 7 + day_in_week - start_wday + 1 %>
+                          <% if actual_day < 1 || actual_day > last_day.day %>
+                            <td></td>
+                          <% else %>
+                            <% date = Date.new(year, month, actual_day) %>
+                            <% classes = [] %>
+                            <% title_parts = [] %>
+                            <% if holidays = holidays_by_date[date] %>
+                              <% classes << 'holiday' %>
+                              <% title_parts << "Holidays: #{holidays.map(&:name).join(', ')}" %>
+                            <% end %>
+                            <% if blocked = blocked_by_date[date] %>
+                              <% classes << 'blocked' %>
+                              <% blocked_titles = blocked.map do |b| %>
+                                <% if b.user_id && b.user_type %>
+                                  <% type = b.user_type %>
+                                  <% entity = @users.find { |u| u.id == b.user_id }&.full_name || 'Unknown User' %>
+                                <% elsif b.department_id %>
+                                  <% type = 'Department' %>
+                                  <% entity = @departments.find { |d| d.id == b.department_id }&.name || 'Unknown Department' %>
+                                <% elsif b.hub_id %>
+                                  <% type = 'Hub' %>
+                                  <% entity = @hubs.find { |h| h.id == b.hub_id }&.name || 'Unknown Hub' %>
+                                <% else %>
+                                  <% type = 'Global' %>
+                                  <% entity = '-' %>
+                                <% end %>
+                                <% "#{type} - #{entity}" %>
+                              <% end %>
+                              <% title_parts << "Blocked: #{blocked_titles.join(', ')}" %>
+                            <% end %>
+                            <% title = title_parts.join(' | ') %>
+                            <% tooltip_attr = title.present? ? " data-bs-toggle=\"tooltip\" title=\"#{h(title)}\"" : '' %>
+                            <% class_attr = classes.any? ? " class=\"#{classes.join(' ')}\"" : '' %>
+                            <td<%= class_attr %><%= tooltip_attr %>><%= actual_day %></td>
+                          <% end %>
+                        <% end %>
+                      </tr>
+                      <% week += 1 %>
+                    <% end %>
+                    <%# Add empty rows to make all calendars have 6 weeks for fixed height %>
+                    <% (week...6).each do %>
+                      <tr>
+                        <% (0..6).each do %><td></td><% end %>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('turbo:load', function () {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+  });
+</script>
