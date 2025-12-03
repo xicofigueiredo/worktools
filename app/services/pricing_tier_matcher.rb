@@ -20,7 +20,8 @@ class PricingTierMatcher
       "UP Sports Exercise" => "UP Sports & Leisure",
       "UP Sports Management" => "UP Sports & Leisure",
       "ESL Course" => "Own Curriculum",
-      "UPx Business" => "UP Business"
+      "UPx Business" => "UP Business",
+      "UP Business (GENEX)" => "UP Business"
     }
 
     search_curriculum = curriculum_aliases[target_curriculum] || target_curriculum
