@@ -157,39 +157,39 @@
       hub_countries = {}
       @hubs.each { |h| hub_countries[h.id] = h.country }
 
-      # Get hub IDs for selected country
-      country_hub_ids = []
-      if country_filter.present?
-        country_hub_ids = @hubs.select { |h| h.country == country_filter }.map(&:id)
-      end
-
       holidays_by_date = {}
 
       # Filter holidays based on type
       unless type_filter == 'blocked'
         filtered_holidays = @public_holidays.select do |h|
-          # If no filters, show everything
-          next true if country_filter.blank? && hub_filter.blank?
+          match = true
 
-          # If holiday has a hub_id, check against filters
-          if h.respond_to?(:hub_id) && h.hub_id.present?
-            hub_match = true
+          # Apply country filter
+          if country_filter.present?
+            # Holiday matches if its country field matches
+            # OR if it has a hub_id whose hub's country matches
+            country_match = false
 
-            # Check hub filter
-            if hub_filter.present?
-              hub_match = h.hub_id == hub_filter
+            if h.country.present? && h.country == country_filter
+              country_match = true
+            elsif h.hub_id.present? && hub_countries[h.hub_id] == country_filter
+              country_match = true
             end
 
-            # Check country filter
-            if country_filter.present?
-              hub_match = hub_match && country_hub_ids.include?(h.hub_id)
-            end
-
-            hub_match
-          else
-            # Global holiday (no hub_id) - always show unless specific hub is selected
-            hub_filter.blank?
+            match = match && country_match
           end
+
+          # Apply hub filter
+          if hub_filter.present?
+            # Holiday matches if its hub_id matches
+            # If holiday has no hub_id, it's global and should show
+            if h.hub_id.present?
+              match = match && h.hub_id == hub_filter
+            end
+            # Global holidays (no hub_id) always match when there's a hub filter
+          end
+
+          match
         end
 
         # Process non-recurring holidays
@@ -215,36 +215,37 @@
       # Filter blocked periods based on type and other filters
       unless type_filter == 'holidays'
         filtered_blocked = @blocked_periods.select do |b|
-          # If no filters, show everything
-          next true if country_filter.blank? && hub_filter.blank? && dept_filter.blank?
-
           match = true
 
-          # Check hub filter
+          # Apply country filter
+          if country_filter.present?
+            # Blocked period matches if its hub's country matches
+            # If no hub_id, it's global and should show
+            if b.hub_id.present?
+              hub_country = hub_countries[b.hub_id]
+              match = match && (hub_country == country_filter)
+            end
+            # Global blocked periods (no hub_id) always match
+          end
+
+          # Apply hub filter
           if hub_filter.present?
-            # Show if matches hub OR if it's global (no hub_id)
+            # Blocked period matches if its hub_id matches
+            # If no hub_id, it's global and should show
             if b.hub_id.present?
               match = match && b.hub_id == hub_filter
             end
-            # If hub_id is nil, it's global, so keep it
+            # Global blocked periods (no hub_id) always match
           end
 
-          # Check country filter
-          if country_filter.present?
-            # Show if hub's country matches OR if it's global (no hub_id)
-            if b.hub_id.present?
-              match = match && country_hub_ids.include?(b.hub_id)
-            end
-            # If hub_id is nil, it's global, so keep it
-          end
-
-          # Check department filter
+          # Apply department filter
           if dept_filter.present?
-            # Show if matches department OR if it's global (no department_id)
+            # Blocked period matches if its department_id matches
+            # If no department_id, it's global and should show
             if b.department_id.present?
               match = match && b.department_id == dept_filter
             end
-            # If department_id is nil, it's global, so keep it
+            # Global blocked periods (no department_id) always match
           end
 
           match
