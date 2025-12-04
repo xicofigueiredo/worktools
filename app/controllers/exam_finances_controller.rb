@@ -74,6 +74,7 @@ class ExamFinancesController < ApplicationController
   end
 
   def update
+    @exam_finance.changed_by_user_email = current_user.email if current_user
     respond_to do |format|
       if @exam_finance.update(exam_finance_params)
         format.html {
