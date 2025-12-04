@@ -12,6 +12,15 @@ class PublicHolidaysController < ApplicationController
     end
   end
 
+  def destroy
+    @public_holiday = PublicHoliday.find(params[:id])
+    year = @public_holiday.date.year
+
+    @public_holiday.destroy
+
+    redirect_to leaves_path(active_tab: 'calendar', year: year), notice: 'Public Holiday deleted.'
+  end
+
   private
 
   def public_holiday_params

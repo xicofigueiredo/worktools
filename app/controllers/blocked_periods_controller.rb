@@ -12,6 +12,15 @@ class BlockedPeriodsController < ApplicationController
     end
   end
 
+  def destroy
+    @blocked_period = BlockedPeriod.find(params[:id])
+    year = @blocked_period.start_date.year
+
+    @blocked_period.destroy
+
+    redirect_to leaves_path(active_tab: 'calendar', year: year), notice: 'Blocked Period deleted.'
+  end
+
   private
 
   def blocked_period_params

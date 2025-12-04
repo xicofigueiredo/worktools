@@ -303,48 +303,84 @@
                           <% else %>
                             <% date = Date.new(year, month, actual_day) %>
                             <% classes = [] %>
-                            <% title_parts = [] %>
+
+                            <%# We will build an HTML string for the Popover content %>
+                            <% popover_content = [] %>
 
                             <% if holidays = holidays_by_date[date] %>
                               <% classes << 'holiday' %>
-                              <% title_parts << "🎉 Holidays: #{holidays.map(&:name).join(', ')}" %>
+                              <% holidays.each do |h| %>
+                                <%# Create the delete link %>
+                                <% delete_link = if @show_hr_view
+                                    link_to(
+                                      '<i class="fas fa-trash"></i>'.html_safe,
+                                      public_holiday_path(h),
+                                      data: { turbo_method: :delete, turbo_confirm: "Delete holiday #{h.name}?" },
+                                      class: "text-danger ms-2",
+                                      tabindex: "-1",
+                                      title: "Delete holiday"
+                                    )
+                                  else
+                                    ""
+                                  end
+                                %>
+                                <% popover_content << "<div class='d-flex justify-content-between align-items-center mb-1'><span>🎉 #{ERB::Util.html_escape(h.name)}</span> #{delete_link}</div>" %>
+                              <% end %>
                             <% end %>
 
                             <% if blocked = blocked_by_date[date] %>
                               <% classes << 'blocked' %>
-                              <% blocked_titles = blocked.map do |b| %>
-                                <% if b.user_id && b.user_type %>
-                                  <% type = b.user_type %>
-                                  <% entity = @users.find { |u| u.id == b.user_id }&.full_name || 'Unknown User' %>
+                              <% blocked.each do |b| %>
+                                <%# Determine the name to show %>
+                                <% if b.user_id %>
+                                  <% entity = @users.find { |u| u.id == b.user_id }&.full_name || 'User' %>
+                                  <% label = "👤 #{entity}" %>
                                 <% elsif b.department_id %>
-                                  <% type = 'Department' %>
-                                  <% entity = @departments.find { |d| d.id == b.department_id }&.name || 'Unknown Department' %>
+                                  <% entity = @departments.find { |d| d.id == b.department_id }&.name || 'Dept' %>
+                                  <% label = "🏢 #{entity}" %>
                                 <% elsif b.hub_id %>
-                                  <% type = 'Hub' %>
-                                  <% entity = @hubs.find { |h| h.id == b.hub_id }&.name || 'Unknown Hub' %>
+                                  <% entity = @hubs.find { |h| h.id == b.hub_id }&.name || 'Hub' %>
+                                  <% label = "📍 #{entity}" %>
                                 <% else %>
-                                  <% type = 'Global' %>
-                                  <% entity = 'All' %>
+                                  <% label = "🌍 Global Block" %>
                                 <% end %>
-                                <% "#{type}: #{entity}" %>
+
+                                <%# Create the delete link %>
+                                <% delete_link = if @show_hr_view
+                                    link_to(
+                                      '<i class="fas fa-trash"></i>'.html_safe,
+                                      blocked_period_path(b),
+                                      data: { turbo_method: :delete, turbo_confirm: "Delete this blocked period?" },
+                                      class: "text-danger ms-2",
+                                      tabindex: "-1",
+                                      title: "Delete blocked period"
+                                    )
+                                  else
+                                    ""
+                                  end
+                                %>
+                                <% popover_content << "<div class='d-flex justify-content-between align-items-center mb-1'><span class='small'>🚫 #{ERB::Util.html_escape(label)}</span> #{delete_link}</div>" %>
                               <% end %>
-                              <% title_parts << "🚫 Blocked: #{blocked_titles.join(', ')}" %>
                             <% end %>
 
                             <% if day_in_week == 0 || day_in_week == 6 %>
                               <% classes << 'weekend' unless classes.any? %>
                             <% end %>
 
-                            <% title = title_parts.join(' | ') %>
                             <% cell_classes = classes.join(' ') %>
+                            <% has_events = popover_content.any? %>
 
+                            <%# RENDER THE CELL %>
                             <td class="<%= cell_classes %>"
-                                <% if title.present? %>
-                                  data-bs-toggle="tooltip"
+                                <% if has_events %>
+                                  style="cursor: pointer;"
+                                  data-bs-toggle="popover"
                                   data-bs-placement="top"
                                   data-bs-html="true"
-                                  title="<%= title.gsub(' | ', '<br>') %>"
-                                <% end %>>
+                                  data-bs-title="Events for <%= date.strftime('%b %d') %>"
+                                  data-bs-content="<%= ERB::Util.html_escape(popover_content.join('')) %>"
+                                <% end %>
+                            >
                               <%= actual_day %>
                             </td>
                           <% end %>
@@ -476,10 +512,36 @@
 
 <script>
   document.addEventListener('turbo:load', function () {
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl);
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+      popoverTriggerEl.addEventListener('show.bs.popover', function (e) {
+        popoverTriggerList.forEach(function (el) {
+          if (el !== popoverTriggerEl) {
+            var popover = bootstrap.Popover.getInstance(el);
+            if (popover) {
+              popover.hide();
+            }
+          }
+        });
+      });
+      return new bootstrap.Popover(popoverTriggerEl, {
+        trigger: 'click',
+        sanitize: false,
+        container: 'body'
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      popoverList.forEach(function (popover) {
+        if (popover.tip && popover.tip.classList.contains('show')) {
+          if (
+            !popover._element.contains(e.target) &&
+            !popover.tip.contains(e.target)
+          ) {
+            popover.hide();
+          }
+        }
+      });
     });
 
     // Handle country filter change - update hub dropdown
