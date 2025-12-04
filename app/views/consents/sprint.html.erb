@@ -165,11 +165,7 @@
     </div>
 
     <div class="mt-4 d-flex justify-content-center">
-      <% if current_user.role == "lc" %>
-        <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;', disabled: true %>
-      <% else %>
-        <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
-      <% end %>
+      <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
       <%= link_to 'Back', learner_profile_path(@learner), class: 'btn btn-secondary ms-2', style: 'border-radius: 10px;' %>
     </div>
   <% end %>
