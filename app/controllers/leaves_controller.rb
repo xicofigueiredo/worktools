@@ -37,6 +37,10 @@ class LeavesController < ApplicationController
       @hubs = Hub.all
       @departments = Department.all
       @users = User.staff
+
+      # Initialize new objects for the modal forms
+      @new_public_holiday = PublicHoliday.new
+      @new_blocked_period = BlockedPeriod.new
     end
   end
 
