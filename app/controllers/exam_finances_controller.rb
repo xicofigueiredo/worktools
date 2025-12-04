@@ -20,11 +20,20 @@ class ExamFinancesController < ApplicationController
     # Get all unique statuses for the filter dropdown
     @available_statuses = ExamFinance.distinct.pluck(:status).compact.sort
 
-    # Get filter parameters
-    status_filter = params[:status] || 'all'
+    # Get filter parameters with role-based defaults
+    status_filter = params[:status]
+    is_default_filter = status_filter.blank?
 
-    # Store current filter
-    @current_status = status_filter
+    # Apply role-based default filters if no status is explicitly provided
+    if status_filter.blank?
+      if current_user.role == 'exams'
+        status_filter = 'No Status'
+      elsif current_user.role == 'finance'
+        status_filter = 'Sent to Finance'
+      else
+        status_filter = 'all'
+      end
+    end
 
     # Load exam finances for the selected season
     exam_finances = ExamFinance.includes(user: [:main_hub, { users_hubs: :hub }])
@@ -43,6 +52,25 @@ class ExamFinancesController < ApplicationController
                 .where(timelines: { user_id: finance.user_id })
                 .any? { |enroll| enroll.display_exam_date == finance.exam_season }
     end
+
+    # Preload exam enrolls for each finance to avoid N+1 queries
+    @exam_enrolls_by_finance = {}
+    @exam_finances.each do |finance|
+      @exam_enrolls_by_finance[finance.id] = ExamEnroll.joins(:timeline)
+                                                       .where(timelines: { user_id: finance.user_id, hidden: false })
+                                                       .select { |enroll| enroll.display_exam_date == finance.exam_season }
+                                                       .sort_by(&:subject_name)
+    end
+
+    # If default filter was applied but no results found, fall back to 'all'
+    if is_default_filter && @exam_finances.empty? && status_filter != 'all'
+      # Redirect to update URL with 'all' status
+      redirect_to exam_finances_path(status: 'all', date: params[:date])
+      return
+    end
+
+    # Store current filter
+    @current_status = status_filter
   end
 
   def show
@@ -65,6 +93,7 @@ class ExamFinancesController < ApplicationController
 
   def create
     @exam_finance = ExamFinance.new(exam_finance_params)
+    @exam_finance.changed_by_user_email = current_user.email if current_user
 
     if @exam_finance.save
       redirect_to @exam_finance, notice: 'Exam finance was successfully created.'

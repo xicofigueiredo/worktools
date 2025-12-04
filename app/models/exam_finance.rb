@@ -7,6 +7,7 @@ class ExamFinance < ApplicationRecord
 
   attr_accessor :changed_by_user_email
 
+  after_create :log_initial_creation
   before_save :log_status_change, if: :status_changed?
 
   def update_number_of_subjects(count)
@@ -25,6 +26,18 @@ class ExamFinance < ApplicationRecord
   end
 
   private
+
+  def log_initial_creation
+    changes = status_changes || []
+    changes << {
+      'from' => 'Created',
+      'to' => status || 'No Status',
+      'changed_at' => created_at.iso8601,
+      'changed_by' => changed_by_user_email || 'System'
+    }
+
+    update_column(:status_changes, changes)
+  end
 
   def log_status_change
     old_status = status_was || 'No Status'

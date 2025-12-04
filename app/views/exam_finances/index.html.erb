@@ -58,7 +58,8 @@
             <tr>
               <th>Learner</th>
               <th>Hub</th>
-              <th>Number of Subjects</th>
+              <th>Subjects</th>
+              <th>Total Cost</th>
               <th>Finance Status</th>
             </tr>
           </thead>
@@ -69,14 +70,32 @@
                 <tr onclick="window.location='<%= exam_finance_path(exam_finance) %>'" style="cursor: pointer;">
                   <td><%= exam_finance.user.full_name %></td>
                   <td><%= exam_finance.user.main_hub&.name || 'N/A' %></td>
-                  <td><%= exam_finance.number_of_subjects %></td>
-                  <td><%= exam_finance.status %></td>
+                  <td>
+                    <% enrolls = @exam_enrolls_by_finance[exam_finance.id] || [] %>
+                    <% if enrolls.any? %>
+                      <div style="font-size: 0.9em;">
+                        <% enrolls.each do |enroll| %>
+                          <div>
+                            <%= enroll.subject_name %> - <%= enroll.code %>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% else %>
+                      <span class="text-muted">No subjects</span>
+                    <% end %>
+                  </td>
+                  <td><%= exam_finance.total_cost %></td>
+                  <td>
+                    <span class="badge <%= finance_status_badge_class(exam_finance.status) %>">
+                      <%= exam_finance.status %>
+                    </span>
+                  </td>
                 </tr>
               <% end %>
             <% else %>
               <tr>
-                <td colspan="4" class="text-center">
-                  <p class="my-3 text-muted">No exam finances found for this season</p>
+                <td colspan="5" class="text-center">
+                  <p class="my-3 text-muted">No exam finances found with this filter</p>
                 </td>
               </tr>
             <% end %>
