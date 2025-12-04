@@ -5,7 +5,7 @@ class StaffLeave < ApplicationRecord
   has_many :confirmations, as: :confirmable, dependent: :destroy
   has_many :staff_leave_documents, dependent: :destroy
 
-  ADVANCE_DAYS = 20
+  ADVANCE_DAYS = 30
   STATUSES = %w[pending approved rejected cancelled].freeze
   LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].freeze
 
