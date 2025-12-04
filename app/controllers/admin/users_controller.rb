@@ -6,6 +6,7 @@ class Admin::UsersController < ApplicationController
     @role = current_user.role
     @hubs = Hub.all
 
+
     @users = User.all
 
     # Filter by Role
