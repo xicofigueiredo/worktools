@@ -2,13 +2,42 @@ class ExamFinancesController < ApplicationController
   before_action :set_exam_finance, only: [:show, :edit, :update, :destroy, :generate_statement, :preview_statement]
 
   def index
-    # Load exam finances for learners with Nov 2025 enrollments
-    exam_finances = ExamFinance.includes(user: { users_hubs: :hub })
+    # Get the target season based on date parameter or default to current season
+    if params[:date].present?
+      target_date = Date.parse(params[:date])
+      @season = Sprint.find_season_for_date(target_date)
+    else
+      @season = Sprint.current_season
+    end
+
+    # Get adjacent seasons for navigation
+    @previous_season = Sprint.previous_season(@season)
+    @next_season = Sprint.next_season(@season)
+
+    # Convert season name to match exam_season format (e.g., "January 2026" or "May/June 2026")
+    season_name = @season[:name]
+
+    # Get all unique statuses for the filter dropdown
+    @available_statuses = ExamFinance.distinct.pluck(:status).compact.sort
+
+    # Get filter parameters
+    status_filter = params[:status] || 'all'
+
+    # Store current filter
+    @current_status = status_filter
+
+    # Load exam finances for the selected season
+    exam_finances = ExamFinance.includes(user: [:main_hub, { users_hubs: :hub }])
                               .joins(:user)
-                              .where(exam_season: "January 2026")
+                              .where(exam_season: season_name)
                               .order('users.full_name ASC')
 
-    # Filter to only those with matching exam enrollments
+    # Apply status filter directly on ExamFinance
+    if status_filter != 'all'
+      exam_finances = exam_finances.where(status: status_filter)
+    end
+
+    # Filter to only those with matching exam enrollments in the selected season
     @exam_finances = exam_finances.select do |finance|
       ExamEnroll.joins(:timeline)
                 .where(timelines: { user_id: finance.user_id })

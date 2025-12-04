@@ -1,30 +1,89 @@
 <div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Exam Finances</h1>
+  <div id="flash">
+    <%= render "shared/flash" %>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-hover">
-      <thead>
-        <tr>
-          <th>Learner</th>
-          <th>Hub</th>
-          <th>Number of Subjects</th>
-          <th>Finance Status</th>
-        </tr>
-      </thead>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Left side: Season name -->
+    <div class="text-start" style="flex: 1;">
+      <h4 class="mb-2">
+        <%= @season[:name] %>
+      </h4>
+    </div>
 
-      <tbody>
-        <% @exam_finances.each do |exam_finance| %>
-          <tr onclick="window.location='<%= exam_finance_path(exam_finance) %>'" style="cursor: pointer;">
-            <td><%= exam_finance.user.full_name %></td>
-            <td><%= exam_finance.user.users_hubs.where(main: true).first.hub.name %></td>
-            <td><%= exam_finance.number_of_subjects %></td>
-            <td><%= exam_finance.status %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+    <!-- Center: Season navigation -->
+    <div class="d-flex gap-2 justify-content-center" style="flex: 1;">
+      <%= link_to exam_finances_path(date: @previous_season&.dig(:start_date), status: params[:status], hub: params[:hub], subject: params[:subject], exam_centre: params[:exam_centre]),
+          class: "btn btn-outline-secondary rounded d-flex align-items-center #{@previous_season ? '' : 'disabled'}" do %>
+        <i class="fa-solid fa-chevron-left"></i>
+      <% end %>
+
+      <%= link_to 'Current Season',
+          exam_finances_path(status: params[:status], hub: params[:hub], subject: params[:subject], exam_centre: params[:exam_centre]),
+          class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+
+      <%= link_to exam_finances_path(date: @next_season&.dig(:start_date), status: params[:status], hub: params[:hub], subject: params[:subject], exam_centre: params[:exam_centre]),
+          class: "btn btn-outline-secondary rounded d-flex align-items-center #{@next_season ? '' : 'disabled'}" do %>
+        <i class="fa-solid fa-chevron-right"></i>
+      <% end %>
+    </div>
+
+    <!-- Right side: Filters -->
+    <div class="d-flex align-items-end gap-2 justify-content-end" style="flex: 1;">
+      <%= form_with url: exam_finances_path, method: :get, local: true, class: "d-flex align-items-end gap-2", id: "filter-form" do |form| %>
+
+        <!-- Status Filter -->
+        <div style="width: 150px;">
+          <%= form.select :status,
+              options_for_select([['All Status', 'all']] + @available_statuses.map { |status| [status, status] }, @current_status),
+              {},
+              {
+                class: "form-select",
+                id: "status-filter",
+                onchange: "this.form.submit();"
+              } %>
+        </div>
+
+        <!-- Preserve date parameter -->
+        <%= form.hidden_field :date, value: params[:date] if params[:date].present? %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Learner</th>
+              <th>Hub</th>
+              <th>Number of Subjects</th>
+              <th>Finance Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% if @exam_finances.any? %>
+              <% @exam_finances.each do |exam_finance| %>
+                <tr onclick="window.location='<%= exam_finance_path(exam_finance) %>'" style="cursor: pointer;">
+                  <td><%= exam_finance.user.full_name %></td>
+                  <td><%= exam_finance.user.main_hub&.name || 'N/A' %></td>
+                  <td><%= exam_finance.number_of_subjects %></td>
+                  <td><%= exam_finance.status %></td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="4" class="text-center">
+                  <p class="my-3 text-muted">No exam finances found for this season</p>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
