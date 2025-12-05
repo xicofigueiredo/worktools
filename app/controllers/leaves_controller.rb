@@ -327,6 +327,10 @@ class LeavesController < ApplicationController
   def cancel
     @staff_leave = current_user.staff_leaves.find(params[:id])
 
+    if Date.current.day > 15
+      redirect_to leaves_path, alert: 'Cancellations are not allowed after the 15th of the month.' and return
+    end
+
     if @staff_leave.status == 'cancelled'
       redirect_to leaves_path, alert: 'Leave is already cancelled.' and return
     end
@@ -338,7 +342,7 @@ class LeavesController < ApplicationController
     # If leave is pending and nobody approved -> immediate cancel as before
     if @staff_leave.status == 'pending' && approved_confs.none?
       ActiveRecord::Base.transaction do
-        @staff_leave.confirmations.update!(read: true)
+        @staff_leave.confirmations.update!(status: 'cancelled')
         @staff_leave.update!(status: 'cancelled')
       end
       redirect_to leaves_path, notice: 'Pending leave cancelled.' and return
