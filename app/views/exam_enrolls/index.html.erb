@@ -99,13 +99,23 @@
               <th>Name</th>
               <th>Subject</th>
               <th>Status</th>
-              <th>Actions</th>
+              <th>Delete</th>
             </tr>
           </thead>
           <tbody>
             <% if @exam_enrolls.any? %>
               <% @exam_enrolls.each do |enrollment| %>
-                <tr id="exam_enroll_<%= enrollment.id %>" data-exam-enroll-id="<%= enrollment.id %>">
+                <%
+                  filter_params = {
+                    status: params[:status],
+                    hub: params[:hub],
+                    subject: params[:subject],
+                    exam_centre: params[:exam_centre],
+                    date: params[:date]
+                  }.compact
+                  show_path = filter_params.present? ? exam_enroll_path(enrollment, filter_params) : exam_enroll_path(enrollment)
+                %>
+                <tr id="exam_enroll_<%= enrollment.id %>" data-exam-enroll-id="<%= enrollment.id %>" data-href="<%= show_path %>" style="cursor: pointer;">
                   <td><%= enrollment.display_exam_date %></td>
                   <td><%= enrollment.hub %></td>
                   <td><%= enrollment.learner_name %></td>
@@ -115,12 +125,6 @@
                   </td>
                   <td>
                     <div class="d-flex justify-content-center">
-                      <%= link_to exam_enroll_path(enrollment), class: "btn btn-sm btn-info me-1" do %>
-                        <i class="fas fa-eye"></i>
-                      <% end %>
-                      <%= link_to edit_exam_enroll_path(enrollment), class: "btn btn-sm btn-warning me-1" do %>
-                        <i class="fas fa-edit"></i>
-                      <% end %>
                       <% if current_user.role == "admin" || current_user.role == "lc" %>
                         <%= button_to exam_enroll_path(enrollment),
                             method: :delete,
@@ -159,4 +163,24 @@
   font-size: 0.9em;
   padding: 0.5em 0.7em;
 }
+
+tr[data-href]:hover td {
+  background-color:#d6f10f !important;
+  cursor: pointer;
+}
 </style>
+
+<script>
+  document.addEventListener('turbo:load', function() {
+    const rows = document.querySelectorAll('tr[data-href]');
+    rows.forEach(function(row) {
+      row.addEventListener('click', function(e) {
+        // Don't navigate if clicking on a button, link, or form
+        if (e.target.closest('button, a, form')) {
+          return;
+        }
+        window.location.href = row.dataset.href;
+      });
+    });
+  });
+</script>

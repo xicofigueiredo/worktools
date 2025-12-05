@@ -17,7 +17,7 @@
     <h1>Exam Enrollment Details</h1>
     <div>
       <%= link_to "Edit", edit_exam_enroll_path(@exam_enroll), class: "btn btn-warning" %>
-      <%= link_to "Back", request.referer || exam_enrolls_path, class: "btn btn-secondary" %>
+      <%= link_to "Back",  exam_enrolls_path(status: params[:status], hub: params[:hub], subject: params[:subject], exam_centre: params[:exam_centre], date: params[:date]), class: "btn btn-secondary" %>
     </div>
   </div>
 
