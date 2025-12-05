@@ -8,8 +8,50 @@ class ConsentsController < ApplicationController
     if @learner.nil?
       redirect_back fallback_location: root_path, alert: "Learner not found" and return
     end
-    # Find the nearest build week week.name.include?("Build") and start_date is before or equal to Date.today
-    @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+
+    # Handle date parameter for navigation
+    begin
+      @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    rescue ArgumentError
+      @current_date = Date.today
+    end
+    @current_date ||= Date.today
+
+    # First, try to find a build week that contains the current date
+    @nearest_build_week = Week.where("start_date <= ? AND end_date >= ? AND name ILIKE ?", @current_date, @current_date, "%Build%").first
+
+    # If no build week found for current date, find the nearest one (past or future)
+    if @nearest_build_week.nil?
+      # Try to find the nearest past build week
+      past_build_week = Week.where("end_date < ? AND name ILIKE ?", @current_date, "%Build%").order(end_date: :desc).first
+      # Try to find the nearest future build week
+      future_build_week = Week.where("start_date > ? AND name ILIKE ?", @current_date, "%Build%").order(:start_date).first
+
+      # Choose the closest one
+      if past_build_week && future_build_week
+        # If both exist, choose the one closest to current_date
+        past_diff = (@current_date - past_build_week.end_date).abs
+        future_diff = (future_build_week.start_date - @current_date).abs
+        @nearest_build_week = past_diff < future_diff ? past_build_week : future_build_week
+      elsif past_build_week
+        @nearest_build_week = past_build_week
+      elsif future_build_week
+        @nearest_build_week = future_build_week
+      else
+        # If no build weeks exist at all, try to find any build week
+        @nearest_build_week = Week.where("name ILIKE ?", "%Build%").order(:start_date).first
+      end
+    end
+
+    # Find previous and next build weeks for navigation
+    if @nearest_build_week
+      @prev_build_week = Week.where("start_date < ? AND name ILIKE ?", @nearest_build_week.start_date, "%Build%").order(start_date: :desc).first
+      @next_build_week = Week.where("start_date > ? AND name ILIKE ?", @nearest_build_week.end_date, "%Build%").order(:start_date).first
+    else
+      @prev_build_week = nil
+      @next_build_week = nil
+    end
+
     bw_existing = Consent.find_by(user_id: @learner.id, week_id: @nearest_build_week&.id)
 
     if bw_existing
@@ -123,6 +165,27 @@ class ConsentsController < ApplicationController
       redirect_back fallback_location: root_path, alert: "Learner not found" and return
     end
     @hub = @learner.main_hub&.name
+
+    # Handle date parameter for navigation
+    begin
+      @current_date = params[:date] ? Date.parse(params[:date]) : Date.today
+    rescue ArgumentError
+      @current_date = Date.today
+    end
+    @current_date ||= Date.today
+
+    # Find sprint for the current date, fallback to today's sprint if not found
+    date_sprint = Sprint.where("start_date <= ? AND end_date >= ?", @current_date, @current_date).first
+    @current_sprint = date_sprint || @current_sprint
+
+    # Find previous and next sprints for navigation
+    if @current_sprint
+      @prev_sprint = Sprint.where("end_date < ?", @current_sprint.start_date).order(end_date: :desc).first
+      @next_sprint = Sprint.where("start_date > ?", @current_sprint.end_date).order(:start_date).first
+    else
+      @prev_sprint = nil
+      @next_sprint = nil
+    end
 
     sprint_existing = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
 

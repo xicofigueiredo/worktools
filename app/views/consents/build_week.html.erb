@@ -2,8 +2,33 @@
 <div class="container mt-4">
   <%= form_with model: @bw_consent, url: build_week_consents_path(learner_id: @learner&.id), method: :post, local: true, data: { controller: 'consent-form' } do |f| %>
     <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
-      <h1><%= @nearest_build_week.name %> Consent Form</h1>
-      <h1><%= @nearest_build_week.sprint.start_date.strftime('%Y') %> <%= @nearest_build_week.sprint.name %></h1>
+      <div class="d-flex">
+        <h1 class="mb-0"><%= @nearest_build_week.name %></h1>
+      </div>
+
+      <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
+        <% if @prev_build_week %>
+          <%= link_to '<i class="fa-solid fa-chevron-left"></i>'.html_safe, build_week_consents_path(learner_id: @learner&.id, date: @prev_build_week.start_date), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+        <% else %>
+          <button class="btn btn-outline-secondary rounded d-flex align-items-center" disabled>
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+        <% end %>
+
+        <%= link_to 'Current Build Week', build_week_consents_path(learner_id: @learner&.id, date: Date.today), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+
+        <% if @next_build_week && @next_build_week.start_date < Date.today + 7.month  %>
+          <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe, build_week_consents_path(learner_id: @learner&.id, date: @next_build_week.start_date), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+        <% else %>
+          <button class="btn btn-outline-secondary rounded d-flex align-items-center" disabled>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        <% end %>
+      </div>
+
+      <div>
+        <h1 class="mb-0"><%= @nearest_build_week.sprint.start_date.strftime('%Y') %> <%= @nearest_build_week.sprint.name %></h1>
+      </div>
     </div>
 
 
