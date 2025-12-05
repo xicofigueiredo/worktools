@@ -9,12 +9,29 @@
       <div class="d-flex gap-2 align-items-center flex-wrap">
         <div class="d-flex gap-2 align-items-center">
           <label class="mb-0 small text-muted">Filter</label>
-          <select id="client-dept-filter" class="form-select form-select-sm" style="width: auto; min-width: 150px;">
-            <option value="all">All departments</option>
-            <% @managed_departments.to_a.each do |d| %>
-              <option value="<%= d.id %>"><%= d.name %></option>
-            <% end %>
-          </select>
+          <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="deptFilterDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 180px; text-align: left;">
+              All departments
+            </button>
+            <ul class="dropdown-menu p-2" aria-labelledby="deptFilterDropdownBtn" style="max-height: 300px; overflow-y: auto;">
+              <li>
+                <label class="dropdown-item d-flex gap-2 align-items-center cursor-pointer">
+                  <input type="checkbox" class="form-check-input mt-0 filter-checkbox-all" value="all" checked>
+                  <span>All departments</span>
+                </label>
+              </li>
+              <li><hr class="dropdown-divider my-1"></li>
+
+              <% @managed_departments.to_a.each do |d| %>
+                <li>
+                  <label class="dropdown-item d-flex gap-2 align-items-center cursor-pointer">
+                    <input type="checkbox" class="form-check-input mt-0 filter-checkbox-dept" value="<%= d.id %>">
+                    <span><%= d.name %></span>
+                  </label>
+                </li>
+              <% end %>
+            </ul>
+          </div>
         </div>
 
         <div class="btn-group" role="group" aria-label="Actions">
@@ -188,30 +205,104 @@
 <!-- Inline scripts: filter + client-side XLSX export (SheetJS) + entitlement management -->
 <script>
   document.addEventListener('turbo:load', function () {
-    var clientFilter = document.getElementById('client-dept-filter');
-    var exportBtn = document.getElementById('export-xlsx-btn');
-    var createBtn = document.getElementById('create-entitlement-btn');
+    var filterBtn = document.getElementById('deptFilterDropdownBtn');
+    var allCheckbox = document.querySelector('.filter-checkbox-all');
+    var deptCheckboxes = document.querySelectorAll('.filter-checkbox-dept');
 
-    if (!clientFilter) return;
+    if (filterBtn && allCheckbox && deptCheckboxes) {
 
-    // Restore saved selection (optional)
-    try {
-      var saved = localStorage.getItem('deptFilter');
-      if (saved) clientFilter.value = saved;
-    } catch (e) {}
+      // 1. Helper to get currently selected IDs
+      function getSelectedIds() {
+        if (allCheckbox.checked) return ['all'];
+        return Array.from(deptCheckboxes)
+          .filter(cb => cb.checked)
+          .map(cb => cb.value);
+      }
 
-    function applyFilter(val) {
-      var allRows = document.querySelectorAll('#dept-entitlements-table tbody tr[data-dept-id]');
-      allRows.forEach(function (row) {
-        if (val === 'all' || val === '' ) {
-          row.style.display = '';
+      // 2. Main Filter Function
+      function applyMultiFilter() {
+        var selectedIds = getSelectedIds();
+        var allRows = document.querySelectorAll('#dept-entitlements-table tbody tr[data-dept-id]');
+
+        // Update Button Text
+        if (selectedIds.includes('all') || selectedIds.length === 0) {
+          filterBtn.innerText = 'All departments';
+        } else if (selectedIds.length === 1) {
+          // Find the name of the single selected dept
+          var selectedCb = Array.from(deptCheckboxes).find(cb => cb.value === selectedIds[0]);
+          filterBtn.innerText = selectedCb ? selectedCb.nextElementSibling.innerText : '1 selected';
         } else {
-          row.style.display = (row.dataset.deptId === val) ? '' : 'none';
+          filterBtn.innerText = selectedIds.length + ' departments selected';
         }
-      });
-    }
 
-    applyFilter(clientFilter.value);
+        // Show/Hide Rows
+        allRows.forEach(function (row) {
+          var rowDeptId = row.dataset.deptId;
+          // Show if 'all' is selected OR if row ID is in the selected list
+          if (selectedIds.includes('all') || selectedIds.includes(rowDeptId)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        // Save to localStorage
+        try {
+          localStorage.setItem('deptFilterMulti', JSON.stringify(selectedIds));
+        } catch (e) {}
+      }
+
+      // 3. Event Listeners
+
+      // Handle "All" click
+      allCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          // Uncheck all specific departments
+          deptCheckboxes.forEach(cb => cb.checked = false);
+        } else {
+          // If user unchecks "All" but nothing else is checked, force "All" back on (prevent empty state)
+           var anyOtherChecked = Array.from(deptCheckboxes).some(cb => cb.checked);
+           if (!anyOtherChecked) this.checked = true;
+        }
+        applyMultiFilter();
+      });
+
+      // Handle Specific Dept click
+      deptCheckboxes.forEach(function(cb) {
+        cb.addEventListener('change', function() {
+          if (this.checked) {
+            // If a specific dept is checked, uncheck "All"
+            allCheckbox.checked = false;
+          } else {
+            // If all specific depts are now unchecked, re-check "All"
+            var anyChecked = Array.from(deptCheckboxes).some(c => c.checked);
+            if (!anyChecked) allCheckbox.checked = true;
+          }
+          applyMultiFilter();
+        });
+      });
+
+      // 4. Restore state from LocalStorage on load
+      try {
+        var saved = JSON.parse(localStorage.getItem('deptFilterMulti'));
+        if (Array.isArray(saved) && saved.length > 0) {
+          if (saved.includes('all')) {
+            allCheckbox.checked = true;
+            deptCheckboxes.forEach(cb => cb.checked = false);
+          } else {
+            allCheckbox.checked = false;
+            deptCheckboxes.forEach(cb => {
+              cb.checked = saved.includes(cb.value);
+            });
+          }
+        }
+      } catch (e) {
+        console.log("Error restoring filter", e);
+      }
+
+      // Initial Apply
+      applyMultiFilter();
+    }
 
     clientFilter.addEventListener('change', function () {
       var val = clientFilter.value;
