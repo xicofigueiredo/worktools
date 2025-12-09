@@ -1,81 +1,127 @@
-<% year_now = Date.current.year %>
+<% year_now = params[:year].present? ? params[:year].to_i : Date.current.year %>
+<% prev_year = year_now - 1 %>
+<% next_year = year_now + 1 %>
 <% show_actions = @show_hr_view %>
 
 <div class="card mb-4">
-  <div class="card-header">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <h5 class="mb-0">Department Entitlements — <%= year_now %></h5>
+  <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <h5 class="mb-0 fw-bold text-dark">Department Entitlements: <%= year_now %></h5>
+
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="deptFilterDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+          All departments
+        </button>
+        <ul class="dropdown-menu p-2" aria-labelledby="deptFilterDropdownBtn" style="max-height: 300px; overflow-y: auto;">
+          <li>
+            <label class="dropdown-item d-flex gap-2 align-items-center cursor-pointer">
+              <input type="checkbox" class="form-check-input mt-0 filter-checkbox-all" value="all" checked>
+              <span>All departments</span>
+            </label>
+          </li>
+          <li><hr class="dropdown-divider my-1"></li>
+          <% @managed_departments.to_a.each do |d| %>
+            <li>
+              <label class="dropdown-item d-flex gap-2 align-items-center cursor-pointer">
+                <input type="checkbox" class="form-check-input mt-0 filter-checkbox-dept" value="<%= d.id %>">
+                <span><%= d.name %></span>
+              </label>
+            </li>
+          <% end %>
+        </ul>
       </div>
-  </div>
 
-  <div class="card-body p-0">
-    <table class="table table-sm mb-0" id="dept-entitlements-table">
-      <thead class="table-light">
-        <tr>
-          <th>Department</th>
-          <th>Name</th>
-          <th>Total</th>
-          <th>Mandatory</th> <th>Booked (Voluntary)</th>
-          <th>Pending</th>
-          <th>Left</th>
-          <% if show_actions %>
-            <th>Actions</th>
-          <% end %>
-        </tr>
-      </thead>
-
-      <tbody>
-        <% if @rows.blank? %>
-          <tr>
-            <td colspan="<%= show_actions ? 8 : 7 %>" class="text-center text-muted py-3">No users found for your departments.</td>
-          </tr>
-        <% else %>
-          <% @rows.each do |r| %>
-            <% primary_dept = (r[:primary_department] || r[:departments].first) %>
-            <tr data-dept-id="<%= primary_dept&.id %>">
-              <td><%= primary_dept&.name || '—' %></td>
-              <td><%= "#{r[:user].full_name}" %></td>
-              <td><%= r[:total_holidays] %></td>
-
-              <td>
-                 <%= r[:mandatory_days] %>
-              </td>
-
-              <td>
-                <%= r[:voluntary_booked] %>
-                <% if r[:booked_carry_over].to_i > 0 %>
-                   <small class="text-muted">(+ <%= r[:booked_carry_over] %> carry)</small>
-                <% end %>
-              </td>
-
-              <td>
-                <%= r[:pending_holiday] %>
-                <% if r[:pending_carry_over].to_i > 0 %>
-                  <small class="text-muted">(+ <%= r[:pending_carry_over] %> carry)</small>
-                <% end %>
-              </td>
-
-              <td><%= r[:holidays_left] %></td>
-
-              <% if show_actions %>
-                <td>
-                  <button type="button"
-                          class="btn btn-sm btn-outline-primary edit-entitlement"
-                          data-user-id="<%= r[:user].id %>"
-                          data-year="<%= year_now %>"
-                          data-current-total="<%= r[:total_holidays] %>"
-                          data-current-booked="<%= r[:booked_holiday] %>"
-                          data-current-pending="<%= r[:pending_holiday] %>"
-                          data-current-left="<%= r[:holidays_left] %>">Edit</button>
-                </td>
-              <% end %>
-            </tr>
-          <% end %>
+      <div class="d-flex gap-2">
+        <% if show_actions %>
+          <button type="button" class="btn btn-primary btn-sm shadow-sm" id="create-entitlement-btn" title="Create new entitlement">
+            <i class="fa-solid fa-plus me-1"></i> New
+          </button>
         <% end %>
-      </tbody>
-    </table>
+
+        <button id="export-xlsx-btn" type="button" class="btn btn-outline-success btn-sm" title="Export visible rows to Excel">
+          <i class="fa-solid fa-file-excel me-1"></i> Export
+        </button>
+
+        <div class="btn-group btn-group-sm">
+          <%= link_to leaves_path(year: prev_year, active_tab: 'manager'), class: 'btn btn-outline-secondary' do %>
+            <i class="fas fa-chevron-left"></i> <%= prev_year %>
+          <% end %>
+          <%= link_to leaves_path(year: next_year, active_tab: 'manager'), class: 'btn btn-outline-secondary' do %>
+            <%= next_year %> <i class="fas fa-chevron-right"></i>
+          <% end %>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0" id="dept-entitlements-table">
+        <thead class="table-light">
+          <tr>
+            <th>Department</th>
+            <th>Name</th>
+            <th>Total</th>
+            <th>Mandatory</th> <th>Booked (Voluntary)</th>
+            <th>Pending</th>
+            <th>Left</th>
+            <% if show_actions %>
+              <th>Actions</th>
+            <% end %>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% if @rows.blank? %>
+            <tr>
+              <td colspan="<%= show_actions ? 8 : 7 %>" class="text-center text-muted py-3">No users found for your departments.</td>
+            </tr>
+          <% else %>
+            <% @rows.each do |r| %>
+              <% primary_dept = (r[:primary_department] || r[:departments].first) %>
+              <tr data-dept-id="<%= primary_dept&.id %>">
+                <td><%= primary_dept&.name || '—' %></td>
+                <td><%= "#{r[:user].full_name}" %></td>
+                <td><%= r[:total_holidays] %></td>
+
+                <td>
+                  <%= r[:mandatory_days] %>
+                </td>
+
+                <td>
+                  <%= r[:voluntary_booked] %>
+                  <% if r[:booked_carry_over].to_i > 0 %>
+                    <small class="text-muted">(+ <%= r[:booked_carry_over] %> carry)</small>
+                  <% end %>
+                </td>
+
+                <td>
+                  <%= r[:pending_holiday] %>
+                  <% if r[:pending_carry_over].to_i > 0 %>
+                    <small class="text-muted">(+ <%= r[:pending_carry_over] %> carry)</small>
+                  <% end %>
+                </td>
+
+                <td><%= r[:holidays_left] %></td>
+
+                <% if show_actions %>
+                  <td>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary edit-entitlement"
+                            data-user-id="<%= r[:user].id %>"
+                            data-year="<%= year_now %>"
+                            data-current-total="<%= r[:total_holidays] %>"
+                            data-current-booked="<%= r[:booked_holiday] %>"
+                            data-current-pending="<%= r[:pending_holiday] %>"
+                            data-current-left="<%= r[:holidays_left] %>">Edit</button>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 <div class="modal fade" id="create-entitlement-modal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">

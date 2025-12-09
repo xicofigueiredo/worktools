@@ -4,6 +4,8 @@ class StaffLeaveEntitlement < ApplicationRecord
   validates :annual_holidays, :holidays_left, numericality: { greater_than_or_equal_to: 0 }
   validates :year, presence: true, uniqueness: { scope: :user_id }
 
+  after_create :apply_existing_mandatory_leaves
+
   # Calculate pro-rated holidays based on start date
   def self.calculate_pro_rated_holidays(start_date, year = Date.current.year, base_amount = 25)
     return base_amount if start_date.blank?
@@ -44,7 +46,9 @@ class StaffLeaveEntitlement < ApplicationRecord
   # Create entitlement with validation
   def self.create_for_user(user:, year:, annual_holidays:, holidays_left:, manager:)
     # Check authorization
-    authorized = manager.managed_departments.any? do |dept|
+    is_admin_or_hr = manager.role == 'admin' || manager.email == 'humanresources@bravegenerationacademy.com'
+
+    authorized = is_admin_or_hr || manager.managed_departments.any? do |dept|
       user.departments.any? { |user_dept| dept.subtree_ids.include?(user_dept.id) }
     end
 
@@ -72,7 +76,9 @@ class StaffLeaveEntitlement < ApplicationRecord
   # Update entitlement with validation
   def update_for_manager(annual_holidays:, holidays_left:, manager:)
     # Check authorization
-    authorized = manager.managed_departments.any? do |dept|
+    is_admin_or_hr = manager.role == 'admin' || manager.email == 'humanresources@bravegenerationacademy.com'
+
+    authorized = is_admin_or_hr || manager.managed_departments.any? do |dept|
       user.departments.any? { |user_dept| dept.subtree_ids.include?(user_dept.id) }
     end
 
@@ -82,6 +88,36 @@ class StaffLeaveEntitlement < ApplicationRecord
       { success: true, entitlement: self }
     else
       { success: false, error: errors.full_messages.to_sentence, status: :unprocessable_entity }
+    end
+  end
+
+  private
+
+  def apply_existing_mandatory_leaves
+    mandatory_leaves = MandatoryLeave.where("extract(year from start_date) = ? OR extract(year from end_date) = ?", year, year)
+
+    mandatory_leaves.each do |ml|
+      # Check if this user qualifies (Global or Role)
+      should_apply = ml.global || (user.role.in?(['lc', 'cm']))
+
+      if should_apply
+        unless StaffLeave.exists?(user: user, mandatory_leave: ml)
+          sl = StaffLeave.new(
+            user: user,
+            start_date: ml.start_date,
+            end_date: ml.end_date,
+            leave_type: 'holiday',
+            status: 'approved',
+            mandatory_leave: ml,
+            notes: "Mandatory Leave: #{ml.name}"
+          )
+
+          sl.calculate_total_days
+          next if sl.total_days == 0
+
+          sl.save(validate: false)
+        end
+      end
     end
   end
 end

@@ -457,7 +457,7 @@ class LeavesController < ApplicationController
   private
 
   def entitlement_params
-    params.permit(:user_id, :year, :annual_holidays, :holidays_left, :annual_total, :new_holidays_left)
+    params.permit(:user_id, :year, :annual_holidays, :holidays_left, :annual_total, :new_holidays_left, :start_date)
   end
 
   def staff_leave_params
@@ -465,7 +465,7 @@ class LeavesController < ApplicationController
   end
 
   def prepare_manager_entitlements
-    year_now = Date.current.year
+    year_now = params[:year].present? ? params[:year].to_i : Date.current.year
     next_year = year_now + 1
 
     # collect ids for all managed departments (including their sub-departments)
