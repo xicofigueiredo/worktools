@@ -181,10 +181,15 @@ class UserMailer < Devise::Mailer
     # --- Curriculum-specific attachments ---
     handbook_curricula = %w(portuguese british own american)
     welcome_letter_curricula = %w(british american own)
+    billing_guide_curricula = %w(portuguese)
 
     unless is_up
       if handbook_curricula.any? { |k| curriculum_raw.include?(k) }
         attachments['Handbook.pdf'] = File.read(Rails.root.join('public', 'documents', 'handbook.pdf'))
+      end
+
+      if billing_guide_curricula.any { |k| curriculum_raw.include?(k) }
+        attachments['Billing_Guide.pdf'] = File.read(Rails.root.join('public', 'documents', 'billing_guide.pdf'))
       end
 
       if welcome_letter_curricula.any? { |k| curriculum_raw.include?(k) }

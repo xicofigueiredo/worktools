@@ -2,102 +2,102 @@ namespace :notifications do
   desc "Send notifications to Level 4 Business users, Learning Coaches, and about the Spring Equinox Party"
   task send_notifications: :environment do
     notifications_count = 0
-    # subject_ids = [559,569]
+    subject_ids = [355,356,357]
 
-    #  Timeline.where(subject_id: subject_ids, hidden: [false, nil]).find_each do |timeline|
-    #    user = timeline.user
-    #    Notification.find_or_create_by!(
-    #      user: user,
-    #      message: "Please update your #{timeline.subject.name} timeline."
-    #      )
-    #      notifications_count += 1
-    #  end
+     Timeline.where(subject_id: subject_ids, hidden: [false, nil]).find_each do |timeline|
+       user = timeline.user
+       Notification.find_or_create_by!(
+         user: user,
+         message: "If you are doing UP Business via BGA (on Moodle rather than GenEx), please create a legacy timeline in Worktools so it appears correctly in the reports. Also make sure you have a sprint goal linked to this timeline, as sprint reports are generated from sprint goals."
+         )
+         notifications_count += 1
+     end
 
-    hub_ids = Hub.where(country: "Portugal").pluck(:id)
+#     hub_ids = Hub.where(country: "Portugal").pluck(:id)
 
-    # Process LCs who have hub relationships in Portugal
-    User.where(role: "lc").find_each do |user|
-      next unless (user.hub_ids & hub_ids).any?  # LCs must have hub relationships in Portugal
-      send = true  # LCs automatically qualify if they have hub relationships
+#     # Process LCs who have hub relationships in Portugal
+#     User.where(role: "lc").find_each do |user|
+#       next unless (user.hub_ids & hub_ids).any?  # LCs must have hub relationships in Portugal
+#       send = true  # LCs automatically qualify if they have hub relationships
 
-      if user.deactivate != true && send
-        Notification.find_or_create_by!(
-          user: user,
-          link: "https://us02web.zoom.us/j/89621728657?pwd=zZeDCuKyjXZufNTdKOec2F8dO58ByE.1",
-          message: "Dear Brave Parents and Guardians,
+#       if user.deactivate != true && send
+#         Notification.find_or_create_by!(
+#           user: user,
+#           link: "https://us02web.zoom.us/j/89621728657?pwd=zZeDCuKyjXZufNTdKOec2F8dO58ByE.1",
+#           message: "Dear Brave Parents and Guardians,
 
-We hope you had a wonderful weekend.
+# We hope you had a wonderful weekend.
 
-📣 Friendly reminder 📣
+# 📣 Friendly reminder 📣
 
-*Today, at 6PM,* Parents are invited to join Tim Vieira for a Zoom Meeting.
+# *Today, at 6PM,* Parents are invited to join Tim Vieira for a Zoom Meeting.
 
-Join Zoom Meeting:
-https://us02web.zoom.us/j/89621728657?pwd=zZeDCuKyjXZufNTdKOec2F8dO58ByE.1
+# Join Zoom Meeting:
+# https://us02web.zoom.us/j/89621728657?pwd=zZeDCuKyjXZufNTdKOec2F8dO58ByE.1
 
-Meeting ID: 896 2172 8657
-Passcode: 872851
+# Meeting ID: 896 2172 8657
+# Passcode: 872851
 
-This meeting will cover important information regarding BGA and this new Sprint.
+# This meeting will cover important information regarding BGA and this new Sprint.
 
-Your presence is highly encouraged.
+# Your presence is highly encouraged.
 
-Thank you! Have a great day!"
-        )
-        notifications_count += 1
-      end
-    end
+# Thank you! Have a great day!"
+#         )
+#         notifications_count += 1
+#       end
+#     end
 
-    # Process guardians whose kids have hub relationships in Portugal
-    User.where(role: "guardian").find_each do |user|
-      send = false
+#     # Process guardians whose kids have hub relationships in Portugal
+#     User.where(role: "guardian").find_each do |user|
+#       send = false
 
-      # Filter out nil/invalid kid IDs and only process valid ones
-      valid_kids = user.kids&.compact&.reject(&:blank?) || []
+#       # Filter out nil/invalid kid IDs and only process valid ones
+#       valid_kids = user.kids&.compact&.reject(&:blank?) || []
 
-      valid_kids.each do |kid_id|
-        begin
-          kid = User.find(kid_id)
-          # Check if the kid belongs to any of the Portuguese hubs
-          if kid.users_hubs.where(hub_id: hub_ids).exists? && kid.deactivate != true
-            send = true
-            break
-          end
-        rescue ActiveRecord::RecordNotFound
-          # Skip if kid doesn't exist
-          puts "Warning: Kid with ID #{kid_id} not found for guardian #{user.email}"
-          next
-        end
-      end
+#       valid_kids.each do |kid_id|
+#         begin
+#           kid = User.find(kid_id)
+#           # Check if the kid belongs to any of the Portuguese hubs
+#           if kid.users_hubs.where(hub_id: hub_ids).exists? && kid.deactivate != true
+#             send = true
+#             break
+#           end
+#         rescue ActiveRecord::RecordNotFound
+#           # Skip if kid doesn't exist
+#           puts "Warning: Kid with ID #{kid_id} not found for guardian #{user.email}"
+#           next
+#         end
+#       end
 
 
-      if user.deactivate != true && send #&& main_hub&.hub_id.in?(hubs_ids)
-        Notification.find_or_create_by!(
-          user: user,
-          link: "https://us02web.zoom.us/j/89621728657?pwd=zZeDCuKyjXZufNTdKOec2F8dO58ByE.1",
-          message: "Dear Brave Parents and Guardians,
+#       if user.deactivate != true && send #&& main_hub&.hub_id.in?(hubs_ids)
+#         Notification.find_or_create_by!(
+#           user: user,
+#           link: "https://us02web.zoom.us/j/89621728657?pwd=zZeDCuKyjXZufNTdKOec2F8dO58ByE.1",
+#           message: "Dear Brave Parents and Guardians,
 
-We hope you had a wonderful weekend.
+# We hope you had a wonderful weekend.
 
-📣 Friendly reminder 📣
+# 📣 Friendly reminder 📣
 
-*Today, at 6PM,* Parents are invited to join Tim Vieira for a Zoom Meeting.
+# *Today, at 6PM,* Parents are invited to join Tim Vieira for a Zoom Meeting.
 
-Join Zoom Meeting:
-https://us02web.zoom.us/j/89621728657?pwd=zZeDCuKyjXZufNTdKOec2F8dO58ByE.1
+# Join Zoom Meeting:
+# https://us02web.zoom.us/j/89621728657?pwd=zZeDCuKyjXZufNTdKOec2F8dO58ByE.1
 
-Meeting ID: 896 2172 8657
-Passcode: 872851
+# Meeting ID: 896 2172 8657
+# Passcode: 872851
 
-This meeting will cover important information regarding BGA and this new Sprint.
+# This meeting will cover important information regarding BGA and this new Sprint.
 
-Your presence is highly encouraged.
+# Your presence is highly encouraged.
 
-Thank you! Have a great day!"
-        )
-        notifications_count += 1
-      end
-    end
+# Thank you! Have a great day!"
+#         )
+#         notifications_count += 1
+#       end
+#     end
     #
 #     users =  ["Manuel.Jordao@edubga.com",
 #     "Hannah.Cataldo@edubga.com",

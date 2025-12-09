@@ -81,7 +81,7 @@ class LearnerInfo < ApplicationRecord
 
     log_update(nil, changes, note: "Automated status update to #{new_status}" + (gen_number ? " with student number generation" : ""))
 
-    #send_status_notification(new_status)
+    send_status_notification(new_status)
   end
 
   def calculate_status

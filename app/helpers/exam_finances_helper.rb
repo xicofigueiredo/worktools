@@ -29,4 +29,31 @@ module ExamFinancesHelper
     end
     total_cost
   end
+
+  def finance_status_badge_class(status)
+    case status
+    when 'No Status'
+      'bg-secondary'
+    when 'Sent to Finance'
+      'bg-primary'
+    when 'Invoiced'
+      'bg-warning'
+    when 'Paid'
+      'bg-success'
+    when 'Deleted'
+      'bg-danger'
+    else
+      'bg-secondary'
+    end
+  end
+
+  def email_initials(email)
+    return '?' if email.blank? || email == 'System'
+
+    # Extract the part before @
+    local_part = email.split('@').first
+
+    # Get first letter only
+    local_part[0].upcase
+  end
 end

@@ -4,54 +4,112 @@
       <h2>Exam Finance Details</h2>
     </div>
     <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-md-3 fw-bold">Learner:</div>
-        <div class="col-md-9"><%= @exam_finance.user.full_name %></div>
-      </div>
+      <div class="row">
+        <!-- Left Column: Main Details -->
+        <div class="col-md-6">
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Learner:</div>
+            <div class="col-md-8"><%= @exam_finance.user.full_name %></div>
+          </div>
 
-      <div class="row mb-3">
-        <div class="col-md-3 fw-bold">Hub:</div>
-        <div class="col-md-9"><%= @exam_finance.user.hubs.first.name %></div>
-      </div>
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Hub:</div>
+            <div class="col-md-8"><%= @exam_finance.user.hubs.first.name %></div>
+          </div>
 
-      <div class="row mb-3">
-        <div class="col-md-3 fw-bold">Exam Season:</div>
-        <div class="col-md-9"><%= @exam_finance.exam_season %></div>
-      </div>
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Exam Season:</div>
+            <div class="col-md-8"><%= @exam_finance.exam_season %></div>
+          </div>
 
-      <div class="row mb-3">
-        <div class="col-md-3 fw-bold">Finance Status:</div>
-        <div class="col-md-9">
-          <%= form_with(model: @exam_finance, local: false, class: 'd-flex gap-2 align-items-center') do |f| %>
-            <%= f.select :status,
-                options_for_select([
-                  ['No Status', 'No Status'],
-                  ['Sent to Finance', 'Sent to Finance']
-                ], @exam_finance.status),
-                {},
-                { class: 'form-select', style: 'width: auto', onchange: 'this.form.requestSubmit()' }
-            %>
-            <div id="status-update-message" class="text-success" style="display: none;">
-              Status updated successfully!
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Finance Status:</div>
+            <div class="col-md-8">
+              <div class="d-flex gap-2 align-items-center flex-wrap">
+                <%= form_with(model: @exam_finance, local: false, class: 'd-flex gap-2 align-items-center') do |f| %>
+                  <%= f.select :status,
+                      options_for_select([
+                        ['No Status', 'No Status'],
+                        ['Sent to Finance', 'Sent to Finance'],
+                        ['Invoiced', 'Invoiced'],
+                        ['Paid', 'Paid'],
+                        ['Deleted', 'Deleted'],
+                      ], @exam_finance.status),
+                      {},
+                      { class: 'form-select', style: 'width: auto', onchange: 'this.form.requestSubmit()' }
+                  %>
+                  <div id="status-update-message" class="text-success" style="display: none;">
+                    Status updated successfully!
+                  </div>
+                <% end %>
+              </div>
+
+              <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                  const form = document.querySelector('form');
+                  const message = document.getElementById('status-update-message');
+
+                  form.addEventListener('ajax:success', function(event) {
+                    message.style.display = 'block';
+                    setTimeout(() => {
+                      message.style.display = 'none';
+                      // Reload page to update the badge color
+                      window.location.reload();
+                    }, 1000);
+                  });
+
+                  // Initialize Bootstrap tooltips
+                  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                  });
+                });
+              </script>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Status Change Log -->
+        <div class="col-md-6">
+          <% if @exam_finance.status_changes_log.any? %>
+            <div class="border rounded p-3" style="max-height: 160px; overflow-y: auto;">
+              <% @exam_finance.status_changes_log.each do |change| %>
+                <% changed_time = Time.parse(change['changed_at']) %>
+                <div class="mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge <%= finance_status_badge_class(change['from']) %>" style="font-size: 0.85em; padding: 0.35em 0.6em;">
+                      <%= change['from'] %>
+                    </span>
+                    <span>→</span>
+                    <span class="badge <%= finance_status_badge_class(change['to']) %>" style="font-size: 0.85em; padding: 0.35em 0.6em;">
+                      <%= change['to'] %>
+                    </span>
+                    <span class="text-muted ms-auto" style="font-size: 0.9em;">
+                      <%= changed_time.strftime("%-d/%-m/%Y at %H:%M")%>
+                      <% if change['changed_by'].present? && change['changed_by'] != 'Unknown' %>
+                        <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle email-tooltip"
+                              style="width: 24px; height: 24px; font-size: 0.75em; cursor: pointer; margin-left: 4px;"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title="<%= change['changed_by'] %>">
+                          <%= email_initials(change['changed_by']) %>
+                        </span>
+                      <% else %>
+                        <span class="text-muted" style="font-size: 0.8em;"><%= change['changed_by'] || 'Unknown' %></span>
+                      <% end %>
+                    </span>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="fw-bold mb-2">Status Change Log:</div>
+            <div class="border rounded p-3 text-muted">
+              No status changes recorded yet.
             </div>
           <% end %>
-
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              const form = document.querySelector('form');
-              const message = document.getElementById('status-update-message');
-
-              form.addEventListener('ajax:success', function() {
-                message.style.display = 'block';
-                setTimeout(() => {
-                  message.style.display = 'none';
-                }, 3000);
-              });
-            });
-          </script>
         </div>
       </div>
-
     </div>
     <div class="card-footer d-flex gap-2">
       <%= link_to 'Preview Statement', preview_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary' %>
@@ -168,3 +226,34 @@
     </div>
   <% end %>
 </div>
+
+<style>
+  /* Style for status select dropdown */
+  select.form-select option[value="No Status"] {
+    background-color: #6c757d;
+    color: white;
+  }
+  select.form-select option[value="Sent to Finance"] {
+    background-color: #0dcaf0;
+    color: #000;
+  }
+  select.form-select option[value="Invoiced"] {
+    background-color: #ffc107;
+    color: #000;
+  }
+  select.form-select option[value="Paid"] {
+    background-color: #198754;
+    color: white;
+  }
+  select.form-select option[value="Deleted"] {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  /* Make tooltips wider for email tooltips */
+  .tooltip .tooltip-inner {
+    max-width: 400px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+  }
+</style>

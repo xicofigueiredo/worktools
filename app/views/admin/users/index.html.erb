@@ -15,7 +15,7 @@
                 <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">
                   <% if @role == "admin" %>
                     <%= f.select :role,
-                        options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"], ["Admin", "admin"]], params[:role]),
+                        options_for_select([["All", ""], ["Learner", "learner"], ["Learning Coach", "lc"], ["Course Manager", "cm"], ["Parent", "guardian"], ["Admin", "admin"], ["Exams", "exams"], ["Edu", "edu"], ["Staff", "staff"], ["Admissions", "admissions"], ["Finance", "finance"], ["Operations", "ops"], ["IT", "it"]], params[:role]),
                         {},
                         { class: "form-select form-select-sm", style: "width: 120px; font-size: 0.8rem; padding: 2px 4px;", onchange: "this.form.submit()" } %>
                   <% else %>
