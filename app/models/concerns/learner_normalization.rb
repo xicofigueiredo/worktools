@@ -32,7 +32,8 @@ module LearnerNormalization
     'up business management' => 'UPx Business',
     'own curriculum' => 'Own Curriculum',
     'upx business management' => 'UPx Business',
-    'up business ; upx business management' => 'UPx Business'
+    'up business ; upx business management' => 'UPx Business',
+    'up business (genex)' => 'UP Business (GENEX)'
   }.freeze
 
   GRADES_PER_CURRICULUM = {
