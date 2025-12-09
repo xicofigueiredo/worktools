@@ -90,14 +90,14 @@
                 <td>
                   <%= r[:voluntary_booked] %>
                   <% if r[:booked_carry_over].to_i > 0 %>
-                    <small class="text-muted">(+ <%= r[:booked_carry_over] %> carry)</small>
+                    <small class="text-muted">(<%= r[:booked_carry_over] %> carry)</small>
                   <% end %>
                 </td>
 
                 <td>
                   <%= r[:pending_holiday] %>
                   <% if r[:pending_carry_over].to_i > 0 %>
-                    <small class="text-muted">(+ <%= r[:pending_carry_over] %> carry)</small>
+                    <small class="text-muted">(<%= r[:pending_carry_over] %> carry)</small>
                   <% end %>
                 </td>
 

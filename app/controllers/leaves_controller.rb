@@ -11,6 +11,19 @@ class LeavesController < ApplicationController
 
     @show_hr_view = current_user.email == 'humanresources@bravegenerationacademy.com' || current_user.role == 'admin'
 
+    # Calculate Current User Entitlements for the View
+    year_now = Date.current.year
+    user_ent_data = calculate_user_entitlement_data(current_user, year_now)
+
+    # Expose variables for _entitlements.html.erb
+    @current_entitlement_total = user_ent_data[:total_holidays]
+    @current_entitlement_left  = user_ent_data[:holidays_left]
+    @current_mandatory_count   = user_ent_data[:mandatory_days]
+    @current_voluntary_booked  = user_ent_data[:voluntary_booked]
+    @current_pending_holiday   = user_ent_data[:pending_holiday]
+    @current_booked_carry      = user_ent_data[:booked_carry_over]
+    @current_pending_carry     = user_ent_data[:pending_carry_over]
+
     if current_user.managed_departments.present?
       prepare_manager_entitlements if current_user&.managed_departments&.present?
       @pending_confirmations = current_user.confirmations.pending
@@ -42,7 +55,6 @@ class LeavesController < ApplicationController
       @departments = Department.all
       @users = User.staff
 
-      # Initialize new objects for the modal forms
       @new_public_holiday = PublicHoliday.new
       @new_blocked_period = BlockedPeriod.new
       @new_mandatory_leave = MandatoryLeave.new
@@ -454,6 +466,30 @@ class LeavesController < ApplicationController
     render json: { error: 'Failed to load users' }, status: :internal_server_error
   end
 
+  def prepare_manager_entitlements
+    year_now = params[:year].present? ? params[:year].to_i : Date.current.year
+
+    managed = current_user.managed_departments.to_a
+    managed_ids = managed.flat_map { |d| d.subtree_ids }.uniq
+    @managed_departments = Department.where(id: managed_ids).order(:name)
+
+    if params[:department_id].present? && managed_ids.include?(params[:department_id].to_i)
+      visible_dept_ids = Department.find(params[:department_id]).subtree_ids
+    else
+      visible_dept_ids = managed_ids
+    end
+
+    @dept_users = User.joins(:users_departments)
+                      .where(users_departments: { department_id: visible_dept_ids })
+                      .includes(:departments)
+                      .distinct
+                      .order('users.full_name')
+
+    @rows = @dept_users.map do |u|
+      calculate_user_entitlement_data(u, year_now)
+    end
+  end
+
   private
 
   def entitlement_params
@@ -464,96 +500,85 @@ class LeavesController < ApplicationController
     params.require(:staff_leave).permit(:leave_type, :start_date, :end_date, :exception_requested, :exception_reason, :notes, :exception_errors, :days_from_previous_year)
   end
 
-  def prepare_manager_entitlements
-    year_now = params[:year].present? ? params[:year].to_i : Date.current.year
-    next_year = year_now + 1
+  def calculate_user_entitlement_data(user, year)
+    entitlement = StaffLeaveEntitlement.find_by(user: user, year: year)
+    total_holidays = entitlement&.annual_holidays || 25
+    holidays_left = entitlement&.holidays_left || 25
 
-    # collect ids for all managed departments (including their sub-departments)
-    managed = current_user.managed_departments.to_a
-    managed_ids = managed.flat_map { |d| d.subtree_ids }.uniq
+    # 1. Fetch relevant leaves (Pending & Approved) that overlap this year
+    # We fetch broadly and filter in Ruby to ensure split-year accuracy
+    leaves = StaffLeave.where(user: user, leave_type: 'holiday', status: ['pending', 'approved'])
+                       .where("start_date <= ? AND end_date >= ?", Date.new(year, 12, 31), Date.new(year, 1, 1))
 
-    # list of departments to build filter dropdown (only those under manager)
-    @managed_departments = Department.where(id: managed_ids).order(:name)
+    pending_days = 0
+    booked_days = 0
+    mandatory_days = 0
 
-    # Optional server-side filter: only show users who belong to selected department subtree
-    if params[:department_id].present? && managed_ids.include?(params[:department_id].to_i)
-      selected_dept = Department.find(params[:department_id])
-      visible_dept_ids = selected_dept.subtree_ids
-    else
-      visible_dept_ids = managed_ids
+    # 2. Calculate "Booked Carry Over" (Days from THIS year used in NEXT year)
+    # Query leaves where end_date is next year and carry > 0
+    next_year = year + 1
+    carry_out_leaves = StaffLeave.where(user: user, leave_type: 'holiday', status: ['pending', 'approved'])
+                                 .where("extract(year from end_date) = ?", next_year)
+                                 .where("days_from_previous_year > 0")
+
+    pending_carry_out = 0
+    booked_carry_out = 0
+
+    carry_out_leaves.each do |l|
+      carry_amt = l.days_from_previous_year.to_i
+      if l.status == 'pending'
+        pending_carry_out += carry_amt
+      else
+        booked_carry_out += carry_amt
+      end
     end
 
-    # fetch users who belong to any of the visible departments
-    # preload departments to avoid N+1 when calling user.departments
-    @dept_users = User.joins(:users_departments)
-                      .where(users_departments: { department_id: visible_dept_ids })
-                      .includes(:departments)
-                      .distinct
-                      .order('users.full_name')
+    # 3. Iterate leaves to calculate cost strictly for THIS year
+    leaves.each do |l|
+      # Calculate days falling strictly in `year`
+      days_in_yr = l.days_in_year(year)
+      next if days_in_yr == 0
 
-    user_ids = @dept_users.map(&:id)
-    @rows = []
-    return if user_ids.empty?
+      cost = days_in_yr
 
-    entitlements_by_user = StaffLeaveEntitlement.where(user_id: user_ids, year: year_now).index_by(&:user_id)
-
-    # aggregated sums grouped by user_id
-    pending_current = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'pending')
-                                .where("extract(year from start_date) = ?", year_now)
-                                .group(:user_id).sum(:total_days)
-
-    booked_current  = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'approved')
-                                .where("extract(year from start_date) = ?", year_now)
-                                .group(:user_id).sum(:total_days)
-
-    pending_carry = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'pending')
-                              .where("extract(year from start_date) = ?", next_year)
-                              .group(:user_id).sum(:days_from_previous_year)
-
-    booked_carry  = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'approved')
-                              .where("extract(year from start_date) = ?", next_year)
-                              .group(:user_id).sum(:days_from_previous_year)
-
-    mandatory_counts = StaffLeave.where(user_id: user_ids, leave_type: 'holiday')
-                                 .where.not(mandatory_leave_id: nil)
-                                 .where("extract(year from start_date) = ?", year_now)
-                                 .group(:user_id).sum(:total_days)
-
-    @rows = @dept_users.map do |u|
-      entitlement = entitlements_by_user[u.id]
-
-      total_holidays = entitlement&.annual_holidays || 25
-      pc = pending_current[u.id] || 0
-      bc = booked_current[u.id]  || 0
-      pco = pending_carry[u.id]  || 0
-      bco = booked_carry[u.id]   || 0
-      mandatory = mandatory_counts[u.id] || 0
-
-      pending_holiday = pc + pco
-      booked_holiday  = bc + bco
-      voluntary_booked = [booked_holiday - mandatory, 0].max
-
-      if entitlement
-        holidays_left = [entitlement.holidays_left || total_holidays - booked_holiday, 0].max
-      else
-        holidays_left = [total_holidays - booked_holiday, 0].max
+      # ADJUSTMENT: If this leave used carry-over FROM PREVIOUS YEAR (year-1),
+      # we must NOT count those carry-over days as a cost to THIS year.
+      if l.days_from_previous_year.to_i > 0 && l.end_date.year == year
+        # Reduce cost by carry amount (capped by days in this year)
+        carry_used = [l.days_from_previous_year.to_i, days_in_yr].min
+        cost -= carry_used
       end
 
-      primary_dept = u.departments.first
-
-      {
-        user: u,
-        departments: u.departments.to_a,
-        primary_department: primary_dept,
-        holidays_left: holidays_left,
-        booked_holiday: booked_holiday,
-        voluntary_booked: voluntary_booked,
-        mandatory_days: mandatory,
-        pending_holiday: pending_holiday,
-        booked_carry_over: bco,
-        pending_carry_over: pco,
-        total_holidays: total_holidays
-      }
+      if l.mandatory_leave_id.present?
+        # Mandatory leaves are always 'approved'
+        mandatory_days += cost
+      elsif l.status == 'pending'
+        pending_days += cost
+      elsif l.status == 'approved'
+        booked_days += cost
+      end
     end
+
+    # 4. Add Carry-Out to Usage
+    pending_days += pending_carry_out
+    booked_days += booked_carry_out
+
+    # Final Hash
+    {
+      user: user,
+      departments: user.departments.to_a,
+      primary_department: user.departments.first,
+
+      total_holidays: total_holidays,
+      holidays_left: holidays_left,
+
+      mandatory_days: mandatory_days,
+      voluntary_booked: booked_days,
+      booked_holiday: booked_days + mandatory_days,
+      pending_holiday: pending_days,
+
+      booked_carry_over: booked_carry_out,
+      pending_carry_over: pending_carry_out
+    }
   end
 end

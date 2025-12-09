@@ -16,8 +16,8 @@ class MandatoryLeave < ApplicationRecord
   end
 
   def distribute_leaves
-    target_year = start_date.year
-    user_ids_with_entitlement = StaffLeaveEntitlement.where(year: target_year).pluck(:user_id)
+    years_range = (start_date.year..end_date.year).to_a
+    user_ids_with_entitlement = StaffLeaveEntitlement.where(year: years_range).pluck(:user_id).uniq
     scope = User.where(id: user_ids_with_entitlement).where(deactivate: [false, nil])
 
     if global

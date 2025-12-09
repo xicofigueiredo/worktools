@@ -61,7 +61,6 @@
                         <% approver = rejected_conf.approver.try(:full_name) || "##{rejected_conf.approver_id}" %>
                         <% when_txt = rejected_conf.validated_at&.strftime('%Y-%m-%d') %>
                         <% tooltip_text = "Reason: #{reason} — By: #{approver} — On: #{when_txt}" %>
-
                         <span class="badge bg-info text-dark ms-2" data-bs-toggle="tooltip" title="<%= h(tooltip_text) %>">i</span>
                       <% end %>
                     <% elsif leave.status == 'approved' %>
@@ -81,6 +80,7 @@
                   <% can_cancel = leave.user_id == current_user.id && %w[pending approved].include?(leave.status) &&
                                   (leave.status == 'pending' || (leave.status == 'approved' && leave.start_date.to_date > Time.zone.today)) %>
                   <% has_docs = leave.staff_leave_documents.any? %>
+
                   <% if can_cancel || has_docs %>
                     <% if pending_cancellation %>
                       <span class="badge bg-warning text-dark">Cancellation requested</span>
@@ -93,7 +93,9 @@
                               class="btn btn-sm btn-outline-danger"
                               title="Cancel leave"
                               data-action="click->cancel#start"
-                              data-cancel-leave-id-value="<%= leave.id %>">
+                              data-cancel-leave-id-value="<%= leave.id %>"
+                              data-cancel-leave-status-value="<%= leave.status %>"
+                              data-cancel-start-date-value="<%= leave.start_date.strftime('%Y-%m-%d') %>">
                               <i class="fa fa-times" aria-hidden="true"></i>
                             </button>
                           <% end %>
