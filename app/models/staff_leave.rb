@@ -118,6 +118,30 @@ class StaffLeave < ApplicationRecord
     end
   end
 
+  def calculate_total_days
+    return if start_date.blank? || end_date.blank?
+    return if end_date < start_date
+
+    # Other leaves count consecutive calendar days (include weekends & public holidays)
+    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
+      self.total_days = (end_date - start_date).to_i + 1
+      return
+    end
+
+    # Holidays: business-day logic (Mon-Fri) excluding public holidays
+    hub = user.users_hubs.find_by(main: true)&.hub
+    holiday_dates = PublicHoliday.dates_for_range(hub: hub, start_date: start_date, end_date: end_date).to_set
+
+    count = 0
+    (start_date..end_date).each do |d|
+      next if d.saturday? || d.sunday?
+      next if holiday_dates.include?(d)
+      count += 1
+    end
+
+    self.total_days = count
+  end
+
   private
 
   def notes_required_for_other
@@ -152,37 +176,56 @@ class StaffLeave < ApplicationRecord
     return unless leave_type == 'holiday' && start_date.present? && end_date.present?
 
     if days_from_previous_year.present? && days_from_previous_year > 0
-      target_year = [start_date.year, end_date.year].max
-      if Date.current.year < target_year  # Future year request
-        jan_mar_start = Date.new(target_year, 1, 1)
-        jan_mar_end = Date.new(target_year, 3, 31)
-        slice_start = [start_date, jan_mar_start].max
-        slice_end = [end_date, jan_mar_end].min
-        if slice_start > slice_end
-          errors.add(:days_from_previous_year, "can only be used for holidays overlapping Jan 1 to Mar 31 of #{target_year}")
-          return
-        end
+      target_year = end_date.year # The year where we want to USE the carry over
 
-        # Business days in eligible overlap
-        temp_leave = StaffLeave.new(user: user, start_date: slice_start, end_date: slice_end, leave_type: leave_type)
-        temp_leave.compute_total_days
-        eligible_days = temp_leave.total_days
+      # 1. Basic Window Validation
+      jan_apr_start = Date.new(target_year, 1, 1)
+      jan_apr_end   = Date.new(target_year, 4, 30)
 
-        if days_from_previous_year > eligible_days
-          errors.add(:days_from_previous_year, "cannot exceed eligible days in #{target_year} Jan-Mar (#{eligible_days})")
-        end
+      slice_start = [start_date, jan_apr_start].max
+      slice_end   = [end_date, jan_apr_end].min
 
-        ent = StaffLeaveEntitlement.find_or_initialize_by(user: user, year: target_year)
-        days_from_previous_used = ent.persisted? ? ent.days_from_previous_year_used.to_i : 0
-        prev_year = target_year - 1
-        prev_ent = StaffLeaveEntitlement.find_by(user: user, year: prev_year)
-        prev_available = prev_ent ? [[5 - days_from_previous_used, prev_ent.holidays_left.to_i].min, 0].max : 0
+      if slice_start > slice_end
+        errors.add(:days_from_previous_year, "can only be used for dates overlapping Jan 1 to Apr 30")
+        return
+      end
 
-        if days_from_previous_year > prev_available
-          errors.add(:days_from_previous_year, "cannot exceed available carry-over days from #{prev_year} (#{prev_available})")
-        end
-      else
-        errors.add(:days_from_previous_year, "carry-over only available for future year requests from current year")
+      # 2. Check Eligible Days (Business Days in Window)
+      temp_leave = StaffLeave.new(user: user, start_date: slice_start, end_date: slice_end, leave_type: leave_type)
+      temp_leave.calculate_total_days
+      eligible_days = temp_leave.total_days
+
+      if days_from_previous_year > eligible_days
+        errors.add(:days_from_previous_year, "cannot exceed the #{eligible_days} working days falling in the Jan-Apr window")
+      end
+
+      # 3. Check Real Balance (Entitlement Table)
+      # Since 'deduct_entitlement_days' runs after_create, the DB has the 'used' values from all previous requests.
+
+      prev_year = target_year - 1
+      ent_prev  = StaffLeaveEntitlement.find_by(user: user, year: prev_year)
+      ent_curr  = StaffLeaveEntitlement.find_by(user: user, year: target_year)
+
+      # A. What is physically left in previous year?
+      # We must subtract days used by THIS request's 2025 portion (if any)
+      days_used_in_prev_year_by_current_request = 0
+      if start_date.year == prev_year
+        prev_part_leave = StaffLeave.new(user: user, start_date: start_date, end_date: [end_date, Date.new(prev_year, 12, 31)].min, leave_type: 'holiday')
+        prev_part_leave.calculate_total_days
+        days_used_in_prev_year_by_current_request = prev_part_leave.total_days
+      end
+
+      prev_balance = ent_prev ? ent_prev.holidays_left.to_i : 0
+      real_prev_balance = [prev_balance - days_used_in_prev_year_by_current_request, 0].max
+
+      # B. Capacity Check (Max 5 total across all requests)
+      used_already = ent_curr ? ent_curr.days_from_previous_year_used.to_i : 0
+      capacity = [5 - used_already, 0].max
+
+      available = [capacity, real_prev_balance].min
+
+      if days_from_previous_year > available
+        errors.add(:days_from_previous_year, "cannot exceed available carry-over balance (#{available}).")
       end
     end
   end
@@ -208,68 +251,37 @@ class StaffLeave < ApplicationRecord
     end
   end
 
-  def calculate_total_days
-    return if start_date.blank? || end_date.blank?
-    return if end_date < start_date
-
-    # Sick leaves count consecutive calendar days (include weekends & public holidays)
-    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
-      self.total_days = (end_date - start_date).to_i + 1
-      return
-    end
-
-    # Holidays: business-day logic (Mon-Fri) excluding public holidays
-    hub = user.users_hubs.find_by(main: true)&.hub
-    holiday_dates = PublicHoliday.dates_for_range(hub: hub, start_date: start_date, end_date: end_date).to_set
-
-    count = 0
-    (start_date..end_date).each do |d|
-      next if d.saturday? || d.sunday?
-      next if holiday_dates.include?(d)
-      count += 1
-    end
-
-    self.total_days = count
-  end
-
   def user_has_days_left
     return if user.blank? || leave_type.blank? || total_days.blank? || start_date.blank?
 
-    years = [start_date.year]
-    years << end_date.year if end_date.year != start_date.year
-    default = leave_type == 'holiday' ? 25 : 5
+    years = (start_date.year..end_date.year).to_a
+    default_ent = leave_type == 'holiday' ? 25 : 5
     field = leave_type == 'holiday' ? 'holidays_left' : 'sick_leaves_left'
 
     years.each do |yr|
-      days_this_year = days_in_year(yr)
-      next if days_this_year == 0
+      # Calculate days needed in this specific year
+      y_start = [start_date, Date.new(yr, 1, 1)].max
+      y_end   = [end_date, Date.new(yr, 12, 31)].min
+      next if y_start > y_end
 
-      entitlement = StaffLeaveEntitlement.find_or_initialize_by(user: user, year: yr)
-      available_current = entitlement.persisted? ? entitlement.send(field).to_i : default
+      temp_leave = StaffLeave.new(user: user, start_date: y_start, end_date: y_end, leave_type: leave_type)
+      temp_leave.calculate_total_days
+      days_needed = temp_leave.total_days
 
-      carry_available = 0
-      if leave_type == 'holiday' && yr > Date.current.year && days_this_year > 0
-        jan_mar_start = Date.new(yr, 1, 1)
-        jan_mar_end = Date.new(yr, 3, 31)
-        slice_start = [start_date, jan_mar_start].max
-        slice_end = [end_date, jan_mar_end].min
-        if slice_start <= slice_end
-          temp_leave = StaffLeave.new(user: user, start_date: slice_start, end_date: slice_end, leave_type: leave_type)
-          temp_leave.compute_total_days
-          eligible_carry = temp_leave.total_days
-          prev_ent = StaffLeaveEntitlement.find_by(user: user, year: yr - 1)
-          days_used = entitlement.persisted? ? entitlement.days_from_previous_year_used.to_i : 0
-          carry_available = prev_ent ? [[5 - days_used, prev_ent.holidays_left.to_i].min, eligible_carry].min : 0
-        end
+      next if days_needed == 0
+
+      ent = StaffLeaveEntitlement.find_or_initialize_by(user: user, year: yr)
+      available = ent.persisted? ? ent.send(field).to_i : default_ent
+
+      # If this is the Carry-Target Year (e.g. 2026), subtract the specified carry-over
+      # from the "Needed" amount, because that amount is covered by 2025's bucket.
+      if leave_type == 'holiday' && days_from_previous_year.to_i > 0 && yr == end_date.year
+        # We only subtract what we can. If needed=4 and carry=3, needed becomes 1.
+        days_needed = [days_needed - days_from_previous_year.to_i, 0].max
       end
 
-      needed = days_this_year
-      needed -= days_from_previous_year.to_i if yr == end_date.year  # Apply carry to next year
-      total_available = available_current + carry_available
-
-      if needed > total_available && !exception_requested
-        over = needed - total_available
-        errors.add(:base, "Exceeded #{leave_type} days in #{yr} by #{over}. Request an exception.")
+      if days_needed > available && !exception_requested
+        errors.add(:base, "Not enough days in #{yr}. Needed: #{days_needed}, Available: #{available}.")
       end
     end
   end
@@ -324,39 +336,60 @@ class StaffLeave < ApplicationRecord
   def deduct_entitlement_days
     return if total_days.blank? || leave_type.blank? || user.blank?
 
-    years = [start_date.year]
-    years << end_date.year if end_date.year != start_date.year
+    years = (start_date.year..end_date.year).to_a
 
     years.each do |yr|
-      days_this_year = days_in_year(yr)
+      # Calculate days strictly for this year part
+      y_start = [start_date, Date.new(yr, 1, 1)].max
+      y_end   = [end_date, Date.new(yr, 12, 31)].min
+
+      # Helper calculation for days in this specific year
+      temp_l = StaffLeave.new(user: user, start_date: y_start, end_date: y_end, leave_type: leave_type)
+      temp_l.calculate_total_days
+      days_this_year = temp_l.total_days
+
       next if days_this_year == 0
 
       entitlement = StaffLeaveEntitlement.find_or_create_by!(user: user, year: yr)
 
       if leave_type == 'holiday'
-        field = :holidays_left
         to_deduct = days_this_year
 
-        # For next year holiday, apply carry-over first if selected
-        if yr > start_date.year && days_from_previous_year.to_i > 0
+        # CARRY OVER LOGIC
+        # We apply carry-over ONLY to the "End Year" (Target Year) of the request.
+        # This handles both split-year (Dec-Jan) and same-year (Jan-Jan) requests.
+        if days_from_previous_year.to_i > 0 && yr == end_date.year
+
           prev_year = yr - 1
           prev_ent = StaffLeaveEntitlement.find_or_create_by!(user: user, year: prev_year)
-          actually_carry = [days_from_previous_year.to_i, days_this_year, 5 - entitlement.days_from_previous_year_used.to_i, prev_ent.holidays_left.to_i].min
 
-          if actually_carry > 0
-            prev_ent.update!(holidays_left: [prev_ent.holidays_left.to_i - actually_carry, 0].max)
-            entitlement.update!(days_from_previous_year_used: entitlement.days_from_previous_year_used.to_i + actually_carry)
-            to_deduct -= actually_carry
+          # Calculate how much we can actually carry for this specific year-chunk
+          # (Usually days_from_previous_year, but capped by days_this_year in case of weird splits)
+          amount_to_carry = [days_from_previous_year.to_i, days_this_year].min
+
+          # Double check safety (though validation should catch this):
+          # Don't take more than what is left in prev year
+          amount_to_carry = [amount_to_carry, prev_ent.holidays_left.to_i].min
+
+          if amount_to_carry > 0
+            # 1. Remove from Previous Year Balance
+            prev_ent.update!(holidays_left: prev_ent.holidays_left.to_i - amount_to_carry)
+
+            # 2. Mark as Used in Current Year
+            entitlement.update!(days_from_previous_year_used: entitlement.days_from_previous_year_used.to_i + amount_to_carry)
+
+            # 3. Reduce the deduction from Current Year Balance
+            to_deduct -= amount_to_carry
           end
         end
 
-        # Deduct remainder from this year's entitlement
-        new_left = [entitlement.send(field).to_i - to_deduct, 0].max
-        entitlement.update!(field => new_left)
+        # Deduct remaining days from this year's balance
+        new_left = [entitlement.holidays_left.to_i - to_deduct, 0].max
+        entitlement.update!(holidays_left: new_left)
+
       else
-        # sick leave: increment sick_leaves_used (no hard caps / verification)
-        to_add = days_this_year
-        entitlement.update!(sick_leaves_used: entitlement.sick_leaves_used.to_i + to_add)
+        # Sick/Other Logic
+        entitlement.update!(sick_leaves_used: entitlement.sick_leaves_used.to_i + days_this_year)
       end
     end
   end
@@ -364,39 +397,50 @@ class StaffLeave < ApplicationRecord
   def return_entitlement_days
     return if total_days.blank? || leave_type.blank? || user.blank?
 
-    years = [start_date.year]
-    years << end_date.year if end_date.year != start_date.year
+    years = (start_date.year..end_date.year).to_a
 
     years.each do |yr|
-      days_this_year = days_in_year(yr)
+      y_start = [start_date, Date.new(yr, 1, 1)].max
+      y_end   = [end_date, Date.new(yr, 12, 31)].min
+
+      temp_l = StaffLeave.new(user: user, start_date: y_start, end_date: y_end, leave_type: leave_type)
+      temp_l.calculate_total_days
+      days_this_year = temp_l.total_days
+
       next if days_this_year == 0
 
       entitlement = StaffLeaveEntitlement.find_or_create_by!(user: user, year: yr)
 
       if leave_type == 'holiday'
-        field = :holidays_left
         to_return = days_this_year
 
-        # For next year holiday, return carry-over first if used
-        if yr > start_date.year && days_from_previous_year.to_i > 0
+        # Revert Carry Over if applicable
+        if days_from_previous_year.to_i > 0 && yr == end_date.year
           prev_year = yr - 1
           prev_ent = StaffLeaveEntitlement.find_or_create_by!(user: user, year: prev_year)
-          actually_carry = [days_from_previous_year.to_i, days_this_year, entitlement.days_from_previous_year_used.to_i].min
 
-          if actually_carry > 0
-            prev_ent.update!(holidays_left: prev_ent.holidays_left.to_i + actually_carry)
-            entitlement.update!(days_from_previous_year_used: [entitlement.days_from_previous_year_used.to_i - actually_carry, 0].max)
-            to_return -= actually_carry
+          # Determine how much was carried
+          # We look at what was used, but we must cap by what this leave actually cost
+          amount_carried = [days_from_previous_year.to_i, days_this_year].min
+
+          # Cap by what is recorded as used (sanity check)
+          amount_carried = [amount_carried, entitlement.days_from_previous_year_used.to_i].min
+
+          if amount_carried > 0
+            # 1. Give back to Previous Year
+            prev_ent.update!(holidays_left: prev_ent.holidays_left.to_i + amount_carried)
+
+            # 2. Un-mark usage
+            entitlement.update!(days_from_previous_year_used: entitlement.days_from_previous_year_used.to_i - amount_carried)
+
+            # 3. Reduce amount to return to Current Year
+            to_return -= amount_carried
           end
         end
 
-        # Return remainder to this year's entitlement
-        entitlement.update!(field => entitlement.send(field).to_i + to_return)
+        entitlement.update!(holidays_left: entitlement.holidays_left.to_i + to_return)
       else
-        # sick leave: subtract from sick_leaves_used (but never go below zero)
-        to_return = days_this_year
-        new_used = [entitlement.sick_leaves_used.to_i - to_return, 0].max
-        entitlement.update!(sick_leaves_used: new_used)
+        entitlement.update!(sick_leaves_used: [entitlement.sick_leaves_used.to_i - days_this_year, 0].max)
       end
     end
   end
