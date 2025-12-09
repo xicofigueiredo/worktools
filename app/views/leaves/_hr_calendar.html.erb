@@ -4,85 +4,106 @@
 
 <style>
   :root {
-    --cal-holiday-bg: #d1e7dd;
+    /* Holiday: Solid Teal */
+    --cal-holiday-bg: #80cbc4;
     --cal-holiday-border: #0f5132;
 
-    --cal-mandatory-bg: #e2d9f3;
-    --cal-mandatory-border: #6f42c1;
+    /* Mandatory: Solid Purple */
+    --cal-mandatory-bg: #ce93d8;
+    --cal-mandatory-border: #522785;
 
-    --cal-blocked-bg: #f8d7da;
-    --cal-blocked-border: #842029;
-    --cal-blocked-pattern: repeating-linear-gradient(45deg, #f5c6cb, #f5c6cb 5px, #f8d7da 5px, #f8d7da 10px);
+    /* Blocked: Solid Orange */
+    --cal-blocked-bg: #ffb74d;
+    --cal-blocked-border: #e65100;
   }
 
-  .calendar-table {
-    table-layout: fixed;
-  }
+  .calendar-table { table-layout: fixed; }
+
   .calendar-table th, .calendar-table td {
     width: 14.28%;
     text-align: center;
     vertical-align: middle;
-    height: 40px;
+    height: 48px;
     padding: 0;
+    position: relative;
   }
+
   .calendar-table td {
     cursor: default;
     border: 1px solid #dee2e6;
-    transition: filter 0.1s ease-in-out;
+    background-clip: padding-box;
+    transition: filter 0.1s ease;
+    color: #212529;
   }
 
   .calendar-table td:not(:empty):hover {
     cursor: pointer;
-    filter: brightness(0.90);
-    position: relative;
-    z-index: 5;
+    filter: brightness(0.92);
+    z-index: 20;
   }
 
-  .holiday {
-    background-color: var(--cal-holiday-bg) !important;
-    border-bottom: 3px solid var(--cal-holiday-border) !important;
-    font-weight: 600;
-    color: var(--cal-holiday-border);
+  .calendar-table td::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    z-index: 10;
+    pointer-events: none;
+    display: none;
   }
 
-  .mandatory {
-    background-color: var(--cal-mandatory-bg) !important;
-    border-bottom: 3px solid var(--cal-mandatory-border) !important;
-    font-weight: 600;
-    color: var(--cal-mandatory-border);
+  .calendar-table .holiday::after,
+  .calendar-table .mandatory::after,
+  .calendar-table .blocked::after {
+    display: block;
   }
 
-  .blocked {
-    background-color: var(--cal-blocked-bg) !important;
-    background-image: var(--cal-blocked-pattern);
-    border-bottom: 3px solid var(--cal-blocked-border) !important;
-    color: var(--cal-blocked-border);
+  .calendar-table .holiday::after {
+    background-color: var(--cal-holiday-border);
   }
 
-  .mandatory.blocked {
-    background: linear-gradient(135deg, var(--cal-mandatory-bg) 50%, var(--cal-blocked-bg) 50%) !important;
-    border-bottom: 3px solid var(--cal-blocked-border) !important;
+  .calendar-table .mandatory::after {
+    background-color: var(--cal-mandatory-border);
   }
+
+  .calendar-table .blocked::after {
+    background-color: var(--cal-blocked-border);
+  }
+
+  .holiday { background-color: var(--cal-holiday-bg) !important; font-weight: 600; }
+  .mandatory { background-color: var(--cal-mandatory-bg) !important; font-weight: 600; }
+  .blocked { background-color: var(--cal-blocked-bg) !important; font-weight: 600; }
 
   .holiday.blocked {
     background: linear-gradient(135deg, var(--cal-holiday-bg) 50%, var(--cal-blocked-bg) 50%) !important;
-    border-bottom: 3px solid var(--cal-blocked-border) !important;
   }
-
+  .mandatory.blocked {
+    background: linear-gradient(135deg, var(--cal-mandatory-bg) 50%, var(--cal-blocked-bg) 50%) !important;
+  }
   .holiday.mandatory {
-    background-color: var(--cal-mandatory-bg) !important;
-    border-bottom: 3px solid var(--cal-mandatory-border) !important;
+    background: linear-gradient(135deg, var(--cal-mandatory-bg) 50%, var(--cal-holiday-bg) 50%) !important;
   }
 
-  .weekend {
-    background-color: #f8f9fa;
-    color: #adb5bd;
+  .holiday.mandatory.blocked {
+    background: linear-gradient(135deg,
+      var(--cal-mandatory-bg) 0% 33%,
+      var(--cal-holiday-bg) 33% 66%,
+      var(--cal-blocked-bg) 66% 100%
+    ) !important;
   }
 
-  .month-card {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    border: 1px solid #dee2e6;
-  }
+  .weekend { background-color: #f8f9fa; color: #adb5bd; }
+  .month-card { box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #dee2e6; }
+
+  .legend-item { display: inline-flex; align-items: center; gap: 0.5rem; margin-right: 1.5rem; }
+  .legend-box { width: 20px; height: 20px; border-radius: 3px; display: inline-block; }
+
+  .legend-box.holiday { background-color: var(--cal-holiday-bg); border: 2px solid var(--cal-holiday-border); }
+  .legend-box.mandatory { background-color: var(--cal-mandatory-bg); border: 2px solid var(--cal-mandatory-border); }
+  .legend-box.blocked { background-color: var(--cal-blocked-bg); border: 2px solid var(--cal-blocked-border); }
+
   .filter-section {
     background-color: #f8f9fa;
     padding: 1rem;
@@ -90,35 +111,10 @@
     margin-bottom: 1rem;
     border: 1px solid #dee2e6;
   }
-  .legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-right: 1.5rem;
-  }
-  .legend-box {
-    width: 20px;
-    height: 20px;
-    border-radius: 3px;
-    display: inline-block;
-  }
-  .legend-box.holiday {
-    background-color: var(--cal-holiday-bg);
-    border: 1px solid var(--cal-holiday-border);
-  }
-  .legend-box.mandatory {
-    background-color: var(--cal-mandatory-bg);
-    border: 1px solid var(--cal-mandatory-border);
-  }
-  .legend-box.blocked {
-    background-color: var(--cal-blocked-bg);
-    background-image: var(--cal-blocked-pattern);
-    border: 1px solid var(--cal-blocked-border);
-  }
 </style>
 
 <div class="card mb-4">
-  <div class="card-header d-flex justify-content-between align-items-center">
+  <div class="card-header d-flex justify-content-between align-items-center bg-white">
     <h5 class="mb-0">Calendar: <%= year %></h5>
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createEventModal">
@@ -208,8 +204,7 @@
       type_filter = params[:type_filter]
 
       # Hub Country Lookup
-      hub_countries = {}
-      @hubs.each { |h| hub_countries[h.id] = h.country }
+      hub_countries = @hubs.each_with_object({}) { |h, memo| memo[h.id] = h.country }
 
       # Auto-filter country if Hub selected
       if hub_filter.present? && !country_filter.present?
@@ -223,15 +218,11 @@
       unless type_filter == 'blocked'
         filtered_holidays = @public_holidays.select do |h|
           match = true
-
           if country_filter.present?
             c_match = (h.country == country_filter) || (h.hub_id && hub_countries[h.hub_id] == country_filter)
             match = match && c_match
           end
-
           if hub_filter.present?
-            # Global holidays (no hub_id) show for everyone
-            # Specific holidays must match hub_id
             if h.hub_id.present?
               match = match && (h.hub_id == hub_filter)
             end
@@ -257,19 +248,15 @@
       unless type_filter == 'holidays'
         filtered_blocked = @blocked_periods.select do |b|
           match = true
-
           if country_filter.present? && b.hub_id.present?
              match = match && (hub_countries[b.hub_id] == country_filter)
           end
-
           if hub_filter.present? && b.hub_id.present?
              match = match && (b.hub_id == hub_filter)
           end
-
           if dept_filter.present? && b.department_id.present?
              match = match && (b.department_id == dept_filter)
           end
-
           match
         end
 
@@ -326,7 +313,7 @@
                             <% if holidays = holidays_by_date[date] %>
                               <% classes << 'holiday' %>
                               <% holidays.each do |h| %>
-                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, public_holiday_path(h), data: { turbo_method: :delete, turbo_confirm: "Delete #{h.name}?" }, class: "text-danger float-end ms-2", title: "Delete") : "" %>
+                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, public_holiday_path(h), data: { turbo_method: :delete, turbo_confirm: "Delete #{h.name}?" }, class: "text-danger float-end ms-4", title: "Delete") : "" %>
                                 <% popover_content << "<div class='mb-1 pb-1 border-bottom small'><strong>🎉 #{h.name}</strong> #{delete_link}</div>" %>
                               <% end %>
                             <% end %>
@@ -336,8 +323,8 @@
                             <% if active_mandatory.any? %>
                               <% classes << 'mandatory' %>
                               <% active_mandatory.each do |m| %>
-                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, mandatory_leafe_path(m), data: { turbo_method: :delete, turbo_confirm: "Delete #{m.name}?" }, class: "text-danger float-end ms-2", title: "Delete") : "" %>
-                                <% popover_content << "<div class='mb-1 pb-1 border-bottom small text-primary'><strong>⚠️ #{m.name}</strong> #{delete_link}</div>" %>
+                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, mandatory_leafe_path(m), data: { turbo_method: :delete, turbo_confirm: "Delete #{m.name}?" }, class: "text-danger float-end ms-4", title: "Delete") : "" %>
+                                <% popover_content << "<div class='mb-1 pb-1 border-bottom small text-primary'><strong>🏢 #{m.name}</strong> #{delete_link}</div>" %>
                               <% end %>
                             <% end %>
 
@@ -354,7 +341,7 @@
                                    else
                                      "🌍 Global"
                                    end %>
-                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, blocked_period_path(b), data: { turbo_method: :delete, turbo_confirm: "Delete Block?" }, class: "text-danger float-end ms-2", title: "Delete") : "" %>
+                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, blocked_period_path(b), data: { turbo_method: :delete, turbo_confirm: "Delete Block?" }, class: "text-danger float-end ms-4", title: "Delete") : "" %>
                                 <% popover_content << "<div class='mb-1 pb-1 border-bottom small text-danger'><strong>🚫 #{label}</strong> #{delete_link}</div>" %>
                               <% end %>
                             <% end %>
