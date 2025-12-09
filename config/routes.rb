@@ -102,6 +102,7 @@ Rails.application.routes.draw do
 
     resources :public_holidays, only: [:create, :destroy]
     resources :blocked_periods, only: [:create, :destroy]
+    resources :mandatory_leaves, only: [:create, :destroy]
 
     resources :leaves, only: [:index, :new, :create, :show] do
       collection do

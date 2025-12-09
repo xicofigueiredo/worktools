@@ -19,12 +19,15 @@ class LeavesController < ApplicationController
       is_top = depts.all? { |d| d.superior.nil? }
 
       if is_top
-        @department_leaves = StaffLeave.where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month).order(start_date: :asc)
+        @department_leaves = StaffLeave.where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month)
+                                       .where(status: ['pending', 'approved'])
+                                       .order(start_date: :asc)
       else
-        all_users = depts.flat_map do |dept|
-          dept.all_users # Assume recursive method in Department
-        end.uniq
-        @department_leaves = StaffLeave.where(user: all_users).where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month).order(start_date: :asc)
+        all_users = depts.flat_map { |dept| dept.all_users }.uniq
+        @department_leaves = StaffLeave.where(user: all_users)
+                                       .where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month)
+                                       .where(status: ['pending', 'approved'])
+                                       .order(start_date: :asc)
       end
     else
       @pending_confirmations = []
@@ -34,6 +37,7 @@ class LeavesController < ApplicationController
     if @show_hr_view
       @public_holidays = PublicHoliday.all.order(date: :asc)
       @blocked_periods = BlockedPeriod.all.order(start_date: :asc)
+      @mandatory_leaves = MandatoryLeave.all.order(start_date: :asc)
       @hubs = Hub.all
       @departments = Department.all
       @users = User.staff
@@ -41,6 +45,7 @@ class LeavesController < ApplicationController
       # Initialize new objects for the modal forms
       @new_public_holiday = PublicHoliday.new
       @new_blocked_period = BlockedPeriod.new
+      @new_mandatory_leave = MandatoryLeave.new
     end
   end
 
@@ -509,6 +514,11 @@ class LeavesController < ApplicationController
                               .where("extract(year from start_date) = ?", next_year)
                               .group(:user_id).sum(:days_from_previous_year)
 
+    mandatory_counts = StaffLeave.where(user_id: user_ids, leave_type: 'holiday')
+                                 .where.not(mandatory_leave_id: nil)
+                                 .where("extract(year from start_date) = ?", year_now)
+                                 .group(:user_id).sum(:total_days)
+
     @rows = @dept_users.map do |u|
       entitlement = entitlements_by_user[u.id]
 
@@ -517,9 +527,11 @@ class LeavesController < ApplicationController
       bc = booked_current[u.id]  || 0
       pco = pending_carry[u.id]  || 0
       bco = booked_carry[u.id]   || 0
+      mandatory = mandatory_counts[u.id] || 0
 
       pending_holiday = pc + pco
       booked_holiday  = bc + bco
+      voluntary_booked = [booked_holiday - mandatory, 0].max
 
       if entitlement
         holidays_left = [entitlement.holidays_left || total_holidays - booked_holiday, 0].max
@@ -527,14 +539,16 @@ class LeavesController < ApplicationController
         holidays_left = [total_holidays - booked_holiday, 0].max
       end
 
-      primary_dept = u.departments.first # choose a "primary" department - change as appropriate
+      primary_dept = u.departments.first
 
       {
         user: u,
-        departments: u.departments.to_a,      # already preloaded
+        departments: u.departments.to_a,
         primary_department: primary_dept,
         holidays_left: holidays_left,
         booked_holiday: booked_holiday,
+        voluntary_booked: voluntary_booked,
+        mandatory_days: mandatory,
         pending_holiday: pending_holiday,
         booked_carry_over: bco,
         pending_carry_over: pco,

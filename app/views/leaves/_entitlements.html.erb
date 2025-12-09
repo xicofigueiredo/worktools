@@ -1,29 +1,28 @@
 <% year_now = Date.current.year %>
-
 <% entitlement = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: year_now) %>
 
-<% # Current year requests %>
-<% pending_holiday_current = current_user.staff_leaves.where(leave_type: "holiday", status: "pending")
-                                             .where("extract(year from start_date) = ?", year_now)
-                                             .sum(:total_days) %>
-<% booked_holiday_current = current_user.staff_leaves.where(leave_type: "holiday", status: "approved")
+<% # Existing sums %>
+<% pending_holiday_current = current_user.staff_leaves.where(leave_type: "holiday", status: "pending").where("extract(year from start_date) = ?", year_now).sum(:total_days) %>
+<% booked_holiday_current = current_user.staff_leaves.where(leave_type: "holiday", status: "approved").where("extract(year from start_date) = ?", year_now).sum(:total_days) %>
+
+<% # Carry-over %>
+<% next_year = year_now + 1 %>
+<% pending_carry_over = current_user.staff_leaves.where(leave_type: "holiday", status: "pending").where("extract(year from start_date) = ?", next_year).sum(:days_from_previous_year) %>
+<% booked_carry_over = current_user.staff_leaves.where(leave_type: "holiday", status: "approved").where("extract(year from start_date) = ?", next_year).sum(:days_from_previous_year) %>
+
+<% # NEW: Mandatory Calculation %>
+<% mandatory_count = current_user.staff_leaves.where(leave_type: "holiday", status: "approved")
+                                              .where.not(mandatory_leave_id: nil)
                                               .where("extract(year from start_date) = ?", year_now)
                                               .sum(:total_days) %>
 
-<% # Carry-over usage in next year %>
-<% next_year = year_now + 1 %>
-<% pending_carry_over = current_user.staff_leaves.where(leave_type: "holiday", status: "pending")
-                                           .where("extract(year from start_date) = ?", next_year)
-                                           .sum(:days_from_previous_year) %>
-<% booked_carry_over = current_user.staff_leaves.where(leave_type: "holiday", status: "approved")
-                                          .where("extract(year from start_date) = ?", next_year)
-                                          .sum(:days_from_previous_year) %>
+<% # Calculate Voluntary Booked (Total Booked - Mandatory) %>
+<% voluntary_booked = [booked_holiday_current - mandatory_count, 0].max %>
 
-<% # Adjusted totals for holidays including carry-over %>
+<% # Totals %>
 <% pending_holiday = pending_holiday_current + pending_carry_over %>
-<% booked_holiday = booked_holiday_current + booked_carry_over %>
 <% holidays_left = entitlement.persisted? ? entitlement.holidays_left : 25 %>
-<% total_holidays = holidays_left + booked_holiday + pending_holiday %>
+<% total_holidays = holidays_left + booked_holiday_current + pending_holiday %>
 
 <div class="card mb-4">
   <div class="card-header d-flex justify-content-between align-items-center">
@@ -38,8 +37,9 @@
       <thead class="table-light">
         <tr>
           <th>Type</th>
-          <th>Total</th>
-          <th>Booked</th>
+          <th>Total Allowance</th>
+          <th>Mandatory</th>
+          <th>Booked (Voluntary)</th>
           <th>Pending</th>
           <th>Left</th>
         </tr>
@@ -48,18 +48,23 @@
         <tr>
           <td>Holidays</td>
           <td><%= total_holidays %></td>
+
+          <td><%= mandatory_count %></td>
+
           <td>
-            <%= booked_holiday %>
+            <%= voluntary_booked %>
             <% if booked_carry_over > 0 %>
-              <small class="text-muted">(includes <%= booked_carry_over %> used in <%= next_year %>)</small>
+              <small class="text-muted">(+ <%= booked_carry_over %> carry used next year)</small>
             <% end %>
           </td>
+
           <td>
             <%= pending_holiday %>
             <% if pending_carry_over > 0 %>
-              <small class="text-muted">(includes <%= pending_carry_over %> used in <%= next_year %>)</small>
+              <small class="text-muted">(+ <%= pending_carry_over %> carry used next year)</small>
             <% end %>
           </td>
+
           <td><%= holidays_left %></td>
         </tr>
       </tbody>

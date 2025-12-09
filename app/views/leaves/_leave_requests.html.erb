@@ -87,17 +87,16 @@
                     <% else %>
                       <div class="d-flex justify-content-center align-items-center gap-2">
                         <% if can_cancel %>
-                          <button
-                            type="button"
-                            class="btn btn-sm btn-outline-danger"
-                            title="Cancel leave"
-                            aria-label="Cancel leave"
-                            data-action="click->cancel#start"
-                            data-cancel-leave-id-value="<%= leave.id %>"
-                            data-cancel-start-date-value="<%= leave.start_date %>"
-                            data-cancel-leave-status-value="<%= leave.status %>">
-                            <i class="fa fa-times" aria-hidden="true"></i>
-                          </button>
+                          <% unless leave.mandatory_leave_id.present? %>
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-outline-danger"
+                              title="Cancel leave"
+                              data-action="click->cancel#start"
+                              data-cancel-leave-id-value="<%= leave.id %>">
+                              <i class="fa fa-times" aria-hidden="true"></i>
+                            </button>
+                          <% end %>
                         <% end %>
 
                         <% if has_docs %>

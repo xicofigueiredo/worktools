@@ -3,48 +3,92 @@
 <% next_year = year + 1 %>
 
 <style>
+  :root {
+    --cal-holiday-bg: #d1e7dd;
+    --cal-holiday-border: #0f5132;
+
+    --cal-mandatory-bg: #e2d9f3;
+    --cal-mandatory-border: #6f42c1;
+
+    --cal-blocked-bg: #f8d7da;
+    --cal-blocked-border: #842029;
+    --cal-blocked-pattern: repeating-linear-gradient(45deg, #f5c6cb, #f5c6cb 5px, #f8d7da 5px, #f8d7da 10px);
+  }
+
+  .calendar-table {
+    table-layout: fixed;
+  }
   .calendar-table th, .calendar-table td {
     width: 14.28%;
     text-align: center;
     vertical-align: middle;
     height: 40px;
+    padding: 0;
   }
   .calendar-table td {
-    position: relative;
     cursor: default;
-    transition: all 0.15s ease;
+    border: 1px solid #dee2e6;
+    transition: filter 0.1s ease-in-out;
   }
+
   .calendar-table td:not(:empty):hover {
-    transform: scale(1.05);
-    z-index: 10;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    cursor: pointer;
+    filter: brightness(0.90);
+    position: relative;
+    z-index: 5;
   }
+
   .holiday {
-    background-color: #d1e7dd !important;
+    background-color: var(--cal-holiday-bg) !important;
+    border-bottom: 3px solid var(--cal-holiday-border) !important;
     font-weight: 600;
+    color: var(--cal-holiday-border);
   }
+
+  .mandatory {
+    background-color: var(--cal-mandatory-bg) !important;
+    border-bottom: 3px solid var(--cal-mandatory-border) !important;
+    font-weight: 600;
+    color: var(--cal-mandatory-border);
+  }
+
   .blocked {
-    background-image: linear-gradient(45deg, #f8d7da 25%, transparent 25%, transparent 50%, #f8d7da 50%, #f8d7da 75%, transparent 75%, transparent) !important;
-    background-size: 8px 8px;
+    background-color: var(--cal-blocked-bg) !important;
+    background-image: var(--cal-blocked-pattern);
+    border-bottom: 3px solid var(--cal-blocked-border) !important;
+    color: var(--cal-blocked-border);
   }
+
+  .mandatory.blocked {
+    background: linear-gradient(135deg, var(--cal-mandatory-bg) 50%, var(--cal-blocked-bg) 50%) !important;
+    border-bottom: 3px solid var(--cal-blocked-border) !important;
+  }
+
   .holiday.blocked {
-    background: linear-gradient(135deg, #d1e7dd 50%, #f8d7da 50%) !important;
+    background: linear-gradient(135deg, var(--cal-holiday-bg) 50%, var(--cal-blocked-bg) 50%) !important;
+    border-bottom: 3px solid var(--cal-blocked-border) !important;
   }
+
+  .holiday.mandatory {
+    background-color: var(--cal-mandatory-bg) !important;
+    border-bottom: 3px solid var(--cal-mandatory-border) !important;
+  }
+
   .weekend {
     background-color: #f8f9fa;
+    color: #adb5bd;
   }
+
   .month-card {
-    transition: all 0.2s ease;
-  }
-  .month-card:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #dee2e6;
   }
   .filter-section {
     background-color: #f8f9fa;
     padding: 1rem;
     border-radius: 0.25rem;
     margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
   }
   .legend-item {
     display: inline-flex;
@@ -56,34 +100,42 @@
     width: 20px;
     height: 20px;
     border-radius: 3px;
-    border: 1px solid #dee2e6;
+    display: inline-block;
   }
   .legend-box.holiday {
-    background-color: #d1e7dd;
+    background-color: var(--cal-holiday-bg);
+    border: 1px solid var(--cal-holiday-border);
+  }
+  .legend-box.mandatory {
+    background-color: var(--cal-mandatory-bg);
+    border: 1px solid var(--cal-mandatory-border);
   }
   .legend-box.blocked {
-    background-image: linear-gradient(45deg, #f8d7da 25%, transparent 25%, transparent 50%, #f8d7da 50%, #f8d7da 75%, transparent 75%, transparent);
-    background-size: 8px 8px;
-  }
-  .legend-box.both {
-    background: linear-gradient(135deg, #d1e7dd 50%, #f8d7da 50%);
+    background-color: var(--cal-blocked-bg);
+    background-image: var(--cal-blocked-pattern);
+    border: 1px solid var(--cal-blocked-border);
   }
 </style>
 
 <div class="card mb-4">
   <div class="card-header d-flex justify-content-between align-items-center">
-    <h2 class="h5 mb-0">Public Holidays and Blocked Periods for <%= year %></h2>
-    <div>
-      <button type="button" class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#createEventModal">
+    <h5 class="mb-0">Calendar: <%= year %></h5>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createEventModal">
         <i class="fas fa-plus"></i> Add Event
       </button>
-      <%= link_to 'Previous Year', leaves_path(year: prev_year, month: params[:month], active_tab: 'calendar'), class: 'btn btn-link btn-sm me-2' %>
-      <%= link_to 'Next Year', leaves_path(year: next_year, month: params[:month], active_tab: 'calendar'), class: 'btn btn-link btn-sm' %>
+      <div class="btn-group btn-group-sm">
+        <%= link_to leaves_path(year: prev_year, month: params[:month], active_tab: 'calendar'), class: 'btn btn-outline-secondary' do %>
+          <i class="fas fa-chevron-left"></i> <%= prev_year %>
+        <% end %>
+        <%= link_to leaves_path(year: next_year, month: params[:month], active_tab: 'calendar'), class: 'btn btn-outline-secondary' do %>
+          <%= next_year %> <i class="fas fa-chevron-right"></i>
+        <% end %>
+      </div>
     </div>
   </div>
 
   <div class="card-body">
-    <!-- Filters Section -->
     <div class="filter-section">
       <form id="calendarFilters">
         <div class="row g-3">
@@ -130,8 +182,7 @@
       </form>
     </div>
 
-    <!-- Legend -->
-    <div class="mb-3 pb-2 border-bottom">
+    <div class="mb-4 pb-2 border-bottom">
       <div class="d-flex flex-wrap align-items-center gap-2">
         <span class="small text-muted me-2">Legend:</span>
         <div class="legend-item">
@@ -139,120 +190,84 @@
           <span class="small">Public Holiday</span>
         </div>
         <div class="legend-item">
-          <div class="legend-box blocked"></div>
-          <span class="small">Blocked Period</span>
+          <div class="legend-box mandatory"></div>
+          <span class="small">Mandatory Leave</span>
         </div>
         <div class="legend-item">
-          <div class="legend-box both"></div>
-          <span class="small">Both</span>
+          <div class="legend-box blocked"></div>
+          <span class="small">Blocked Period</span>
         </div>
       </div>
     </div>
 
     <%
-      # Apply filters
+      # Apply filters logic
       country_filter = params[:country_filter] if params[:country_filter].present?
       hub_filter = params[:hub_filter].to_i if params[:hub_filter].present?
       dept_filter = params[:department_filter].to_i if params[:department_filter].present?
       type_filter = params[:type_filter]
 
-      # Create a hash of hub_id => country for quick lookup
+      # Hub Country Lookup
       hub_countries = {}
       @hubs.each { |h| hub_countries[h.id] = h.country }
 
-      holidays_by_date = {}
-
+      # Auto-filter country if Hub selected
       if hub_filter.present? && !country_filter.present?
         country_filter = hub_countries[hub_filter]
       end
 
-      # Filter holidays based on type
+      holidays_by_date = {}
+      blocked_by_date = {}
+
+      # 1. Filter Holidays
       unless type_filter == 'blocked'
         filtered_holidays = @public_holidays.select do |h|
           match = true
 
-          # Apply country filter
           if country_filter.present?
-            # Holiday matches if its country field matches
-            # OR if it has a hub_id whose hub's country matches
-            country_match = false
-
-            if h.country.present? && h.country == country_filter
-              country_match = true
-            elsif h.hub_id.present? && hub_countries[h.hub_id] == country_filter
-              country_match = true
-            end
-
-            match = match && country_match
+            c_match = (h.country == country_filter) || (h.hub_id && hub_countries[h.hub_id] == country_filter)
+            match = match && c_match
           end
 
-          # Apply hub filter
           if hub_filter.present?
-            # Holiday matches if its hub_id matches
-            # If holiday has no hub_id, it's global and should show
+            # Global holidays (no hub_id) show for everyone
+            # Specific holidays must match hub_id
             if h.hub_id.present?
-              match = match && h.hub_id == hub_filter
+              match = match && (h.hub_id == hub_filter)
             end
-            # Global holidays (no hub_id) always match when there's a hub filter
           end
-
           match
         end
 
-        # Process non-recurring holidays
-        filtered_holidays.reject(&:recurring).select { |h| h.date.year == year }.each do |h|
-          holidays_by_date[h.date] ||= []
-          holidays_by_date[h.date] << h
-        end
-
-        # Process recurring holidays
-        filtered_holidays.select(&:recurring).each do |h|
-          begin
-            d = Date.new(year, h.date.month, h.date.day)
-            holidays_by_date[d] ||= []
-            holidays_by_date[d] << h
-          rescue Date::Error
-            # Skip invalid dates (e.g., Feb 29 on non-leap year)
+        filtered_holidays.each do |h|
+          if h.recurring
+            begin
+              d = Date.new(year, h.date.month, h.date.day)
+              holidays_by_date[d] ||= []
+              holidays_by_date[d] << h
+            rescue Date::Error; end
+          elsif h.date.year == year
+            holidays_by_date[h.date] ||= []
+            holidays_by_date[h.date] << h
           end
         end
       end
 
-      blocked_by_date = {}
-
-      # Filter blocked periods based on type and other filters
+      # 2. Filter Blocked
       unless type_filter == 'holidays'
         filtered_blocked = @blocked_periods.select do |b|
           match = true
 
-          # Apply country filter
-          if country_filter.present?
-            # Blocked period matches if its hub's country matches
-            # If no hub_id, it's global and should show
-            if b.hub_id.present?
-              hub_country = hub_countries[b.hub_id]
-              match = match && (hub_country == country_filter)
-            end
-            # Global blocked periods (no hub_id) always match
+          if country_filter.present? && b.hub_id.present?
+             match = match && (hub_countries[b.hub_id] == country_filter)
           end
 
-          # Apply hub filter
-          if hub_filter.present?
-            # Blocked period matches if its hub_id matches
-            # If no hub_id, it's global and should show
-            if b.hub_id.present?
-              match = match && b.hub_id == hub_filter
-            end
-            # Global blocked periods (no hub_id) always match
+          if hub_filter.present? && b.hub_id.present?
+             match = match && (b.hub_id == hub_filter)
           end
 
-          # Apply department filter
-          if dept_filter.present?
-            # Blocked period matches if its department_id matches
-            # If no department_id, it's global and should show
-            if b.department_id.present?
-              match = match && b.department_id == dept_filter
-            end
-            # Global blocked periods (no department_id) always match
+          if dept_filter.present? && b.department_id.present?
+             match = match && (b.department_id == dept_filter)
           end
 
           match
@@ -268,17 +283,17 @@
       end
     %>
 
-    <% if holidays_by_date.blank? && blocked_by_date.blank? %>
+    <% if holidays_by_date.blank? && blocked_by_date.blank? && @mandatory_leaves.blank? %>
       <div class="text-center py-5">
-        <p class="text-muted mb-0">No public holidays or blocked periods for <%= year %> with the selected filters.</p>
+        <p class="text-muted mb-0">No events found for <%= year %> with the selected filters.</p>
       </div>
     <% else %>
       <div class="row">
         <% (1..12).each do |month| %>
           <div class="col-md-4 mb-3">
-            <div class="card month-card">
-              <div class="card-header bg-primary text-white">
-                <h6 class="mb-0"><%= Date::MONTHNAMES[month] %></h6>
+            <div class="card month-card h-100">
+              <div class="card-header bg-primary text-white py-2">
+                <h6 class="mb-0 small fw-bold text-uppercase"><%= Date::MONTHNAMES[month] %></h6>
               </div>
               <div class="card-body p-0">
                 <%
@@ -299,88 +314,65 @@
                         <% (0..6).each do |day_in_week| %>
                           <% actual_day = week * 7 + day_in_week - start_wday + 1 %>
                           <% if actual_day < 1 || actual_day > last_day.day %>
-                            <td></td>
+                            <td class="bg-light border-0"></td>
                           <% else %>
                             <% date = Date.new(year, month, actual_day) %>
                             <% classes = [] %>
-
-                            <%# We will build an HTML string for the Popover content %>
                             <% popover_content = [] %>
 
+                            <%# --- Check Events --- %>
+
+                            <%# 1. Holidays %>
                             <% if holidays = holidays_by_date[date] %>
                               <% classes << 'holiday' %>
                               <% holidays.each do |h| %>
-                                <%# Create the delete link %>
-                                <% delete_link = if @show_hr_view
-                                    link_to(
-                                      '<i class="fas fa-trash"></i>'.html_safe,
-                                      public_holiday_path(h),
-                                      data: { turbo_method: :delete, turbo_confirm: "Delete holiday #{h.name}?" },
-                                      class: "text-danger ms-2",
-                                      tabindex: "-1",
-                                      title: "Delete holiday"
-                                    )
-                                  else
-                                    ""
-                                  end
-                                %>
-                                <% popover_content << "<div class='d-flex justify-content-between align-items-center mb-1'><span>🎉 #{ERB::Util.html_escape(h.name)}</span> #{delete_link}</div>" %>
+                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, public_holiday_path(h), data: { turbo_method: :delete, turbo_confirm: "Delete #{h.name}?" }, class: "text-danger float-end ms-2", title: "Delete") : "" %>
+                                <% popover_content << "<div class='mb-1 pb-1 border-bottom small'><strong>🎉 #{h.name}</strong> #{delete_link}</div>" %>
                               <% end %>
                             <% end %>
 
+                            <%# 2. Mandatory %>
+                            <% active_mandatory = @mandatory_leaves.select { |m| date >= m.start_date && date <= m.end_date } %>
+                            <% if active_mandatory.any? %>
+                              <% classes << 'mandatory' %>
+                              <% active_mandatory.each do |m| %>
+                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, mandatory_leafe_path(m), data: { turbo_method: :delete, turbo_confirm: "Delete #{m.name}?" }, class: "text-danger float-end ms-2", title: "Delete") : "" %>
+                                <% popover_content << "<div class='mb-1 pb-1 border-bottom small text-primary'><strong>⚠️ #{m.name}</strong> #{delete_link}</div>" %>
+                              <% end %>
+                            <% end %>
+
+                            <%# 3. Blocked %>
                             <% if blocked = blocked_by_date[date] %>
                               <% classes << 'blocked' %>
                               <% blocked.each do |b| %>
-                                <%# Determine the name to show %>
-                                <% if b.user_id %>
-                                  <% entity = @users.find { |u| u.id == b.user_id }&.full_name || 'User' %>
-                                  <% label = "👤 #{entity}" %>
-                                <% elsif b.department_id %>
-                                  <% entity = @departments.find { |d| d.id == b.department_id }&.name || 'Dept' %>
-                                  <% label = "🏢 #{entity}" %>
-                                <% elsif b.hub_id %>
-                                  <% entity = @hubs.find { |h| h.id == b.hub_id }&.name || 'Hub' %>
-                                  <% label = "📍 #{entity}" %>
-                                <% else %>
-                                  <% label = "🌍 Global Block" %>
-                                <% end %>
-
-                                <%# Create the delete link %>
-                                <% delete_link = if @show_hr_view
-                                    link_to(
-                                      '<i class="fas fa-trash"></i>'.html_safe,
-                                      blocked_period_path(b),
-                                      data: { turbo_method: :delete, turbo_confirm: "Delete this blocked period?" },
-                                      class: "text-danger ms-2",
-                                      tabindex: "-1",
-                                      title: "Delete blocked period"
-                                    )
-                                  else
-                                    ""
-                                  end
-                                %>
-                                <% popover_content << "<div class='d-flex justify-content-between align-items-center mb-1'><span class='small'>🚫 #{ERB::Util.html_escape(label)}</span> #{delete_link}</div>" %>
+                                <% label = if b.user_id
+                                     "👤 #{@users.find { |u| u.id == b.user_id }&.full_name}"
+                                   elsif b.department_id
+                                     "🏢 #{@departments.find { |d| d.id == b.department_id }&.name}"
+                                   elsif b.hub_id
+                                     "📍 #{@hubs.find { |h| h.id == b.hub_id }&.name}"
+                                   else
+                                     "🌍 Global"
+                                   end %>
+                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, blocked_period_path(b), data: { turbo_method: :delete, turbo_confirm: "Delete Block?" }, class: "text-danger float-end ms-2", title: "Delete") : "" %>
+                                <% popover_content << "<div class='mb-1 pb-1 border-bottom small text-danger'><strong>🚫 #{label}</strong> #{delete_link}</div>" %>
                               <% end %>
                             <% end %>
 
-                            <% if day_in_week == 0 || day_in_week == 6 %>
-                              <% classes << 'weekend' unless classes.any? %>
+                            <%# Weekend %>
+                            <% if (day_in_week == 0 || day_in_week == 6) && classes.empty? %>
+                              <% classes << 'weekend' %>
                             <% end %>
 
-                            <% cell_classes = classes.join(' ') %>
-                            <% has_events = popover_content.any? %>
-
-                            <%# RENDER THE CELL %>
-                            <td class="<%= cell_classes %>"
-                                <% if has_events %>
-                                  style="cursor: pointer;"
+                            <td class="<%= classes.join(' ') %>"
+                                <% if popover_content.any? %>
                                   data-bs-toggle="popover"
                                   data-bs-placement="top"
                                   data-bs-html="true"
-                                  data-bs-title="Events for <%= date.strftime('%b %d') %>"
-                                  data-bs-content="<%= ERB::Util.html_escape(popover_content.join('')) %>"
-                                <% end %>
-                            >
+                                  data-bs-trigger="click"
+                                  title="<div class='text-center small fw-bold'><%= date.strftime('%a, %b %d') %></div>"
+                                  data-bs-content="<%= ERB::Util.html_escape(popover_content.join) %>"
+                                <% end %>>
                               <%= actual_day %>
                             </td>
                           <% end %>
@@ -388,11 +380,10 @@
                       </tr>
                       <% week += 1 %>
                     <% end %>
-                    <%# Add empty rows to make all calendars have 6 weeks for consistency %>
+
+                    <%# Fill remaining rows %>
                     <% (week...6).each do %>
-                      <tr>
-                        <% (0..6).each do %><td></td><% end %>
-                      </tr>
+                      <tr><% (0..6).each do %><td class="bg-light border-0"></td><% end %></tr>
                     <% end %>
                   </tbody>
                 </table>
@@ -414,11 +405,12 @@
       </div>
       <div class="modal-body">
 
-        <div class="mb-4">
-          <label class="form-label fw-bold">What would you like to create?</label>
+        <div class="mb-3">
+          <label class="form-label fw-bold">Event Type</label>
           <select class="form-select" id="eventTypeSelector">
             <option value="holiday">Public Holiday</option>
             <option value="blocked">Blocked Period</option>
+            <option value="mandatory">Mandatory Leave</option>
           </select>
         </div>
 
@@ -426,34 +418,29 @@
           <%= form_with(model: @new_public_holiday, url: public_holidays_path, local: true) do |f| %>
             <div class="mb-3">
               <%= f.label :name, class: "form-label" %>
-              <%= f.text_field :name, class: "form-control", required: true, placeholder: "e.g. Christmas Day" %>
+              <%= f.text_field :name, class: "form-control", required: true %>
             </div>
-
             <div class="mb-3">
               <%= f.label :date, class: "form-label" %>
               <%= f.date_field :date, class: "form-control", required: true, value: Date.current %>
             </div>
-
             <div class="mb-3 form-check">
               <%= f.check_box :recurring, class: "form-check-input" %>
               <%= f.label :recurring, "Recurring every year?", class: "form-check-label" %>
             </div>
-
             <hr>
-            <p class="small text-muted mb-2">Scope (Leave empty for Global/All)</p>
-
+            <p class="small text-muted mb-2">Scope (Optional)</p>
             <div class="row g-2">
               <div class="col-6">
-                <%= f.label :country, "Specific Country", class: "form-label small" %>
+                <%= f.label :country, "Country", class: "form-label small" %>
                 <%= f.select :country, @hubs.map(&:country).compact.uniq.sort, { include_blank: "Global / All" }, { class: "form-select form-select-sm" } %>
               </div>
               <div class="col-6">
-                <%= f.label :hub_id, "Specific Hub", class: "form-label small" %>
+                <%= f.label :hub_id, "Hub", class: "form-label small" %>
                 <%= f.collection_select :hub_id, @hubs, :id, :name, { include_blank: "None" }, { class: "form-select form-select-sm" } %>
               </div>
             </div>
-
-            <div class="mt-4 text-end">
+            <div class="mt-3 text-end">
               <button type="submit" class="btn btn-success">Create Holiday</button>
             </div>
           <% end %>
@@ -461,7 +448,6 @@
 
         <div id="form-blocked-section" style="display: none;">
           <%= form_with(model: @new_blocked_period, url: blocked_periods_path, local: true) do |f| %>
-
             <div class="row g-2 mb-3">
               <div class="col-6">
                 <%= f.label :start_date, class: "form-label" %>
@@ -472,35 +458,53 @@
                 <%= f.date_field :end_date, class: "form-control", required: true %>
               </div>
             </div>
-
             <hr>
             <div class="mb-3">
               <label class="form-label">Who is this blocked for?</label>
               <select class="form-select" id="blockedTargetSelector">
-                <option value="global">Entire Organization (Global)</option>
+                <option value="global">Entire Organization</option>
                 <option value="hub">Specific Hub</option>
                 <option value="department">Specific Department</option>
                 <option value="user">Specific User</option>
               </select>
             </div>
-
             <div id="target-hub" class="target-group mb-3" style="display:none;">
-              <%= f.label :hub_id, "Select Hub", class: "form-label" %>
               <%= f.collection_select :hub_id, @hubs, :id, :name, { include_blank: "Select Hub..." }, { class: "form-select" } %>
             </div>
-
             <div id="target-department" class="target-group mb-3" style="display:none;">
-              <%= f.label :department_id, "Select Department", class: "form-label" %>
               <%= f.collection_select :department_id, @departments, :id, :name, { include_blank: "Select Department..." }, { class: "form-select" } %>
             </div>
-
             <div id="target-user" class="target-group mb-3" style="display:none;">
-              <%= f.label :user_id, "Select User", class: "form-label" %>
               <%= f.collection_select :user_id, @users, :id, :full_name, { include_blank: "Select User..." }, { class: "form-select" } %>
             </div>
+            <div class="mt-3 text-end">
+              <button type="submit" class="btn btn-warning">Create Block</button>
+            </div>
+          <% end %>
+        </div>
 
-            <div class="mt-4 text-end">
-              <button type="submit" class="btn btn-warning">Create Blocked Period</button>
+        <div id="form-mandatory-section" style="display: none;">
+          <%= form_with(model: @new_mandatory_leave, url: mandatory_leaves_path, local: true) do |f| %>
+            <div class="mb-3">
+              <%= f.label :name, class: "form-label" %>
+              <%= f.text_field :name, class: "form-control", required: true %>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <%= f.label :start_date, class: "form-label" %>
+                <%= f.date_field :start_date, class: "form-control", required: true %>
+              </div>
+              <div class="col-6">
+                <%= f.label :end_date, class: "form-label" %>
+                <%= f.date_field :end_date, class: "form-control", required: true %>
+              </div>
+            </div>
+            <div class="mb-3 form-check">
+              <%= f.check_box :global, class: "form-check-input" %>
+              <%= f.label :global, "Apply to Everyone? (Uncheck for LC/CM only)", class: "form-check-label" %>
+            </div>
+            <div class="mt-3 text-end">
+              <button type="submit" class="btn btn-danger">Create Mandatory</button>
             </div>
           <% end %>
         </div>
@@ -512,130 +516,70 @@
 
 <script>
   document.addEventListener('turbo:load', function () {
+    // 1. Initialize Popovers (Click to open, click outside to close)
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-      popoverTriggerEl.addEventListener('show.bs.popover', function (e) {
-        popoverTriggerList.forEach(function (el) {
-          if (el !== popoverTriggerEl) {
-            var popover = bootstrap.Popover.getInstance(el);
-            if (popover) {
-              popover.hide();
-            }
-          }
-        });
-      });
-      return new bootstrap.Popover(popoverTriggerEl, {
-        trigger: 'click',
-        sanitize: false,
-        container: 'body'
-      });
+    var popoverList = popoverTriggerList.map(function (el) {
+      return new bootstrap.Popover(el, { sanitize: false, container: 'body', trigger: 'click' });
     });
 
+    // Close on outside click
     document.addEventListener('click', function (e) {
       popoverList.forEach(function (popover) {
         if (popover.tip && popover.tip.classList.contains('show')) {
-          if (
-            !popover._element.contains(e.target) &&
-            !popover.tip.contains(e.target)
-          ) {
+          if (!popover._element.contains(e.target) && !popover.tip.contains(e.target)) {
             popover.hide();
           }
         }
       });
     });
 
-    // Handle country filter change - update hub dropdown
+    // 2. Filter Logic (Hub/Country Sync)
     var countryFilter = document.getElementById('countryFilter');
     var hubFilter = document.getElementById('hubFilter');
-
     if (countryFilter && hubFilter) {
       countryFilter.addEventListener('change', function() {
-        var selectedCountry = this.value;
+        var selectedVal = this.value;
         var hubOptions = hubFilter.querySelectorAll('option');
-
-        hubOptions.forEach(function(option) {
-          if (option.value === '') {
-            option.style.display = '';
-            return;
-          }
-
-          var optionCountry = option.getAttribute('data-country');
-          if (!selectedCountry || optionCountry === selectedCountry) {
-            option.style.display = '';
-          } else {
-            option.style.display = 'none';
-          }
+        hubOptions.forEach(function(opt) {
+          if (opt.value === '') { opt.style.display = ''; return; }
+          opt.style.display = (!selectedVal || opt.dataset.country === selectedVal) ? '' : 'none';
         });
-
-        // Reset hub selection if it's now hidden
-        if (hubFilter.value && hubFilter.selectedOptions[0].style.display === 'none') {
-          hubFilter.value = '';
-        }
+        if (hubFilter.value && hubFilter.selectedOptions[0].style.display === 'none') hubFilter.value = '';
       });
     }
 
-    // Handle filter changes
-    var filterSelects = document.querySelectorAll('.filter-section select');
-    filterSelects.forEach(function(select) {
-      select.addEventListener('change', function() {
-        var form = document.getElementById('calendarFilters');
-        var formData = new FormData(form);
+    // Auto-submit filters
+    document.querySelectorAll('.filter-section select').forEach(s => {
+      s.addEventListener('change', function() {
         var params = new URLSearchParams(window.location.search);
-
-        // Update URL params with filter values
-        formData.forEach(function(value, key) {
-          if (value) {
-            params.set(key, value);
-          } else {
-            params.delete(key);
-          }
-        });
-
-        // Preserve year and active_tab
-        if (!params.has('year')) {
-          params.set('year', '<%= year %>');
-        }
+        var formData = new FormData(document.getElementById('calendarFilters'));
+        formData.forEach((v, k) => v ? params.set(k, v) : params.delete(k));
+        if (!params.has('year')) params.set('year', '<%= year %>');
         params.set('active_tab', 'calendar');
-
-        // Redirect with new params
         window.location.href = window.location.pathname + '?' + params.toString();
       });
     });
 
+    // 3. Modal Form Toggles
     var typeSelector = document.getElementById('eventTypeSelector');
-    var holidaySection = document.getElementById('form-holiday-section');
-    var blockedSection = document.getElementById('form-blocked-section');
-
     if(typeSelector) {
       typeSelector.addEventListener('change', function() {
-        if(this.value === 'holiday') {
-          holidaySection.style.display = 'block';
-          blockedSection.style.display = 'none';
-        } else {
-          holidaySection.style.display = 'none';
-          blockedSection.style.display = 'block';
-        }
+        ['form-holiday-section', 'form-blocked-section', 'form-mandatory-section'].forEach(id => {
+          document.getElementById(id).style.display = 'none';
+        });
+        if(this.value === 'holiday') document.getElementById('form-holiday-section').style.display = 'block';
+        if(this.value === 'blocked') document.getElementById('form-blocked-section').style.display = 'block';
+        if(this.value === 'mandatory') document.getElementById('form-mandatory-section').style.display = 'block';
       });
     }
 
     var targetSelector = document.getElementById('blockedTargetSelector');
-    var targetGroups = document.querySelectorAll('.target-group');
-
     if(targetSelector) {
       targetSelector.addEventListener('change', function() {
-        // Hide all target specific inputs first
-        targetGroups.forEach(function(el) { el.style.display = 'none'; });
-        // Reset their values so we don't submit hidden data
-        targetGroups.forEach(function(el) {
-          var select = el.querySelector('select');
-          if(select) select.value = "";
-        });
-
-        // Show the selected one
-        var selection = this.value;
-        if(selection !== 'global') {
-          var targetDiv = document.getElementById('target-' + selection);
-          if(targetDiv) targetDiv.style.display = 'block';
+        document.querySelectorAll('.target-group').forEach(el => el.style.display = 'none');
+        if(this.value !== 'global') {
+          var target = document.getElementById('target-' + this.value);
+          if(target) target.style.display = 'block';
         }
       });
     }

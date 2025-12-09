@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
+ActiveRecord::Schema[7.0].define(version: 2025_12_09_110747) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -22,6 +22,34 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["record_type", "record_id", "name"], name: "index_action_text_rich_texts_uniqueness", unique: true
+  end
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "assignments", force: :cascade do |t|
@@ -295,7 +323,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
     t.integer "learning_coach_ids", default: [], array: true
     t.integer "timeline_id"
     t.string "specific_papers"
-    t.date "personalized_exam_date"
+    t.string "personalized_exam_date"
     t.string "paper1"
     t.string "paper2"
     t.string "paper3"
@@ -577,6 +605,15 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
     t.datetime "updated_at", null: false
     t.string "level"
     t.index ["user_id"], name: "index_lws_timelines_on_user_id"
+  end
+
+  create_table "mandatory_leaves", force: :cascade do |t|
+    t.string "name", null: false
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.boolean "global", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "monday_slots", force: :cascade do |t|
@@ -926,8 +963,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
     t.datetime "updated_at", null: false
     t.text "exception_errors"
     t.integer "days_from_previous_year", default: 0, null: false
+    t.bigint "mandatory_leave_id"
     t.index ["approver_user_id"], name: "index_staff_leaves_on_approver_user_id"
     t.index ["days_from_previous_year"], name: "index_staff_leaves_on_days_from_previous_year"
+    t.index ["mandatory_leave_id"], name: "index_staff_leaves_on_mandatory_leave_id"
     t.index ["start_date"], name: "index_staff_leaves_on_start_date"
     t.index ["status"], name: "index_staff_leaves_on_status"
     t.index ["user_id", "start_date"], name: "index_staff_leaves_on_user_id_and_start_date"
@@ -1165,6 +1204,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
     t.index ["sprint_id"], name: "index_weeks_on_sprint_id"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "assignments", "subjects"
   add_foreign_key "assignments", "users"
   add_foreign_key "attendances", "users"
@@ -1246,6 +1287,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
   add_foreign_key "sprint_goals", "users"
   add_foreign_key "staff_leave_documents", "staff_leaves", column: "staff_leave_id"
   add_foreign_key "staff_leave_entitlements", "users"
+  add_foreign_key "staff_leaves", "mandatory_leaves", column: "mandatory_leave_id"
   add_foreign_key "staff_leaves", "users"
   add_foreign_key "staff_leaves", "users", column: "approver_user_id"
   add_foreign_key "submissions", "moodle_assignments"

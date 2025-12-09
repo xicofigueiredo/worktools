@@ -1,6 +1,7 @@
 class StaffLeave < ApplicationRecord
   belongs_to :user
   belongs_to :approver_user, class_name: "User", optional: true
+  belongs_to :mandatory_leave, optional: true
 
   has_many :confirmations, as: :confirmable, dependent: :destroy
   has_many :staff_leave_documents, dependent: :destroy
@@ -13,11 +14,11 @@ class StaffLeave < ApplicationRecord
   validates :leave_type, presence: true, inclusion: { in: LEAVE_TYPES }
   validates :start_date, :end_date, presence: true
   validate  :end_on_or_after_start
-  validate  :advance_days_rule, on: :create, if: -> { leave_type == 'holiday' }
-  validate  :user_has_days_left, on: :create, if: -> { leave_type == 'holiday' }
-  validate  :no_overlapping_blocked_periods, on: :create, if: -> { leave_type == 'holiday' }
-  validate  :no_department_overlaps, on: :create, if: -> { leave_type == 'holiday' }
-  validate  :no_self_overlaps, on: :create
+  validate  :advance_days_rule, on: :create, if: -> { leave_type == 'holiday' && mandatory_leave_id.nil? }
+  validate  :user_has_days_left, on: :create, if: -> { leave_type == 'holiday' && mandatory_leave_id.nil? }
+  validate  :no_overlapping_blocked_periods, on: :create, if: -> { leave_type == 'holiday' && mandatory_leave_id.nil? }
+  validate  :no_department_overlaps, on: :create, if: -> { leave_type == 'holiday' && mandatory_leave_id.nil? }
+  validate  :no_self_overlaps, on: :create, unless: -> { mandatory_leave_id.present? }
   validate  :exception_reason_if_requested
   validates :days_from_previous_year, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validate  :previous_year_days_allowed, on: :create
@@ -26,9 +27,11 @@ class StaffLeave < ApplicationRecord
   validate :notes_required_for_other, on: :create
 
   before_validation :calculate_total_days, on: [:create, :update]
+  before_destroy :check_if_mandatory
   after_create :deduct_entitlement_days
   after_create :create_initial_confirmation
   after_update :return_entitlement_days, if: -> { saved_change_to_status? && ['rejected', 'cancelled'].include?(status) && !['rejected', 'cancelled'].include?(saved_changes[:status].first) }
+  after_destroy :return_entitlement_days
 
   def compute_total_days
     calculate_total_days
@@ -143,6 +146,13 @@ class StaffLeave < ApplicationRecord
   end
 
   private
+
+  def check_if_mandatory
+    if mandatory_leave_id.present? && !destroyed_by_association
+      errors.add(:base, "Cannot cancel a mandatory leave. Please contact HR.")
+      throw(:abort)
+    end
+  end
 
   def notes_required_for_other
     if leave_type == 'other' && notes.blank?
@@ -336,6 +346,16 @@ class StaffLeave < ApplicationRecord
   def deduct_entitlement_days
     return if total_days.blank? || leave_type.blank? || user.blank?
 
+    if mandatory_leave_id.present?
+      target_year = start_date.year
+      entitlement = StaffLeaveEntitlement.find_or_create_by!(user: user, year: target_year)
+
+      # Deduct full amount from start year, regardless of split
+      new_left = [entitlement.holidays_left.to_i - total_days, 0].max
+      entitlement.update!(holidays_left: new_left)
+      return # Exit early
+    end
+
     years = (start_date.year..end_date.year).to_a
 
     years.each do |yr|
@@ -397,6 +417,13 @@ class StaffLeave < ApplicationRecord
   def return_entitlement_days
     return if total_days.blank? || leave_type.blank? || user.blank?
 
+    if mandatory_leave_id.present?
+      target_year = start_date.year
+      entitlement = StaffLeaveEntitlement.find_or_create_by!(user: user, year: target_year)
+      entitlement.update!(holidays_left: entitlement.holidays_left.to_i + total_days)
+      return
+    end
+
     years = (start_date.year..end_date.year).to_a
 
     years.each do |yr|
@@ -446,6 +473,8 @@ class StaffLeave < ApplicationRecord
   end
 
   def create_initial_confirmation
+    return if mandatory_leave_id.present?
+
     chain = approval_chain
     if chain.present?
       confirmations.create!(type: 'Confirmation', approver: chain.first, status: 'pending')
