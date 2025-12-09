@@ -17,7 +17,7 @@
     <h1>Exam Enrollment Details</h1>
     <div>
       <%= link_to "Edit", edit_exam_enroll_path(@exam_enroll), class: "btn btn-warning" %>
-      <%= link_to "Back", request.referer || exam_enrolls_path, class: "btn btn-secondary" %>
+      <%= link_to "Back",  exam_enrolls_path(status: params[:status], hub: params[:hub], subject: params[:subject], exam_centre: params[:exam_centre], date: params[:date]), class: "btn btn-secondary" %>
     </div>
   </div>
 
@@ -41,29 +41,38 @@
     </div>
   </div>
 
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>Learning Coach Information</h5>
-    </div>
-    <div class="card-body">
-      <% if @exam_enroll.learning_coach_ids.any? %>
-        <div class="row">
-          <% @exam_enroll.learning_coach_ids.each do |lc_id| %>
-            <% if lc = User.find_by(id: lc_id) %>
-              <div class="col-md-6 mb-3">
-                <div class="card">
-                  <div class="card-body">
-                    <h6 class="card-title"><%= lc.full_name %></h6>
-                    <p class="card-text"><small class="text-muted"><%= lc.email %></small></p>
+  <div class="d-flex gap-4 flex-wrap">
+    <div class="card mb-4 flex-grow-1">
+      <div class="card-header">
+        <h5>Learning Coach Information</h5>
+      </div>
+      <div class="card-body">
+        <% if @exam_enroll.learning_coach_ids.any? %>
+          <div class="row">
+            <% @exam_enroll.learning_coach_ids.each do |lc_id| %>
+              <% if lc = User.find_by(id: lc_id) %>
+                <div class="col-md-6 mb-3">
+                  <div class="card">
+                    <div class="card-body">
+                      <h6 class="card-title"><%= lc.full_name %></h6>
+                      <p class="card-text"><small class="text-muted"><%= lc.email %></small></p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              <% end %>
             <% end %>
-          <% end %>
-        </div>
-      <% else %>
-        <p class="text-muted">No Learning Coaches assigned</p>
-      <% end %>
+          </div>
+        <% else %>
+          <p class="text-muted">No Learning Coaches assigned</p>
+        <% end %>
+      </div>
+    </div>
+    <div class="card mb-4 flex-grow-1">
+      <div class="card-header">
+        <h5>Status History</h5>
+      </div>
+      <div class="card-body">
+      </div>
     </div>
   </div>
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
+ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -334,6 +334,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
     t.float "paper3_cost"
     t.float "paper4_cost"
     t.float "paper5_cost"
+    t.jsonb "status_changes", default: []
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
     t.index ["timeline_id"], name: "index_exam_enrolls_on_timeline_id"
   end
@@ -348,6 +349,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_25_200039) do
     t.text "comments"
     t.string "currency", default: "EUR"
     t.integer "number_of_subjects", default: 0, null: false
+    t.jsonb "status_changes", default: []
     t.index ["user_id"], name: "index_exam_finances_on_user_id"
   end
 

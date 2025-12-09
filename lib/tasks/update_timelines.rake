@@ -3,10 +3,10 @@ require './app/controllers/concerns/generate_topic_deadlines'
 # lib/tasks/simulate_update.rake
 include GenerateTopicDeadlines
 
-namespace :moodle_timelines do
+namespace :timelines do
   desc "Update moodle timelines"
   task update_timelines: :environment do
-    timelines = MoodleTimeline.where(hidden: false, end_date: Date.today..Date.today + 3.year)
+    timelines = Timeline.where(hidden: false, subject_id: [566, 83])
     array_of_timelines = timelines.to_a
 
     successful_updates = 0
@@ -74,6 +74,6 @@ namespace :moodle_timelines do
     #   puts " #{timeline.end_date} - #{timeline.subject&.name} (#{timeline.user&.email})"
     #   count += 1
     # end
-    puts "Total: #{count}"
+    # puts "Total: #{count}"
   end
 end

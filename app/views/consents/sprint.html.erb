@@ -1,6 +1,30 @@
 <div class="container mt-4">
   <%= form_with model: @sprint_consent, url: sprint_consents_path(learner_id: @learner&.id), method: :post, local: true, data: { controller: 'consent-form' } do |f| %>
-    <h1 class="mb-3"><%= @current_sprint.name %> <%= @current_sprint.start_date.strftime('%Y') %> Consent Form</h1>
+    <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
+      <div class="d-flex">
+        <h1 class="mb-0"><%= @current_sprint.name %> <%= @current_sprint.start_date.strftime('%Y') %> Consent Form</h1>
+      </div>
+
+      <div class="d-flex gap-2 position-absolute top-50 start-50 translate-middle">
+        <% if @prev_sprint %>
+          <%= link_to '<i class="fa-solid fa-chevron-left"></i>'.html_safe, sprint_consents_path(learner_id: @learner&.id, date: @prev_sprint.start_date), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+        <% else %>
+          <button class="btn btn-outline-secondary rounded d-flex align-items-center" disabled>
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+        <% end %>
+
+        <%= link_to 'Current Sprint', sprint_consents_path(learner_id: @learner&.id, date: Date.today), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+
+        <% if @next_sprint && @next_sprint.start_date < Date.today + 1.month  %>
+          <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe, sprint_consents_path(learner_id: @learner&.id, date: @next_sprint.start_date), class: "btn btn-outline-secondary rounded d-flex align-items-center" %>
+        <% else %>
+          <button class="btn btn-outline-secondary rounded d-flex align-items-center" disabled>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        <% end %>
+      </div>
+    </div>
 
     <div class="card p-4 shadow-sm bg-body-tertiary mb-4" style="border-radius: 10px;">
       <p>
@@ -165,11 +189,7 @@
     </div>
 
     <div class="mt-4 d-flex justify-content-center">
-      <% if current_user.role == "lc" %>
-        <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;', disabled: true %>
-      <% else %>
-        <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
-      <% end %>
+      <%= f.submit 'Submit Consent', class: 'btn btn-primary', style: 'border-radius: 10px;' %>
       <%= link_to 'Back', learner_profile_path(@learner), class: 'btn btn-secondary ms-2', style: 'border-radius: 10px;' %>
     </div>
   <% end %>
