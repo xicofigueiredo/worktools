@@ -193,6 +193,7 @@ Rails.application.routes.draw do
         patch 'update_activities'
         post 'remove_lc'
         delete 'destroy_report_knowledge', to: 'reports#destroy_report_knowledge'
+        post 'reset_knowledges_from_sprint_goal', to: 'reports#reset_knowledges_from_sprint_goal'
       end
     end
 

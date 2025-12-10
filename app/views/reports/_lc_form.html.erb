@@ -38,7 +38,17 @@
 <%= form_with(model: @report, url: update_knowledges_report_path(@report), method: :patch, local: true, data: { controller: "save-knowledge" }) do |f| %>
   <div class="section">
     <div class="section-title">Knowledge <i class="fa-solid fa-circle-info" title="..."></i></div>
-    <%= link_to "LWS Calculator", "https://edubgabravegeneration.sharepoint.com/:x:/s/EducationalDepartment/EXneLAemM65AraRgL78x80UBUhDIJnKcE7zE8F6e8RTemw?e=84negu", class: "btn btn-primary", target: "_blank" %>
+    <div class="d-flex gap-2 mb-3">
+      <%= link_to "LWS Calculator", "https://edubgabravegeneration.sharepoint.com/:x:/s/EducationalDepartment/EXneLAemM65AraRgL78x80UBUhDIJnKcE7zE8F6e8RTemw?e=84negu", class: "btn btn-primary", target: "_blank" %>
+      <% if @sprint_goal_knowledges_count > @report_knowledges_count %>
+        <%= link_to reset_knowledges_from_sprint_goal_report_path(@report),
+            method: :post,
+            class: "btn btn-secondary",
+            data: { turbo_method: :post, turbo_confirm: "This will create report knowledge records for any missing knowledges from the sprint goal. Continue?" } do %>
+          Fetch from Sprint Goal
+        <% end %>
+      <% end %>
+    </div>
     <table class="knowledge-table">
       <thead>
         <tr>

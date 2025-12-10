@@ -1,7 +1,7 @@
 class ReportsController < ApplicationController
   before_action :authenticate_user!
 
-  before_action :set_report, only: %i[edit update toggle_hide update_knowledges update_activities download_pdf]
+  before_action :set_report, only: %i[edit update toggle_hide update_knowledges update_activities download_pdf destroy_report_knowledge reset_knowledges_from_sprint_goal]
 
   def lc_view
     redirect_to root_path if current_user.role != 'lc' && current_user.role != 'admin'
@@ -163,6 +163,10 @@ class ReportsController < ApplicationController
     sprint_goal = @learner.sprint_goals.includes(:knowledges, :skills, :communities).find_by(sprint: sprint)
     sprint_goal_knowledges = sprint_goal.knowledges.pluck(:subject_name) if sprint_goal
 
+    # Set counts for conditional button display
+    @sprint_goal_knowledges_count = sprint_goal&.knowledges&.count || 0
+    @report_knowledges_count = @report.report_knowledges.count
+
     timelines = @learner.timelines
     .joins(:subject) # Ensure we join the subjects table
     .where('subjects.name IN (:sprint_knowledges) OR timelines.personalized_name IN (:sprint_knowledges)',
@@ -259,14 +263,83 @@ class ReportsController < ApplicationController
   end
 
   def destroy_report_knowledge
-    @report = Report.find(params[:id])
-
     @report_knowledge = @report.report_knowledges.find(params[:knowledge_id])
 
     if @report_knowledge.destroy
       redirect_to edit_report_path(@report), notice: 'Knowledge record deleted successfully.'
     else
       redirect_to edit_report_path(@report), alert: 'Failed to delete the knowledge record.'
+    end
+  end
+
+  def reset_knowledges_from_sprint_goal
+    @learner = @report.user
+    sprint = @report.sprint
+    sprint_goal = @learner.sprint_goals.includes(:knowledges).find_by(sprint: sprint)
+
+    if sprint_goal.nil?
+      redirect_to edit_report_path(@report), alert: 'No sprint goal found for this report.'
+      return
+    end
+
+    created_count = 0
+    skipped_count = 0
+    subjects = Subject.pluck(:name).to_set
+
+    sprint_goal.knowledges.each do |knowledge|
+      # Skip if knowledge doesn't have a subject_name
+      next unless knowledge.subject_name.present?
+
+      # Check if report_knowledge already exists by knowledge_id or subject_name
+      existing_report_knowledge = @report.report_knowledges.find_by(knowledge_id: knowledge.id) ||
+                                  @report.report_knowledges.find_by(subject_name: knowledge.subject_name)
+
+      if existing_report_knowledge
+        skipped_count += 1
+        next
+      end
+
+      # Determine subject_name (handle Travel & Tourism special case)
+      subject_name = if knowledge.subject_name == "Travel & Tourism IGCSE (M50% not done)" ||
+                         knowledge.subject_name == "Travel & Tourism IGCSE (M50% done)"
+                       "Travel & Tourism IGCSE"
+                     else
+                       knowledge.subject_name
+                     end
+
+      # Determine if personalized and get progress/difference
+      if subjects.include?(subject_name)
+        personalized = false
+        subject = Subject.find_by(name: subject_name)
+        timeline = @learner.timelines.find_by(subject_id: subject&.id)
+        progress = timeline&.progress || 0
+        difference = timeline&.difference || 0
+      else
+        personalized = true
+        progress = nil
+        difference = nil
+      end
+
+      # Create the report_knowledge
+      begin
+        @report.report_knowledges.create!(
+          knowledge_id: knowledge.id,
+          subject_name: subject_name,
+          exam_season: knowledge.exam_season,
+          personalized: personalized,
+          progress: progress,
+          difference: difference
+        )
+        created_count += 1
+      rescue => e
+        Rails.logger.error "Failed to create ReportKnowledge for Knowledge ID: #{knowledge.id}: #{e.message}"
+      end
+    end
+
+    if created_count > 0
+      redirect_to edit_report_path(@report), notice: "#{created_count} knowledge record(s) created. #{skipped_count} already existed."
+    else
+      redirect_to edit_report_path(@report), notice: "All knowledge records already exist. #{skipped_count} skipped."
     end
   end
 
