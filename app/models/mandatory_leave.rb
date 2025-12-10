@@ -17,16 +17,16 @@ class MandatoryLeave < ApplicationRecord
 
   def distribute_leaves
     years_range = (start_date.year..end_date.year).to_a
-    user_ids_with_entitlement = StaffLeaveEntitlement.where(year: years_range).pluck(:user_id).uniq
-    scope = User.where(id: user_ids_with_entitlement).where(deactivate: [false, nil])
 
-    if global
-      users = scope
-    else
-      users = scope.where(role: ['lc', 'cm'])
-    end
+    users = User.staff
+                .joins(:staff_leave_entitlements)
+                .where(staff_leave_entitlements: { year: years_range })
+                .where(deactivate: [false, nil])
+                .distinct
 
-    users.each do |user|
+    users = users.where(role: %w[lc cm]) unless global
+
+    users.find_each do |user|
       sl = StaffLeave.new(
         user: user,
         start_date: start_date,
@@ -38,7 +38,7 @@ class MandatoryLeave < ApplicationRecord
       )
 
       sl.calculate_total_days
-      next if sl.total_days == 0
+      next if sl.total_days.zero?
 
       sl.save(validate: false)
     end
