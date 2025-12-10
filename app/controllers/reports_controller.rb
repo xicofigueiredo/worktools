@@ -259,7 +259,7 @@ class ReportsController < ApplicationController
   end
 
   def destroy_report_knowledge
-    @report = Report.find(params[:report_id])
+    @report = Report.find(params[:id])
 
     @report_knowledge = @report.report_knowledges.find(params[:knowledge_id])
 
