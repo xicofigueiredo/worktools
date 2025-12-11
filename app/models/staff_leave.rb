@@ -8,7 +8,7 @@ class StaffLeave < ApplicationRecord
 
   ADVANCE_DAYS = 30
   STATUSES = %w[pending approved rejected cancelled].freeze
-  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].freeze
+  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave', 'parental leave', 'birthday', 'other'].freeze
 
   validates :status, inclusion: { in: STATUSES }
   validates :leave_type, presence: true, inclusion: { in: LEAVE_TYPES }
@@ -25,6 +25,7 @@ class StaffLeave < ApplicationRecord
   validate  :paid_leave_minimum_days, on: :create
   validate  :marriage_leave_max_days, on: :create
   validate :notes_required_for_other, on: :create
+  validate :birthday_rules, on: :create, if: -> { leave_type == 'birthday' }
 
   before_validation :calculate_total_days, on: [:create, :update]
   before_destroy :check_if_mandatory
@@ -125,6 +126,11 @@ class StaffLeave < ApplicationRecord
     return if start_date.blank? || end_date.blank?
     return if end_date < start_date
 
+    if leave_type == 'birthday'
+      self.total_days = 1
+      return
+    end
+
     # Other leaves count consecutive calendar days (include weekends & public holidays)
     if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
       self.total_days = (end_date - start_date).to_i + 1
@@ -172,6 +178,26 @@ class StaffLeave < ApplicationRecord
   end
 
   private
+
+  def birthday_rules
+    bdate = user.collaborator_info&.birthdate
+    if bdate.nil?
+      errors.add(:base, "Birthdate is missing from your profile. Please contact HR.")
+      return
+    end
+
+    today = Date.current
+    candidate = bdate.change(year: today.year)
+    candidate = bdate.change(year: today.year + 1) if candidate < today
+
+    if start_date != candidate || end_date != candidate
+      errors.add(:base, "Birthday leave can only be taken on your next birthday: #{candidate.strftime('%d/%m/%Y')}.")
+    end
+
+    if StaffLeave.exists?(user: user, leave_type: 'birthday', start_date: candidate, status: ['pending', 'approved'])
+      errors.add(:base, "You have already requested leave for this birthday.")
+    end
+  end
 
   def check_if_mandatory
     if mandatory_leave_id.present? && !destroyed_by_association
@@ -370,6 +396,7 @@ class StaffLeave < ApplicationRecord
   end
 
   def deduct_entitlement_days
+    return if leave_type == 'birthday'
     return if total_days.blank? || leave_type.blank? || user.blank?
 
     years = (start_date.year..end_date.year).to_a
@@ -418,6 +445,7 @@ class StaffLeave < ApplicationRecord
   end
 
   def return_entitlement_days
+    return if leave_type == 'birthday'
     return if total_days.blank? || leave_type.blank? || user.blank?
 
     years = (start_date.year..end_date.year).to_a

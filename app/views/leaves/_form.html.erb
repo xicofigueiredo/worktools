@@ -3,7 +3,8 @@
     data: {
       controller: "leave",
       "leave-advance-days-value": StaffLeave::ADVANCE_DAYS,
-      "leave-preview-url-value": preview_leaves_path
+      "leave-preview-url-value": preview_leaves_path,
+      "leave-user-birthdate-value": current_user.collaborator_info&.birthdate&.to_s
     }
   } do |f| %>
 
@@ -20,7 +21,7 @@
       <div class="mb-2">
         <%= f.label :leave_type, "Type", class: "form-label" %>
         <%= f.select :leave_type,
-          [['Holiday', 'holiday'], ['Sick Leave', 'sick leave'], ['Paid Leave', 'paid leave'], ['Marriage Leave', 'marriage leave'], ['Parental Leave', 'parental leave'], ['Other', 'other']], {},
+          [['Holiday', 'holiday'], ['Sick Leave', 'sick leave'], ['Paid Leave', 'paid leave'], ['Marriage Leave', 'marriage leave'], ['Parental Leave', 'parental leave'], ['Birthday Leave', 'birthday'], ['Other', 'other']], {},
           data: { "leave-target": "type", action: "change->leave#validate" },
           class: "form-select" %>
       </div>
