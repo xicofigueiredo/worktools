@@ -7,7 +7,11 @@ module ProgressCalculations
     all_topic_ids = timelines.flat_map { |timeline| timeline.subject.topics.map(&:id) }.uniq
 
     # Preload user_topics for current_user for these topics in one query, index by topic_id
-    user = timelines.first.user || current_user
+    if timelines.any?
+      user = timelines.first.user
+    else
+      user = current_user
+    end
     user_topics_by_topic = user.user_topics.where(topic_id: all_topic_ids).index_by(&:topic_id)
 
     timelines.each do |timeline|
@@ -104,7 +108,11 @@ module ProgressCalculations
 
   # Refactored to preload user_topics for the given timeline to avoid N+1 queries
   def calc_remaining_blocks(timeline)
-    user = timeline.user || current_user
+    if timeline
+      user = timeline.first.user
+    else
+      user = current_user
+    end
     topics = timeline.subject.topics
     topic_ids = topics.map(&:id)
     user_topics = user.user_topics.where(topic_id: topic_ids).index_by(&:topic_id)
@@ -112,7 +120,11 @@ module ProgressCalculations
   end
 
   def calc_remaining_timeline_hours_and_percentage(timeline)
-    user = timeline.user || current_user
+    if timeline
+      user = timelines.first.user
+    else
+      user = current_user
+    end
     topics = timeline.subject.topics
     topic_ids = topics.map(&:id)
     user_topics = user.user_topics.where(topic_id: topic_ids).index_by(&:topic_id)
