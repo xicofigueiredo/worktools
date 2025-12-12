@@ -15,6 +15,7 @@ namespace :db do
     CSV.foreach(csv_path, headers: true, encoding: 'ISO-8859-1:utf-8').with_index(2) do |row, lineno|
       email = row['BGA Email'].to_s.strip.downcase
       dob_str = row['Date of Birth'].to_s.strip
+      name_str = row['Name'].to_s.strip
 
       if email.empty? || dob_str.empty?
         puts "Line #{lineno}: Missing email or date. Skipping."
@@ -29,14 +30,24 @@ namespace :db do
         next
       end
 
-      # 2. Find or Create User
-      user = User.find_or_create_by(email: email) do |u|
-        u.password = "123456"
-        u.password_confirmation = "123456"
-        u.full_name = email.split('@').first.titleize
-        u.confirmed_at = Time.current
-        u.role = 'staff'
-        puts "Line #{lineno}: Created new user for #{email}"
+      # 2. Find or Initialize User
+      user = User.find_or_initialize_by(email: email)
+
+      # Always update the name if present in CSV
+      user.full_name = name_str if name_str.present?
+
+      # Only set these if it's a brand new user
+      if user.new_record?
+        user.password = "123456"
+        user.password_confirmation = "123456"
+        user.confirmed_at = Time.current
+        user.role = 'staff'
+        puts "Line #{lineno}: Creating new user for #{email}"
+      end
+
+      unless user.save
+        puts "Line #{lineno}: Error saving user #{email} - #{user.errors.full_messages.join(', ')}"
+        next
       end
 
       # 3. Find or Create CollaboratorInfo & Update

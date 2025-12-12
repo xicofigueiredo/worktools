@@ -25,11 +25,11 @@ Employee Nº,Name,Status,Country,Location,Role,Start Date,Personal Email,BGA Emai
 142,Esther Ruth Oliveira da Silva,Active,Portugal,Central,Partnerships & BGA for Life,11/22/2022,,esther@bravegenerationacademy.com,,12/5/1987,12/11/2025,#REF!,Brasileira,"Praceta Marquesa do Cadaval, 192 - RC ESQ- 2765-396 Monte Estoril",291313809,12070921560,,8/20/2026,,N/A,F,Single,N/A,0,PT50 0007 0000 0032 0946 5202 3,,
 143,Princess Carmela Salvaña T?ut,Active,Portugal,Central,Exams Assistant,6/1/2024,,princess.carmela@bravegenerationacademy.com,,8/12/1998,12/11/2025,#REF!,Filipino,"Rua da Beijoquinha, 11 Sacotes 2725-510 Algueirão Mem Martins, Sintra, Portugal",319037991,12170071159,,Cartão de Residência: 9Q4R39441 Validade do Cartão: 09/06/2028 | Philippines Passport Number: P1875186C Passport Issued Date: 04 October 2022 Valid Until: 03 October 2032,,N/A,F,Married,2,1 (Mother),PT50 0018 200703571154020 12,,
 144,Eugenia Damonte,Active,Portugal,Central,Course Manager,10/11/2023,,eugenia.damonte@edubga.com,,8/22/1991,12/11/2025,#REF!,Italian,"Lote 21, Urbanização das Palhagueiras, A dos Cunhados, 2560-044, Torres Vedras ",309161991,12088957152,,CA71656KV,,Master,F,Single,N/A,0,PT50 0023 0000 4568 4141 3149 4,,
-145,Daniellé Roodt ,Active,Portugal,Central,Educational Officer,6/1/2024,,danielle@bravegenerationacademy.com,,12/28/1999,12/11/2025,#REF!,Portuguese,"10 Eden Nature Reserve 
+145,Daniellé Roodt ,Active,Portugal,Central,Educational Officer,6/1/2024,,danielle@bravegenerationacademy.com,,12/28/1999,12/11/2025,#REF!,Portuguese,"10 Eden Nature Reserve
 R37 Lydenburg road
-Nelspruit 
+Nelspruit
 Mpumalanga
-Postal code- 1200",326753982,12087776661,,"Portuguese ID- 32881568  
+Postal code- 1200",326753982,12087776661,,"Portuguese ID- 32881568
 validity- 25/11/2026",,N/A,F,Single,N/A,0,LT32 3250 0607 5001 0280,,
 146,Rodrigo Maria Magro da Costa Pereira,Active,Portugal,CCB,Learning Coach,9/1/2023,,rodrigo@bravegenerationacademy.com,,6/15/1998,12/11/2025,#REF!,Portugal,Rua Silva Carvalho n56 3esq 1250-255,227476069,12033448858,,14699764 6 ZW6 validity date: 22/10/2026,,N/A,M,Single,N/A,0,PT50 0023 0000 4549 2600 0709 4,,
 147,Manuel da Silva,Active,Portugal,Central,Operations & Development Manager,12/1/2022,,manuel@bravegenerationacademy.com,,3/30/1972,12/11/2025,#REF!,Portugal,"Rua Bernardino Machado 156, 3 andar 2785-092 Sao domingos de rana",299624218,12080753001,,12487879 2 ZY5,,Pos-Graduation,M,Married,N/A,2,PT50003300004556626633205,,
@@ -66,7 +66,7 @@ validity- 25/11/2026",,N/A,F,Single,N/A,0,LT32 3250 0607 5001 0280,,
 192,Nahid Salimi,Active,Portugal,Central,Education Support Officer,7/1/2025,nahidsalimi2006@gmail.com ,nahid@bravegenerationacademy.com,+351 913 750 396,7/27/2005,12/11/2025,#REF!,Afghan,"Travessa de Faro 130, Apartment 5A - Código Postal 2775-541",331859599,,Passport,P04072544,10/7/2026,,F,Single,N/A,0,LT66 3250 0249 7518 4267,,
 193,Confidence Chinelo Darah,Active,Portugal,Lagos 2 (Batata),Learning Coach,8/4/2025,confidencedarah@gmail.com ,confidence.Darah@edubga.com,927811665,6/30/1998,12/11/2025,#REF!,Nigerian,"Rua do Bairro Lote 15A, R/C Dt Coca Maravilhas 8500-480 Portimão",315996676,12167193281,Passport,B51048970,3/19/2035,Master of Medicine. ,F,Single,N/A,0, PT50 0269 0179 00204293922 22,,
 194,Guilherme Fernandes Gago,Active,Portugal,Central,Software Engineer,9/1/2025,guilherme.gago@tecnico.ulisboa.pt,guilherme@bravegenerationacademy.com,+351 918583800,2/2/2002,12/11/2025,#REF!,Portuguese,"Rua de Pombal, 41, 3B, 2415-783 Leiria",268441154,12038950542,ID,14579223,12/13/2029,Bologna Master Degree in Computer Science and Engineering,M,Single,N/A,0,"Banco CTT, Leiria, PT50019300001050636786023",,
-195,Mariah Casey,Active,Portugal,Lagos 1 (Marina),Learning Coach,11/3/2025,riahc2015@gmail.com,Mariah.Casey@edubga.com,351913766375,19/01/96,12/11/2025,#REF!,United States,Quinta Patarinho 125 ,305472275,12094648047,Passport,582130196,3/4/2028,Bachelor’s Degree in English Literature with a Minor in Business ,,Single,,0,"Millennium 
+195,Mariah Casey,Active,Portugal,Lagos 1 (Marina),Learning Coach,11/3/2025,riahc2015@gmail.com,Mariah.Casey@edubga.com,351913766375,01/19/1996,12/11/2025,#REF!,United States,Quinta Patarinho 125 ,305472275,12094648047,Passport,582130196,3/4/2028,Bachelor’s Degree in English Literature with a Minor in Business ,,Single,,0,"Millennium
 PT50 0033 0000 45628070076 05
 NIB 0033 0000 45628070076 05
 BCOMPTPL",,
@@ -119,9 +119,9 @@ SA004,Jacobus Petrus Izak,Active,South Africa ,Paarl,Learning Coach,1/6/2025,,ja
 SA005,Jakobus Jurie Basson,Active,South Africa ,HHS (Huguenot High School),Learning Coach,1/6/2025,,kobus.basson@edubga.com,,1/16/1993,12/11/2025,#REF!,South African,"Bergstreet 30,Wellington,7655",2080100155,N/A,,9301165118087,,N/A,M,Single,N/A,0,,,
 SA007,Dominic Pinheiro,Active,South Africa ,DHS (Durban High School),Learning Coach,7/4/2025,,dominic.pinheiro@edubga.com,,10/20/1998,12/11/2025,#REF!,South African,"4 Ribston Place, Westville, 3629",17909326,,,9810205207080,,Becon Marketing and Management,M,Single,N/A,0,,,
 SA008,Courteney Tiyana Ilett,Active,South Africa,Tygervalley,Learning Coach,9/1/2025,courteneyilett@gmail.com ,courteney.Ilett@edubga.com,780203532,2/6/2001,12/11/2025,#REF!,South African,"7 June Street, Claremont. 7780",703499293,,ID,1.0206E+11,7/31/2025,"Bachelor of Arts Degree, majoring in Psychology and Communication Science. ",F,Single,N/A,0,"MS COURTENEY ILETT
-STANDARD BANK 
+STANDARD BANK
 DURBAN NORTH
 7654
 CURRENT ACCOUNT
 10220492199",,
-SA010,Luhann De Kock,Active,South Africa,Paarl,Learning Coach,10/1/2025,luhanndk@gmail.com,luhann.kock@edubga.com,27710394002,01/12/93,12/11/2025,#REF!,South African ,"Chestnut 13, Stellenbosch 7600",587493230,,ID,9.31202E+12,6/7/2022,Bachelor's Degree in Psychology and EnglishPostgraduate in Education,M,Single,,2,L De KockCapitecAcc: 1478676041Branch: 470010BIC/Swift: CABLZAJJ,,
+SA010,Luhann De Kock,Active,South Africa,Paarl,Learning Coach,10/1/2025,luhanndk@gmail.com,luhann.kock@edubga.com,27710394002,12/01/1993,12/11/2025,#REF!,South African ,"Chestnut 13, Stellenbosch 7600",587493230,,ID,9.31202E+12,6/7/2022,Bachelor's Degree in Psychology and EnglishPostgraduate in Education,M,Single,,2,L De KockCapitecAcc: 1478676041Branch: 470010BIC/Swift: CABLZAJJ,,
