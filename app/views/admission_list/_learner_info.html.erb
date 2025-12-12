@@ -307,6 +307,15 @@
       <% display_value = @learner_info.hub&.name || "-" %>
     <% else %>
       <% display_value = case attr_sym
+        when :birthdate
+          if value.present?
+            now = Time.zone.now.to_date
+            dob = value.to_date
+            age = now.year - dob.year - ((now.month > dob.month || (now.month == dob.month && now.day >= dob.day)) ? 0 : 1)
+            "#{value.strftime("%d-%m-%Y")} (#{age} years old)"
+          else
+            "-"
+          end
         when :use_of_image_authorisation then (value.to_s.downcase == 'true' || value.to_s.downcase == 'i consent to the above mentioned conditions'.downcase ? "Yes (Consent Given)" : "No (Consent Denied)")
         when :emergency_protocol_choice then value.presence || "-"
         when :data_validated then value ? "Yes" : "No"
