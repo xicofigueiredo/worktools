@@ -42,6 +42,21 @@ class HubsController < ApplicationController
                         .limit(200)
   end
 
+  def calendar
+    @hub = Hub.find(params[:id])
+    @year = params[:year] ? params[:year].to_i : Date.current.year
+    @prev_year = @year - 1
+    @next_year = @year + 1
+
+    # Call Service to get data
+    service = CalendarDataService.new(year: @year, hub: @hub)
+    data = service.call
+
+    @holidays_by_date = data[:holidays]
+    @blocked_by_date  = data[:blocked]
+    @mandatory_leaves = data[:mandatory]
+  end
+
   private
 
   def calculate_ages(birthdates)

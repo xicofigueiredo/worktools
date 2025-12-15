@@ -11,7 +11,7 @@ class LeavesController < ApplicationController
 
     @show_hr_view = current_user.email == 'humanresources@bravegenerationacademy.com' || current_user.role == 'admin'
 
-    # Calculate Current User Entitlements for the View
+    # 1. Calculate Current User Entitlements for the View
     year_now = Date.current.year
     user_ent_data = calculate_user_entitlement_data(current_user, year_now)
 
@@ -24,6 +24,7 @@ class LeavesController < ApplicationController
     @current_booked_carry      = user_ent_data[:booked_carry_over]
     @current_pending_carry     = user_ent_data[:pending_carry_over]
 
+    # 2. Manager View Logic
     if current_user.managed_departments.present?
       prepare_manager_entitlements if current_user&.managed_departments&.present?
       @pending_confirmations = current_user.confirmations.pending
@@ -33,28 +34,48 @@ class LeavesController < ApplicationController
 
       if is_top
         @department_leaves = StaffLeave.where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month)
-                                       .where(status: ['pending', 'approved'])
-                                       .order(start_date: :asc)
+                                      .where(status: ['pending', 'approved'])
+                                      .order(start_date: :asc)
       else
         all_users = depts.flat_map { |dept| dept.all_users }.uniq
         @department_leaves = StaffLeave.where(user: all_users)
-                                       .where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month)
-                                       .where(status: ['pending', 'approved'])
-                                       .order(start_date: :asc)
+                                      .where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month)
+                                      .where(status: ['pending', 'approved'])
+                                      .order(start_date: :asc)
       end
     else
       @pending_confirmations = []
       @department_leaves = []
     end
 
+    # 3. HR Calendar Logic (Refactored to use Service)
     if @show_hr_view
-      @public_holidays = PublicHoliday.all.order(date: :asc)
-      @blocked_periods = BlockedPeriod.all.order(start_date: :asc)
-      @mandatory_leaves = MandatoryLeave.all.order(start_date: :asc)
       @hubs = Hub.all
       @departments = Department.all
       @users = User.staff
 
+      # Determine Year for Calendar
+      @year = params[:year] ? params[:year].to_i : Date.current.year
+
+      # Resolve Filter Object
+      hub_filter = params[:hub_filter].present? ? Hub.find_by(id: params[:hub_filter]) : nil
+
+      # Call the Service
+      service = CalendarDataService.new(
+        year: @year,
+        hub: hub_filter,
+        department_id: params[:department_filter],
+        type_filter: params[:type_filter]
+      )
+
+      data = service.call
+
+      # Assign Data for the Shared Partial
+      @holidays_by_date = data[:holidays]
+      @blocked_by_date  = data[:blocked]
+      @mandatory_leaves = data[:mandatory]
+
+      # Initialize Objects for "Add Event" Modals
       @new_public_holiday = PublicHoliday.new
       @new_blocked_period = BlockedPeriod.new
       @new_mandatory_leave = MandatoryLeave.new

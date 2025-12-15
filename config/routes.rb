@@ -96,7 +96,11 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :hubs, only: [:index, :show]
+    resources :hubs, only: [:index, :show] do
+      member do
+        get :calendar
+      end
+    end
 
     resources :pricing_tiers, only: [:index, :update]
 

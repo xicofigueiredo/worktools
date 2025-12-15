@@ -1,0 +1,94 @@
+<%#
+  Locals:
+  - year: Integer
+  - holidays_by_date: Hash { Date => [PublicHoliday] }
+  - blocked_by_date: Hash { Date => [BlockedPeriod] }
+  - mandatory_leaves: Array [MandatoryLeave]
+  - read_only: Boolean (default: true)
+%>
+
+<div class="row">
+  <% (1..12).each do |month| %>
+    <div class="col-md-4 mb-3">
+      <div class="card month-card h-100">
+        <div class="card-header bg-primary text-white py-2">
+          <h6 class="mb-0 small fw-bold text-uppercase"><%= Date::MONTHNAMES[month] %></h6>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-bordered table-sm mb-0 calendar-table">
+            <thead class="table-light">
+              <tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr>
+            </thead>
+            <tbody>
+              <%
+                 first = Date.new(year, month, 1)
+                 last = first.end_of_month
+                 week = 0
+                 start_offset = first.wday
+              %>
+
+              <% while week * 7 - start_offset < last.day %>
+                <tr>
+                  <% (0..6).each do |wday| %>
+                    <% day_num = week * 7 + wday - start_offset + 1 %>
+
+                    <% if day_num < 1 || day_num > last.day %>
+                      <td class="bg-light border-0"></td>
+                    <% else %>
+                      <% date = Date.new(year, month, day_num) %>
+                      <% classes = [] %>
+                      <% popover_items = [] %>
+
+                      <%# --- Holidays --- %>
+                      <% if events = holidays_by_date[date] %>
+                        <% classes << 'holiday' %>
+                        <% events.each do |h| %>
+                          <% delete_btn = (!read_only) ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, public_holiday_path(h), data: { turbo_method: :delete, turbo_confirm: "Delete?" }, class: "text-danger float-end ms-2") : "" %>
+                          <% popover_items << "<div><strong>#{h.name}</strong> #{delete_btn}</div>" %>
+                        <% end %>
+                      <% end %>
+
+                      <%# --- Mandatory --- %>
+                      <% active_mand = mandatory_leaves.select { |m| date >= m.start_date && date <= m.end_date } %>
+                      <% if active_mand.any? %>
+                        <% classes << 'mandatory' %>
+                        <% active_mand.each do |m| %>
+                           <% delete_btn = (!read_only) ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, mandatory_leafe_path(m), data: { turbo_method: :delete, turbo_confirm: "Delete?" }, class: "text-danger float-end ms-2") : "" %>
+                           <% popover_items << "<div class='text-primary'><strong>#{m.name}</strong> #{delete_btn}</div>" %>
+                        <% end %>
+                      <% end %>
+
+                      <%# --- Blocked --- %>
+                      <% if blocks = blocked_by_date[date] %>
+                        <% classes << 'blocked' %>
+                        <% blocks.each do |b| %>
+                          <%# Label logic adapted from %>
+                          <% label = if b.user_id then "User" elsif b.department_id then "Dept" elsif b.hub_id then "Hub" else "Global" end %>
+                          <% delete_btn = (!read_only) ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, blocked_period_path(b), data: { turbo_method: :delete, turbo_confirm: "Delete?" }, class: "text-danger float-end ms-2") : "" %>
+                          <% popover_items << "<div class='text-danger'><strong>Blocked (#{label})</strong> #{delete_btn}</div>" %>
+                        <% end %>
+                      <% end %>
+
+                      <% if (wday == 0 || wday == 6) && classes.empty? %><% classes << 'weekend' %><% end %>
+
+                      <td class="<%= classes.join(' ') %>"
+                          <% if popover_items.any? %>
+                            data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true" data-bs-trigger="click"
+                            title="<%= date.strftime('%a, %b %d') %>"
+                            data-bs-content="<%= ERB::Util.html_escape(popover_items.join) %>"
+                          <% end %>>
+                        <%= day_num %>
+                      </td>
+                    <% end %>
+                  <% end %>
+                </tr>
+                <% week += 1 %>
+              <% end %>
+              <% (week...6).each do %><tr><td colspan="7" class="bg-light border-0" style="height: 48px;"></td></tr><% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

@@ -2,114 +2,6 @@
 <% prev_year = year - 1 %>
 <% next_year = year + 1 %>
 
-<style>
-  :root {
-    --cal-holiday-bg: #80cbc4;
-    --cal-holiday-border: #0f5132;
-
-    --cal-mandatory-bg: #ce93d8;
-    --cal-mandatory-border: #522785;
-
-    --cal-blocked-bg: #ffb74d;
-    --cal-blocked-border: #e65100;
-  }
-
-  .calendar-table { table-layout: fixed; }
-
-  .calendar-table th, .calendar-table td {
-    width: 14.28%;
-    text-align: center;
-    vertical-align: middle;
-    height: 48px;
-    padding: 0;
-    position: relative;
-  }
-
-  .calendar-table td {
-    cursor: default;
-    border: 1px solid #dee2e6;
-    background-clip: padding-box;
-    transition: filter 0.1s ease;
-    color: #212529;
-  }
-
-  .calendar-table td:not(:empty):hover {
-    cursor: pointer;
-    filter: brightness(0.92);
-    z-index: 20;
-  }
-
-  .calendar-table td::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 5px;
-    z-index: 10;
-    pointer-events: none;
-    display: none;
-  }
-
-  .calendar-table .holiday::after,
-  .calendar-table .mandatory::after,
-  .calendar-table .blocked::after {
-    display: block;
-  }
-
-  .calendar-table .holiday::after {
-    background-color: var(--cal-holiday-border);
-  }
-
-  .calendar-table .mandatory::after {
-    background-color: var(--cal-mandatory-border);
-  }
-
-  .calendar-table .blocked::after {
-    background-color: var(--cal-blocked-border);
-  }
-
-  .holiday { background-color: var(--cal-holiday-bg) !important; font-weight: 600; }
-  .mandatory { background-color: var(--cal-mandatory-bg) !important; font-weight: 600; }
-  .blocked { background-color: var(--cal-blocked-bg) !important; font-weight: 600; }
-
-  .holiday.blocked {
-    background: linear-gradient(135deg, var(--cal-holiday-bg) 50%, var(--cal-blocked-bg) 50%) !important;
-  }
-  .mandatory.blocked {
-    background: linear-gradient(135deg, var(--cal-mandatory-bg) 50%, var(--cal-blocked-bg) 50%) !important;
-  }
-  .holiday.mandatory {
-    background: linear-gradient(135deg, var(--cal-mandatory-bg) 50%, var(--cal-holiday-bg) 50%) !important;
-  }
-
-  .holiday.mandatory.blocked {
-    background: linear-gradient(135deg,
-      var(--cal-mandatory-bg) 0% 33%,
-      var(--cal-holiday-bg) 33% 66%,
-      var(--cal-blocked-bg) 66% 100%
-    ) !important;
-  }
-
-  .weekend { background-color: #f8f9fa; color: #adb5bd; }
-  .month-card { box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #dee2e6; }
-
-  .legend-item { display: inline-flex; align-items: center; gap: 0.5rem; margin-right: 1.5rem; }
-  .legend-box { width: 20px; height: 20px; border-radius: 3px; display: inline-block; }
-
-  .legend-box.holiday { background-color: var(--cal-holiday-bg); border: 2px solid var(--cal-holiday-border); }
-  .legend-box.mandatory { background-color: var(--cal-mandatory-bg); border: 2px solid var(--cal-mandatory-border); }
-  .legend-box.blocked { background-color: var(--cal-blocked-bg); border: 2px solid var(--cal-blocked-border); }
-
-  .filter-section {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 0.25rem;
-    margin-bottom: 1rem;
-    border: 1px solid #dee2e6;
-  }
-</style>
-
 <div class="card mb-4">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Calendar: <%= year %></h5>
@@ -129,7 +21,7 @@
   </div>
 
   <div class="card-body">
-    <div class="filter-section">
+    <div class="filter-section mb-4">
       <form id="calendarFilters">
         <div class="row g-3">
           <div class="col-md-3">
@@ -178,204 +70,24 @@
     <div class="mb-4 pb-2 border-bottom">
       <div class="d-flex flex-wrap align-items-center gap-2">
         <span class="small text-muted me-2">Legend:</span>
-        <div class="legend-item">
-          <div class="legend-box holiday"></div>
-          <span class="small">Public Holiday</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-box mandatory"></div>
-          <span class="small">Mandatory Leave</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-box blocked"></div>
-          <span class="small">Blocked Period</span>
-        </div>
+        <div class="legend-item"><div class="legend-box holiday"></div> <span class="small">Public Holiday</span></div>
+        <div class="legend-item"><div class="legend-box mandatory"></div> <span class="small">Mandatory Leave</span></div>
+        <div class="legend-item"><div class="legend-box blocked"></div> <span class="small">Blocked Period</span></div>
       </div>
     </div>
 
-    <%
-      # Apply filters logic
-      country_filter = params[:country_filter] if params[:country_filter].present?
-      hub_filter = params[:hub_filter].to_i if params[:hub_filter].present?
-      dept_filter = params[:department_filter].to_i if params[:department_filter].present?
-      type_filter = params[:type_filter]
-
-      # Hub Country Lookup
-      hub_countries = @hubs.each_with_object({}) { |h, memo| memo[h.id] = h.country }
-
-      # Auto-filter country if Hub selected
-      if hub_filter.present? && !country_filter.present?
-        country_filter = hub_countries[hub_filter]
-      end
-
-      holidays_by_date = {}
-      blocked_by_date = {}
-
-      # 1. Filter Holidays
-      unless type_filter == 'blocked'
-        filtered_holidays = @public_holidays.select do |h|
-          match = true
-          if country_filter.present?
-            c_match = (h.country == country_filter) || (h.hub_id && hub_countries[h.hub_id] == country_filter)
-            match = match && c_match
-          end
-          if hub_filter.present?
-            if h.hub_id.present?
-              match = match && (h.hub_id == hub_filter)
-            end
-          end
-          match
-        end
-
-        filtered_holidays.each do |h|
-          if h.recurring
-            begin
-              d = Date.new(year, h.date.month, h.date.day)
-              holidays_by_date[d] ||= []
-              holidays_by_date[d] << h
-            rescue Date::Error; end
-          elsif h.date.year == year
-            holidays_by_date[h.date] ||= []
-            holidays_by_date[h.date] << h
-          end
-        end
-      end
-
-      # 2. Filter Blocked
-      unless type_filter == 'holidays'
-        filtered_blocked = @blocked_periods.select do |b|
-          match = true
-          if country_filter.present? && b.hub_id.present?
-             match = match && (hub_countries[b.hub_id] == country_filter)
-          end
-          if hub_filter.present? && b.hub_id.present?
-             match = match && (b.hub_id == hub_filter)
-          end
-          if dept_filter.present? && b.department_id.present?
-             match = match && (b.department_id == dept_filter)
-          end
-          match
-        end
-
-        filtered_blocked.each do |b|
-          (b.start_date..b.end_date).each do |d|
-            next unless d.year == year
-            blocked_by_date[d] ||= []
-            blocked_by_date[d] << b
-          end
-        end
-      end
-    %>
-
-    <% if holidays_by_date.blank? && blocked_by_date.blank? && @mandatory_leaves.blank? %>
+    <% if @holidays_by_date.blank? && @blocked_by_date.blank? && @mandatory_leaves.blank? %>
       <div class="text-center py-5">
         <p class="text-muted mb-0">No events found for <%= year %> with the selected filters.</p>
       </div>
     <% else %>
-      <div class="row">
-        <% (1..12).each do |month| %>
-          <div class="col-md-4 mb-3">
-            <div class="card month-card h-100">
-              <div class="card-header bg-primary text-white py-2">
-                <h6 class="mb-0 small fw-bold text-uppercase"><%= Date::MONTHNAMES[month] %></h6>
-              </div>
-              <div class="card-body p-0">
-                <%
-                  first_day = Date.new(year, month, 1)
-                  last_day = first_day.end_of_month
-                  start_wday = first_day.wday
-                  week = 0
-                %>
-                <table class="table table-bordered table-sm mb-0 calendar-table">
-                  <thead class="table-light">
-                    <tr>
-                      <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% while week * 7 - start_wday < last_day.day %>
-                      <tr>
-                        <% (0..6).each do |day_in_week| %>
-                          <% actual_day = week * 7 + day_in_week - start_wday + 1 %>
-                          <% if actual_day < 1 || actual_day > last_day.day %>
-                            <td class="bg-light border-0"></td>
-                          <% else %>
-                            <% date = Date.new(year, month, actual_day) %>
-                            <% classes = [] %>
-                            <% popover_content = [] %>
-
-                            <%# --- Check Events --- %>
-
-                            <%# 1. Holidays %>
-                            <% if holidays = holidays_by_date[date] %>
-                              <% classes << 'holiday' %>
-                              <% holidays.each do |h| %>
-                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, public_holiday_path(h), data: { turbo_method: :delete, turbo_confirm: "Delete #{h.name}?" }, class: "text-danger float-end ms-4", title: "Delete") : "" %>
-                                <% popover_content << "<div class='mb-1 pb-1 border-bottom small'><strong>🎉 #{h.name}</strong> #{delete_link}</div>" %>
-                              <% end %>
-                            <% end %>
-
-                            <%# 2. Mandatory %>
-                            <% active_mandatory = @mandatory_leaves.select { |m| date >= m.start_date && date <= m.end_date } %>
-                            <% if active_mandatory.any? %>
-                              <% classes << 'mandatory' %>
-                              <% active_mandatory.each do |m| %>
-                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, mandatory_leafe_path(m), data: { turbo_method: :delete, turbo_confirm: "Delete #{m.name}?" }, class: "text-danger float-end ms-4", title: "Delete") : "" %>
-                                <% popover_content << "<div class='mb-1 pb-1 border-bottom small text-primary'><strong>🏢 #{m.name}</strong> #{delete_link}</div>" %>
-                              <% end %>
-                            <% end %>
-
-                            <%# 3. Blocked %>
-                            <% if blocked = blocked_by_date[date] %>
-                              <% classes << 'blocked' %>
-                              <% blocked.each do |b| %>
-                                <% label = if b.user_id
-                                     "👤 #{@users.find { |u| u.id == b.user_id }&.full_name}"
-                                   elsif b.department_id
-                                     "🏢 #{@departments.find { |d| d.id == b.department_id }&.name}"
-                                   elsif b.hub_id
-                                     "📍 #{@hubs.find { |h| h.id == b.hub_id }&.name}"
-                                   else
-                                     "🌍 Global"
-                                   end %>
-                                <% delete_link = @show_hr_view ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, blocked_period_path(b), data: { turbo_method: :delete, turbo_confirm: "Delete Block?" }, class: "text-danger float-end ms-4", title: "Delete") : "" %>
-                                <% popover_content << "<div class='mb-1 pb-1 border-bottom small text-danger'><strong>🚫 #{label}</strong> #{delete_link}</div>" %>
-                              <% end %>
-                            <% end %>
-
-                            <%# Weekend %>
-                            <% if (day_in_week == 0 || day_in_week == 6) && classes.empty? %>
-                              <% classes << 'weekend' %>
-                            <% end %>
-
-                            <td class="<%= classes.join(' ') %>"
-                                <% if popover_content.any? %>
-                                  data-bs-toggle="popover"
-                                  data-bs-placement="top"
-                                  data-bs-html="true"
-                                  data-bs-trigger="click"
-                                  title="<div class='text-center small fw-bold'><%= date.strftime('%a, %b %d') %></div>"
-                                  data-bs-content="<%= ERB::Util.html_escape(popover_content.join) %>"
-                                <% end %>>
-                              <%= actual_day %>
-                            </td>
-                          <% end %>
-                        <% end %>
-                      </tr>
-                      <% week += 1 %>
-                    <% end %>
-
-                    <%# Fill remaining rows %>
-                    <% (week...6).each do %>
-                      <tr><% (0..6).each do %><td class="bg-light border-0"></td><% end %></tr>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        <% end %>
-      </div>
+      <%= render partial: "shared/calendar_grid", locals: {
+            year: year,
+            holidays_by_date: @holidays_by_date,
+            blocked_by_date: @blocked_by_date,
+            mandatory_leaves: @mandatory_leaves,
+            read_only: false
+          } %>
     <% end %>
   </div>
 </div>
@@ -500,7 +212,7 @@
 
 <script>
   document.addEventListener('turbo:load', function () {
-    // 1. Initialize Popovers (Click to open, click outside to close)
+    // 1. Initialize Popovers
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     var popoverList = popoverTriggerList.map(function (el) {
       return new bootstrap.Popover(el, { sanitize: false, container: 'body', trigger: 'click' });

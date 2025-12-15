@@ -1,0 +1,57 @@
+<div class="hub-container px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><%= @hub.name %> Calendar</h3>
+      <div class="text-muted small">Viewing events for <%= @year %></div>
+    </div>
+
+    <div class="btn-group">
+      <%= link_to calendar_hub_path(@hub, year: @prev_year), class: 'btn btn-outline-secondary' do %>
+        <i class="fas fa-chevron-left"></i> <%= @prev_year %>
+      <% end %>
+
+      <%= link_to hub_path(@hub), class: 'btn btn-primary' do %>
+        <i class="fas fa-columns"></i> Hub Dashboard
+      <% end %>
+
+      <%= link_to calendar_hub_path(@hub, year: @next_year), class: 'btn btn-outline-secondary' do %>
+        <%= @next_year %> <i class="fas fa-chevron-right"></i>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mb-3 pb-2 border-bottom">
+    <div class="d-flex gap-3">
+      <div class="legend-item"><div class="legend-box holiday"></div> <span class="small">Public Holiday</span></div>
+      <div class="legend-item"><div class="legend-box mandatory"></div> <span class="small">Mandatory Leave</span></div>
+      <div class="legend-item"><div class="legend-box blocked"></div> <span class="small">Blocked Period</span></div>
+    </div>
+  </div>
+
+  <%= render partial: "shared/calendar_grid", locals: {
+        year: @year,
+        holidays_by_date: @holidays_by_date,
+        blocked_by_date: @blocked_by_date,
+        mandatory_leaves: @mandatory_leaves,
+        read_only: true
+      } %>
+</div>
+
+<script>
+  document.addEventListener('turbo:load', function () {
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverList = popoverTriggerList.map(function (el) {
+      return new bootstrap.Popover(el, { container: 'body', trigger: 'click' });
+    });
+
+    document.addEventListener('click', function (e) {
+      popoverList.forEach(function (popover) {
+        if (popover.tip && popover.tip.classList.contains('show')) {
+          if (!popover._element.contains(e.target) && !popover.tip.contains(e.target)) {
+            popover.hide();
+          }
+        }
+      });
+    });
+  });
+</script>
