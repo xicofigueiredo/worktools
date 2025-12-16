@@ -64,6 +64,7 @@ class LeavesController < ApplicationController
       service = CalendarDataService.new(
         year: @year,
         hub: hub_filter,
+        country: params[:country_filter],
         department_id: params[:department_filter],
         type_filter: params[:type_filter]
       )
