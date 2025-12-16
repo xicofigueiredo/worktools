@@ -10,31 +10,48 @@ class BookingAvailabilityService
   end
 
   def available_slots
-    return [] unless @config && @config.open_on?(@date.wday)
+    # 1. Basic Checks
+    return [] unless @config
+    return [] if @date < Date.current
+
+    # 2. Day of Week Check
+    return [] unless @config.open_on?(@date.wday)
+
+    # 3. Blockout Checks
     return [] if is_holiday? || is_blocked?
 
-    # Determine duration (minutes)
-    duration = @visit_type == 'trial' ? @config.trial_duration : @config.visit_duration
+    # 4. Duration & Limits
+    duration = (@visit_type == 'trial') ? @config.trial_duration : @config.visit_duration
 
+    # Define the absolute latest a slot can START
+    # Visits: Can start up to 16:00
+    # Trials: Can start up to (16:00 - duration)
     limit_time = Time.zone.parse("#{@date} #{CLOSING_LIMIT_HOUR}:00")
 
     if @visit_type == 'trial'
       limit_time -= duration.minutes
     end
 
-    # Get allowed slots from config (e.g. ["10:00", "14:00"])
-    configured_slots = @config.visit_slots || []
+    # 5. Slot Calculation
     available = []
+    configured_slots = @config.visit_slots || []
 
     configured_slots.each do |time_str|
-      start_time = Time.zone.parse("#{@date} #{time_str}")
+      # Parse strictly in the context of the date and Hub's timezone
+      start_time = Time.zone.parse("#{@date} #{time_str}") rescue nil
+      next unless start_time
 
-      # 1. RANGE CHECK: Is this slot too late for the specific type?
-      if start_time > limit_time
-        next
-      end
+      # Filter: Before Opening Hour? (Safety check)
+      opening_time = Time.zone.parse("#{@date} #{OPENING_HOUR}:00")
+      next if start_time < opening_time
 
-      # 2. OVERLAP CHECK: Is the slot taken?
+      # Filter: After Closing Limit?
+      next if start_time > limit_time
+
+      # Filter: In the past? (for today's bookings)
+      next if start_time < Time.zone.now + 1.hour # Buffer for immediate bookings
+
+      # Overlap Check
       end_time = start_time + duration.minutes
       unless slot_taken?(start_time, end_time)
         available << time_str
@@ -47,7 +64,7 @@ class BookingAvailabilityService
   private
 
   def is_holiday?
-    PublicHoliday.where("date = ?", @date)
+    PublicHoliday.where(date: @date)
                  .where("(hub_id = ? OR (hub_id IS NULL AND country = ?))", @hub.id, @hub.country)
                  .exists?
   end

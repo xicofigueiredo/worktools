@@ -6,12 +6,16 @@
     </div>
 
     <div class="d-flex gap-2">
+      <button class="btn btn-success text-white" onclick="copyBookingLink()">
+        <i class="fas fa-share-alt"></i> Share Booking Link
+      </button>
+
       <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bookingSettingsModal">
-        <i class="fas fa-cog"></i> Booking Settings
+        <i class="fas fa-cog"></i> Settings
       </button>
 
       <button class="btn btn-warning" onclick="openHubBlockModal('<%= Date.current %>')">
-        <i class="fas fa-plus"></i> Add Blocked Period
+        <i class="fas fa-plus"></i> Block Period
       </button>
 
       <div class="btn-group">
@@ -25,14 +29,6 @@
           <%= @next_year %> <i class="fas fa-chevron-right"></i>
         <% end %>
       </div>
-    </div>
-  </div>
-
-  <div class="mb-3 pb-2 border-bottom">
-    <div class="d-flex gap-3">
-      <div class="legend-item"><div class="legend-box holiday"></div> <span class="small">Public Holiday</span></div>
-      <div class="legend-item"><div class="legend-box mandatory"></div> <span class="small">Mandatory Leave</span></div>
-      <div class="legend-item"><div class="legend-box blocked"></div> <span class="small">Blocked Period</span></div>
     </div>
   </div>
 
@@ -74,9 +70,14 @@
           <div class="mb-4">
             <div class="d-flex flex-wrap gap-3">
               <% Date::DAYNAMES[1..5].each_with_index do |day, idx| %>
+                <%
+                   # FIX: The loop index 'idx' starts at 0, which corresponds to Monday (index 0 of slicing 1..5)
+                   # But in Ruby Date.wday, Monday is 1. So we must use (idx + 1).
+                   actual_wday = idx + 1
+                %>
                 <div class="form-check form-check-inline border rounded px-3 py-2 m-0 bg-light">
-                  <%= check_box_tag "hub_booking_config[visit_days][]", idx, config.visit_days&.include?(idx), class: "form-check-input", id: "day_#{idx}" %>
-                  <label class="form-check-label fw-bold" for="day_<%= idx %>"><%= day %></label>
+                  <%= check_box_tag "hub_booking_config[visit_days][]", actual_wday, config.visit_days&.include?(actual_wday), class: "form-check-input", id: "day_#{actual_wday}" %>
+                  <label class="form-check-label fw-bold" for="day_<%= actual_wday %>"><%= day %></label>
                 </div>
               <% end %>
             </div>
@@ -84,13 +85,13 @@
 
           <h6 class="border-bottom pb-2 mb-2">Available Start Times</h6>
           <p class="small text-muted mb-3">
-            Select allowed start times. <br>
+            Select allowed start times.
+            <br>
             <span class="text-danger">* Note: Trials will be automatically hidden for slots where they would extend past 16:00.</span>
           </p>
 
           <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
             <%
-               # Generate slots strictly from 10:00 to 16:00
                start_gen = Time.parse("10:00")
                end_gen = Time.parse("16:00")
                current = start_gen
@@ -154,6 +155,55 @@
 </div>
 
 <script>
+  function copyBookingLink() {
+    const url = "<%= new_hub_hub_visit_url(@hub) %>";
+
+    navigator.clipboard.writeText(url).then(() => {
+      // Create Toast Element
+      const toast = document.createElement('div');
+
+      // Inline styles for a floating toast appearance
+      toast.style.position = 'fixed';
+      toast.style.top = '20px';
+      toast.style.right = '20px'; // Position Top-Right
+      toast.style.zIndex = '10000';
+      toast.style.padding = '12px 24px';
+      toast.style.backgroundColor = '#198754'; // Bootstrap Success Green
+      toast.style.color = '#fff';
+      toast.style.borderRadius = '8px';
+      toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      toast.style.fontWeight = '500';
+      toast.style.display = 'flex';
+      toast.style.alignItems = 'center';
+      toast.style.gap = '10px';
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      toast.style.transform = 'translateY(-20px)';
+
+      toast.innerHTML = '<i class="fas fa-check-circle"></i> Booking link copied!';
+
+      document.body.appendChild(toast);
+
+      // Trigger animation
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+      });
+
+      // Remove after 3 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+      // Fallback: Use standard alert if clipboard API fails
+      prompt("Could not copy automatically. Please copy this link:", url);
+    });
+  }
+
   function openHubBlockModal(dateStr) {
     var modalEl = document.getElementById('createHubBlockModal');
     if (!modalEl) return;
