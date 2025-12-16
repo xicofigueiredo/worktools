@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_12_11_132055) do
+ActiveRecord::Schema[7.0].define(version: 2025_12_16_122243) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -110,6 +110,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_11_132055) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "department_id"
+    t.bigint "creator_id"
+    t.index ["creator_id"], name: "index_blocked_periods_on_creator_id"
     t.index ["department_id"], name: "index_blocked_periods_on_department_id"
     t.index ["hub_id"], name: "index_blocked_periods_on_hub_id"
     t.index ["user_id"], name: "index_blocked_periods_on_user_id"
@@ -1217,6 +1219,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_11_132055) do
   add_foreign_key "blocked_periods", "departments"
   add_foreign_key "blocked_periods", "hubs"
   add_foreign_key "blocked_periods", "users"
+  add_foreign_key "blocked_periods", "users", column: "creator_id"
   add_foreign_key "chat_messages", "chats"
   add_foreign_key "chats", "subjects"
   add_foreign_key "chats", "users"

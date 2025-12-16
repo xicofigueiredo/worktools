@@ -2,6 +2,7 @@ class BlockedPeriod < ApplicationRecord
   belongs_to :hub, optional: true
   belongs_to :department, optional: true
   belongs_to :user, optional: true
+  belongs_to :creator, class_name: 'User', optional: true
 
   # Scope for calendar filtering
   def self.for_calendar_view(start_date:, end_date:, hub_id: nil, department_id: nil)

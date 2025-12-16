@@ -55,6 +55,8 @@ class HubsController < ApplicationController
     @holidays_by_date = data[:holidays]
     @blocked_by_date  = data[:blocked]
     @mandatory_leaves = data[:mandatory]
+
+    @new_blocked_period = BlockedPeriod.new
   end
 
   private

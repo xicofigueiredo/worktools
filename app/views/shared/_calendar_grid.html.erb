@@ -5,7 +5,11 @@
   - blocked_by_date: Hash { Date => [BlockedPeriod] }
   - mandatory_leaves: Array [MandatoryLeave]
   - read_only: Boolean (default: true)
+  - allow_creation: Boolean (default: false)
 %>
+
+<% is_hr_or_admin = current_user.email == 'humanresources@bravegenerationacademy.com' || current_user.role == 'admin' %>
+<% creation_enabled = local_assigns[:allow_creation] == true %>
 
 <div class="row">
   <% (1..12).each do |month| %>
@@ -17,7 +21,7 @@
         <div class="card-body p-0">
           <table class="table table-bordered table-sm mb-0 calendar-table">
             <thead class="table-light">
-              <tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr>
+               <tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr>
             </thead>
             <tbody>
               <%
@@ -43,8 +47,8 @@
                       <% if events = holidays_by_date[date] %>
                         <% classes << 'holiday' %>
                         <% events.each do |h| %>
-                          <% delete_btn = (!read_only) ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, public_holiday_path(h), data: { turbo_method: :delete, turbo_confirm: "Delete?" }, class: "text-danger float-end ms-2") : "" %>
-                          <% popover_items << "<div><strong>#{h.name}</strong> #{delete_btn}</div>" %>
+                          <% delete_btn = (!read_only && is_hr_or_admin) ? button_to('<i class="fas fa-trash-alt"></i>'.html_safe, public_holiday_path(h), method: :delete, form: { style: 'display:inline-block;' }, class: "btn btn-link text-danger p-0 ms-2 align-baseline", style: "text-decoration: none;", data: { turbo_confirm: "Delete #{h.name}?" }) : "" %>
+                          <% popover_items << "<div class='mb-1 pb-1 border-bottom small d-flex justify-content-between align-items-center'><span><strong>#{h.name}</strong></span> #{delete_btn}</div>" %>
                         <% end %>
                       <% end %>
 
@@ -53,8 +57,8 @@
                       <% if active_mand.any? %>
                         <% classes << 'mandatory' %>
                         <% active_mand.each do |m| %>
-                           <% delete_btn = (!read_only) ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, mandatory_leafe_path(m), data: { turbo_method: :delete, turbo_confirm: "Delete?" }, class: "text-danger float-end ms-2") : "" %>
-                           <% popover_items << "<div class='text-primary'><strong>#{m.name}</strong> #{delete_btn}</div>" %>
+                           <% delete_btn = (!read_only && is_hr_or_admin) ? button_to('<i class="fas fa-trash-alt"></i>'.html_safe, mandatory_leafe_path(m), method: :delete, form: { style: 'display:inline-block;' }, class: "btn btn-link text-danger p-0 ms-2 align-baseline", style: "text-decoration: none;", data: { turbo_confirm: "Delete #{m.name}?" }) : "" %>
+                           <% popover_items << "<div class='mb-1 pb-1 border-bottom small text-primary d-flex justify-content-between align-items-center'><span><strong>#{m.name}</strong></span> #{delete_btn}</div>" %>
                         <% end %>
                       <% end %>
 
@@ -62,20 +66,34 @@
                       <% if blocks = blocked_by_date[date] %>
                         <% classes << 'blocked' %>
                         <% blocks.each do |b| %>
-                          <%# Label logic adapted from %>
                           <% label = if b.user_id then "User" elsif b.department_id then "Dept" elsif b.hub_id then "Hub" else "Global" end %>
-                          <% delete_btn = (!read_only) ? link_to('<i class="fas fa-trash-alt"></i>'.html_safe, blocked_period_path(b), data: { turbo_method: :delete, turbo_confirm: "Delete?" }, class: "text-danger float-end ms-2") : "" %>
-                          <% popover_items << "<div class='text-danger'><strong>Blocked (#{label})</strong> #{delete_btn}</div>" %>
+
+                          <%# CHECK PERMISSIONS: HR/Admin OR Creator %>
+                          <% can_delete_block = is_hr_or_admin || (b.respond_to?(:creator_id) && b.creator_id == current_user.id) %>
+
+                          <%# Using button_to ensures DELETE method is used %>
+                          <% delete_btn = (!read_only && can_delete_block) ? button_to('<i class="fas fa-trash-alt"></i>'.html_safe, blocked_period_path(b), method: :delete, form: { style: 'display:inline-block;' }, class: "btn btn-link text-danger p-0 ms-2 align-baseline", style: "text-decoration: none;", data: { turbo_confirm: "Delete this block?" }) : "" %>
+
+                          <% popover_items << "<div class='mb-1 pb-1 border-bottom small text-danger d-flex justify-content-between align-items-center'><span><strong>Blocked (#{label})</strong></span> #{delete_btn}</div>" %>
                         <% end %>
                       <% end %>
 
                       <% if (wday == 0 || wday == 6) && classes.empty? %><% classes << 'weekend' %><% end %>
 
+                      <%# --- ADD BLOCK INTERACTION (Inside Popover) --- %>
+                      <% if creation_enabled %>
+                        <%# We add a button that triggers the JS modal function %>
+                        <% add_btn = "<div class='mt-2 text-center'><button class='btn btn-xs btn-outline-primary w-100' onclick='openHubBlockModal(\"#{date}\");'>+ Add Block Here</button></div>" %>
+                        <% popover_items << add_btn %>
+                      <% end %>
+
                       <td class="<%= classes.join(' ') %>"
+                          <%# Only initialize popover if we have items (Existing events OR creation enabled) %>
                           <% if popover_items.any? %>
                             data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true" data-bs-trigger="click"
-                            title="<%= date.strftime('%a, %b %d') %>"
+                            title="<div class='text-center small fw-bold'><%= date.strftime('%a, %b %d') %></div>"
                             data-bs-content="<%= ERB::Util.html_escape(popover_items.join) %>"
+                            style="cursor: pointer;"
                           <% end %>>
                         <%= day_num %>
                       </td>
