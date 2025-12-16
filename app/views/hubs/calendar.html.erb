@@ -6,6 +6,10 @@
     </div>
 
     <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bookingSettingsModal">
+        <i class="fas fa-cog"></i> Booking Settings
+      </button>
+
       <button class="btn btn-warning" onclick="openHubBlockModal('<%= Date.current %>')">
         <i class="fas fa-plus"></i> Add Blocked Period
       </button>
@@ -14,11 +18,9 @@
         <%= link_to calendar_hub_path(@hub, year: @prev_year), class: 'btn btn-outline-secondary' do %>
           <i class="fas fa-chevron-left"></i> <%= @prev_year %>
         <% end %>
-
         <%= link_to hub_path(@hub), class: 'btn btn-primary' do %>
           <i class="fas fa-columns"></i> Hub Dashboard
         <% end %>
-
         <%= link_to calendar_hub_path(@hub, year: @next_year), class: 'btn btn-outline-secondary' do %>
           <%= @next_year %> <i class="fas fa-chevron-right"></i>
         <% end %>
@@ -44,6 +46,80 @@
       } %>
 </div>
 
+<div class="modal fade" id="bookingSettingsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Hub Booking Configuration</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <% config = @hub.settings %>
+      <%= form_with(model: config, url: hub_booking_config_path(@hub), method: :patch, local: true) do |f| %>
+        <div class="modal-body">
+
+          <h6 class="border-bottom pb-2 mb-3">Durations</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <%= f.label :visit_duration, "Visit Duration (min)", class: "form-label fw-bold" %>
+              <%= f.number_field :visit_duration, class: "form-control", min: 15, step: 15 %>
+            </div>
+            <div class="col-md-6">
+              <%= f.label :trial_duration, "Trial Duration (min)", class: "form-label fw-bold" %>
+              <%= f.number_field :trial_duration, class: "form-control", min: 30, step: 15 %>
+            </div>
+          </div>
+
+          <h6 class="border-bottom pb-2 mb-3">Available Days</h6>
+          <div class="mb-4">
+            <div class="d-flex flex-wrap gap-3">
+              <% Date::DAYNAMES[1..5].each_with_index do |day, idx| %>
+                <div class="form-check form-check-inline border rounded px-3 py-2 m-0 bg-light">
+                  <%= check_box_tag "hub_booking_config[visit_days][]", idx, config.visit_days&.include?(idx), class: "form-check-input", id: "day_#{idx}" %>
+                  <label class="form-check-label fw-bold" for="day_<%= idx %>"><%= day %></label>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <h6 class="border-bottom pb-2 mb-2">Available Start Times</h6>
+          <p class="small text-muted mb-3">
+            Select allowed start times. <br>
+            <span class="text-danger">* Note: Trials will be automatically hidden for slots where they would extend past 16:00.</span>
+          </p>
+
+          <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
+            <%
+               # Generate slots strictly from 10:00 to 16:00
+               start_gen = Time.parse("10:00")
+               end_gen = Time.parse("16:00")
+               current = start_gen
+            %>
+
+            <% while current <= end_gen %>
+              <% time_str = current.strftime("%H:%M") %>
+              <% is_checked = (config.visit_slots || []).include?(time_str) %>
+
+              <div class="form-check">
+                <%= check_box_tag "hub_booking_config[visit_slots][]", time_str, is_checked, class: "form-check-input", id: "slot_#{time_str}" %>
+                <label class="form-check-label small" for="slot_#{time_str}">
+                  <%= time_str %>
+                </label>
+              </div>
+              <% current += 30.minutes %>
+            <% end %>
+          </div>
+
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary px-4">Save Configuration</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="createHubBlockModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -54,11 +130,9 @@
       <%= form_with(model: @new_blocked_period, url: blocked_periods_path, local: true) do |f| %>
         <div class="modal-body">
           <div class="alert alert-info small mb-3">
-            <i class="fas fa-info-circle"></i> This will block the period for <strong><%= @hub.name %></strong> only.
+            <i class="fas fa-info-circle"></i> This will block <strong><%= @hub.name %></strong> for all bookings.
           </div>
-
           <%= f.hidden_field :hub_id, value: @hub.id %>
-
           <div class="row g-2">
             <div class="col-6">
               <%= f.label :start_date, class: "form-label" %>
@@ -83,12 +157,8 @@
   function openHubBlockModal(dateStr) {
     var modalEl = document.getElementById('createHubBlockModal');
     if (!modalEl) return;
-
-    // Pre-fill dates
     document.getElementById('modalStartDate').value = dateStr;
     document.getElementById('modalEndDate').value = dateStr;
-
-    // Show Modal
     var modal = new bootstrap.Modal(modalEl);
     modal.show();
   }
@@ -102,7 +172,6 @@
     document.addEventListener('click', function (e) {
       popoverList.forEach(function (popover) {
         if (popover.tip && popover.tip.classList.contains('show')) {
-          // Close if click is outside popover AND outside the triggering element
           if (!popover._element.contains(e.target) && !popover.tip.contains(e.target)) {
             popover.hide();
           }

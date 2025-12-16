@@ -100,6 +100,14 @@ Rails.application.routes.draw do
       member do
         get :calendar
       end
+
+      resource :booking_config, controller: 'hub_booking_configs', only: [:create, :update]
+
+      resources :hub_visits, only: [:new, :create] do
+        collection do
+          get :available_slots
+        end
+      end
     end
 
     resources :pricing_tiers, only: [:index, :update]

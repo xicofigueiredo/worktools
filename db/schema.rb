@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_12_16_122243) do
+ActiveRecord::Schema[7.0].define(version: 2025_12_16_161408) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -396,6 +396,37 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_16_122243) do
     t.boolean "bga"
     t.string "country"
     t.index ["user_id"], name: "index_holidays_on_user_id"
+  end
+
+  create_table "hub_booking_configs", force: :cascade do |t|
+    t.bigint "hub_id", null: false
+    t.integer "visit_days", default: [], array: true
+    t.string "visit_slots", default: [], array: true
+    t.integer "visit_duration", default: 60
+    t.integer "trial_duration", default: 180
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["hub_id"], name: "index_hub_booking_configs_on_hub_id"
+  end
+
+  create_table "hub_visits", force: :cascade do |t|
+    t.bigint "hub_id", null: false
+    t.string "visit_type", null: false
+    t.datetime "start_time", null: false
+    t.datetime "end_time", null: false
+    t.string "status", default: "pending", null: false
+    t.string "first_name"
+    t.string "last_name"
+    t.string "email"
+    t.string "phone"
+    t.string "learner_name"
+    t.string "learner_age"
+    t.string "learner_academic_level"
+    t.text "special_requests"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["hub_id", "start_time", "end_time"], name: "index_hub_visits_on_hub_id_and_start_time_and_end_time"
+    t.index ["hub_id"], name: "index_hub_visits_on_hub_id"
   end
 
   create_table "hubps", force: :cascade do |t|
@@ -1247,6 +1278,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_16_122243) do
   add_foreign_key "friday_slots", "users", column: "learner_id"
   add_foreign_key "friday_slots", "weekly_meetings"
   add_foreign_key "holidays", "users"
+  add_foreign_key "hub_booking_configs", "hubs"
+  add_foreign_key "hub_visits", "hubs"
   add_foreign_key "hubps", "kdas"
   add_foreign_key "hubs", "users", column: "regional_manager_id"
   add_foreign_key "inis", "kdas"

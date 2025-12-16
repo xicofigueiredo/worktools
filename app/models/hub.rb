@@ -8,6 +8,10 @@ class Hub < ApplicationRecord
   has_many :weekly_meetings, dependent: :destroy
   has_many :consent_activities, dependent: :nullify
   has_many :consent_study_hubs, dependent: :destroy
+  has_one :booking_config, class_name: 'HubBookingConfig', dependent: :destroy
+  has_many :hub_visits, dependent: :destroy
+
+  accepts_nested_attributes_for :booking_config
 
   # Scopes for common queries
   scope :with_main_users, -> { joins(:users_hubs).where(users_hubs: { main: true }) }
@@ -90,5 +94,9 @@ class Hub < ApplicationRecord
         percentage: nil
       }
     end
+  end
+
+  def settings
+    booking_config || build_booking_config
   end
 end
