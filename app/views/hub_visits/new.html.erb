@@ -110,7 +110,7 @@
           </div>
           <div class="col-md-6">
             <%= f.label :email, class: "form-label" %>
-            <%= f.email_field :email, class: "form-control", required: true %>
+            <%= f.email_field :email, class: "form-control", required: true, pattern: "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$" %>
           </div>
           <div class="col-md-6">
             <%= f.label :phone, class: "form-label" %>
@@ -126,7 +126,7 @@
           </div>
           <div class="col-md-4">
             <%= f.label :learner_age, "Age", class: "form-label" %>
-            <%= f.number_field :learner_age, class: "form-control", required: true %>
+            <%= f.number_field :learner_age, class: "form-control", required: true, min: 1 %>
           </div>
           <div class="col-md-4">
             <%= f.label :learner_academic_level, "Grade/Year", class: "form-label" %>

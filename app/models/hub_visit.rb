@@ -4,7 +4,8 @@ class HubVisit < ApplicationRecord
   enum status: { pending: 'pending', confirmed: 'confirmed', cancelled: 'cancelled', rejected: 'rejected' }
   enum visit_type: { visit: 'visit', trial: 'trial' }
 
-  validates :first_name, :last_name, :email, :start_time, :end_time, presence: true
+  validates :first_name, :last_name, :email, :start_time, :end_time, :learner_name, :learner_academic_level, presence: true
+  validates :learner_age, presence: true, numericality: { greater_than: 0, only_integer: true }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
 
   validate :check_availability, on: :create
