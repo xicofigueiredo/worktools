@@ -78,6 +78,8 @@
                       <%# --- Visits / Trials (SORTED CHRONOLOGICALLY) --- %>
                       <% visits = visits_by_date[date] %>
                       <% if visits %>
+                        <% classes << 'has-visits' if visits.any? %>
+
                         <% visits.sort_by(&:start_time).each do |v| %>
                            <%
                               time_str = v.start_time.strftime("%H:%M")
@@ -112,11 +114,6 @@
                       <%
                          style_list = []
                          style_list << "cursor: pointer;" if (creation_enabled || popover_items.any?)
-
-                         if visits&.any?
-                           # Vivid Blue Background + Darker Blue Bottom Border
-                           style_list << "background-color: #b6d4fe !important; color: #052c65 !important; font-weight: bold; border-bottom: 4px solid #0a58ca !important;"
-                         end
                       %>
 
                       <td class="<%= classes.join(' ') %> position-relative text-center align-middle"

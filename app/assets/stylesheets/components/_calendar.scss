@@ -5,6 +5,8 @@
   --cal-mandatory-border: #522785;
   --cal-blocked-bg: #ffb74d;
   --cal-blocked-border: #e65100;
+  --cal-visit-bg: #b6d4fe;
+  --cal-visit-border: #0d6efd;
 }
 
 .calendar-table {
@@ -33,7 +35,8 @@
     }
   }
 
-  /* Status Indicators (Bottom Border) */
+  /* --- Status Indicators (Bottom Border) --- */
+  /* The order here defines priority for the colored bar */
   td::after {
     content: '';
     position: absolute;
@@ -46,20 +49,80 @@
     display: none;
   }
 
+  /* Priority Order: Blocked (Highest) > Mandatory > Holiday > Visit */
+  .has-visits::after { display: block; background-color: var(--cal-visit-border); }
   .holiday::after { display: block; background-color: var(--cal-holiday-border); }
   .mandatory::after { display: block; background-color: var(--cal-mandatory-border); }
   .blocked::after { display: block; background-color: var(--cal-blocked-border); }
 
-  /* Background Colors */
+
+  /* --- Background Logic --- */
+
+  /* 1. Single Event (Solid Color) */
+  .has-visits { background-color: var(--cal-visit-bg) !important; color: #052c65; font-weight: 600; }
   .holiday { background-color: var(--cal-holiday-bg) !important; font-weight: 600; }
   .mandatory { background-color: var(--cal-mandatory-bg) !important; font-weight: 600; }
   .blocked { background-color: var(--cal-blocked-bg) !important; font-weight: 600; }
   .weekend { background-color: #f8f9fa; color: #adb5bd; }
 
-  /* Gradient Mixes */
+
+  /* 2. Two Events (50/50 Split) */
   .holiday.blocked { background: linear-gradient(135deg, var(--cal-holiday-bg) 50%, var(--cal-blocked-bg) 50%) !important; }
   .mandatory.blocked { background: linear-gradient(135deg, var(--cal-mandatory-bg) 50%, var(--cal-blocked-bg) 50%) !important; }
   .holiday.mandatory { background: linear-gradient(135deg, var(--cal-mandatory-bg) 50%, var(--cal-holiday-bg) 50%) !important; }
+
+  .has-visits.blocked { background: linear-gradient(135deg, var(--cal-visit-bg) 50%, var(--cal-blocked-bg) 50%) !important; }
+  .has-visits.holiday { background: linear-gradient(135deg, var(--cal-visit-bg) 50%, var(--cal-holiday-bg) 50%) !important; }
+  .has-visits.mandatory { background: linear-gradient(135deg, var(--cal-visit-bg) 50%, var(--cal-mandatory-bg) 50%) !important; }
+
+
+  /* 3. Three Events (33/33/33 Split) */
+  /* Visit + Blocked + Holiday */
+  .has-visits.blocked.holiday {
+    background: linear-gradient(135deg,
+      var(--cal-visit-bg) 0%, var(--cal-visit-bg) 33.3%,
+      var(--cal-holiday-bg) 33.3%, var(--cal-holiday-bg) 66.6%,
+      var(--cal-blocked-bg) 66.6%, var(--cal-blocked-bg) 100%
+    ) !important;
+  }
+
+  /* Visit + Blocked + Mandatory */
+  .has-visits.blocked.mandatory {
+    background: linear-gradient(135deg,
+      var(--cal-visit-bg) 0%, var(--cal-visit-bg) 33.3%,
+      var(--cal-mandatory-bg) 33.3%, var(--cal-mandatory-bg) 66.6%,
+      var(--cal-blocked-bg) 66.6%, var(--cal-blocked-bg) 100%
+    ) !important;
+  }
+
+  /* Visit + Holiday + Mandatory */
+  .has-visits.holiday.mandatory {
+    background: linear-gradient(135deg,
+      var(--cal-visit-bg) 0%, var(--cal-visit-bg) 33.3%,
+      var(--cal-holiday-bg) 33.3%, var(--cal-holiday-bg) 66.6%,
+      var(--cal-mandatory-bg) 66.6%, var(--cal-mandatory-bg) 100%
+    ) !important;
+  }
+
+  /* Holiday + Mandatory + Blocked (No Visit) */
+  .holiday.mandatory.blocked {
+    background: linear-gradient(135deg,
+      var(--cal-holiday-bg) 0%, var(--cal-holiday-bg) 33.3%,
+      var(--cal-mandatory-bg) 33.3%, var(--cal-mandatory-bg) 66.6%,
+      var(--cal-blocked-bg) 66.6%, var(--cal-blocked-bg) 100%
+    ) !important;
+  }
+
+
+  /* 4. Four Events (25/25/25/25 Split) */
+  .has-visits.holiday.mandatory.blocked {
+    background: linear-gradient(135deg,
+      var(--cal-visit-bg) 0%, var(--cal-visit-bg) 25%,
+      var(--cal-holiday-bg) 25%, var(--cal-holiday-bg) 50%,
+      var(--cal-mandatory-bg) 50%, var(--cal-mandatory-bg) 75%,
+      var(--cal-blocked-bg) 75%, var(--cal-blocked-bg) 100%
+    ) !important;
+  }
 
   .month-card { box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #dee2e6; }
 }
@@ -70,4 +133,5 @@
   &.holiday { background-color: var(--cal-holiday-bg); border: 2px solid var(--cal-holiday-border); }
   &.mandatory { background-color: var(--cal-mandatory-bg); border: 2px solid var(--cal-mandatory-border); }
   &.blocked { background-color: var(--cal-blocked-bg); border: 2px solid var(--cal-blocked-border); }
+  &.visit { background-color: var(--cal-visit-bg); border: 2px solid var(--cal-visit-border); }
 }
