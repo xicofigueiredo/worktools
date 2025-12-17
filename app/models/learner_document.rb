@@ -11,6 +11,7 @@ class LearnerDocument < ApplicationRecord
     picture
     credentials
     exam_certificates
+    transfer
   ].freeze
 
   belongs_to :learner_info

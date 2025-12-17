@@ -7,6 +7,29 @@ class AdmissionListController < ApplicationController
   before_action :require_admin_or_admissions, only: [:fetch_from_hubspot]
 
   def index
+    if params[:reset].present?
+      session.delete(:admission_filters)
+      redirect_to admissions_path and return
+    end
+
+    filter_keys = [:search, :status, :hub, :programme, :curriculum, :grade_year]
+
+    has_active_filters = params[:filter_applied].present? || filter_keys.any? { |k| params[k].present? }
+
+    if has_active_filters
+      session[:admission_filters] = params.permit(
+        :filter_applied,
+        :search,
+        status: [],
+        hub: [],
+        programme: [],
+        curriculum: [],
+        grade_year: []
+      ).to_h
+    elsif session[:admission_filters].present? && request.format.html?
+      redirect_to admissions_path(session[:admission_filters]) and return
+    end
+
     @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
     @curricula = LearnerInfo.distinct.pluck(:curriculum_course_option).compact.sort
     @grades    = LearnerInfo.distinct.pluck(:grade_year).compact.sort
