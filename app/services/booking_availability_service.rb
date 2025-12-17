@@ -17,8 +17,8 @@ class BookingAvailabilityService
     # 2. Day of Week Check
     return [] unless @config.open_on?(@date.wday)
 
-    # 3. Blockout Checks
-    return [] if is_holiday? || is_blocked?
+    # 3. Blockout Checks (Added is_mandatory_leave?)
+    return [] if is_holiday? || is_blocked? || is_mandatory_leave?
 
     # 4. Duration & Limits
     duration = (@visit_type == 'trial') ? @config.trial_duration : @config.visit_duration
@@ -73,6 +73,10 @@ class BookingAvailabilityService
     BlockedPeriod.where(hub_id: @hub.id)
                  .where("start_date <= ? AND end_date >= ?", @date, @date)
                  .exists?
+  end
+
+  def is_mandatory_leave?
+    MandatoryLeave.where("start_date <= ? AND end_date >= ?", @date, @date).exists?
   end
 
   def slot_taken?(start_t, end_t)

@@ -7,6 +7,10 @@ class HubVisitsController < ApplicationController
     @hub = Hub.find(params[:hub_id])
     @visit = HubVisit.new
 
+    # FETCH ALLOWED DAYS (Integers: 0=Sun, 1=Mon, etc.)
+    # If no config, default to empty (calendar will be disabled)
+    @allowed_days = @hub.booking_config&.visit_days || []
+
     # --- BLACKOUT DATES CALCULATION ---
     start_range = Date.current
     end_range = 6.months.from_now.to_date
@@ -24,9 +28,17 @@ class HubVisitsController < ApplicationController
                           .where("start_date <= ? AND end_date >= ?", end_range, start_range)
 
     blocks.find_each do |block|
-      # Expand ranges into individual date strings
       s = [block.start_date, start_range].max
       e = [block.end_date, end_range].min
+      @blackout_dates += (s..e).map(&:to_s)
+    end
+
+    # 3. Fetch Mandatory Leaves (Global/System-wide)
+    mandatory = MandatoryLeave.where("start_date <= ? AND end_date >= ?", end_range, start_range)
+
+    mandatory.find_each do |m|
+      s = [m.start_date, start_range].max
+      e = [m.end_date, end_range].min
       @blackout_dates += (s..e).map(&:to_s)
     end
 

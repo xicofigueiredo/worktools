@@ -122,15 +122,15 @@
         <div class="row g-3">
           <div class="col-md-4">
             <%= f.label :learner_name, "Learner Name", class: "form-label" %>
-            <%= f.text_field :learner_name, class: "form-control" %>
+            <%= f.text_field :learner_name, class: "form-control", required: true %>
           </div>
           <div class="col-md-4">
             <%= f.label :learner_age, "Age", class: "form-label" %>
-            <%= f.number_field :learner_age, class: "form-control" %>
+            <%= f.number_field :learner_age, class: "form-control", required: true %>
           </div>
           <div class="col-md-4">
             <%= f.label :learner_academic_level, "Grade/Year", class: "form-label" %>
-            <%= f.select :learner_academic_level, ["Grade 6 (Year 7)", "Grade 7 (Year 8)", "Grade 8 (Year 9)", "Grade 9 (Year 10)", "Grade 10 (Year 11)", "Grade 11 (Year 12)", "Grade 12 (Year 13)"], { include_blank: "Select Level" }, { class: "form-select" } %>
+            <%= f.select :learner_academic_level, ["Grade 6 (Year 7)", "Grade 7 (Year 8)", "Grade 8 (Year 9)", "Grade 9 (Year 10)", "Grade 10 (Year 11)", "Grade 11 (Year 12)", "Grade 12 (Year 13)"], { include_blank: "Select Level" }, { class: "form-select", required: true } %>
           </div>
           <div class="col-12">
             <%= f.label :special_requests, "Notes / Special Requests", class: "form-label" %>
@@ -189,8 +189,11 @@
 <script>
   let currentStep = 1;
   const hubId = "<%= @hub.id %>";
+
   // Convert Ruby array to JS array for disabling dates
   const blackoutDates = <%= @blackout_dates.to_json.html_safe %>;
+  const allowedDays = <%= @allowed_days.to_json.html_safe %>; // e.g. [1, 2, 3] for Mon, Tue, Wed
+
   let bookingData = { type: null, date: null, time: null };
   let fpInstance = null;
 
@@ -210,12 +213,16 @@
     fpInstance = flatpickr("#flatpickr-container", {
       inline: true,
       minDate: "today",
-      // Add the blackout dates here
+      // Disable logic: Block blackout dates AND days not in allowedDays
       disable: [
         function(date) {
-          // 1. Disable Weekends
-          if (date.getDay() === 0 || date.getDay() === 6) return true;
-          // 2. Disable Holidays/Blocked Periods (Match YYYY-MM-DD string)
+          // 1. Disable if day is not in Allowed Days (Open Days)
+          // date.getDay() returns 0 (Sun) to 6 (Sat)
+          if (allowedDays.length > 0 && !allowedDays.includes(date.getDay())) {
+            return true;
+          }
+
+          // 2. Disable Holidays/Blocked Periods/Mandatory Leaves
           const dateString = date.toISOString().split('T')[0];
           return blackoutDates.includes(dateString);
         }
@@ -275,7 +282,6 @@
 
     document.querySelectorAll('.time-slot-btn').forEach(el => el.classList.remove('selected'));
     btn.classList.add('selected');
-
     document.getElementById('btn-step-2').disabled = false;
   }
 
