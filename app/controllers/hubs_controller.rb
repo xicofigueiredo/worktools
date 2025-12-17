@@ -49,12 +49,13 @@ class HubsController < ApplicationController
     @next_year = @year + 1
 
     # Call Service to get data
-    service = CalendarDataService.new(year: @year, hub: @hub)
+    service = CalendarDataService.new(year: @year, hub: @hub, include_visits: true)
     data = service.call
 
     @holidays_by_date = data[:holidays]
     @blocked_by_date  = data[:blocked]
     @mandatory_leaves = data[:mandatory]
+    @visits_by_date   = data[:visits]
 
     @new_blocked_period = BlockedPeriod.new
   end

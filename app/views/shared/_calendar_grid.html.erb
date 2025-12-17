@@ -4,23 +4,25 @@
   - holidays_by_date: Hash { Date => [PublicHoliday] }
   - blocked_by_date: Hash { Date => [BlockedPeriod] }
   - mandatory_leaves: Array [MandatoryLeave]
+  - visits_by_date: Hash (Optional)
   - read_only: Boolean (default: true)
   - allow_creation: Boolean (default: false)
 %>
 
 <% is_hr_or_admin = current_user.email == 'humanresources@bravegenerationacademy.com' || current_user.role == 'admin' %>
 <% creation_enabled = local_assigns[:allow_creation] == true %>
+<% visits_by_date = local_assigns[:visits_by_date] || {} %>
 
 <div class="row">
   <% (1..12).each do |month| %>
     <div class="col-md-4 mb-3">
-      <div class="card month-card h-100">
-        <div class="card-header bg-primary text-white py-2">
-          <h6 class="mb-0 small fw-bold text-uppercase"><%= Date::MONTHNAMES[month] %></h6>
+      <div class="card month-card h-100 border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-2">
+          <h6 class="mb-0 fw-bold text-uppercase text-dark"><%= Date::MONTHNAMES[month] %></h6>
         </div>
         <div class="card-body p-0">
           <table class="table table-bordered table-sm mb-0 calendar-table">
-            <thead class="table-light">
+            <thead class="table-light text-center small text-muted">
                <tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr>
             </thead>
             <tbody>
@@ -67,33 +69,62 @@
                         <% classes << 'blocked' %>
                         <% blocks.each do |b| %>
                           <% label = if b.user_id then "User" elsif b.department_id then "Dept" elsif b.hub_id then "Hub" else "Global" end %>
-
-                          <%# CHECK PERMISSIONS: HR/Admin OR Creator %>
                           <% can_delete_block = is_hr_or_admin || (b.respond_to?(:creator_id) && b.creator_id == current_user.id) %>
-
-                          <%# Using button_to ensures DELETE method is used %>
                           <% delete_btn = (!read_only && can_delete_block) ? button_to('<i class="fas fa-trash-alt"></i>'.html_safe, blocked_period_path(b), method: :delete, form: { style: 'display:inline-block;' }, class: "btn btn-link text-danger p-0 ms-2 align-baseline", style: "text-decoration: none;", data: { turbo_confirm: "Delete this block?" }) : "" %>
-
                           <% popover_items << "<div class='mb-1 pb-1 border-bottom small text-danger d-flex justify-content-between align-items-center'><span><strong>Blocked (#{label})</strong></span> #{delete_btn}</div>" %>
+                        <% end %>
+                      <% end %>
+
+                      <%# --- Visits / Trials (SORTED CHRONOLOGICALLY) --- %>
+                      <% visits = visits_by_date[date] %>
+                      <% if visits %>
+                        <% visits.sort_by(&:start_time).each do |v| %>
+                           <%
+                              time_str = v.start_time.strftime("%H:%M")
+                              type_label = v.visit_type == 'trial' ? 'Trial' : 'Visit'
+
+                              visit_data = {
+                                type: type_label,
+                                date: v.start_time.strftime("%B %d, %Y"),
+                                time: "#{time_str} - #{v.end_time.strftime('%H:%M')}",
+                                name: "#{v.first_name} #{v.last_name}",
+                                email: v.email,
+                                phone: v.phone,
+                                learner_name: v.learner_name,
+                                learner_age: v.learner_age,
+                                learner_level: v.learner_academic_level,
+                                notes: v.special_requests
+                              }
+                           %>
+                           <% info_btn = "<button class='btn btn-link p-0 ms-2 text-dark' data-visit='#{ERB::Util.html_escape(visit_data.to_json)}' onclick='openVisitModal(this.getAttribute(\"data-visit\")); event.stopPropagation();'><i class='fas fa-info-circle'></i></button>" %>
+                           <% popover_items << "<div class='mb-1 pb-1 border-bottom small text-dark d-flex justify-content-between align-items-center'><span><strong>#{time_str} #{type_label}</strong>: #{v.learner_name}</span> #{info_btn}</div>" %>
                         <% end %>
                       <% end %>
 
                       <% if (wday == 0 || wday == 6) && classes.empty? %><% classes << 'weekend' %><% end %>
 
-                      <%# --- ADD BLOCK INTERACTION (Inside Popover) --- %>
                       <% if creation_enabled %>
-                        <%# We add a button that triggers the JS modal function %>
                         <% add_btn = "<div class='mt-2 text-center'><button class='btn btn-xs btn-outline-primary w-100' onclick='openHubBlockModal(\"#{date}\");'>+ Add Block Here</button></div>" %>
                         <% popover_items << add_btn %>
                       <% end %>
 
-                      <td class="<%= classes.join(' ') %>"
-                          <%# Only initialize popover if we have items (Existing events OR creation enabled) %>
+                      <%# Styles %>
+                      <%
+                         style_list = []
+                         style_list << "cursor: pointer;" if (creation_enabled || popover_items.any?)
+
+                         if visits&.any?
+                           # Vivid Blue Background + Darker Blue Bottom Border
+                           style_list << "background-color: #b6d4fe !important; color: #052c65 !important; font-weight: bold; border-bottom: 4px solid #0a58ca !important;"
+                         end
+                      %>
+
+                      <td class="<%= classes.join(' ') %> position-relative text-center align-middle"
+                          style="<%= style_list.join(' ') %>"
                           <% if popover_items.any? %>
                             data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true" data-bs-trigger="click"
                             title="<div class='text-center small fw-bold'><%= date.strftime('%a, %b %d') %></div>"
                             data-bs-content="<%= ERB::Util.html_escape(popover_items.join) %>"
-                            style="cursor: pointer;"
                           <% end %>>
                         <%= day_num %>
                       </td>

@@ -1,11 +1,36 @@
 class HubVisitsController < ApplicationController
   skip_before_action :authenticate_user!, only: [:new, :create, :available_slots]
 
-  layout 'application'
+  layout 'public'
 
   def new
     @hub = Hub.find(params[:hub_id])
     @visit = HubVisit.new
+
+    # --- BLACKOUT DATES CALCULATION ---
+    start_range = Date.current
+    end_range = 6.months.from_now.to_date
+
+    @blackout_dates = []
+
+    # 1. Fetch Holidays (Hub-specific, Country-specific, or Global)
+    holidays = PublicHoliday.where(date: start_range..end_range)
+                            .where("(hub_id = :hub_id) OR (hub_id IS NULL AND country = :country) OR (hub_id IS NULL AND country IS NULL)",
+                                   hub_id: @hub.id, country: @hub.country)
+    @blackout_dates += holidays.pluck(:date).map(&:to_s)
+
+    # 2. Fetch Blocked Periods (Hub-specific)
+    blocks = BlockedPeriod.where(hub_id: @hub.id)
+                          .where("start_date <= ? AND end_date >= ?", end_range, start_range)
+
+    blocks.find_each do |block|
+      # Expand ranges into individual date strings
+      s = [block.start_date, start_range].max
+      e = [block.end_date, end_range].min
+      @blackout_dates += (s..e).map(&:to_s)
+    end
+
+    @blackout_dates.uniq!
   end
 
   def available_slots
@@ -41,7 +66,6 @@ class HubVisitsController < ApplicationController
     end
 
     if @visit.save
-      # Trigger mailer: HubVisitMailer.confirmation(@visit).deliver_later
       render json: { success: true, message: "Booking Request Sent!" }
     else
       render json: { success: false, errors: @visit.errors.full_messages }, status: :unprocessable_entity

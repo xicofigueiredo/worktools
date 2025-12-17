@@ -23,7 +23,7 @@
             <div class="icon"><i class="fas fa-eye"></i></div>
             <div class="content">
               <h5>Hub Visit</h5>
-              <p>Tour the hub, meet the LCs, and ask questions.</p>
+              <p>Explore our learning environment and meet the team.</p>
               <span class="badge bg-primary">~ 1 Hour</span>
             </div>
           </div>
@@ -48,10 +48,16 @@
         <div class="row g-4">
           <div class="col-md-6 border-end">
             <label class="form-label fw-bold mb-2">1. Choose a Day</label>
-            <div id="flatpickr-container"></div> </div>
+            <div id="flatpickr-container"></div>
+          </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-bold mb-2">2. Choose a Time</label>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label fw-bold mb-0">2. Choose a Time</label>
+              <span class="badge bg-light text-dark border">
+                <i class="far fa-clock me-1"></i> Local Hub Time
+              </span>
+            </div>
 
             <div id="slots-empty" class="text-center text-muted py-5">
               <i class="far fa-calendar-alt fa-2x mb-2"></i>
@@ -65,8 +71,10 @@
 
             <div id="slots-container" class="slots-grid"></div>
 
-            <div id="no-slots-message" class="alert alert-warning small" style="display:none;">
-              <i class="fas fa-exclamation-triangle me-1"></i> No available slots for this date.
+            <div id="no-slots-message" class="booking-alert text-center p-4 mt-3" style="display:none;">
+              <div class="mb-2"><i class="fas fa-calendar-times fa-2x text-warning"></i></div>
+              <h6 class="fw-bold">No Available Slots</h6>
+              <p class="small text-muted mb-0">We are fully booked or closed on this date. Please try selecting another day.</p>
             </div>
           </div>
         </div>
@@ -144,6 +152,7 @@
   .booking-container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
   .booking-card { background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); padding: 40px; }
   .booking-header { text-align: center; margin-bottom: 30px; }
+  .booking-alert { background: #fff3cd; border: 1px solid #ffecb5; border-radius: 8px; color: #664d03; }
 
   /* Progress Bar */
   .progress-container { display: flex; justify-content: space-between; margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; }
@@ -180,6 +189,8 @@
 <script>
   let currentStep = 1;
   const hubId = "<%= @hub.id %>";
+  // Convert Ruby array to JS array for disabling dates
+  const blackoutDates = <%= @blackout_dates.to_json.html_safe %>;
   let bookingData = { type: null, date: null, time: null };
   let fpInstance = null;
 
@@ -199,11 +210,14 @@
     fpInstance = flatpickr("#flatpickr-container", {
       inline: true,
       minDate: "today",
+      // Add the blackout dates here
       disable: [
         function(date) {
-          // Disable Sundays (0) and Saturdays (6)
-          // Adjust this if your hub allows weekends
-          return (date.getDay() === 0 || date.getDay() === 6);
+          // 1. Disable Weekends
+          if (date.getDay() === 0 || date.getDay() === 6) return true;
+          // 2. Disable Holidays/Blocked Periods (Match YYYY-MM-DD string)
+          const dateString = date.toISOString().split('T')[0];
+          return blackoutDates.includes(dateString);
         }
       ],
       onChange: function(selectedDates, dateStr, instance) {
@@ -268,7 +282,6 @@
   // --- Navigation & Summary ---
   function nextStep(current) {
     if (current === 2) {
-      // Update Summary before Step 3
       document.getElementById('summary-type').textContent = bookingData.type === 'visit' ? 'Hub Visit' : 'Trial Day';
       document.getElementById('summary-date').textContent = bookingData.date;
       document.getElementById('summary-time').textContent = bookingData.time;
@@ -314,15 +327,20 @@
         document.querySelector('.booking-card').innerHTML = `
           <div class="text-center py-5">
             <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
-            <h3 class="mt-4">Booking Confirmed!</h3>
-            <p class="text-muted mb-4">We have sent a confirmation email to ${formData.get('hub_visit[email]')}.</p>
-            <a href="/" class="btn btn-primary">Return Home</a>
+            <h3 class="mt-4">Request Received</h3>
+            <p class="text-muted mb-4 px-4">Your booking request has been received. We will be in touch shortly to confirm the details.</p>
           </div>`;
       } else {
         alert("Error: " + data.errors.join(", "));
         btn.disabled = false;
         btn.textContent = "Confirm Booking";
       }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Something went wrong. Please try again.");
+      btn.disabled = false;
+      btn.textContent = "Confirm Booking";
     });
   });
 </script>

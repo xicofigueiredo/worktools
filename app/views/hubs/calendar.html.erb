@@ -32,11 +32,25 @@
     </div>
   </div>
 
+  <div class="mb-3 pb-2 border-bottom">
+    <div class="d-flex gap-3 align-items-center">
+      <div class="legend-item"><div class="legend-box holiday"></div> <span class="small">Public Holiday</span></div>
+      <div class="legend-item"><div class="legend-box mandatory"></div> <span class="small">Mandatory Leave</span></div>
+      <div class="legend-item"><div class="legend-box blocked"></div> <span class="small">Blocked Period</span></div>
+
+      <div class="legend-item">
+        <div class="legend-box" style="background-color: #b6d4fe; border: 2px solid #0d6efd;"></div>
+        <span class="small">Visits/Trials</span>
+      </div>
+    </div>
+  </div>
+
   <%= render partial: "shared/calendar_grid", locals: {
         year: @year,
         holidays_by_date: @holidays_by_date,
         blocked_by_date: @blocked_by_date,
         mandatory_leaves: @mandatory_leaves,
+        visits_by_date: @visits_by_date,
         read_only: false,
         allow_creation: true
       } %>
@@ -49,11 +63,9 @@
         <h5 class="modal-title">Hub Booking Configuration</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-
       <% config = @hub.settings %>
       <%= form_with(model: config, url: hub_booking_config_path(@hub), method: :patch, local: true) do |f| %>
         <div class="modal-body">
-
           <h6 class="border-bottom pb-2 mb-3">Durations</h6>
           <div class="row g-3 mb-4">
             <div class="col-md-6">
@@ -70,11 +82,7 @@
           <div class="mb-4">
             <div class="d-flex flex-wrap gap-3">
               <% Date::DAYNAMES[1..5].each_with_index do |day, idx| %>
-                <%
-                   # FIX: The loop index 'idx' starts at 0, which corresponds to Monday (index 0 of slicing 1..5)
-                   # But in Ruby Date.wday, Monday is 1. So we must use (idx + 1).
-                   actual_wday = idx + 1
-                %>
+                <% actual_wday = idx + 1 %>
                 <div class="form-check form-check-inline border rounded px-3 py-2 m-0 bg-light">
                   <%= check_box_tag "hub_booking_config[visit_days][]", actual_wday, config.visit_days&.include?(actual_wday), class: "form-check-input", id: "day_#{actual_wday}" %>
                   <label class="form-check-label fw-bold" for="day_<%= actual_wday %>"><%= day %></label>
@@ -84,33 +92,22 @@
           </div>
 
           <h6 class="border-bottom pb-2 mb-2">Available Start Times</h6>
-          <p class="small text-muted mb-3">
-            Select allowed start times.
-            <br>
-            <span class="text-danger">* Note: Trials will be automatically hidden for slots where they would extend past 16:00.</span>
-          </p>
-
           <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
             <%
                start_gen = Time.parse("10:00")
                end_gen = Time.parse("16:00")
                current = start_gen
             %>
-
             <% while current <= end_gen %>
               <% time_str = current.strftime("%H:%M") %>
               <% is_checked = (config.visit_slots || []).include?(time_str) %>
-
               <div class="form-check">
                 <%= check_box_tag "hub_booking_config[visit_slots][]", time_str, is_checked, class: "form-check-input", id: "slot_#{time_str}" %>
-                <label class="form-check-label small" for="slot_#{time_str}">
-                  <%= time_str %>
-                </label>
+                <label class="form-check-label small" for="slot_#{time_str}"><%= time_str %></label>
               </div>
               <% current += 30.minutes %>
             <% end %>
           </div>
-
         </div>
         <div class="modal-footer bg-light">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -154,21 +151,144 @@
   </div>
 </div>
 
+<div class="modal fade" id="visitDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header text-white" style="background: linear-gradient(135deg, #0d6efd, #0a58ca);">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fas fa-calendar-check fa-lg"></i>
+          <h5 class="modal-title mb-0" id="visitModalTitle">Visit Details</h5>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="row mb-4">
+          <div class="col-6">
+            <div class="text-uppercase text-muted small fw-bold mb-1">Date</div>
+            <div class="fs-5 text-dark" id="modalVisitDate"></div>
+          </div>
+          <div class="col-6">
+            <div class="text-uppercase text-muted small fw-bold mb-1">Time</div>
+            <div class="fs-5 text-dark" id="modalVisitTime"></div>
+          </div>
+        </div>
+
+        <hr class="text-muted opacity-25">
+
+        <div class="mb-4">
+          <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user-circle me-2"></i>Visitor Information</h6>
+          <div class="ps-3 border-start border-3 border-primary bg-light p-3 rounded-end">
+            <div class="fs-5 fw-bold text-dark mb-1" id="modalVisitName"></div>
+            <div class="d-flex align-items-center gap-3 text-secondary mt-2">
+              <span class="d-flex align-items-center gap-1"><i class="fas fa-envelope text-muted"></i> <span id="modalVisitEmail"></span></span>
+            </div>
+            <div class="d-flex align-items-center gap-3 text-secondary mt-1">
+              <span class="d-flex align-items-center gap-1"><i class="fas fa-phone text-muted"></i> <span id="modalVisitPhone"></span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <h6 class="fw-bold text-success mb-3"><i class="fas fa-graduation-cap me-2"></i>Learner Details</h6>
+          <div class="row g-3">
+            <div class="col-4">
+              <div class="small text-muted">Name</div>
+              <div class="fw-bold" id="modalLearnerName"></div>
+            </div>
+            <div class="col-3">
+              <div class="small text-muted">Age</div>
+              <div class="fw-bold" id="modalLearnerAge"></div>
+            </div>
+            <div class="col-5">
+              <div class="small text-muted">Level</div>
+              <div class="fw-bold" id="modalLearnerLevel"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <h6 class="fw-bold text-secondary mb-2"><i class="fas fa-sticky-note me-2"></i>Special Requests</h6>
+          <div class="p-3 bg-light rounded border small fst-italic text-break" id="modalVisitNotes" style="min-height: 60px;">
+            No special requests.
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light border-top-0">
+        <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">Close Details</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+  // --- OPEN VISIT DETAILS MODAL ---
+  window.openVisitModal = function(dataJson) {
+    var data = (typeof dataJson === 'string') ? JSON.parse(dataJson) : dataJson;
+
+    // 1. Force Close All Popovers
+    var popovers = document.querySelectorAll('.popover');
+    popovers.forEach(function(p) { p.remove(); });
+    // Also use Bootstrap API to ensure state is cleared
+    var triggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    triggerList.forEach(function (triggerEl) {
+      var popover = bootstrap.Popover.getInstance(triggerEl);
+      if (popover) popover.hide();
+    });
+
+    // 2. Populate Fields
+    document.getElementById('visitModalTitle').textContent = data.type + " Details";
+    document.getElementById('modalVisitDate').textContent = data.date;
+    document.getElementById('modalVisitTime').textContent = data.time;
+    document.getElementById('modalVisitName').textContent = data.name;
+    document.getElementById('modalVisitEmail').textContent = data.email || "N/A";
+    document.getElementById('modalVisitPhone').textContent = data.phone || "N/A";
+    document.getElementById('modalLearnerName').textContent = data.learner_name || "N/A";
+    document.getElementById('modalLearnerAge').textContent = data.learner_age || "N/A";
+    document.getElementById('modalLearnerLevel').textContent = data.learner_level || "N/A";
+
+    var notesEl = document.getElementById('modalVisitNotes');
+    if (data.notes && data.notes.trim() !== "") {
+      notesEl.textContent = data.notes;
+      notesEl.classList.remove('text-muted');
+    } else {
+      notesEl.textContent = "No special requests.";
+      notesEl.classList.add('text-muted');
+    }
+
+    // 3. Open Modal
+    var modalEl = document.getElementById('visitDetailsModal');
+    var modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  };
+
+  // --- FORCE CLEANUP BACKDROP ---
+  // Fix for gray screen getting stuck
+  document.addEventListener("DOMContentLoaded", function() {
+    var myModalEl = document.getElementById('visitDetailsModal');
+    if(myModalEl) {
+      myModalEl.addEventListener('hidden.bs.modal', function (event) {
+        // Manually remove backdrop
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        // Reset body classes
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+      });
+    }
+  });
+
   function copyBookingLink() {
     const url = "<%= new_hub_hub_visit_url(@hub) %>";
 
     navigator.clipboard.writeText(url).then(() => {
-      // Create Toast Element
       const toast = document.createElement('div');
-
-      // Inline styles for a floating toast appearance
       toast.style.position = 'fixed';
       toast.style.top = '20px';
-      toast.style.right = '20px'; // Position Top-Right
+      toast.style.right = '20px';
       toast.style.zIndex = '10000';
       toast.style.padding = '12px 24px';
-      toast.style.backgroundColor = '#198754'; // Bootstrap Success Green
+      toast.style.backgroundColor = '#198754';
       toast.style.color = '#fff';
       toast.style.borderRadius = '8px';
       toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
@@ -181,16 +301,13 @@
       toast.style.transform = 'translateY(-20px)';
 
       toast.innerHTML = '<i class="fas fa-check-circle"></i> Booking link copied!';
-
       document.body.appendChild(toast);
 
-      // Trigger animation
       requestAnimationFrame(() => {
         toast.style.opacity = '1';
         toast.style.transform = 'translateY(0)';
       });
 
-      // Remove after 3 seconds
       setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(-20px)';
@@ -199,7 +316,6 @@
 
     }).catch(err => {
       console.error('Failed to copy: ', err);
-      // Fallback: Use standard alert if clipboard API fails
       prompt("Could not copy automatically. Please copy this link:", url);
     });
   }
