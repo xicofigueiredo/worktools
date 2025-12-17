@@ -1,6 +1,6 @@
 class BookingAvailabilityService
-  OPENING_HOUR = 10
-  CLOSING_LIMIT_HOUR = 16
+  OPENING_HOUR = HubBookingConfig::OPENING_HOUR
+  CLOSING_LIMIT_HOUR = HubBookingConfig::CLOSING_HOUR
 
   def initialize(hub, date, visit_type)
     @hub = hub
@@ -14,42 +14,33 @@ class BookingAvailabilityService
     return [] unless @config
     return [] if @date < Date.current
 
-    # 2. Day of Week Check
-    return [] unless @config.open_on?(@date.wday)
+    # 2. Get Configured Slots for THIS specific day (1=Mon, etc)
+    day_slots = @config.slots_for_day(@date.wday)
 
-    # 3. Blockout Checks (Added is_mandatory_leave?)
+    # If no slots for this day, we are closed
+    return [] if day_slots.empty?
+
+    # 3. Blockout Checks
     return [] if is_holiday? || is_blocked? || is_mandatory_leave?
 
-    # 4. Duration & Limits
-    duration = (@visit_type == 'trial') ? @config.trial_duration : @config.visit_duration
+    # 4. Duration & Limits (Using Constants)
+    duration = (@visit_type == 'trial') ? HubBookingConfig::TRIAL_DURATION : HubBookingConfig::VISIT_DURATION
 
-    # Define the absolute latest a slot can START
-    # Visits: Can start up to 16:00
-    # Trials: Can start up to (16:00 - duration)
     limit_time = Time.zone.parse("#{@date} #{CLOSING_LIMIT_HOUR}:00")
-
-    if @visit_type == 'trial'
-      limit_time -= duration.minutes
-    end
+    limit_time -= duration.minutes if @visit_type == 'trial'
 
     # 5. Slot Calculation
     available = []
-    configured_slots = @config.visit_slots || []
 
-    configured_slots.each do |time_str|
-      # Parse strictly in the context of the date and Hub's timezone
+    day_slots.each do |time_str|
       start_time = Time.zone.parse("#{@date} #{time_str}") rescue nil
       next unless start_time
 
-      # Filter: Before Opening Hour? (Safety check)
+      # Filter: Before Opening/After Limit/In Past
       opening_time = Time.zone.parse("#{@date} #{OPENING_HOUR}:00")
       next if start_time < opening_time
-
-      # Filter: After Closing Limit?
       next if start_time > limit_time
-
-      # Filter: In the past? (for today's bookings)
-      next if start_time < Time.zone.now + 1.hour # Buffer for immediate bookings
+      next if start_time < Time.zone.now + 1.hour
 
       # Overlap Check
       end_time = start_time + duration.minutes

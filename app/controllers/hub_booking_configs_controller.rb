@@ -5,20 +5,22 @@ class HubBookingConfigsController < ApplicationController
   def update
     @config = @hub.booking_config || @hub.build_booking_config
 
-    # Convert checkbox strings to integers
-    if params[:hub_booking_config][:visit_days].present?
-      params[:hub_booking_config][:visit_days] = params[:hub_booking_config][:visit_days].map(&:to_i)
+    raw_slots = params.require(:hub_booking_config).permit(visit_slots: {})[:visit_slots]
+
+    clean_slots = {}
+    if raw_slots.present?
+      raw_slots.each do |day, times|
+        valid_times = times.select(&:present?)
+        clean_slots[day] = valid_times if valid_times.any?
+      end
     end
 
-    # Clean empty slots
-    if params[:hub_booking_config][:visit_slots].present?
-      params[:hub_booking_config][:visit_slots].reject!(&:blank?)
-    end
+    @config.visit_slots = clean_slots
 
-    if @config.update(config_params)
-      redirect_back fallback_location: calendar_hub_path(@hub), notice: 'Booking settings updated successfully.'
+    if @config.save
+      redirect_back fallback_location: calendar_hub_path(@hub), notice: 'Schedule updated successfully.'
     else
-      redirect_back fallback_location: calendar_hub_path(@hub), alert: "Error updating settings: #{@config.errors.full_messages.join(', ')}"
+      redirect_back fallback_location: calendar_hub_path(@hub), alert: "Error: #{@config.errors.full_messages.join(', ')}"
     end
   end
 
@@ -26,13 +28,5 @@ class HubBookingConfigsController < ApplicationController
 
   def set_hub
     @hub = Hub.find(params[:hub_id])
-  end
-
-  def config_params
-    # Removed closing_time from permitted params
-    params.require(:hub_booking_config).permit(
-      :visit_duration, :trial_duration,
-      visit_days: [], visit_slots: []
-    )
   end
 end

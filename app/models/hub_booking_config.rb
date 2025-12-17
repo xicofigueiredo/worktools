@@ -1,18 +1,26 @@
 class HubBookingConfig < ApplicationRecord
   belongs_to :hub
 
-  validates :visit_duration, :trial_duration, numericality: { greater_than: 0 }
+  VISIT_DURATION = 60
+  TRIAL_DURATION = 180
 
-  # Virtual attribute to handle comma-separated string from the form
-  def visit_slots_str
-    (visit_slots || []).join(', ')
+  OPENING_HOUR = 10
+  CLOSING_HOUR = 16
+
+  # Returns array of time strings for a given day index (0=Sun, 1=Mon...)
+  def slots_for_day(wday)
+    return [] unless visit_slots.present?
+    visit_slots[wday.to_s] || []
   end
 
-  def visit_slots_str=(str)
-    self.visit_slots = str.split(',').map(&:strip).reject(&:blank?)
-  end
-
+  # Check if a day has ANY slots configured
   def open_on?(wday)
-    (visit_days || []).include?(wday)
+    slots_for_day(wday).any?
+  end
+
+  # Returns list of integer weekdays that have slots (for the calendar frontend)
+  def visit_days
+    return [] unless visit_slots.present?
+    visit_slots.keys.map(&:to_i).sort
   end
 end

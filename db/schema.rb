@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_12_16_161408) do
+ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -400,12 +400,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_16_161408) do
 
   create_table "hub_booking_configs", force: :cascade do |t|
     t.bigint "hub_id", null: false
-    t.integer "visit_days", default: [], array: true
-    t.string "visit_slots", default: [], array: true
-    t.integer "visit_duration", default: 60
-    t.integer "trial_duration", default: 180
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "visit_slots", default: {}
     t.index ["hub_id"], name: "index_hub_booking_configs_on_hub_id"
   end
 

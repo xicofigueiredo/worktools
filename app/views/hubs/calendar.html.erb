@@ -62,52 +62,77 @@
       <% config = @hub.settings %>
       <%= form_with(model: config, url: hub_booking_config_path(@hub), method: :patch, local: true) do |f| %>
         <div class="modal-body">
-          <h6 class="border-bottom pb-2 mb-3">Durations</h6>
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-              <%= f.label :visit_duration, "Visit Duration (min)", class: "form-label fw-bold" %>
-              <%= f.number_field :visit_duration, class: "form-control", min: 15, step: 15 %>
-            </div>
-            <div class="col-md-6">
-              <%= f.label :trial_duration, "Trial Duration (min)", class: "form-label fw-bold" %>
-              <%= f.number_field :trial_duration, class: "form-control", min: 30, step: 15 %>
-            </div>
+          <div class="alert alert-info small mb-3">
+            <i class="fas fa-info-circle"></i>
+            <strong>Note:</strong> Durations are fixed by the system.<br>
+            Hub Visit: <strong><%= HubBookingConfig::VISIT_DURATION %> mins</strong> |
+            Trial Day: <strong><%= HubBookingConfig::TRIAL_DURATION %> mins</strong>
           </div>
 
-          <h6 class="border-bottom pb-2 mb-3">Available Days</h6>
-          <div class="mb-4">
-            <div class="d-flex flex-wrap gap-3">
-              <% Date::DAYNAMES[1..5].each_with_index do |day, idx| %>
-                <% actual_wday = idx + 1 %>
-                <div class="form-check form-check-inline border rounded px-3 py-2 m-0 bg-light">
-                  <%= check_box_tag "hub_booking_config[visit_days][]", actual_wday, config.visit_days&.include?(actual_wday), class: "form-check-input", id: "day_#{actual_wday}" %>
-                  <label class="form-check-label fw-bold" for="day_<%= actual_wday %>"><%= day %></label>
+          <h6 class="border-bottom pb-2 mb-3">Weekly Schedule</h6>
+
+          <ul class="nav nav-tabs mb-3" id="scheduleTabs" role="tablist">
+            <% (1..5).each_with_index do |wday, index| %>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link <%= 'active' if index == 0 %>"
+                        id="day-<%= wday %>-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#day-<%= wday %>-content"
+                        type="button" role="tab"
+                        aria-controls="day-<%= wday %>-content"
+                        aria-selected="<%= index == 0 %>">
+                  <%= Date::DAYNAMES[wday] %>
+                </button>
+              </li>
+            <% end %>
+          </ul>
+
+          <div class="tab-content" id="scheduleTabsContent">
+            <% (1..5).each_with_index do |wday, index| %>
+              <div class="tab-pane fade <%= 'show active' if index == 0 %>" id="day-<%= wday %>-content" role="tabpanel" aria-labelledby="day-<%= wday %>-tab">
+                <div class="p-3 border rounded bg-light">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 text-primary">Available Slots for <%= Date::DAYNAMES[wday] %></h6>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllSlots(<%= wday %>)">Toggle All</button>
+                  </div>
+
+                  <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
+                    <%
+                       # Generate 10:00 to 16:00
+                       start_gen = Time.parse("#{HubBookingConfig::OPENING_HOUR}:00")
+                       end_gen = Time.parse("#{HubBookingConfig::CLOSING_HOUR}:00")
+                       current = start_gen
+
+                       # Get currently saved slots for this day (wday)
+                       saved_slots = config.slots_for_day(wday)
+                    %>
+                    <% while current <= end_gen %>
+                      <% time_str = current.strftime("%H:%M") %>
+                      <% is_checked = saved_slots.include?(time_str) %>
+
+                      <div class="form-check position-relative bg-white rounded border px-2 py-1">
+                        <input class="form-check-input ms-0 me-2 day-chk-<%= wday %>"
+                               type="checkbox"
+                               name="hub_booking_config[visit_slots][<%= wday %>][]"
+                               value="<%= time_str %>"
+                               id="slot_<%= wday %>_<%= time_str %>"
+                               <%= 'checked' if is_checked %>>
+                        <label class="form-check-label small stretched-link" for="slot_<%= wday %>_<%= time_str %>">
+                          <%= time_str %>
+                        </label>
+                      </div>
+                      <% current += 30.minutes %>
+                    <% end %>
+                  </div>
                 </div>
-              <% end %>
-            </div>
-          </div>
-
-          <h6 class="border-bottom pb-2 mb-2">Available Start Times</h6>
-          <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
-            <%
-               start_gen = Time.parse("10:00")
-               end_gen = Time.parse("16:00")
-               current = start_gen
-            %>
-            <% while current <= end_gen %>
-              <% time_str = current.strftime("%H:%M") %>
-              <% is_checked = (config.visit_slots || []).include?(time_str) %>
-              <div class="form-check">
-                <%= check_box_tag "hub_booking_config[visit_slots][]", time_str, is_checked, class: "form-check-input", id: "slot_#{time_str}" %>
-                <label class="form-check-label small" for="slot_#{time_str}"><%= time_str %></label>
               </div>
-              <% current += 30.minutes %>
             <% end %>
           </div>
+
         </div>
         <div class="modal-footer bg-light">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-primary px-4">Save Configuration</button>
+          <button type="submit" class="btn btn-primary px-4">Save Schedule</button>
         </div>
       <% end %>
     </div>
@@ -341,4 +366,21 @@
       });
     });
   });
+
+  document.addEventListener('turbo:load', function () {
+    var triggerTabList = [].slice.call(document.querySelectorAll('#scheduleTabs button'))
+    triggerTabList.forEach(function (triggerEl) {
+      var tabTrigger = new bootstrap.Tab(triggerEl)
+      triggerEl.addEventListener('click', function (event) {
+        event.preventDefault()
+        tabTrigger.show()
+      })
+    })
+  });
+
+  function toggleAllSlots(wday) {
+    const checkboxes = document.querySelectorAll(`.day-chk-${wday}`);
+    const shouldCheck = !checkboxes[0].checked;
+    checkboxes.forEach(c => c.checked = shouldCheck);
+  }
 </script>
