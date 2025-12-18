@@ -212,7 +212,7 @@
     // Initialize Flatpickr (Inline)
     fpInstance = flatpickr("#flatpickr-container", {
       inline: true,
-      minDate: "today",
+      minDate: new Date().getTime() + 24 * 60 * 60 * 1000,
       // Disable logic: Block blackout dates AND days not in allowedDays
       disable: [
         function(date) {
@@ -334,7 +334,7 @@
           <div class="text-center py-5">
             <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
             <h3 class="mt-4">Request Received</h3>
-            <p class="text-muted mb-4 px-4">Your booking request has been received. We will be in touch shortly to confirm the details.</p>
+            <p class="text-muted mb-4 px-4">Your booking request has been received.</p>
           </div>`;
       } else {
         alert("Error: " + data.errors.join(", "));

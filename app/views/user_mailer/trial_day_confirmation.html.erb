@@ -1,0 +1,28 @@
+<p>Dear <%= @visit.first_name %> and <%= @visit.learner_name %>,</p>
+
+<p>We’re thrilled to welcome you for a trial day at <strong><%= @hub.name %></strong> BGA Hub! This experience is designed to give <%= @visit.learner_name %> a genuine feeling of what it’s like to be a BGA learner, surrounded by our community and learning culture.</p>
+
+<p><strong>What to expect from the trial day:</strong></p>
+<ul>
+  <li>The trial day lasts for a minimum of 3 hours.</li>
+  <li>Meet Learning Coaches, who will guide and support the experience.</li>
+  <li>Connect with other learners and get to know potential new colleagues.</li>
+  <li>Explore the different learning platforms and curricula BGA offers.</li>
+  <li>Experience our unique approach to personalised learning.</li>
+</ul>
+
+<p><strong>Please find below the details of your visit:</strong></p>
+<p>
+  <strong>Hub Address:</strong> <%= @hub.address %>
+  <% if @hub.google_map_link.present? %>
+    (<a href="<%= @hub.google_map_link %>">Google Maps</a>)
+  <% end %>
+  <br>
+  <strong>Date and Time:</strong> <%= @visit.start_time.strftime("%A, %B %d, %Y") %> at <%= @visit.start_time.strftime("%H:%M") %><br>
+  <strong>Learning Coaches:</strong> <%= @lcs %>
+</p>
+
+<p>We’re looking forward to welcoming you and giving an exciting and meaningful introduction to our hub. If you need any additional information before the trial day, just let us know.</p>
+
+<p>Warm regards,</p>
+<p><strong>Admissions Team</strong></p>

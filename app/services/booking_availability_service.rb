@@ -40,7 +40,7 @@ class BookingAvailabilityService
       opening_time = Time.zone.parse("#{@date} #{OPENING_HOUR}:00")
       next if start_time < opening_time
       next if start_time > limit_time
-      next if start_time < Time.zone.now + 1.hour
+      next if start_time < Time.zone.now + 24.hours
 
       # Overlap Check
       end_time = start_time + duration.minutes

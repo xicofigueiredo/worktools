@@ -63,21 +63,23 @@ class HubVisitsController < ApplicationController
     @hub = Hub.find(params[:hub_id])
     config = @hub.booking_config
 
-    duration = params[:hub_visit][:visit_type] == 'trial' ? config&.trial_duration : config&.visit_duration
-    duration ||= 60
-
-    date_str = params[:date]
-    time_str = params[:time]
+    duration_minutes = params[:hub_visit][:visit_type] == 'trial' ? 180 : 60
 
     @visit = @hub.hub_visits.new(visit_params)
 
-    if date_str.present? && time_str.present?
-      start_time = Time.zone.parse("#{date_str} #{time_str}")
+    if params[:date].present? && params[:time].present?
+      start_time = Time.zone.parse("#{params[:date]} #{params[:time]}")
       @visit.start_time = start_time
-      @visit.end_time = start_time + duration.minutes
+      @visit.end_time = start_time + duration_minutes.minutes
     end
 
     if @visit.save
+      if @visit.visit?
+        UserMailer.hub_visit_confirmation(@visit).deliver_later
+      elsif @visit.trial?
+        UserMailer.trial_day_confirmation(@visit).deliver_later
+      end
+
       render json: { success: true, message: "Booking Request Sent!" }
     else
       render json: { success: false, errors: @visit.errors.full_messages }, status: :unprocessable_entity

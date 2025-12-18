@@ -243,4 +243,30 @@ class UserMailer < Devise::Mailer
     #   template_name: template_path
     # )
   end
+
+  def hub_visit_confirmation(visit)
+    @visit = visit
+    @hub = visit.hub
+    @lcs = @hub.learning_coaches.map { |u| u.try(:full_name) || u.email }.to_sentence
+
+    mail(
+      to: @visit.email,
+      cc: ApplicationMailer::FROM_CONTACT, # add hub_email
+      from: ApplicationMailer::FROM_CONTACT,
+      subject: "Your Hub Visit for #{@hub.name} Is Confirmed!"
+    )
+  end
+
+  def trial_day_confirmation(visit)
+    @visit = visit
+    @hub = visit.hub
+    @lcs = @hub.learning_coaches.map { |u| u.try(:full_name) || u.email }.to_sentence
+
+    mail(
+      to: @visit.email,
+      cc: ApplicationMailer::FROM_CONTACT, # add hub_email
+      from: ApplicationMailer::FROM_CONTACT,
+      subject: "Your Trial Day Is Booked!"
+    )
+  end
 end
