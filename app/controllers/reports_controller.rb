@@ -52,16 +52,30 @@ class ReportsController < ApplicationController
     else
 
 
-      @learners = User.joins(:users_hubs)
+      hub_learner_ids = User.joins(:users_hubs)
         .joins("INNER JOIN hubs ON hubs.id = users_hubs.hub_id")
         .where(hubs: { id: current_user.hubs.ids }, role: 'learner')
         .where("users.deactivate = ? OR (users.graduated_at BETWEEN ? AND ?)",
                false,
                @sprint.start_date,
                @sprint.end_date)
-        .select('users.*, hubs.name as hub_name')
+        .pluck(:id)
+
+      online_learner_ids = current_user.online_learners
+        .where("users.deactivate = ? OR (users.graduated_at BETWEEN ? AND ?)",
+               false,
+               @sprint.start_date,
+               @sprint.end_date)
+        .pluck(:id)
+
+      all_learner_ids = (hub_learner_ids + online_learner_ids).uniq
+
+      @learners = User.joins("LEFT OUTER JOIN users_hubs ON users_hubs.user_id = users.id")
+        .joins("LEFT OUTER JOIN hubs ON hubs.id = users_hubs.hub_id")
+        .where(id: all_learner_ids, role: 'learner')
+        .select('users.*, COALESCE(MAX(CASE WHEN users_hubs.main = true THEN hubs.name END), MAX(hubs.name), \'Online\') as hub_name')
+        .group('users.id')
         .order('hub_name ASC, users.full_name ASC')
-        .distinct
 
 
       @grouped_learners = @learners.group_by { |learner| learner.hub_name }
