@@ -298,11 +298,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.integer "learning_coach_ids", default: [], array: true
     t.integer "timeline_id"
     t.string "specific_papers"
-<<<<<<< HEAD
     t.string "personalized_exam_date"
-=======
-    t.date "personalized_exam_date"
->>>>>>> adf5c01fee85da3c51fa8ed71244fbef4a9f8312
     t.string "paper1"
     t.string "paper2"
     t.string "paper3"
