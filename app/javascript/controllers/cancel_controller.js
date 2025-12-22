@@ -1,4 +1,3 @@
-// app/javascript/controllers/cancel_controller.js
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
@@ -24,6 +23,13 @@ export default class extends Controller {
       return
     }
 
+    const now = new Date()
+    const currentDay = now.getDate()
+    if (currentDay >= 15) {
+      alert("Cancellations are not allowed on or after the 15th of the month.")
+      return
+    }
+
     const actionUrl = `/leaves/${leaveId}/cancel`
 
     // If leave is pending - immediate cancellation after confirmation (no modal)
@@ -45,17 +51,16 @@ export default class extends Controller {
 
     // compute days until start (local)
     const start = new Date(startDateStr + "T00:00:00")
-    const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const daysUntilStart = Math.ceil((start - today) / (1000 * 60 * 60 * 24))
 
-    if (daysUntilStart >= 16) {
-      // >=16 days: confirm and submit without justification (controller still creates CancellationConfirmation)
+    if (daysUntilStart >= 15) {
+      // >=15 days: confirm and submit without justification (controller still creates CancellationConfirmation)
       if (confirm("Request cancellation? This will notify your managers for review. Your leave days will be reinstated only if a manager approves the cancellation.")) {
         this._submitSimpleForm(actionUrl, { exception_requested: false })
       }
     } else {
-      // <16 days: open modal to require justification
+      // <15 days: open modal to require justification
       this._openModalForReason(actionUrl, daysUntilStart)
     }
   }
@@ -81,7 +86,7 @@ export default class extends Controller {
         if (reason && reason.trim().length > 0) {
           this._submitSimpleForm(actionUrl, { exception_requested: true, exception_reason: reason.trim() })
         } else {
-          alert("Justification is required to request a cancellation within 16 days.")
+          alert("Justification is required to request a cancellation within 15 days.")
         }
       }
     } else {

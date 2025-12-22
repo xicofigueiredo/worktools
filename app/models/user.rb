@@ -40,6 +40,7 @@ class User < ApplicationRecord
   has_many :consents, dependent: :destroy
 
   has_many :staff_leaves, dependent: :destroy, class_name: "StaffLeave"
+  has_many :staff_leave_entitlements, dependent: :destroy, class_name: "StaffLeaveEntitlement"
   has_many :users_departments, dependent: :destroy
   has_many :departments, through: :users_departments, dependent: :destroy
   has_many :managed_departments, class_name: 'Department', foreign_key: 'manager_id'
@@ -109,6 +110,8 @@ class User < ApplicationRecord
   scope :active_learners, -> {
     where(role: 'learner', deactivate: false)
   }
+
+  scope :staff, -> { where(role: STAFF_ROLES) }
 
   def subjects_without_timeline
     Subject.left_outer_joins(:timelines).where(timelines: { user_id: nil })

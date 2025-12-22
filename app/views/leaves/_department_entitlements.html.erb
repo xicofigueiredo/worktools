@@ -1,80 +1,108 @@
-<% year_now = Date.current.year %>
-<% show_actions = current_user.email == 'humanresources@bravegenerationacademy.com' %>
+<% year_now = params[:year].present? ? params[:year].to_i : Date.current.year %>
+<% prev_year = year_now - 1 %>
+<% next_year = year_now + 1 %>
+<% show_actions = @show_hr_view %>
 
 <div class="card mb-4">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Department Entitlements — <%= year_now %></h5>
+  <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <h5 class="mb-0 fw-bold text-dark">Department Entitlements: <%= year_now %></h5>
 
-    <div class="d-flex gap-2 align-items-center">
-      <label class="mb-0 me-2 small text-muted">Filter</label>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="deptFilterDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+          All departments
+        </button>
+        <ul class="dropdown-menu p-2" aria-labelledby="deptFilterDropdownBtn" style="max-height: 300px; overflow-y: auto;">
+          <li>
+            <label class="dropdown-item d-flex gap-2 align-items-center cursor-pointer">
+              <input type="checkbox" class="form-check-input mt-0 filter-checkbox-all" value="all" checked>
+              <span>All departments</span>
+            </label>
+          </li>
+          <li><hr class="dropdown-divider my-1"></li>
+          <% @managed_departments.to_a.each do |d| %>
+            <li>
+              <label class="dropdown-item d-flex gap-2 align-items-center cursor-pointer">
+                <input type="checkbox" class="form-check-input mt-0 filter-checkbox-dept" value="<%= d.id %>">
+                <span><%= d.name %></span>
+              </label>
+            </li>
+          <% end %>
+        </ul>
+      </div>
 
-      <!-- Client-side filter select -->
-      <select id="client-dept-filter" class="form-select form-select-sm">
-        <option value="all">All departments</option>
-        <% @managed_departments.to_a.each do |d| %>
-          <option value="<%= d.id %>"><%= d.name %></option>
+      <div class="d-flex gap-2">
+        <% if show_actions %>
+          <button type="button" class="btn btn-primary btn-sm shadow-sm" id="create-entitlement-btn" title="Create new entitlement">
+            <i class="fa-solid fa-plus me-1"></i> New
+          </button>
         <% end %>
-      </select>
 
-      <!-- Excel-style export button (matches modal button styling) -->
-      <!-- Uses FontAwesome icon if available; otherwise shows "Export" text -->
-      <button id="export-xlsx-btn"
-              type="button"
-              class="btn btn-sm btn-outline-success ms-2"
-              title="Export visible rows to Excel"
-              aria-label="Export visible rows to Excel">
-        <i class="fa-solid fa-file-excel" aria-hidden="true"></i>
-      </button>
+        <button id="export-xlsx-btn" type="button" class="btn btn-outline-success btn-sm" title="Export visible rows to Excel">
+          <i class="fa-solid fa-file-excel me-1"></i> Export
+        </button>
+
+        <div class="btn-group btn-group-sm">
+          <%= link_to leaves_path(year: prev_year, active_tab: 'manager'), class: 'btn btn-outline-secondary' do %>
+            <i class="fas fa-chevron-left"></i> <%= prev_year %>
+          <% end %>
+          <%= link_to leaves_path(year: next_year, active_tab: 'manager'), class: 'btn btn-outline-secondary' do %>
+            <%= next_year %> <i class="fas fa-chevron-right"></i>
+          <% end %>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="card-body p-0">
-    <table class="table table-sm mb-0" id="dept-entitlements-table">
-      <thead class="table-light">
-        <tr>
-          <th>Department</th>
-          <th>Name</th>
-          <th>Total</th>
-          <th>Booked</th>
-          <th>Pending</th>
-          <th>Left</th>
-          <% if show_actions %>
-            <th>Actions</th>
-          <% end %>
-        </tr>
-      </thead>
-
-      <tbody>
-        <% if @rows.blank? %>
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0" id="dept-entitlements-table">
+        <thead class="table-light">
           <tr>
-            <td colspan="<%= show_actions ? 7 : 6 %>" class="text-center text-muted py-3">No users found for the selected departments.</td>
+            <th>Department</th>
+            <th>Name</th>
+            <th>Total</th>
+            <th>Mandatory</th> <th>Booked (Voluntary)</th>
+            <th>Pending</th>
+            <th>Left</th>
+            <% if show_actions %>
+              <th>Actions</th>
+            <% end %>
           </tr>
-        <% else %>
-          <% grouped = @rows.group_by do |r|
-               dept = (r[:primary_department] || r[:departments].first)
-               [dept&.id, dept&.name || "—"]
-             end %>
+        </thead>
 
-          <% grouped.each do |(dept_id, dept_name), rows| %>
-            <% rows.each do |r| %>
+        <tbody>
+          <% if @rows.blank? %>
+            <tr>
+              <td colspan="<%= show_actions ? 8 : 7 %>" class="text-center text-muted py-3">No users found for your departments.</td>
+            </tr>
+          <% else %>
+            <% @rows.each do |r| %>
               <% primary_dept = (r[:primary_department] || r[:departments].first) %>
               <tr data-dept-id="<%= primary_dept&.id %>">
                 <td><%= primary_dept&.name || '—' %></td>
                 <td><%= "#{r[:user].full_name}" %></td>
                 <td><%= r[:total_holidays] %></td>
+
                 <td>
-                  <%= r[:booked_holiday] %>
+                  <%= r[:mandatory_days] %>
+                </td>
+
+                <td>
+                  <%= r[:voluntary_booked] %>
                   <% if r[:booked_carry_over].to_i > 0 %>
-                    <small class="text-muted">(includes <%= r[:booked_carry_over] %> from <%= year_now + 1 %>)</small>
+                    <small class="text-muted">(<%= r[:booked_carry_over] %> carry)</small>
                   <% end %>
                 </td>
+
                 <td>
                   <%= r[:pending_holiday] %>
                   <% if r[:pending_carry_over].to_i > 0 %>
-                    <small class="text-muted">(includes <%= r[:pending_carry_over] %> from <%= year_now + 1 %>)</small>
+                    <small class="text-muted">(<%= r[:pending_carry_over] %> carry)</small>
                   <% end %>
                 </td>
+
                 <td><%= r[:holidays_left] %></td>
+
                 <% if show_actions %>
                   <td>
                     <button type="button"
@@ -90,13 +118,57 @@
               </tr>
             <% end %>
           <% end %>
-        <% end %>
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<div class="modal fade" id="create-entitlement-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Entitlement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="create-entitlement-form">
+          <input type="hidden" name="year" id="create-year" value="<%= year_now %>">
+
+          <div class="mb-3">
+            <label for="create-user-select" class="form-label">Select User <span class="text-danger">*</span></label>
+            <select class="form-select" id="create-user-select" name="user_id" required>
+              <option value="">Loading users...</option>
+            </select>
+            <small class="text-muted">Only staff members without an entitlement for <%= year_now %> are shown.</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="create-start-date" class="form-label">Start Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="create-start-date" name="start_date" required>
+            <small class="text-muted">The date when this person starts working (used to calculate pro-rated holidays).</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="create-annual-holidays" class="form-label">Annual Holidays <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="create-annual-holidays" name="annual_holidays" min="0" value="25" required>
+            <small class="text-muted">This will be auto-calculated based on start date, but you can adjust it.</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="create-holidays-left" class="form-label">Holidays Left <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="create-holidays-left" name="holidays_left" min="0" value="25" required>
+            <small class="text-muted">Usually same as annual holidays for new entitlements.</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="save-create-entitlement">Create Entitlement</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Edit Entitlement Modal -->
 <div class="modal fade" id="edit-entitlement-modal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -128,39 +200,91 @@
   </div>
 </div>
 
-<!-- Inline scripts: filter + client-side XLSX export (SheetJS) -->
 <script>
   document.addEventListener('turbo:load', function () {
-    var clientFilter = document.getElementById('client-dept-filter');
-    var exportBtn = document.getElementById('export-xlsx-btn');
-    if (!clientFilter) return;
+    var filterBtn = document.getElementById('deptFilterDropdownBtn');
+    var allCheckbox = document.querySelector('.filter-checkbox-all');
+    var deptCheckboxes = document.querySelectorAll('.filter-checkbox-dept');
 
-    // restore saved selection (optional)
-    try {
-      var saved = localStorage.getItem('deptFilter');
-      if (saved) clientFilter.value = saved;
-    } catch (e) {}
+    if (filterBtn && allCheckbox && deptCheckboxes) {
 
-    function applyFilter(val) {
-      var allRows = document.querySelectorAll('#dept-entitlements-table tbody tr[data-dept-id]');
-      allRows.forEach(function (row) {
-        if (val === 'all' || val === '' ) {
-          row.style.display = '';
+      function getSelectedIds() {
+        if (allCheckbox.checked) return ['all'];
+        return Array.from(deptCheckboxes)
+          .filter(cb => cb.checked)
+          .map(cb => cb.value);
+      }
+
+      function applyMultiFilter() {
+        var selectedIds = getSelectedIds();
+        var allRows = document.querySelectorAll('#dept-entitlements-table tbody tr[data-dept-id]');
+
+        if (selectedIds.includes('all') || selectedIds.length === 0) {
+          filterBtn.innerText = 'All departments';
+        } else if (selectedIds.length === 1) {
+          var selectedCb = Array.from(deptCheckboxes).find(cb => cb.value === selectedIds[0]);
+          filterBtn.innerText = selectedCb ? selectedCb.nextElementSibling.innerText : '1 selected';
         } else {
-          row.style.display = (row.dataset.deptId === val) ? '' : 'none';
+          filterBtn.innerText = selectedIds.length + ' departments selected';
         }
+
+        allRows.forEach(function (row) {
+          var rowDeptId = row.dataset.deptId;
+          if (selectedIds.includes('all') || selectedIds.includes(rowDeptId)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        try {
+          localStorage.setItem('deptFilterMulti', JSON.stringify(selectedIds));
+        } catch (e) {}
+      }
+
+      allCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          deptCheckboxes.forEach(cb => cb.checked = false);
+        } else {
+           var anyOtherChecked = Array.from(deptCheckboxes).some(cb => cb.checked);
+           if (!anyOtherChecked) this.checked = true;
+        }
+        applyMultiFilter();
       });
+
+      deptCheckboxes.forEach(function(cb) {
+        cb.addEventListener('change', function() {
+          if (this.checked) {
+            allCheckbox.checked = false;
+          } else {
+            var anyChecked = Array.from(deptCheckboxes).some(c => c.checked);
+            if (!anyChecked) allCheckbox.checked = true;
+          }
+          applyMultiFilter();
+        });
+      });
+
+      try {
+        var saved = JSON.parse(localStorage.getItem('deptFilterMulti'));
+        if (Array.isArray(saved) && saved.length > 0) {
+          if (saved.includes('all')) {
+            allCheckbox.checked = true;
+            deptCheckboxes.forEach(cb => cb.checked = false);
+          } else {
+            allCheckbox.checked = false;
+            deptCheckboxes.forEach(cb => {
+              cb.checked = saved.includes(cb.value);
+            });
+          }
+        }
+      } catch (e) {
+        console.log("Error restoring filter", e);
+      }
+
+      applyMultiFilter();
     }
 
-    applyFilter(clientFilter.value);
-
-    clientFilter.addEventListener('change', function () {
-      var val = clientFilter.value;
-      try { localStorage.setItem('deptFilter', val); } catch (e) {}
-      applyFilter(val);
-    });
-
-    // Ensure SheetJS (XLSX) is loaded, then call callback
+    // SheetJS (XLSX) Logic
     function ensureXLSX(callback) {
       if (window.XLSX) return callback();
       var s = document.createElement('script');
@@ -168,12 +292,11 @@
       s.async = true;
       s.onload = function () { callback(); };
       s.onerror = function () {
-        alert('Failed to load Excel export library. Please try again or contact the administrator.');
+        alert('Failed to load Excel export library.');
       };
       document.head.appendChild(s);
     }
 
-    // Export visible rows to .xlsx
     function exportVisibleRowsXLSX() {
       var table = document.getElementById('dept-entitlements-table');
       if (!table) { alert('Table not found'); return; }
@@ -186,7 +309,6 @@
       var visibleData = [];
 
       tbodyRows.forEach(function (row) {
-        // only export data rows that have data-dept-id and are visible
         if (!row.dataset.deptId) return;
         var style = window.getComputedStyle(row);
         if (style.display === 'none') return;
@@ -194,8 +316,7 @@
         var cols = Array.from(row.querySelectorAll('td'));
         if (cols.length === 0) return;
 
-        // Extract text content and trim, exclude actions column
-        var cells = cols.slice(0, 6).map(function (td) {
+        var cells = cols.slice(0, 7).map(function (td) { // Grab first 7 cols (inc mandatory)
           return (td.innerText || '').trim();
         });
         visibleData.push(cells);
@@ -208,15 +329,13 @@
 
       var aoa = [header].concat(visibleData);
 
-      // Use SheetJS to create workbook
       try {
         var ws = XLSX.utils.aoa_to_sheet(aoa);
-
-        // Optional: set column widths (characters)
         ws['!cols'] = [
           { wch: 25 }, // Department
           { wch: 30 }, // Name
           { wch: 10 }, // Total
+          { wch: 10 }, // Mandatory
           { wch: 15 }, // Booked
           { wch: 15 }, // Pending
           { wch: 10 }  // Left
@@ -224,10 +343,8 @@
 
         var wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Entitlements');
-
         var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         var blob = new Blob([wbout], { type: 'application/octet-stream' });
-
         var filename = 'department_entitlements_' + new Date().toISOString().slice(0,10) + '.xlsx';
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
@@ -239,17 +356,131 @@
         URL.revokeObjectURL(url);
       } catch (err) {
         console.error('XLSX export error', err);
-        alert('Failed to export to Excel. Check console for details.');
+        alert('Failed to export to Excel.');
       }
     }
 
+    var exportBtn = document.getElementById('export-xlsx-btn');
     if (exportBtn) {
       exportBtn.addEventListener('click', function () {
         ensureXLSX(function () { exportVisibleRowsXLSX(); });
       });
     }
 
-    // Edit entitlement JS
+    // Create Entitlement Modal Logic
+    var createBtn = document.getElementById('create-entitlement-btn');
+    if (createBtn) {
+      createBtn.addEventListener('click', function () {
+        var modal = new bootstrap.Modal(document.getElementById('create-entitlement-modal'));
+        var userSelect = document.getElementById('create-user-select');
+        var yearNow = <%= year_now %>;
+
+        document.getElementById('create-entitlement-form').reset();
+        document.getElementById('create-year').value = yearNow;
+
+        userSelect.innerHTML = '<option value="">Loading users...</option>';
+        userSelect.disabled = true;
+
+        fetch('/leaves/users_without_entitlement?year=' + yearNow, {
+          method: 'GET',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+          }
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then(data => {
+          userSelect.disabled = false;
+          if (data.users && data.users.length > 0) {
+            userSelect.innerHTML = '<option value="">-- Select a user --</option>';
+            data.users.forEach(user => {
+              var option = document.createElement('option');
+              option.value = user.id;
+              option.textContent = user.name;
+              userSelect.appendChild(option);
+            });
+          } else {
+            userSelect.innerHTML = '<option value="">No users available</option>';
+          }
+        })
+        .catch(err => {
+          userSelect.disabled = false;
+          userSelect.innerHTML = '<option value="">Error loading users</option>';
+        });
+
+        modal.show();
+      });
+    }
+
+    // Pro-rated calc
+    var startDateInput = document.getElementById('create-start-date');
+    var annualHolidaysInput = document.getElementById('create-annual-holidays');
+    var holidaysLeftInput = document.getElementById('create-holidays-left');
+
+    if (startDateInput && annualHolidaysInput && holidaysLeftInput) {
+      startDateInput.addEventListener('change', function () {
+        var startDate = new Date(this.value);
+        var yearNow = <%= year_now %>;
+        var yearStart = new Date(yearNow, 0, 1);
+        var yearEnd = new Date(yearNow, 11, 31);
+
+        if (startDate && !isNaN(startDate.getTime())) {
+          var totalDaysInYear = (yearEnd - yearStart) / (1000 * 60 * 60 * 24) + 1;
+          var daysRemaining = Math.max(0, (yearEnd - startDate) / (1000 * 60 * 60 * 24) + 1);
+          var proRatedHolidays = Math.round((daysRemaining / totalDaysInYear) * 25);
+          annualHolidaysInput.value = proRatedHolidays;
+          holidaysLeftInput.value = proRatedHolidays;
+        }
+      });
+      annualHolidaysInput.addEventListener('input', function () {
+        holidaysLeftInput.value = this.value;
+      });
+    }
+
+    // Save Create
+    var saveCreateBtn = document.getElementById('save-create-entitlement');
+    if (saveCreateBtn) {
+      saveCreateBtn.addEventListener('click', function () {
+        var form = document.getElementById('create-entitlement-form');
+        var data = new FormData(form);
+
+        if (!data.get('user_id') || !data.get('start_date')) {
+          alert('Please fill in all required fields');
+          return;
+        }
+
+        saveCreateBtn.disabled = true;
+        saveCreateBtn.textContent = 'Creating...';
+
+        fetch('/leaves/create_entitlement', {
+          method: 'POST',
+          body: data,
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = '/leaves?active_tab=manager';
+          } else {
+            alert('Failed: ' + (data.error || 'Unknown error'));
+            saveCreateBtn.disabled = false;
+            saveCreateBtn.textContent = 'Create Entitlement';
+          }
+        })
+        .catch(err => {
+          alert('Error: ' + err.message);
+          saveCreateBtn.disabled = false;
+          saveCreateBtn.textContent = 'Create Entitlement';
+        });
+      });
+    }
+
+    // Edit Modal
     document.querySelectorAll('.edit-entitlement').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var userId = btn.dataset.userId;
@@ -263,20 +494,11 @@
         document.getElementById('edit-year').value = year;
         var totalInput = document.getElementById('annual-total');
         var leftInput = document.getElementById('remaining-left');
+
         totalInput.value = currentTotal;
         leftInput.value = currentLeft;
         document.getElementById('current-booked').innerText = currentBooked;
         document.getElementById('current-pending').innerText = currentPending;
-
-        // Enforce non-negative
-        totalInput.addEventListener('input', function () {
-          var val = parseInt(this.value);
-          if (isNaN(val) || val < 0) this.value = 0;
-        });
-        leftInput.addEventListener('input', function () {
-          var val = parseInt(this.value);
-          if (isNaN(val) || val < 0) this.value = 0;
-        });
 
         var modal = new bootstrap.Modal(document.getElementById('edit-entitlement-modal'));
         modal.show();
@@ -289,6 +511,9 @@
         var form = document.getElementById('edit-entitlement-form');
         var data = new FormData(form);
 
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
         fetch('/leaves/update_entitlement', {
           method: 'POST',
           body: data,
@@ -296,13 +521,19 @@
             'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
           }
         }).then(function (response) {
-          if (response.ok) {
+          return response.json();
+        }).then(function (data) {
+          if (data.success) {
             window.location.href = '/leaves?active_tab=manager';
           } else {
-            alert('Failed to update entitlement.');
+            alert('Failed: ' + (data.error || 'Unknown error'));
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save changes';
           }
         }).catch(function (err) {
           alert('Error: ' + err.message);
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save changes';
         });
       });
     }

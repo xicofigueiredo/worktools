@@ -9,6 +9,22 @@ class LeavesController < ApplicationController
     @next_month = @month.next_month
     @prev_month = @month.prev_month
 
+    @show_hr_view = current_user.email == 'humanresources@bravegenerationacademy.com' || current_user.role == 'admin'
+
+    # 1. Calculate Current User Entitlements for the View
+    year_now = Date.current.year
+    user_ent_data = calculate_user_entitlement_data(current_user, year_now)
+
+    # Expose variables for _entitlements.html.erb
+    @current_entitlement_total = user_ent_data[:total_holidays]
+    @current_entitlement_left  = user_ent_data[:holidays_left]
+    @current_mandatory_count   = user_ent_data[:mandatory_days]
+    @current_voluntary_booked  = user_ent_data[:voluntary_booked]
+    @current_pending_holiday   = user_ent_data[:pending_holiday]
+    @current_booked_carry      = user_ent_data[:booked_carry_over]
+    @current_pending_carry     = user_ent_data[:pending_carry_over]
+
+    # 2. Manager View Logic
     if current_user.managed_departments.present?
       prepare_manager_entitlements if current_user&.managed_departments&.present?
       @pending_confirmations = current_user.confirmations.pending
@@ -17,16 +33,53 @@ class LeavesController < ApplicationController
       is_top = depts.all? { |d| d.superior.nil? }
 
       if is_top
-        @department_leaves = StaffLeave.where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month).order(start_date: :asc)
+        @department_leaves = StaffLeave.where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month)
+                                      .where(status: ['pending', 'approved'])
+                                      .order(start_date: :asc)
       else
-        all_users = depts.flat_map do |dept|
-          dept.all_users # Assume recursive method in Department
-        end.uniq
-        @department_leaves = StaffLeave.where(user: all_users).where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month).order(start_date: :asc)
+        all_users = depts.flat_map { |dept| dept.all_users }.uniq
+        @department_leaves = StaffLeave.where(user: all_users)
+                                      .where("start_date <= ? AND end_date >= ?", @month.end_of_month, @month)
+                                      .where(status: ['pending', 'approved'])
+                                      .order(start_date: :asc)
       end
     else
       @pending_confirmations = []
       @department_leaves = []
+    end
+
+    # 3. HR Calendar Logic (Refactored to use Service)
+    if @show_hr_view
+      @hubs = Hub.all
+      @departments = Department.all
+      @users = User.staff
+
+      # Determine Year for Calendar
+      @year = params[:year] ? params[:year].to_i : Date.current.year
+
+      # Resolve Filter Object
+      hub_filter = params[:hub_filter].present? ? Hub.find_by(id: params[:hub_filter]) : nil
+
+      # Call the Service
+      service = CalendarDataService.new(
+        year: @year,
+        hub: hub_filter,
+        country: params[:country_filter],
+        department_id: params[:department_filter],
+        type_filter: params[:type_filter]
+      )
+
+      data = service.call
+
+      # Assign Data for the Shared Partial
+      @holidays_by_date = data[:holidays]
+      @blocked_by_date  = data[:blocked]
+      @mandatory_leaves = data[:mandatory]
+
+      # Initialize Objects for "Add Event" Modals
+      @new_public_holiday = PublicHoliday.new
+      @new_blocked_period = BlockedPeriod.new
+      @new_mandatory_leave = MandatoryLeave.new
     end
   end
 
@@ -112,206 +165,140 @@ class LeavesController < ApplicationController
     @staff_leave = current_user.staff_leaves.find(params[:id])
   end
 
-  # POST /leaves/preview
   def preview
     begin
       start_date = Date.parse(params[:start_date].to_s)
       end_date   = Date.parse(params[:end_date].to_s)
-    rescue ArgumentError
-      return render json: { error: "Invalid start_date or end_date" }, status: :unprocessable_entity
+    rescue ArgumentError, TypeError
+      return render json: { error: "Invalid dates" }, status: :unprocessable_entity
+    end
+
+    if end_date < start_date
+      return render json: { error: "End date must be after start date" }, status: :unprocessable_entity
     end
 
     leave_type = params[:leave_type].to_s
-    if end_date < start_date
-      return render json: { error: "end_date must be the same or after start_date" }, status: :unprocessable_entity
-    end
 
-    # build a StaffLeave to compute totals using model logic (which handles sick/paid vs holiday)
-    staff_leave = StaffLeave.new(user: current_user, start_date: start_date, end_date: end_date, leave_type: leave_type)
-    staff_leave.compute_total_days
+    # 1. Total Days Calculation
+    temp_leave = StaffLeave.new(user: current_user, start_date: start_date, end_date: end_date, leave_type: leave_type)
+    temp_leave.calculate_total_days
+    total_days_count = temp_leave.total_days.to_i
 
-    # Build per-year counts and per-year entitlements
+    # 2. Breakdown by Year
     years = (start_date.year..end_date.year).to_a
     days_by_year = {}
+    years.each do |yr|
+      y_start = [start_date, Date.new(yr, 1, 1)].max
+      y_end   = [end_date, Date.new(yr, 12, 31)].min
+
+      if y_start <= y_end
+        y_leave = StaffLeave.new(user: current_user, start_date: y_start, end_date: y_end, leave_type: leave_type)
+        y_leave.calculate_total_days
+        days_by_year[yr] = y_leave.total_days.to_i
+      else
+        days_by_year[yr] = 0
+      end
+    end
+
+    # 3. Entitlements Preview
     entitlements_by_year = {}
-
     years.each do |yr|
-      # days_in_year uses model logic: consecutive for sick/paid, business days for holiday
-      days_by_year[yr] = staff_leave.days_in_year(yr)
-
       ent = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
-      if ent.new_record?
-        ent.annual_holidays = 25
-        ent.holidays_left = 25
-      end
-
-      if leave_type == 'holiday'
-        entitlements_by_year[yr] = ent.holidays_left.to_i
-      else
-        entitlements_by_year[yr] = 0
-      end
+      # Defaults if record missing
+      val = ent.persisted? ? ent.holidays_left.to_i : 25
+      entitlements_by_year[yr] = leave_type == 'holiday' ? val : 0
     end
 
-    # Jan-Mar carry logic only meaningful for holidays; reuse previous logic (no change)
-    jan_mar_segments = []
-    years.each do |yr|
-      jan_mar_start = Date.new(yr, 1, 1)
-      jan_mar_end   = Date.new(yr, 3, 31)
-      slice_start = [start_date, jan_mar_start].max
-      slice_end   = [end_date, jan_mar_end].min
-      next if slice_start > slice_end
+    # 4. Carry-Over Logic
+    jan_apr_segments = []
 
-      temp_leave = StaffLeave.new(user: current_user, start_date: slice_start, end_date: slice_end, leave_type: leave_type)
-      temp_leave.compute_total_days
-      eligible_carry_days = temp_leave.total_days.to_i
-
-      prev_year = yr - 1
-      prev_ent = StaffLeaveEntitlement.find_by(user: current_user, year: prev_year)
-      if prev_ent.nil?
-        prev_holidays_left = 25
-      else
-        prev_holidays_left = prev_ent.holidays_left.to_i
-      end
-
-      entitlement_for_this_year = StaffLeaveEntitlement.find_or_initialize_by(user: current_user, year: yr)
-      if entitlement_for_this_year.new_record?
-        entitlement_for_this_year.annual_holidays = 25
-        entitlement_for_this_year.holidays_left = 25
-      end
-      days_from_previous_used = entitlement_for_this_year.days_from_previous_year_used.to_i
-
-      previous_year_carry = [[5 - days_from_previous_used, prev_holidays_left].min, eligible_carry_days].min
-      previous_year_carry = [previous_year_carry, 0].max
-
-      jan_mar_segments << {
-        year: yr,
-        eligible_carry_days: eligible_carry_days,
-        previous_year: prev_year,
-        previous_year_holidays_left: prev_holidays_left,
-        previous_year_carry: previous_year_carry,
-        days_from_previous_year_used: days_from_previous_used
-      }
-    end
-
-    # blocked periods & overlaps adjustments:
-    blocked = false
-    blocked_messages = []
     if leave_type == 'holiday'
-      hub_id = current_user.users_hubs.find_by(main: true)&.hub_id
-      department_ids = current_user.department_ids
-      user_type = current_user.role
+      years.each do |yr|
+        # Only check carry over if we are looking at a future year relative to "Now"
+        # AND strictly if yr is the End Date year (to simplify mapping)
+        next unless Date.current.year < yr
 
-      blocked_periods = BlockedPeriod.where("(user_id = :user_id OR user_type = :user_type OR hub_id = :hub_id OR department_id IN (:department_ids)) AND start_date <= :end_date AND end_date >= :start_date",
-                                            user_id: current_user.id, user_type: user_type, hub_id: hub_id, department_ids: department_ids,
-                                            start_date: start_date, end_date: end_date)
-      blocked = blocked_periods.exists?
-      blocked_messages = blocked_periods.map do |bp|
-        scope = if bp.user_id
-                  "your account"
-                elsif bp.user_type
-                  "user type #{bp.user_type}"
-                elsif bp.hub_id
-                  "hub #{Hub.find(bp.hub_id).name}"
-                elsif bp.department_id
-                  "department #{Department.find(bp.department_id).name}"
-                else
-                  "unknown scope"
-                end
-        "Can't take holidays on blocked period from #{bp.start_date} to #{bp.end_date} for #{scope}."
-      end
-    end
+        window_start = Date.new(yr, 1, 1)
+        window_end   = Date.new(yr, 4, 30)
 
-    # overlaps (only for holidays)
-    overlapping_messages = []
-    if leave_type == 'holiday'
-      if current_user.role == 'lc'
-        main_hub = current_user.users_hubs.find_by(main: true)&.hub
-        hub_lc_user_ids = main_hub.users.where(role: 'lc').pluck(:id) - [current_user.id]
+        overlap_start = [start_date, window_start].max
+        overlap_end   = [end_date, window_end].min
 
-        overlapping_leaves = StaffLeave.where(user_id: hub_lc_user_ids, status: ['pending', 'approved'], leave_type: leave_type)
-                                              .where.not("end_date < ? OR start_date > ?", start_date, end_date)
+        if overlap_start <= overlap_end
+          overlap_leave = StaffLeave.new(user: current_user, start_date: overlap_start, end_date: overlap_end, leave_type: 'holiday')
+          overlap_leave.calculate_total_days
+          eligible_carry_days = overlap_leave.total_days.to_i
 
-        overlapping_leaves.each do |leave|
-          status = leave.status
-          date_range = "#{leave.start_date} to #{leave.end_date}"
-          user_name = leave.user.full_name || "A user"
-          hub_name = main_hub.name
-          overlapping_messages << "#{user_name} of your hub #{hub_name} has already a #{status} #{leave_type} on #{date_range}."
-        end
-      else
-        current_user.departments.each do |dept|
-          dept_user_ids = dept.user_ids - [current_user.id]
-          overlapping_leaves = StaffLeave.where(user_id: dept_user_ids,
-                                                status: ['pending', 'approved'],
-                                                leave_type: leave_type)
-                                        .where.not("end_date < ? OR start_date > ?", start_date, end_date)
-          overlapping_leaves.each do |leave|
-            status = leave.status
-            date_range = "#{leave.start_date} to #{leave.end_date}"
-            user_name = leave.user.full_name || "A user"
-            dept_name = dept.name
-            overlapping_messages << "#{user_name} of your #{dept_name} department has already a #{status} #{leave_type} on #{date_range}."
+          if eligible_carry_days > 0
+             prev_year = yr - 1
+             prev_ent = StaffLeaveEntitlement.find_by(user: current_user, year: prev_year)
+             curr_ent = StaffLeaveEntitlement.find_by(user: current_user, year: yr)
+
+             prev_balance = prev_ent ? prev_ent.holidays_left.to_i : 0
+             used_already = curr_ent ? curr_ent.days_from_previous_year_used.to_i : 0
+
+             # Calculate Remaining Previous Balance taking into account THIS request's previous year consumption
+             days_used_in_prev_year = days_by_year[prev_year] || 0
+             real_prev_balance = [prev_balance - days_used_in_prev_year, 0].max
+
+             # Capacity
+             capacity = [5 - used_already, 0].max
+
+             actual_available = [capacity, real_prev_balance].min
+
+             if actual_available > 0
+               jan_apr_segments << {
+                 year: yr,
+                 eligible_carry_days: eligible_carry_days,
+                 previous_year_carry: actual_available,
+                 previous_year: prev_year
+               }
+             end
           end
         end
       end
     end
 
-    # Unified self-overlap check
-    overlapping_conflict = false
-    overlapping_conflict_messages = []
+    # 5. Errors / Soft Validation
+    temp_leave.valid?
+    blocked = temp_leave.errors.where(:base).any? { |e| e.message.include?("Blocked") }
+    blocked_messages = []
+    blocked_messages << "Period contains blocked dates." if blocked
 
-    overlapping_leaves = current_user.staff_leaves.where(status: ['pending', 'approved'])
-                                              .where.not("end_date < ? OR start_date > ?", start_date, end_date)
-    if overlapping_leaves.exists?
-      overlapping_conflict = true
-      overlapping_conflict_messages = overlapping_leaves.map do |leave|
-        "You already have a #{leave.leave_type.titleize} (#{leave.status}) scheduled from #{leave.start_date} to #{leave.end_date}. Please cancel it before proceeding with this request."
-      end
-    end
+    overlapping_conflict = temp_leave.errors.where(:base).any? { |e| e.message.include?("already have") }
 
-    # Additional checks for marriage leave (lifetime unique, even non-overlapping)
-    if leave_type == 'marriage leave'
-      if staff_leave.total_days.to_i > 15
-        overlapping_conflict = true
-        overlapping_conflict_messages << "Marriage leave cannot exceed 15 consecutive days."
-      end
-      if current_user.staff_leaves.where(leave_type: 'marriage leave', status: ['pending', 'approved']).exists?
-        overlapping_conflict = true
-        overlapping_conflict_messages << "You have already requested or taken marriage leave."
-      end
-    end
-
-    sum_entitlements = entitlements_by_year.values.sum
-    sum_possible_carry = jan_mar_segments.map { |s| s[:previous_year_carry].to_i }.sum
-    total_available_including_possible_carry = sum_entitlements + sum_possible_carry
-
+    # Exceeds Check
     exceeds = false
     if leave_type == 'holiday'
-      exceeds = staff_leave.total_days.to_i > total_available_including_possible_carry
+      years.each do |yr|
+        needed = days_by_year[yr] || 0
+        available = entitlements_by_year[yr] || 0
+
+        segment = jan_apr_segments.find { |s| s[:year] == yr }
+        available += segment[:previous_year_carry] if segment
+
+        exceeds = true if needed > available
+      end
     end
 
-    notes_message = leave_type == 'other' ? "This request spans #{staff_leave.total_days.to_i} consecutive days (including weekends/holidays). Provide details in notes." : nil
-
     render json: {
-      total_days: staff_leave.total_days.to_i,
+      total_days: total_days_count,
       days_by_year: days_by_year,
-      jan_mar_segments: jan_mar_segments,
+      jan_apr_segments: jan_apr_segments,
       entitlements_by_year: entitlements_by_year,
-      exceeds: exceeds,
       blocked: blocked,
       blocked_messages: blocked_messages,
-      overlapping_messages: overlapping_messages.uniq,
       overlapping_conflict: overlapping_conflict,
-      overlapping_conflict_messages: overlapping_conflict_messages,
-      notes_message: notes_message
+      exceeds: exceeds
     }
-  rescue => e
-    Rails.logger.error "Leaves#preview error: #{e.class} #{e.message}\n#{e.backtrace.first(10).join("\n")}"
-    render json: { error: "Unexpected error" }, status: 500
   end
 
   def cancel
     @staff_leave = current_user.staff_leaves.find(params[:id])
+
+    if Date.current.day > 15
+      redirect_to leaves_path, alert: 'Cancellations are not allowed after the 15th of the month.' and return
+    end
 
     if @staff_leave.status == 'cancelled'
       redirect_to leaves_path, alert: 'Leave is already cancelled.' and return
@@ -324,7 +311,7 @@ class LeavesController < ApplicationController
     # If leave is pending and nobody approved -> immediate cancel as before
     if @staff_leave.status == 'pending' && approved_confs.none?
       ActiveRecord::Base.transaction do
-        @staff_leave.confirmations.update!(read: true)
+        @staff_leave.confirmations.update!(status: 'cancelled')
         @staff_leave.update!(status: 'cancelled')
       end
       redirect_to leaves_path, notice: 'Pending leave cancelled.' and return
@@ -423,121 +410,197 @@ class LeavesController < ApplicationController
     redirect_to leaves_path(active_tab: 'manager'), alert: "Could not reject confirmation: #{e.record.errors.full_messages.to_sentence}"
   end
 
-  def update_entitlement
-    user_id = params[:user_id]
-    year = params[:year].to_i
-    annual_total = [params[:annual_total].to_i, 0].max
-    new_holidays_left = [params[:new_holidays_left].to_i, 0].max
+  def create_entitlement
+    params = entitlement_params  # Use strong params
+    user = User.find_by(id: params[:user_id])
 
-    user = User.find(user_id)
-
-    # Authorize: check if user is in managed departments' subtree
-    authorized = current_user.managed_departments.any? do |d|
-      user.departments.any? { |ud| d.subtree_ids.include?(ud.id) }
+    unless user
+      render json: { error: 'User not found' }, status: :not_found
+      return
     end
 
-    unless authorized
-      render json: { error: 'Unauthorized' }, status: :unauthorized
+    result = StaffLeaveEntitlement.create_for_user(
+      user: user,
+      year: params[:year].to_i,
+      annual_holidays: [params[:annual_holidays].to_i, 0].max,
+      holidays_left: [params[:holidays_left].to_i, 0].max,
+      manager: current_user
+    )
+
+    if result[:success]
+      render json: { success: true }
+    else
+      render json: { error: result[:error] }, status: result[:status]
+    end
+  rescue => e
+    Rails.logger.error "Create entitlement error: #{e.message}"
+    render json: { error: 'Failed to create entitlement' }, status: :internal_server_error
+  end
+
+  def update_entitlement
+    params = entitlement_params  # Use strong params
+    user = User.find_by(id: params[:user_id])
+    year = params[:year].to_i
+
+    unless user
+      render json: { error: 'User not found' }, status: :not_found
       return
     end
 
     entitlement = StaffLeaveEntitlement.find_or_initialize_by(user: user, year: year)
-    entitlement.annual_holidays = annual_total
-    entitlement.holidays_left = new_holidays_left
-    if entitlement.save
+
+    if entitlement.new_record?
+      result = StaffLeaveEntitlement.create_for_user(
+        user: user,
+        year: year,
+        annual_holidays: [params[:annual_total].to_i, 0].max,
+        holidays_left: [params[:new_holidays_left].to_i, 0].max,
+        manager: current_user
+      )
+    else
+      result = entitlement.update_for_manager(
+        annual_holidays: [params[:annual_total].to_i, 0].max,
+        holidays_left: [params[:new_holidays_left].to_i, 0].max,
+        manager: current_user
+      )
+    end
+
+    if result[:success]
       render json: { success: true }
     else
-      render json: { error: entitlement.errors.full_messages.to_sentence }, status: :unprocessable_entity
+      render json: { error: result[:error] }, status: result[:status]
     end
+  rescue => e
+    Rails.logger.error "Update entitlement error: #{e.message}"
+    render json: { error: 'Failed to update entitlement' }, status: :internal_server_error
   end
 
-  private
+  def users_without_entitlement
+    year = params[:year].presence&.to_i || Date.current.year  # Safety: Default to current year if missing
 
-  def staff_leave_params
-    params.require(:staff_leave).permit(:leave_type, :start_date, :end_date, :exception_requested, :exception_reason, :notes, :exception_errors, :days_from_previous_year)
+    users = StaffLeaveEntitlement.users_without_entitlement(nil, year)
+
+    render json: {
+      users: users.map { |u| { id: u.id, name: u.full_name } }
+    }
+  rescue => e
+    Rails.logger.error "Error fetching users without entitlement: #{e.message}"
+    render json: { error: 'Failed to load users' }, status: :internal_server_error
   end
 
   def prepare_manager_entitlements
-    year_now = Date.current.year
-    next_year = year_now + 1
+    year_now = params[:year].present? ? params[:year].to_i : Date.current.year
 
-    # collect ids for all managed departments (including their sub-departments)
     managed = current_user.managed_departments.to_a
     managed_ids = managed.flat_map { |d| d.subtree_ids }.uniq
-
-    # list of departments to build filter dropdown (only those under manager)
     @managed_departments = Department.where(id: managed_ids).order(:name)
 
-    # Optional server-side filter: only show users who belong to selected department subtree
     if params[:department_id].present? && managed_ids.include?(params[:department_id].to_i)
-      selected_dept = Department.find(params[:department_id])
-      visible_dept_ids = selected_dept.subtree_ids
+      visible_dept_ids = Department.find(params[:department_id]).subtree_ids
     else
       visible_dept_ids = managed_ids
     end
 
-    # fetch users who belong to any of the visible departments
-    # preload departments to avoid N+1 when calling user.departments
     @dept_users = User.joins(:users_departments)
                       .where(users_departments: { department_id: visible_dept_ids })
                       .includes(:departments)
                       .distinct
                       .order('users.full_name')
 
-    user_ids = @dept_users.map(&:id)
-    @rows = []
-    return if user_ids.empty?
-
-    entitlements_by_user = StaffLeaveEntitlement.where(user_id: user_ids, year: year_now).index_by(&:user_id)
-
-    # aggregated sums grouped by user_id
-    pending_current = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'pending')
-                                .where("extract(year from start_date) = ?", year_now)
-                                .group(:user_id).sum(:total_days)
-
-    booked_current  = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'approved')
-                                .where("extract(year from start_date) = ?", year_now)
-                                .group(:user_id).sum(:total_days)
-
-    pending_carry = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'pending')
-                              .where("extract(year from start_date) = ?", next_year)
-                              .group(:user_id).sum(:days_from_previous_year)
-
-    booked_carry  = StaffLeave.where(user_id: user_ids, leave_type: 'holiday', status: 'approved')
-                              .where("extract(year from start_date) = ?", next_year)
-                              .group(:user_id).sum(:days_from_previous_year)
-
     @rows = @dept_users.map do |u|
-      entitlement = entitlements_by_user[u.id]
+      calculate_user_entitlement_data(u, year_now)
+    end
+  end
 
-      total_holidays = entitlement&.annual_holidays || 25
-      pc = pending_current[u.id] || 0
-      bc = booked_current[u.id]  || 0
-      pco = pending_carry[u.id]  || 0
-      bco = booked_carry[u.id]   || 0
+  private
 
-      pending_holiday = pc + pco
-      booked_holiday  = bc + bco
+  def entitlement_params
+    params.permit(:user_id, :year, :annual_holidays, :holidays_left, :annual_total, :new_holidays_left, :start_date)
+  end
 
-      if entitlement
-        holidays_left = [entitlement.holidays_left || total_holidays - booked_holiday, 0].max
+  def staff_leave_params
+    params.require(:staff_leave).permit(:leave_type, :start_date, :end_date, :exception_requested, :exception_reason, :notes, :exception_errors, :days_from_previous_year)
+  end
+
+  def calculate_user_entitlement_data(user, year)
+    entitlement = StaffLeaveEntitlement.find_by(user: user, year: year)
+    total_holidays = entitlement&.annual_holidays || 25
+    holidays_left = entitlement&.holidays_left || 25
+
+    # 1. Fetch relevant leaves (Pending & Approved) that overlap this year
+    # We fetch broadly and filter in Ruby to ensure split-year accuracy
+    leaves = StaffLeave.where(user: user, leave_type: 'holiday', status: ['pending', 'approved'])
+                       .where("start_date <= ? AND end_date >= ?", Date.new(year, 12, 31), Date.new(year, 1, 1))
+
+    pending_days = 0
+    booked_days = 0
+    mandatory_days = 0
+
+    # 2. Calculate "Booked Carry Over" (Days from THIS year used in NEXT year)
+    # Query leaves where end_date is next year and carry > 0
+    next_year = year + 1
+    carry_out_leaves = StaffLeave.where(user: user, leave_type: 'holiday', status: ['pending', 'approved'])
+                                 .where("extract(year from end_date) = ?", next_year)
+                                 .where("days_from_previous_year > 0")
+
+    pending_carry_out = 0
+    booked_carry_out = 0
+
+    carry_out_leaves.each do |l|
+      carry_amt = l.days_from_previous_year.to_i
+      if l.status == 'pending'
+        pending_carry_out += carry_amt
       else
-        holidays_left = [total_holidays - booked_holiday, 0].max
+        booked_carry_out += carry_amt
+      end
+    end
+
+    # 3. Iterate leaves to calculate cost strictly for THIS year
+    leaves.each do |l|
+      # Calculate days falling strictly in `year`
+      days_in_yr = l.days_in_year(year)
+      next if days_in_yr == 0
+
+      cost = days_in_yr
+
+      # ADJUSTMENT: If this leave used carry-over FROM PREVIOUS YEAR (year-1),
+      # we must NOT count those carry-over days as a cost to THIS year.
+      if l.days_from_previous_year.to_i > 0 && l.end_date.year == year
+        # Reduce cost by carry amount (capped by days in this year)
+        carry_used = [l.days_from_previous_year.to_i, days_in_yr].min
+        cost -= carry_used
       end
 
-      primary_dept = u.departments.first # choose a "primary" department - change as appropriate
-
-      {
-        user: u,
-        departments: u.departments.to_a,      # already preloaded
-        primary_department: primary_dept,
-        holidays_left: holidays_left,
-        booked_holiday: booked_holiday,
-        pending_holiday: pending_holiday,
-        booked_carry_over: bco,
-        pending_carry_over: pco,
-        total_holidays: total_holidays
-      }
+      if l.mandatory_leave_id.present?
+        # Mandatory leaves are always 'approved'
+        mandatory_days += cost
+      elsif l.status == 'pending'
+        pending_days += cost
+      elsif l.status == 'approved'
+        booked_days += cost
+      end
     end
+
+    # 4. Add Carry-Out to Usage
+    pending_days += pending_carry_out
+    booked_days += booked_carry_out
+
+    # Final Hash
+    {
+      user: user,
+      departments: user.departments.to_a,
+      primary_department: user.departments.first,
+
+      total_holidays: total_holidays,
+      holidays_left: holidays_left,
+
+      mandatory_days: mandatory_days,
+      voluntary_booked: booked_days,
+      booked_holiday: booked_days + mandatory_days,
+      pending_holiday: pending_days,
+
+      booked_carry_over: booked_carry_out,
+      pending_carry_over: pending_carry_out
+    }
   end
 end

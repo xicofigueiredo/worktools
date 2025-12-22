@@ -1,0 +1,386 @@
+<div class="hub-container px-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-0"><%= @hub.name %> Calendar</h3>
+      <div class="text-muted small">Viewing events for <%= @year %></div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-success text-white" onclick="copyBookingLink()">
+        <i class="fas fa-share-alt"></i> Share Booking Link
+      </button>
+
+      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bookingSettingsModal">
+        <i class="fas fa-cog"></i> Settings
+      </button>
+
+      <button class="btn btn-warning" onclick="openHubBlockModal('<%= Date.current %>')">
+        <i class="fas fa-plus"></i> Block Period
+      </button>
+
+      <div class="btn-group">
+        <%= link_to calendar_hub_path(@hub, year: @prev_year), class: 'btn btn-outline-secondary' do %>
+          <i class="fas fa-chevron-left"></i> <%= @prev_year %>
+        <% end %>
+        <%= link_to hub_path(@hub), class: 'btn btn-primary' do %>
+          <i class="fas fa-columns"></i> Hub Dashboard
+        <% end %>
+        <%= link_to calendar_hub_path(@hub, year: @next_year), class: 'btn btn-outline-secondary' do %>
+          <%= @next_year %> <i class="fas fa-chevron-right"></i>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-3 pb-2 border-bottom">
+    <div class="d-flex gap-3 align-items-center">
+      <div class="legend-item"><div class="legend-box holiday"></div> <span class="small">Public Holiday</span></div>
+      <div class="legend-item"><div class="legend-box mandatory"></div> <span class="small">Mandatory Leave</span></div>
+      <div class="legend-item"><div class="legend-box blocked"></div> <span class="small">Blocked Period</span></div>
+      <div class="legend-item"><div class="legend-box visit"></div><span class="small">Visits/Trials</span></div>
+    </div>
+  </div>
+
+  <%= render partial: "shared/calendar_grid", locals: {
+        year: @year,
+        holidays_by_date: @holidays_by_date,
+        blocked_by_date: @blocked_by_date,
+        mandatory_leaves: @mandatory_leaves,
+        visits_by_date: @visits_by_date,
+        read_only: false,
+        allow_creation: true
+      } %>
+</div>
+
+<div class="modal fade" id="bookingSettingsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Hub Booking Configuration</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <% config = @hub.settings %>
+      <%= form_with(model: config, url: hub_booking_config_path(@hub), method: :patch, local: true) do |f| %>
+        <div class="modal-body">
+          <div class="alert alert-info small mb-3">
+            <i class="fas fa-info-circle"></i>
+            <strong>Note:</strong> Durations are fixed by the system.<br>
+            Hub Visit: <strong><%= HubBookingConfig::VISIT_DURATION %> mins</strong> |
+            Trial Day: <strong><%= HubBookingConfig::TRIAL_DURATION %> mins</strong>
+          </div>
+
+          <h6 class="border-bottom pb-2 mb-3">Weekly Schedule</h6>
+
+          <ul class="nav nav-tabs mb-3" id="scheduleTabs" role="tablist">
+            <% (1..5).each_with_index do |wday, index| %>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link <%= 'active' if index == 0 %>"
+                        id="day-<%= wday %>-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#day-<%= wday %>-content"
+                        type="button" role="tab"
+                        aria-controls="day-<%= wday %>-content"
+                        aria-selected="<%= index == 0 %>">
+                  <%= Date::DAYNAMES[wday] %>
+                </button>
+              </li>
+            <% end %>
+          </ul>
+
+          <div class="tab-content" id="scheduleTabsContent">
+            <% (1..5).each_with_index do |wday, index| %>
+              <div class="tab-pane fade <%= 'show active' if index == 0 %>" id="day-<%= wday %>-content" role="tabpanel" aria-labelledby="day-<%= wday %>-tab">
+                <div class="p-3 border rounded bg-light">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 text-primary">Available Slots for <%= Date::DAYNAMES[wday] %></h6>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllSlots(<%= wday %>)">Toggle All</button>
+                  </div>
+
+                  <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
+                    <%
+                       # Generate 10:00 to 16:00
+                       start_gen = Time.parse("#{HubBookingConfig::OPENING_HOUR}:00")
+                       end_gen = Time.parse("#{HubBookingConfig::CLOSING_HOUR}:00")
+                       current = start_gen
+
+                       # Get currently saved slots for this day (wday)
+                       saved_slots = config.slots_for_day(wday)
+                    %>
+                    <% while current <= end_gen %>
+                      <% time_str = current.strftime("%H:%M") %>
+                      <% is_checked = saved_slots.include?(time_str) %>
+
+                      <div class="form-check position-relative bg-white rounded border px-2 py-1">
+                        <input class="form-check-input ms-0 me-2 day-chk-<%= wday %>"
+                               type="checkbox"
+                               name="hub_booking_config[visit_slots][<%= wday %>][]"
+                               value="<%= time_str %>"
+                               id="slot_<%= wday %>_<%= time_str %>"
+                               <%= 'checked' if is_checked %>>
+                        <label class="form-check-label small stretched-link" for="slot_<%= wday %>_<%= time_str %>">
+                          <%= time_str %>
+                        </label>
+                      </div>
+                      <% current += 30.minutes %>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary px-4">Save Schedule</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="createHubBlockModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Schedule Blocked Period</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with(model: @new_blocked_period, url: blocked_periods_path, local: true) do |f| %>
+        <div class="modal-body">
+          <div class="alert alert-info small mb-3">
+            <i class="fas fa-info-circle"></i> This will block <strong><%= @hub.name %></strong> for all bookings.
+          </div>
+          <%= f.hidden_field :hub_id, value: @hub.id %>
+          <div class="row g-2">
+            <div class="col-6">
+              <%= f.label :start_date, class: "form-label" %>
+              <%= f.date_field :start_date, class: "form-control", id: "modalStartDate", required: true %>
+            </div>
+            <div class="col-6">
+              <%= f.label :end_date, class: "form-label" %>
+              <%= f.date_field :end_date, class: "form-control", id: "modalEndDate", required: true %>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Create Block</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="visitDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header text-white" style="background: linear-gradient(135deg, #0d6efd, #0a58ca);">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fas fa-calendar-check fa-lg"></i>
+          <h5 class="modal-title mb-0" id="visitModalTitle">Visit Details</h5>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="row mb-4">
+          <div class="col-6">
+            <div class="text-uppercase text-muted small fw-bold mb-1">Date</div>
+            <div class="fs-5 text-dark" id="modalVisitDate"></div>
+          </div>
+          <div class="col-6">
+            <div class="text-uppercase text-muted small fw-bold mb-1">Time</div>
+            <div class="fs-5 text-dark" id="modalVisitTime"></div>
+          </div>
+        </div>
+
+        <hr class="text-muted opacity-25">
+
+        <div class="mb-4">
+          <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user-circle me-2"></i>Visitor Information</h6>
+          <div class="ps-3 border-start border-3 border-primary bg-light p-3 rounded-end">
+            <div class="fs-5 fw-bold text-dark mb-1" id="modalVisitName"></div>
+            <div class="d-flex align-items-center gap-3 text-secondary mt-2">
+              <span class="d-flex align-items-center gap-1"><i class="fas fa-envelope text-muted"></i> <span id="modalVisitEmail"></span></span>
+            </div>
+            <div class="d-flex align-items-center gap-3 text-secondary mt-1">
+              <span class="d-flex align-items-center gap-1"><i class="fas fa-phone text-muted"></i> <span id="modalVisitPhone"></span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <h6 class="fw-bold text-success mb-3"><i class="fas fa-graduation-cap me-2"></i>Learner Details</h6>
+          <div class="row g-3">
+            <div class="col-4">
+              <div class="small text-muted">Name</div>
+              <div class="fw-bold" id="modalLearnerName"></div>
+            </div>
+            <div class="col-3">
+              <div class="small text-muted">Age</div>
+              <div class="fw-bold" id="modalLearnerAge"></div>
+            </div>
+            <div class="col-5">
+              <div class="small text-muted">Level</div>
+              <div class="fw-bold" id="modalLearnerLevel"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <h6 class="fw-bold text-secondary mb-2"><i class="fas fa-sticky-note me-2"></i>Special Requests</h6>
+          <div class="p-3 bg-light rounded border small fst-italic text-break" id="modalVisitNotes" style="min-height: 60px;">
+            No special requests.
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light border-top-0">
+        <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">Close Details</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- OPEN VISIT DETAILS MODAL ---
+  window.openVisitModal = function(dataJson) {
+    var data = (typeof dataJson === 'string') ? JSON.parse(dataJson) : dataJson;
+
+    // 1. Force Close All Popovers
+    var popovers = document.querySelectorAll('.popover');
+    popovers.forEach(function(p) { p.remove(); });
+    // Also use Bootstrap API to ensure state is cleared
+    var triggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    triggerList.forEach(function (triggerEl) {
+      var popover = bootstrap.Popover.getInstance(triggerEl);
+      if (popover) popover.hide();
+    });
+
+    // 2. Populate Fields
+    document.getElementById('visitModalTitle').textContent = data.type + " Details";
+    document.getElementById('modalVisitDate').textContent = data.date;
+    document.getElementById('modalVisitTime').textContent = data.time;
+    document.getElementById('modalVisitName').textContent = data.name;
+    document.getElementById('modalVisitEmail').textContent = data.email || "N/A";
+    document.getElementById('modalVisitPhone').textContent = data.phone || "N/A";
+    document.getElementById('modalLearnerName').textContent = data.learner_name || "N/A";
+    document.getElementById('modalLearnerAge').textContent = data.learner_age || "N/A";
+    document.getElementById('modalLearnerLevel').textContent = data.learner_level || "N/A";
+
+    var notesEl = document.getElementById('modalVisitNotes');
+    if (data.notes && data.notes.trim() !== "") {
+      notesEl.textContent = data.notes;
+      notesEl.classList.remove('text-muted');
+    } else {
+      notesEl.textContent = "No special requests.";
+      notesEl.classList.add('text-muted');
+    }
+
+    // 3. Open Modal
+    var modalEl = document.getElementById('visitDetailsModal');
+    var modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  };
+
+  // --- FORCE CLEANUP BACKDROP ---
+  // Fix for gray screen getting stuck
+  document.addEventListener("DOMContentLoaded", function() {
+    var myModalEl = document.getElementById('visitDetailsModal');
+    if(myModalEl) {
+      myModalEl.addEventListener('hidden.bs.modal', function (event) {
+        // Manually remove backdrop
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        // Reset body classes
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
+      });
+    }
+  });
+
+  function copyBookingLink() {
+    const url = "<%= new_hub_hub_visit_url(@hub) %>";
+
+    navigator.clipboard.writeText(url).then(() => {
+      const toast = document.createElement('div');
+      toast.style.position = 'fixed';
+      toast.style.top = '20px';
+      toast.style.right = '20px';
+      toast.style.zIndex = '10000';
+      toast.style.padding = '12px 24px';
+      toast.style.backgroundColor = '#198754';
+      toast.style.color = '#fff';
+      toast.style.borderRadius = '8px';
+      toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      toast.style.fontWeight = '500';
+      toast.style.display = 'flex';
+      toast.style.alignItems = 'center';
+      toast.style.gap = '10px';
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      toast.style.transform = 'translateY(-20px)';
+
+      toast.innerHTML = '<i class="fas fa-check-circle"></i> Booking link copied!';
+      document.body.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+      });
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+      prompt("Could not copy automatically. Please copy this link:", url);
+    });
+  }
+
+  function openHubBlockModal(dateStr) {
+    var modalEl = document.getElementById('createHubBlockModal');
+    if (!modalEl) return;
+    document.getElementById('modalStartDate').value = dateStr;
+    document.getElementById('modalEndDate').value = dateStr;
+    var modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
+
+  document.addEventListener('turbo:load', function () {
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverList = popoverTriggerList.map(function (el) {
+      return new bootstrap.Popover(el, { sanitize: false, container: 'body', trigger: 'click' });
+    });
+
+    document.addEventListener('click', function (e) {
+      popoverList.forEach(function (popover) {
+        if (popover.tip && popover.tip.classList.contains('show')) {
+          if (!popover._element.contains(e.target) && !popover.tip.contains(e.target)) {
+            popover.hide();
+          }
+        }
+      });
+    });
+  });
+
+  document.addEventListener('turbo:load', function () {
+    var triggerTabList = [].slice.call(document.querySelectorAll('#scheduleTabs button'))
+    triggerTabList.forEach(function (triggerEl) {
+      var tabTrigger = new bootstrap.Tab(triggerEl)
+      triggerEl.addEventListener('click', function (event) {
+        event.preventDefault()
+        tabTrigger.show()
+      })
+    })
+  });
+
+  function toggleAllSlots(wday) {
+    const checkboxes = document.querySelectorAll(`.day-chk-${wday}`);
+    const shouldCheck = !checkboxes[0].checked;
+    checkboxes.forEach(c => c.checked = shouldCheck);
+  }
+</script>

@@ -96,14 +96,35 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :hubs, only: [:index, :show]
+    resources :hubs, only: [:index, :show] do
+      member do
+        get :calendar
+      end
+
+      resource :booking_config, controller: 'hub_booking_configs', only: [:create, :update]
+
+      resources :hub_visits, only: [:new, :create] do
+        collection do
+          get :available_slots
+        end
+      end
+    end
 
     resources :pricing_tiers, only: [:index, :update]
+
+    resources :public_holidays, only: [:create, :destroy]
+    resources :blocked_periods, only: [:create, :destroy]
+    resources :mandatory_leaves, only: [:create, :destroy]
 
     resources :leaves, only: [:index, :new, :create, :show] do
       collection do
         post :preview
         post :update_entitlement
+        post :create_entitlement
+        get :users_without_entitlement
+
+        post 'approve_confirmation/:id', to: 'leaves#approve_confirmation', as: 'approve_confirmation'
+        post 'reject_confirmation/:id', to: 'leaves#reject_confirmation', as: 'reject_confirmation'
       end
 
       member do
@@ -112,9 +133,6 @@ Rails.application.routes.draw do
         get 'documents/:doc_id/download', to: 'leaves#download_document', as: 'download_document'
       end
     end
-
-    post 'leaves/approve_confirmation/:id', to: 'leaves#approve_confirmation', as: 'approve_confirmation'
-    post 'leaves/reject_confirmation/:id', to: 'leaves#reject_confirmation', as: 'reject_confirmation'
 
     resources :holidays, except: [:show, :index]
 

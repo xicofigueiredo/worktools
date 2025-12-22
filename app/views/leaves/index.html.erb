@@ -6,35 +6,90 @@
     <div class="alert alert-danger"><%= alert %></div>
   <% end %>
 
-  <% if current_user.managed_departments.present? %>
+  <% active_tab = params[:active_tab].presence || 'my-leaves' %>
+
+  <% if current_user.managed_departments.present? || @show_hr_view %>
     <ul class="nav nav-tabs" id="leavesTabs" role="tablist">
+
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="my-leaves-tab" data-bs-toggle="tab" data-bs-target="#my-leaves" type="button" role="tab" aria-controls="my-leaves" aria-selected="true">
+        <button class="nav-link <%= 'active' if active_tab == 'my-leaves' %>"
+                id="my-leaves-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#my-leaves"
+                type="button"
+                role="tab"
+                aria-controls="my-leaves"
+                aria-selected="<%= active_tab == 'my-leaves' %>">
           <h2>My Leaves</h2>
         </button>
       </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="manager-tab" data-bs-toggle="tab" data-bs-target="#manager" type="button" role="tab" aria-controls="manager" aria-selected="false">
-          <h2>Manager Dashboard</h2>
-        </button>
-      </li>
+
+      <% if current_user.managed_departments.present? %>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link <%= 'active' if active_tab == 'manager' %>"
+                  id="manager-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#manager"
+                  type="button"
+                  role="tab"
+                  aria-controls="manager"
+                  aria-selected="<%= active_tab == 'manager' %>">
+            <h2>Manager Dashboard</h2>
+          </button>
+        </li>
+      <% end %>
+
+      <% if @show_hr_view %>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link <%= 'active' if active_tab == 'calendar' %>"
+                  id="calendar-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#calendar"
+                  type="button"
+                  role="tab"
+                  aria-controls="calendar"
+                  aria-selected="<%= active_tab == 'calendar' %>">
+            <h2>Calendar View</h2>
+          </button>
+        </li>
+      <% end %>
     </ul>
 
     <div class="tab-content mt-4" id="leavesTabsContent">
-      <div class="tab-pane fade show active" id="my-leaves" role="tabpanel" aria-labelledby="my-leaves-tab">
+
+      <div class="tab-pane fade <%= 'show active' if active_tab == 'my-leaves' %>"
+           id="my-leaves"
+           role="tabpanel"
+           aria-labelledby="my-leaves-tab">
         <div class="px-4">
           <%= render 'entitlements' %>
           <%= render 'leave_requests', leaves: @user_leaves %>
         </div>
       </div>
 
-      <div class="tab-pane fade" id="manager" role="tabpanel" aria-labelledby="manager-tab">
-        <div class="px-4">
-          <%= render 'pending_confirmations' %>
-          <%= render 'department_entitlements' %>
-          <%= render 'department_holidays' %>
+      <% if current_user.managed_departments.present? %>
+        <div class="tab-pane fade <%= 'show active' if active_tab == 'manager' %>"
+             id="manager"
+             role="tabpanel"
+             aria-labelledby="manager-tab">
+          <div class="px-4">
+            <%= render 'pending_confirmations' %>
+            <%= render 'department_entitlements' %>
+            <%= render 'department_holidays' %>
+          </div>
         </div>
-      </div>
+      <% end %>
+
+      <% if @show_hr_view %>
+        <div class="tab-pane fade <%= 'show active' if active_tab == 'calendar' %>"
+             id="calendar"
+             role="tabpanel"
+             aria-labelledby="calendar-tab">
+          <div class="px-4">
+            <%= render 'hr_calendar' %>
+          </div>
+        </div>
+      <% end %>
     </div>
   <% else %>
     <div class="px-4">
@@ -45,49 +100,24 @@
 </div>
 
 <script>
-  function activateTab() {
-    // Get the active tab from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const activeTab = urlParams.get('active_tab');
-
-    if (activeTab) {
-      // Remove active class from all tabs
-      document.querySelectorAll('.nav-link').forEach(tab => {
-        tab.classList.remove('active');
-        tab.setAttribute('aria-selected', 'false');
-      });
-
-      // Remove active class from all tab panes
-      document.querySelectorAll('.tab-pane').forEach(pane => {
-        pane.classList.remove('show', 'active');
-      });
-
-      // Activate the specified tab
-      const targetTab = document.querySelector(`#${activeTab}-tab`);
-      const targetPane = document.querySelector(`#${activeTab}`);
-
-      if (targetTab && targetPane) {
-        targetTab.classList.add('active');
-        targetTab.setAttribute('aria-selected', 'true');
-        targetPane.classList.add('show', 'active');
-      }
-    }
-  }
-
-  // Run on initial page load
-  document.addEventListener('DOMContentLoaded', activateTab);
-
   document.addEventListener('turbo:load', function() {
-    if (typeof activateTab === 'function') {
-      try { activateTab() } catch (e) { console.error('activateTab() error', e) }
-    }
-
-    // If Bootstrap is present, initialise all tooltips
+    // Initialise Tooltips
     if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
       var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
       tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el) })
     }
-  })
+
+    // Update URL when tab is clicked
+    var tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabEls.forEach(function(tabEl) {
+      tabEl.addEventListener('shown.bs.tab', function (event) {
+        var tabId = event.target.id.replace('-tab', '');
+        var newUrl = new URL(window.location);
+        newUrl.searchParams.set('active_tab', tabId);
+        window.history.replaceState({}, '', newUrl);
+      });
+    });
+  });
 </script>
 
 <style>

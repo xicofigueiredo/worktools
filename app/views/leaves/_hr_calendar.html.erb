@@ -1,0 +1,283 @@
+<% year = params[:year] ? params[:year].to_i : Date.current.year %>
+<% prev_year = year - 1 %>
+<% next_year = year + 1 %>
+
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Calendar: <%= year %></h5>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createEventModal">
+        <i class="fas fa-plus"></i> Add Event
+      </button>
+      <div class="btn-group btn-group-sm">
+        <%= link_to leaves_path(year: prev_year, month: params[:month], active_tab: 'calendar'), class: 'btn btn-outline-secondary' do %>
+          <i class="fas fa-chevron-left"></i> <%= prev_year %>
+        <% end %>
+        <%= link_to leaves_path(year: next_year, month: params[:month], active_tab: 'calendar'), class: 'btn btn-outline-secondary' do %>
+          <%= next_year %> <i class="fas fa-chevron-right"></i>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="filter-section mb-4">
+      <form id="calendarFilters">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Country</label>
+            <select class="form-select form-select-sm" id="countryFilter" name="country_filter">
+              <option value="">All Countries</option>
+              <% countries = @hubs.map(&:country).compact.uniq.sort %>
+              <% countries.each do |country| %>
+                <option value="<%= country %>" <%= 'selected' if params[:country_filter] == country %>><%= country %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Hub</label>
+            <select class="form-select form-select-sm" id="hubFilter" name="hub_filter">
+              <option value="">All Hubs</option>
+              <% @hubs.each do |hub| %>
+                <option value="<%= hub.id %>" data-country="<%= hub.country %>" <%= 'selected' if params[:hub_filter].to_i == hub.id %>><%= hub.name %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Department</label>
+            <select class="form-select form-select-sm" id="departmentFilter" name="department_filter">
+              <option value="">All Departments</option>
+              <% @departments.each do |dept| %>
+                <option value="<%= dept.id %>" <%= 'selected' if params[:department_filter].to_i == dept.id %>><%= dept.name %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Type</label>
+            <select class="form-select form-select-sm" id="typeFilter" name="type_filter">
+              <option value="">All Types</option>
+              <option value="holidays" <%= 'selected' if params[:type_filter] == 'holidays' %>>Holidays Only</option>
+              <option value="blocked" <%= 'selected' if params[:type_filter] == 'blocked' %>>Blocked Periods Only</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="mb-4 pb-2 border-bottom">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="small text-muted me-2">Legend:</span>
+        <div class="legend-item"><div class="legend-box holiday"></div> <span class="small">Public Holiday</span></div>
+        <div class="legend-item"><div class="legend-box mandatory"></div> <span class="small">Mandatory Leave</span></div>
+        <div class="legend-item"><div class="legend-box blocked"></div> <span class="small">Blocked Period</span></div>
+      </div>
+    </div>
+
+    <% if @holidays_by_date.blank? && @blocked_by_date.blank? && @mandatory_leaves.blank? %>
+      <div class="text-center py-5">
+        <p class="text-muted mb-0">No events found for <%= year %> with the selected filters.</p>
+      </div>
+    <% else %>
+      <%= render partial: "shared/calendar_grid", locals: {
+            year: year,
+            holidays_by_date: @holidays_by_date,
+            blocked_by_date: @blocked_by_date,
+            mandatory_leaves: @mandatory_leaves,
+            read_only: false
+          } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="modal fade" id="createEventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Calendar Event</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Event Type</label>
+          <select class="form-select" id="eventTypeSelector">
+            <option value="holiday">Public Holiday</option>
+            <option value="blocked">Blocked Period</option>
+            <option value="mandatory">Mandatory Leave</option>
+          </select>
+        </div>
+
+        <div id="form-holiday-section">
+          <%= form_with(model: @new_public_holiday, url: public_holidays_path, local: true) do |f| %>
+            <div class="mb-3">
+              <%= f.label :name, class: "form-label" %>
+              <%= f.text_field :name, class: "form-control", required: true %>
+            </div>
+            <div class="mb-3">
+              <%= f.label :date, class: "form-label" %>
+              <%= f.date_field :date, class: "form-control", required: true, value: Date.current %>
+            </div>
+            <div class="mb-3 form-check">
+              <%= f.check_box :recurring, class: "form-check-input" %>
+              <%= f.label :recurring, "Recurring every year?", class: "form-check-label" %>
+            </div>
+            <hr>
+            <p class="small text-muted mb-2">Scope (Optional)</p>
+            <div class="row g-2">
+              <div class="col-6">
+                <%= f.label :country, "Country", class: "form-label small" %>
+                <%= f.select :country, @hubs.map(&:country).compact.uniq.sort, { include_blank: "Global / All" }, { class: "form-select form-select-sm" } %>
+              </div>
+              <div class="col-6">
+                <%= f.label :hub_id, "Hub", class: "form-label small" %>
+                <%= f.collection_select :hub_id, @hubs, :id, :name, { include_blank: "None" }, { class: "form-select form-select-sm" } %>
+              </div>
+            </div>
+            <div class="mt-3 text-end">
+              <button type="submit" class="btn btn-success">Create Holiday</button>
+            </div>
+          <% end %>
+        </div>
+
+        <div id="form-blocked-section" style="display: none;">
+          <%= form_with(model: @new_blocked_period, url: blocked_periods_path, local: true) do |f| %>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <%= f.label :start_date, class: "form-label" %>
+                <%= f.date_field :start_date, class: "form-control", required: true %>
+              </div>
+              <div class="col-6">
+                <%= f.label :end_date, class: "form-label" %>
+                <%= f.date_field :end_date, class: "form-control", required: true %>
+              </div>
+            </div>
+            <hr>
+            <div class="mb-3">
+              <label class="form-label">Who is this blocked for?</label>
+              <select class="form-select" id="blockedTargetSelector">
+                <option value="global">Entire Organization</option>
+                <option value="hub">Specific Hub</option>
+                <option value="department">Specific Department</option>
+                <option value="user">Specific User</option>
+              </select>
+            </div>
+            <div id="target-hub" class="target-group mb-3" style="display:none;">
+              <%= f.collection_select :hub_id, @hubs, :id, :name, { include_blank: "Select Hub..." }, { class: "form-select" } %>
+            </div>
+            <div id="target-department" class="target-group mb-3" style="display:none;">
+              <%= f.collection_select :department_id, @departments, :id, :name, { include_blank: "Select Department..." }, { class: "form-select" } %>
+            </div>
+            <div id="target-user" class="target-group mb-3" style="display:none;">
+              <%= f.collection_select :user_id, @users, :id, :full_name, { include_blank: "Select User..." }, { class: "form-select" } %>
+            </div>
+            <div class="mt-3 text-end">
+              <button type="submit" class="btn btn-warning">Create Block</button>
+            </div>
+          <% end %>
+        </div>
+
+        <div id="form-mandatory-section" style="display: none;">
+          <%= form_with(model: @new_mandatory_leave, url: mandatory_leaves_path, local: true) do |f| %>
+            <div class="mb-3">
+              <%= f.label :name, class: "form-label" %>
+              <%= f.text_field :name, class: "form-control", required: true %>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <%= f.label :start_date, class: "form-label" %>
+                <%= f.date_field :start_date, class: "form-control", required: true %>
+              </div>
+              <div class="col-6">
+                <%= f.label :end_date, class: "form-label" %>
+                <%= f.date_field :end_date, class: "form-control", required: true %>
+              </div>
+            </div>
+            <div class="mb-3 form-check">
+              <%= f.check_box :global, class: "form-check-input" %>
+              <%= f.label :global, "Apply to Everyone? (Uncheck for LC/CM only)", class: "form-check-label" %>
+            </div>
+            <div class="mt-3 text-end">
+              <button type="submit" class="btn btn-danger">Create Mandatory</button>
+            </div>
+          <% end %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('turbo:load', function () {
+    // 1. Initialize Popovers
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverList = popoverTriggerList.map(function (el) {
+      return new bootstrap.Popover(el, { sanitize: false, container: 'body', trigger: 'click' });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', function (e) {
+      popoverList.forEach(function (popover) {
+        if (popover.tip && popover.tip.classList.contains('show')) {
+          if (!popover._element.contains(e.target) && !popover.tip.contains(e.target)) {
+            popover.hide();
+          }
+        }
+      });
+    });
+
+    // 2. Filter Logic (Hub/Country Sync)
+    var countryFilter = document.getElementById('countryFilter');
+    var hubFilter = document.getElementById('hubFilter');
+    if (countryFilter && hubFilter) {
+      countryFilter.addEventListener('change', function() {
+        var selectedVal = this.value;
+        var hubOptions = hubFilter.querySelectorAll('option');
+        hubOptions.forEach(function(opt) {
+          if (opt.value === '') { opt.style.display = ''; return; }
+          opt.style.display = (!selectedVal || opt.dataset.country === selectedVal) ? '' : 'none';
+        });
+        if (hubFilter.value && hubFilter.selectedOptions[0].style.display === 'none') hubFilter.value = '';
+      });
+    }
+
+    // Auto-submit filters
+    document.querySelectorAll('.filter-section select').forEach(s => {
+      s.addEventListener('change', function() {
+        var params = new URLSearchParams(window.location.search);
+        var formData = new FormData(document.getElementById('calendarFilters'));
+        formData.forEach((v, k) => v ? params.set(k, v) : params.delete(k));
+        if (!params.has('year')) params.set('year', '<%= year %>');
+        params.set('active_tab', 'calendar');
+        window.location.href = window.location.pathname + '?' + params.toString();
+      });
+    });
+
+    // 3. Modal Form Toggles
+    var typeSelector = document.getElementById('eventTypeSelector');
+    if(typeSelector) {
+      typeSelector.addEventListener('change', function() {
+        ['form-holiday-section', 'form-blocked-section', 'form-mandatory-section'].forEach(id => {
+          document.getElementById(id).style.display = 'none';
+        });
+        if(this.value === 'holiday') document.getElementById('form-holiday-section').style.display = 'block';
+        if(this.value === 'blocked') document.getElementById('form-blocked-section').style.display = 'block';
+        if(this.value === 'mandatory') document.getElementById('form-mandatory-section').style.display = 'block';
+      });
+    }
+
+    var targetSelector = document.getElementById('blockedTargetSelector');
+    if(targetSelector) {
+      targetSelector.addEventListener('change', function() {
+        document.querySelectorAll('.target-group').forEach(el => el.style.display = 'none');
+        if(this.value !== 'global') {
+          var target = document.getElementById('target-' + this.value);
+          if(target) target.style.display = 'block';
+        }
+      });
+    }
+  });
+</script>

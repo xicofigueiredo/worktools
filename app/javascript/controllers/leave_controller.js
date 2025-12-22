@@ -1,4 +1,3 @@
-// app/javascript/controllers/leave_controller.js
 import { Controller } from "@hotwired/stimulus"
 
 function debounce(fn, wait = 300) {
@@ -12,522 +11,394 @@ function debounce(fn, wait = 300) {
 export default class extends Controller {
   static targets = [
     "start", "end", "type",
-    "message", "exception", "exceptionReason",
-    "exceptionBtn", "submit", "exceptionRequested", "exceptionErrors",
-    "documentsWrapper", "form", "reason", "documentsLabel", "documentsText",
-    // carry-over targets
-    "daysFromPrevWrapper", "daysFromPrevCheckbox", "daysFromPrevInput", "daysFromPrevInfo", "daysFromPreviousHidden"
+    "message", "submit",
+    "exception", "exceptionReason", "exceptionBtn", "exceptionRequested", "exceptionErrors",
+    "documentsWrapper", "documentsLabel", "documentsText",
+    "daysFromPrevWrapper", "daysFromPrevCheckbox", "daysFromPrevInput", "daysFromPrevInfo", "daysFromPreviousHidden",
+    "form", "reason"
   ]
 
   static values = {
     advanceDays: Number,
     previewUrl: String,
-    confirmationId: Number
+    userBirthdate: String // Defined to receive birthdate from view
   }
 
   connect() {
-    if (!this.hasAdvanceDaysValue) this.advanceDaysValue = 20
-    if (this.hasExceptionTarget) this._hide(this.exceptionTarget)
-    this._disableSubmit(true)
-    this._debouncedPreview = debounce(() => this.fetchPreview(), 250)
-    this.softErrors = []
-    this.hardErrors = []
-    this.totalDays = 0
-    this.daysByYear = {}
-    this.janMarSegments = []
-    this.selectedJanMarSegment = null
-    this.remainingEntitlements = {}
-    this.eligibleCarryDays = 0
-    this.previousCarryAvailable = 0
-    this.leaveYear = null
+    if (this.hasStartTarget && this.hasEndTarget) {
+      if (!this.hasAdvanceDaysValue) this.advanceDaysValue = 30
 
-    // initial type detection & change handler
-    let initialType = ""
-    if (this.hasTypeTarget) {
-      initialType = this.typeTarget.value || ""
-      this.typeTarget.addEventListener('change', () => {
-        this.isSick = (this.typeTarget.value || "").toLowerCase().includes('sick')
-        this.isPaid = (this.typeTarget.value || "").toLowerCase().includes('paid')
-        this._toggleDocumentRequired()
-        try { this.validate() } catch (e) { /* ignore */ }
-      })
-    } else {
-      const el = this.element.querySelector('[data-leave-target="type"]')
-      if (el) initialType = el.value || ""
-    }
+      this._disableSubmit(true)
+      this._debouncedPreview = debounce(() => this.fetchPreview(), 250)
 
-    // FIX: use initialType (type variable not defined here previously)
-    this.isSick = initialType.toLowerCase().includes('sick')
-    this.isPaid = initialType.toLowerCase().includes('paid')
-    this.isMarriage = initialType.toLowerCase().includes('marriage')
-    this.isParental = initialType.toLowerCase().includes('parental')
-    this.isOther = initialType.toLowerCase().includes('other')
+      if (this.hasExceptionTarget) this._hide(this.exceptionTarget)
+      if (this.hasExceptionBtnTarget) this._hide(this.exceptionBtnTarget)
+      if (this.hasDaysFromPrevWrapperTarget) this._hide(this.daysFromPrevWrapperTarget)
 
-    if (this.hasStartTarget && this.hasEndTarget && this.hasTypeTarget) {
-      this.validate()
-    } else {
-      this._toggleDocumentField()
+      this.softErrors = []
+      this.hardErrors = []
+
+      if (this.hasDaysFromPrevInputTarget) {
+        this.daysFromPrevInputTarget.addEventListener('input', (e) => this.updateCarryInput(e))
+      }
+
       this._toggleDocumentRequired()
     }
-
-    if (this.hasExceptionErrorsTarget && this.element) {
-      this.element.addEventListener('submit', (ev) => {
-        try {
-          if (!this.hasExceptionErrorsTarget) return
-          const userMsgs = Array.isArray(this.softErrors) ? this.softErrors.slice() : []
-          const approverMsgs = userMsgs.map((msg) => {
-            if (/book holidays .* days in advance/i.test(msg) || /fewer than .* days’ notice/i.test(msg)) {
-              return `Didn't ask for holidays with ${this.advanceDaysValue} days of advance`
-            }
-            return msg
-          })
-          const payload = { user: userMsgs, approver: approverMsgs }
-          this.exceptionErrorsTarget.value = JSON.stringify(payload)
-        } catch (e) {
-          console.error("Error writing exception errors to hidden field:", e)
-        }
-      })
-    }
-
-    // init carry UI hidden
-    if (this.hasDaysFromPrevWrapperTarget) {
-      this._hide(this.daysFromPrevWrapperTarget)
-      if (this.hasDaysFromPrevInputTarget) {
-        this.daysFromPrevInputTarget.disabled = true
-        this.daysFromPrevInputTarget.value = 0
-      }
-      if (this.hasDaysFromPreviousHiddenTarget) {
-        this.daysFromPreviousHiddenTarget.value = 0
-      }
-      if (this.hasDaysFromPrevCheckboxTarget) {
-        this.daysFromPrevCheckboxTarget.checked = false
-      }
-    }
-
-    // ensure file required flag is in sync
-    this._toggleDocumentRequired()
   }
 
-  validate() {
-    this._clearMessage()
-
-    const start = this._parseDate(this.startTarget?.value)
-    const end   = this._parseDate(this.endTarget?.value)
-    const type  = (this.typeTarget?.value || "holiday").toLowerCase()
-
-    // keep flags in sync for client-side logic (use safe optional chaining)
-    this.isSick = (type || '').toLowerCase().includes('sick')
-    this.isPaid = (type || '').toLowerCase().includes('paid')
-    this.isMarriage = (type || '').toLowerCase().includes('marriage')
-    this.isParental = (type || '').toLowerCase().includes('parental')
-    this.isOther = (type || '').toLowerCase().includes('other')
-    this._toggleDocumentRequired()
-
-    this.hardErrors = []
-    this.softErrors = []
-
-    // advance-warning applies only to holidays
-    this.advanceWarningMessage = null
-    if (type === "holiday" && start) {
-      const daysUntilStart = this._daysBetween(this._todayLocal(), start)
-      if (daysUntilStart < this.advanceDaysValue) {
-        this.advanceWarningMessage = `Vacation requests made with fewer than ${this.advanceDaysValue} days’ notice require a written justification. This justification will be reviewed and shared directly with your managers, who may approve or reject the request.`
-        this.softErrors.push(this.advanceWarningMessage)
-      }
-    }
-
-    if (start && end && end < start) {
-      this.hardErrors.push("End date must be the same or after the start date")
-    }
-
-    // If we have a valid date range, and leave is sick/paid (or other consecutive-type), compute consecutive-day counts locally
-    if (start && end) {
-      // keep flags in sync again
-      this.isSick = (type || '').toLowerCase().includes('sick')
-      this.isPaid = (type || '').toLowerCase().includes('paid')
-      this.isMarriage = (type || '').toLowerCase().includes('marriage')
-      this.isParental = (type || '').toLowerCase().includes('parental')
-      this.isOther = (type || '').toLowerCase().includes('other')
-
-      this.totalDays = 0
-      this.daysByYear = {}
-
-      if (this.isSick || this.isPaid || this.isMarriage || this.isParental || this.isOther) {
-        // compute per-year consecutive days locally so the info line appears instantly
-        const localDaysByYear = this._computeConsecutiveDaysByYear(this.startTarget.value, this.endTarget.value)
-        this.daysByYear = localDaysByYear
-        // totalDays is sum of all years
-        this.totalDays = Object.values(localDaysByYear).reduce((s, v) => s + Number(v || 0), 0)
-      }
-    }
-
-    // front-end paid-leave minimum validation (consecutive calendar days)
-    if (start && end && this.isPaid) {
-      const daysCount = this.totalDays || (() => {
-        const s = this._parseDate(this.startTarget.value)
-        const e = this._parseDate(this.endTarget.value)
-        return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1
-      })()
-      if (daysCount < 30) {
-        this.hardErrors.push(`Paid leave must be at least 30 consecutive days.`)
-      }
-    }
-
-    // marriage rule example (keeps selected count for message if you want)
-    if (start && end && this.isMarriage) {
-      const daysCount = this.totalDays || (() => {
-        const s = this._parseDate(this.startTarget.value)
-        const e = this._parseDate(this.endTarget.value)
-        return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1
-      })()
-      if (daysCount > 15) {
-        this.hardErrors.push(`Marriage leave cannot exceed 15 consecutive days (selected: ${daysCount} day(s)).`)
-      }
-    }
-
-    if (start && end && this.hardErrors.length === 0) {
-      this.displayMessages()
-      this._setMessage("Checking dates...", "info")
-      this._disableSubmit(true)
-      this._debouncedPreview()
-    } else {
-      this.displayMessages()
-    }
-
-    this._toggleDocumentField()
-  }
-
+  // --- Manager Dashboard: Open Reject Modal ---
   open(event) {
     event.preventDefault()
     const btn = event.currentTarget
     const url = btn.dataset.rejectUrl
-
-    if (this.hasFormTarget && url) {
-      this.formTarget.action = url
-    }
+    if (this.hasFormTarget && url) this.formTarget.action = url
 
     const modalEl = document.getElementById('rejectModal')
-    if (modalEl) {
-      this._rejectModal = new bootstrap.Modal(modalEl)
-      this._rejectModal.show()
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      const modal = new bootstrap.Modal(modalEl)
+      modal.show()
     }
   }
 
-  showException(event) {
-    if (event && event.preventDefault) event.preventDefault()
+  // --- Main Validation Logic ---
+  validate() {
+    this.softErrors = []
+    this.hardErrors = []
+    this._clearMessage()
 
-    if (this._exceptionShown()) {
-      this._hide(this.exceptionTarget)
-      if (this.hasExceptionRequestedTarget) this.exceptionRequestedTarget.value = "false"
+    let startVal = this.startTarget.value
+    let endVal = this.endTarget.value
+    const type = (this.typeTarget.value || "").toLowerCase()
+
+    // -----------------------------------------------------------
+    // 1. BIRTHDAY LOGIC (Auto-Select & Lock)
+    // -----------------------------------------------------------
+    if (type === 'birthday') {
+      const birthdateStr = this.userBirthdateValue
+
+      // Lock inputs so user cannot change them manually
+      this.startTarget.readOnly = true
+      this.endTarget.readOnly = true
+      this.startTarget.classList.add("bg-light")
+      this.endTarget.classList.add("bg-light")
+
+      if (!birthdateStr) {
+        this.hardErrors.push("Birthdate is missing from your profile. Please contact HR.")
+        this.displayMessages()
+        return
+      } else {
+        // Calculate Next Birthday
+        const today = new Date()
+        today.setHours(0,0,0,0)
+
+        const [y, m, d] = birthdateStr.split('-').map(Number)
+        let nextBday = new Date(today.getFullYear(), m - 1, d)
+
+        // If birthday has passed this year, use next year
+        if (nextBday.getTime() < today.getTime()) {
+          nextBday.setFullYear(today.getFullYear() + 1)
+        }
+
+        // Format to YYYY-MM-DD
+        const year = nextBday.getFullYear()
+        const month = String(nextBday.getMonth() + 1).padStart(2, '0')
+        const day = String(nextBday.getDate()).padStart(2, '0')
+        const formatted = `${year}-${month}-${day}`
+
+        // Auto-fill inputs
+        this.startTarget.value = formatted
+        this.endTarget.value = formatted
+
+        // Update local vars
+        startVal = formatted
+        endVal = formatted
+      }
     } else {
-      if (this.hasExceptionTarget) this._show(this.exceptionTarget)
-      if (this.hasExceptionRequestedTarget) this.exceptionRequestedTarget.value = "true"
-      if (this.hasExceptionReasonTarget) {
-        try { this.exceptionReasonTarget.focus() } catch (e) { /* ignore */ }
+      // Unlock inputs for other types
+      this.startTarget.readOnly = false
+      this.endTarget.readOnly = false
+      this.startTarget.classList.remove("bg-light")
+      this.endTarget.classList.remove("bg-light")
+    }
+
+    this._toggleDocumentField()
+
+    // -----------------------------------------------------------
+    // 2. CHECK EMPTY DATES
+    // -----------------------------------------------------------
+    if (!startVal || !endVal) return
+
+    const start = this._parseDate(startVal)
+    const end = this._parseDate(endVal)
+
+    // -----------------------------------------------------------
+    // 3. HARD VALIDATIONS (Client Side)
+    // -----------------------------------------------------------
+    if (end < start) {
+      this.hardErrors.push("End date must be the same or after the start date")
+    }
+
+    const daysCount = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1
+
+    if (type.includes('paid') && daysCount < 30) {
+      this.hardErrors.push(`Paid leave must be at least 30 consecutive days.`)
+    }
+
+    if (type.includes('marriage') && daysCount > 15) {
+      this.hardErrors.push(`Marriage leave cannot exceed 15 consecutive days.`)
+    }
+
+    // -----------------------------------------------------------
+    // 4. SOFT VALIDATIONS (Advance Notice)
+    // -----------------------------------------------------------
+    if (type === 'holiday') {
+      const daysUntilStart = this._daysBetween(this._todayLocal(), start)
+      if (daysUntilStart < this.advanceDaysValue) {
+        this.softErrors.push(`Requests made with fewer than ${this.advanceDaysValue} days’ notice require a written justification.`)
       }
     }
 
-    this.displayMessages()
+    // -----------------------------------------------------------
+    // 5. DECISION
+    // -----------------------------------------------------------
+    if (this.hardErrors.length > 0) {
+      this.displayMessages()
+    } else {
+      this._setMessage("Checking availability...", "info")
+      this._debouncedPreview()
+    }
   }
 
-  exceptionInput() { this.displayMessages() }
-
+  // --- Server Preview ---
   async fetchPreview() {
-    this.hardErrors = []
-    this.softErrors = []
-    const start = this.startTarget?.value
-    const end   = this.endTarget?.value
-    const type  = this.typeTarget?.value
+    const start = this.startTarget.value
+    const end = this.endTarget.value
+    const type = this.typeTarget.value
 
-    if (!start || !end) return
-
-    this.isSick = (type || '').toLowerCase().includes('sick')
-    this.isPaid = (type || '').toLowerCase().includes('paid')
-    this.isMarriage = (type || '').toLowerCase().includes('marriage')
-    this.isParental = (type || '').toLowerCase().includes('parental')
-    this.isOther = (type || '').toLowerCase().includes('other')
-
-    const token = document.querySelector('meta[name="csrf-token"]')?.content
     try {
       const resp = await fetch(this.previewUrlValue, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": token
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify({ start_date: start, end_date: end, leave_type: type })
       })
+      const data = await resp.json()
 
-      const json = await resp.json()
-      if (!resp.ok) {
-        const msg = (json && json.error) ? json.error : `Preview failed (${resp.status})`
-        this.hardErrors.push(msg)
+      if (data.error) {
+        this.hardErrors.push(data.error)
         this.displayMessages()
         return
       }
 
-      // Use server-provided totals (server ensures consecutive days for sick/paid)
-      this.totalDays = Number(json.total_days || 0)
-      this.daysByYear = json.days_by_year || {}
-      this.janMarSegments = json.jan_mar_segments || []
-      this.remainingEntitlements = json.entitlements_by_year || {}
-      this.leaveYear = this._parseDate(start) ? this._parseDate(start).getFullYear() : null
+      this.totalDays = data.total_days
+      this.daysByYear = data.days_by_year || {}
+      this.carrySegments = data.jan_apr_segments || []
 
-      // select first applicable Jan-Mar segment that has carry available
-      this.selectedJanMarSegment = null
-      for (const seg of this.janMarSegments) {
-        if (Number(seg.previous_year_carry || 0) > 0) { this.selectedJanMarSegment = seg; break }
+      // High Duration Warning (Safety Check)
+      if (this.totalDays > 40) {
+        this.softErrors.push(`⚠️ <strong>High day count detected (${this.totalDays} days).</strong><br>Please check your <strong>End Date</strong> year.`)
       }
 
-      this.previousCarryAvailable = this.selectedJanMarSegment ? Number(this.selectedJanMarSegment.previous_year_carry || 0) : 0
-      this.eligibleCarryDays = this.selectedJanMarSegment ? Number(this.selectedJanMarSegment.eligible_carry_days || 0) : 0
-
-      // prepare messages
-      this.softErrors = []
-      if (this.advanceWarningMessage) this.softErrors.push(this.advanceWarningMessage)
-      if (json.advance_warning_message && !this.softErrors.includes(json.advance_warning_message)) {
-        this.softErrors.push(json.advance_warning_message)
-      }
-
-      // entitlement exceed message only for holidays
-      if (!this.isSick && !this.isPaid && json.exceeds) {
-        const entSum = Object.values(this.remainingEntitlements).reduce((a,b)=>a+Number(b||0),0)
-        const sumPrevCarry = (this.janMarSegments || []).reduce((s,seg) => s + Number(seg.previous_year_carry || 0), 0)
-        const available = entSum + sumPrevCarry
-        const yearList = Object.keys(this.daysByYear).map(k => Number(k)).sort()
-        const splitMsg = yearList.length > 1 ? ` (${yearList.map(y => `${this.daysByYear[y] || 0} in ${y}`).join(', ')})` : ''
-        this.softErrors.push(`You only have ${available} days left to take ${type}s${splitMsg} (carry-over may be available for Jan–Mar segments).`)
-      }
-
-      // BLOCKED messages only for holidays
-      if (!this.isSick && !this.isPaid && Array.isArray(json.blocked_messages)) this.softErrors.push(...(json.blocked_messages || []))
-
-      // overlapping conflicts:
-      if (json.overlapping_conflict) {
-        if (Array.isArray(json.overlapping_conflict_messages)) {
-          this.hardErrors.push(...json.overlapping_conflict_messages)
-        } else if (Array.isArray(json.overlapping_messages)) {
-          this.hardErrors.push(...json.overlapping_messages)
-        }
-      } else {
-        if (Array.isArray(json.overlapping_messages)) this.softErrors.push(...(json.overlapping_messages || []))
-      }
-
-      // self overlap (same-type) is always a hard error
-      if (json.overlapping_self) {
-        if (!Array.isArray(this.hardErrors)) this.hardErrors = []
-        this.hardErrors.push(json.overlapping_self_message)
-      }
-
-      // carry UI handling: hide for sick and paid leaves
-      if (this.hasDaysFromPrevWrapperTarget) {
-        if (this.isSick || this.isPaid) {
-          this._hide(this.daysFromPrevWrapperTarget)
-          if (this.hasDaysFromPrevInputTarget) {
-            this.daysFromPrevInputTarget.value = 0
-            this.daysFromPrevInputTarget.disabled = true
-          }
-          if (this.hasDaysFromPreviousHiddenTarget) {
-            this.daysFromPreviousHiddenTarget.value = 0
-          }
-          if (this.hasDaysFromPrevCheckboxTarget) {
-            this.daysFromPrevCheckboxTarget.checked = false
-          }
+      // Server Flags
+      if (data.blocked) {
+        if (data.blocked_messages && data.blocked_messages.length > 0) {
+          this.softErrors.push(...data.blocked_messages)
         } else {
-          // original carry UI logic omitted for brevity (unchanged)
-          // ... same as previous controller ...
+          this.softErrors.push("Selected period overlaps with a blocked period.")
         }
       }
 
+      if (data.overlapping_conflict) {
+        if (type === 'birthday') {
+          this.hardErrors.push("You already scheduled your next birthday leave. Please wait for it to pass to schedule the next one.")
+        }
+        else if (data.overlapping_conflict_messages && data.overlapping_conflict_messages.length > 0) {
+          this.hardErrors.push(...data.overlapping_conflict_messages)
+        } else {
+          this.hardErrors.push("You already have a request for this period.")
+        }
+      }
+
+      if (data.exceeds) {
+        this.softErrors.push("You do not have enough days in your entitlement.")
+      }
+
+      this.handleCarryUI()
       this.displayMessages()
-    } catch (err) {
-      console.error("Preview fetch error:", err)
-      this.hardErrors.push("Could not validate dates right now. Try again.")
-      this.displayMessages()
+
+    } catch (e) {
+      console.error(e)
+      this._setMessage("Validation error. Please try again.", "error")
     }
   }
 
+  // --- Display Messages ---
+  displayMessages() {
+    const messages = []
+
+    if (this.hardErrors.length > 0) {
+      this.hardErrors.forEach(msg => messages.push(`<div class="text-danger fw-bold"><i class="fas fa-times-circle"></i> ${msg}</div>`))
+      this._setMessage(messages.join(""), "error")
+      this._disableSubmit(true)
+      this._hide(this.exceptionBtnTarget)
+      return
+    }
+
+    if (this.softErrors.length > 0) {
+      this.softErrors.forEach(msg => messages.push(`<div class="text-orange"><i class="fas fa-exclamation-triangle"></i> ${msg}</div>`))
+
+      this._show(this.exceptionBtnTarget)
+
+      const exceptionOpen = this._exceptionShown()
+      const reasonProvided = this.hasExceptionReasonTarget && this.exceptionReasonTarget.value.trim().length > 0
+
+      if (exceptionOpen && reasonProvided) {
+        this._disableSubmit(false)
+      } else {
+        this._disableSubmit(true)
+      }
+
+      if (this.hasExceptionErrorsTarget) {
+        this.exceptionErrorsTarget.value = JSON.stringify({ user: this.softErrors, approver: this.softErrors })
+      }
+    } else {
+      this._hide(this.exceptionBtnTarget)
+      this._disableSubmit(false)
+      if (this.hasExceptionErrorsTarget) this.exceptionErrorsTarget.value = ""
+    }
+
+    const infoHtml = this.buildInfoHtml()
+    if (infoHtml) {
+      messages.push(`<div class="mt-2 pt-2 border-top text-dark">${infoHtml}</div>`)
+    }
+
+    if (this.softErrors.length > 0) {
+      this._setMessage(messages.join(""), "mixed")
+    } else {
+      this._setMessage(messages.join(""), "success")
+    }
+  }
+
+  // --- Carry Over ---
+  handleCarryUI() {
+    if (!this.hasDaysFromPrevWrapperTarget) return
+
+    if (this.carrySegments.length > 0) {
+      const segment = this.carrySegments[0]
+      this._show(this.daysFromPrevWrapperTarget)
+      this.currentSegment = segment
+      this.maxCarry = Math.min(segment.previous_year_carry, segment.eligible_carry_days)
+      if (this.hasDaysFromPrevInputTarget) this.daysFromPrevInputTarget.max = this.maxCarry
+      if (this.hasDaysFromPrevInfoTarget) {
+        this.daysFromPrevInfoTarget.innerHTML = `Available from ${segment.previous_year}: <strong>${segment.previous_year_carry}</strong>. (Max usable: ${this.maxCarry})`
+      }
+    } else {
+      this._hide(this.daysFromPrevWrapperTarget)
+      this.currentSegment = null
+      this.resetCarry()
+    }
+  }
+
+  buildInfoHtml() {
+    if (this.totalDays === undefined || this.totalDays === null) return null
+
+    const type = (this.typeTarget.value || "").toLowerCase()
+    if (type === 'birthday') {
+       const start = this.startTarget.value
+       if (!start) return null
+       const [y, m, d] = start.split('-')
+       return `You are scheduling your birthday leave for: <strong>${d}/${m}/${y}</strong> and this will <strong>not</strong> take days from your ${y} entitlement.`
+    }
+
+    const carryUsed = parseInt(this.daysFromPreviousHiddenTarget.value) || 0
+    let breakdown = { ...this.daysByYear }
+
+    if (this.currentSegment && carryUsed > 0) {
+      const tYear = this.currentSegment.year
+      const sYear = this.currentSegment.previous_year
+      if (breakdown[tYear]) breakdown[tYear] -= carryUsed
+      if (!breakdown[sYear]) breakdown[sYear] = 0
+      breakdown[sYear] += carryUsed
+    }
+
+    let parts = []
+    Object.keys(breakdown).sort().forEach(y => {
+      const d = breakdown[y]
+      if (d > 0) {
+        let txt = `<strong>${d} days</strong> from ${y}`
+        if (this.currentSegment && carryUsed > 0 && parseInt(y) === this.currentSegment.previous_year) {
+          txt += ` <small class="text-muted">(includes ${carryUsed} carry-over)</small>`
+        }
+        parts.push(txt)
+      }
+    })
+    return `Total: <strong>${this.totalDays} days</strong>.<br>Usage: ${parts.join(" + ")}`
+  }
+
   toggleUseCarry() {
-    if (!this.hasDaysFromPrevCheckboxTarget || !this.hasDaysFromPrevInputTarget || !this.hasDaysFromPreviousHiddenTarget) return
     const checked = this.daysFromPrevCheckboxTarget.checked
     this.daysFromPrevInputTarget.disabled = !checked
-    if (!checked) {
-      this.daysFromPrevInputTarget.value = 0
-      this.daysFromPreviousHiddenTarget.value = 0
+    if(checked) {
+      this.daysFromPrevInputTarget.value = this.maxCarry
+      this.daysFromPreviousHiddenTarget.value = this.maxCarry
     } else {
-      const max = Number(this.daysFromPrevInputTarget.max || 0)
-      this.daysFromPrevInputTarget.value = max
-      this.daysFromPreviousHiddenTarget.value = max
+      this.resetCarry()
     }
     this.displayMessages()
   }
 
-  daysFromPrevInputTargetConnected(target) {
-    target.addEventListener('input', (ev) => {
-      let v = Number(ev.target.value || 0)
-      const max = Number(ev.target.max || 0)
-      const min = Number(ev.target.min || 0)
-      v = Math.max(min, Math.min(max, v))
-      ev.target.value = v
-      if (this.hasDaysFromPreviousHiddenTarget) this.daysFromPreviousHiddenTarget.value = v
-      this.displayMessages()
-    })
+  updateCarryInput(e) {
+    let val = parseInt(e.target.value) || 0
+    if(val > this.maxCarry) val = this.maxCarry
+    if(val < 0) val = 0
+    e.target.value = val
+    this.daysFromPreviousHiddenTarget.value = val
+    this.displayMessages()
   }
 
-  // allocation & message builder (keeps same structure as before)
-  displayMessages() {
-    const bypassed = this._exceptionShown() && this._hasExceptionReason()
-    const effectiveSoftErrors = bypassed ? [] : this.softErrors
-
-    const allMessages = []
-    if (this.hardErrors.length > 0) {
-      allMessages.push(...this.hardErrors.map(msg => `<span class="text-danger">${msg}</span>`))
+  resetCarry() {
+    if(this.hasDaysFromPrevInputTarget) {
+      this.daysFromPrevInputTarget.value = 0
+      this.daysFromPrevInputTarget.disabled = true
     }
-    if (this.softErrors.length > 0) {
-      allMessages.push(...this.softErrors.map(msg => `<span class="text-orange">${msg}</span>`))
-    }
+    if(this.hasDaysFromPrevCheckboxTarget) this.daysFromPrevCheckboxTarget.checked = false
+    if(this.hasDaysFromPreviousHiddenTarget) this.daysFromPreviousHiddenTarget.value = 0
+  }
 
-    const startVal = this.hasStartHiddenTarget ? (this.startHiddenTarget.value || "").toString().trim()
-                    : (this.hasStartTarget ? (this.startTarget.value || "").toString().trim() : "")
-    const endVal   = this.hasEndHiddenTarget   ? (this.endHiddenTarget.value || "").toString().trim()
-                    : (this.hasEndTarget ? (this.endTarget.value || "").toString().trim() : "")
-
-    const datesFilled = startVal.length > 0 && endVal.length > 0
-
-    const infos = []
-    if (datesFilled) {
-      const allocation = {}
-      Object.keys(this.daysByYear || {}).forEach(k => { allocation[Number(k)] = Number(this.daysByYear[k] || 0) })
-      const carrySelected = this.hasDaysFromPreviousHiddenTarget ? Number(this.daysFromPreviousHiddenTarget.value || 0) : 0
-
-      if (!this.isSick && !this.isPaid && carrySelected > 0 && this.selectedJanMarSegment) {
-        const segYear = Number(this.selectedJanMarSegment.year)
-        const prevYear = Number(this.selectedJanMarSegment.previous_year)
-        if (allocation[prevYear] == null) allocation[prevYear] = 0
-        if (allocation[segYear] == null) allocation[segYear] = 0
-        const carry = Math.min(carrySelected, allocation[segYear] + carrySelected)
-        allocation[prevYear] = (allocation[prevYear] || 0) + carry
-        allocation[segYear] = Math.max(0, (allocation[segYear] || 0) - carry)
-      }
-
-      const yearKeys = Object.keys(allocation).map(k => Number(k)).sort((a,b)=>a-b)
-
-      if (yearKeys.length === 0 && this.totalDays > 0) {
-        infos.push(`This will take ${this.totalDays} day(s) in the selected range.`)
-      } else if (yearKeys.length === 1) {
-        if (this.isSick) {
-          infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} day(s) of sick leave.`)
-        } else if (this.isPaid) {
-          infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of paid leave.`)
-        } else if (this.isMarriage) {
-          infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of marriage leave.`)
-        } else if (this.isParental) {
-          infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s) of parental leave.`)
-        } else if (this.isOther) {
-          infos.push(`This request is equivalent to ${allocation[yearKeys[0]]} consecutive day(s). Provide explanation in notes.`)
-        } else {
-          infos.push(`This will take ${allocation[yearKeys[0]]} day(s) of your entitlement for ${yearKeys[0]}.`)
-        }
-      } else if (yearKeys.length > 1) {
-        if (this.isSick) {
-          const parts = []
-          for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
-          infos.push(`This request is equivalent to ${this.totalDays} day(s) of sick leave: ${parts.join(' and ')}.`)
-        } else if (this.isPaid) {
-          const parts = []
-          for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
-          infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s) of paid leave: ${parts.join(' and ')}.`)
-        } else if (this.isMarriage) {
-          const parts = []
-          for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
-          infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s) of marriage leave: ${parts.join(' and ')}.`)
-        } else if (this.isParental) {
-          const parts = []
-          for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
-          infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s) of parental leave: ${parts.join(' and ')}.`)
-        } else if (this.isOther) {
-          const parts = []
-          for (const y of yearKeys) parts.push(`${allocation[y]} in ${y}`)
-          infos.push(`This request is equivalent to ${this.totalDays} consecutive day(s): ${parts.join(' and ')}. Provide explanation in notes.`)
-        } else {
-          const parts = []
-          for (const y of yearKeys) parts.push(`${allocation[y]} day(s) from ${y}`)
-          infos.push(`This will take ${parts.join(' and ')}.`)
-        }
-      }
-    }
-
-    if (infos.length > 0) {
-      allMessages.push(...infos.map(msg => `<span class="text-dark">${msg}</span>`))
-    }
-
-    if (allMessages.length > 0) {
-      this._setMessage(allMessages.join("<br>"), "mixed")
+  showException(e) {
+    if (e) e.preventDefault()
+    if (this._exceptionShown()) {
+      this._hide(this.exceptionTarget)
+      if (this.hasExceptionRequestedTarget) this.exceptionRequestedTarget.value = "false"
     } else {
-      this._clearMessage()
+      this._show(this.exceptionTarget)
+      if (this.hasExceptionRequestedTarget) this.exceptionRequestedTarget.value = "true"
+      if (this.hasExceptionReasonTarget) this.exceptionReasonTarget.focus()
     }
-
-    if (this.softErrors.length > 0) {
-      this._showExceptionBtn()
-    } else {
-      this._hideExceptionBtn()
-    }
-
-    const canSubmit = this.hardErrors.length === 0 && (bypassed || effectiveSoftErrors.length === 0)
-    this._disableSubmit(!canSubmit)
+    this.displayMessages()
   }
 
-  // helpers...
-  _parseDate(v) { if (!v) return null; const d = new Date(v + "T00:00:00"); return isNaN(d.getTime()) ? null : d }
-  _todayLocal() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()) }
-  _daysBetween(a, b) { return Math.ceil((b - a) / (1000 * 60 * 60 * 24)) }
-
-  _hide(el) { if (el) el.style.display = "none" }
-  _show(el) { if (el) el.style.display = "block" }
-  _setMessage(html, type="info") {
-    if (!this.hasMessageTarget) return;
-    this.messageTarget.innerHTML = html;
-    this.messageTarget.className = "";
-    if (type !== "mixed") {
-      this.messageTarget.classList.add(type === "error" ? "text-danger" : "text-info")
-    }
-  }
-  _clearMessage() { if (!this.hasMessageTarget) return; this.messageTarget.innerHTML = ""; this.messageTarget.className = "" }
-  _disableSubmit(flag) { if (this.hasSubmitTarget) this.submitTarget.disabled = !!flag }
-  _exceptionShown() { return this.hasExceptionTarget && this.exceptionTarget.style.display !== "none" }
-  _hasExceptionReason() { return this.hasExceptionReasonTarget && this.exceptionReasonTarget.value.trim().length > 0 }
-  _showExceptionBtn() { if (this.hasExceptionBtnTarget) this.exceptionBtnTarget.style.display = "inline-block" }
-  _hideExceptionBtn() { if (this.hasExceptionBtnTarget) this.exceptionBtnTarget.style.display = "none" }
+  exceptionInput() { this.displayMessages() }
 
   _toggleDocumentField() {
     if (this.hasDocumentsWrapperTarget) {
-      const type = (this.typeTarget?.value || "").toLowerCase()
-      if (type.includes('sick') || type.includes('marriage') || type.includes('parental')) {
+      const type = (this.typeTarget.value || "").toLowerCase()
+      const showDocs = type.includes('sick') || type.includes('marriage') || type.includes('parental')
+      if (showDocs) {
         this._show(this.documentsWrapperTarget)
         if (this.hasDocumentsLabelTarget) {
-          if (type.includes('sick')) {
-            this.documentsLabelTarget.textContent = 'Medical documents'
-          } else if (type.includes('marriage')) {
-            this.documentsLabelTarget.textContent = 'Marriage documents'
-          } else if (type.includes('parental')) {
-            this.documentsLabelTarget.textContent = 'Parental documents'
-          }
+          if (type.includes('sick')) this.documentsLabelTarget.textContent = 'Medical documents'
+          else if (type.includes('marriage')) this.documentsLabelTarget.textContent = 'Marriage documents'
+          else if (type.includes('parental')) this.documentsLabelTarget.textContent = 'Parental documents'
         }
-        if (this.hasDocumentsTextTarget) {
-          if (type.includes('sick')) {
-            this.documentsTextTarget.innerHTML = 'Upload a medical report or justification for sick leave. Only PDF and Word documents are allowed.'
-          } else if (type.includes('marriage')) {
-            this.documentsTextTarget.innerHTML = 'Upload required documents (e.g., marriage certificate) for marriage leave. Only PDF and Word documents are allowed.'
-          } else if (type.includes('parental')) {
-            this.documentsTextTarget.innerHTML = 'Upload required documents (e.g., birth certificate) for parental leave. Only PDF and Word documents are allowed.'
-          }
-        }
+        this._toggleDocumentRequired()
       } else {
         this._hide(this.documentsWrapperTarget)
+        this._toggleDocumentRequired()
       }
     }
-    // update required attribute if needed
-    this._toggleDocumentRequired()
   }
 
   _toggleDocumentRequired() {
@@ -540,20 +411,20 @@ export default class extends Controller {
     }
   }
 
-  // Helper: compute consecutive calendar days per year for a date range
-  _computeConsecutiveDaysByYear(startIso, endIso) {
-    // startIso/endIso are ISO strings like "2025-09-01"
-    const start = this._parseDate(startIso)
-    const end = this._parseDate(endIso)
-    if (!start || !end || end < start) return {}
+  _parseDate(v) { if(!v) return null; return new Date(v) }
+  _todayLocal() { const d = new Date(); d.setHours(0,0,0,0); return d }
+  _daysBetween(a, b) { return Math.ceil((b - a) / (1000 * 60 * 60 * 24)) }
+  _show(el) { if(el) el.style.display = "block" }
+  _hide(el) { if(el) el.style.display = "none" }
 
-    const byYear = {}
-    let d = new Date(start.getFullYear(), start.getMonth(), start.getDate())
-    while (d <= end) {
-      const y = d.getFullYear()
-      byYear[y] = (byYear[y] || 0) + 1
-      d.setDate(d.getDate() + 1)
+  _setMessage(html, type) {
+    this.messageTarget.innerHTML = html
+    this.messageTarget.className = ""
+    if (type !== "mixed") {
+      this.messageTarget.classList.add(type === "error" ? "text-danger" : "text-success")
     }
-    return byYear
   }
+  _clearMessage() { this.messageTarget.innerHTML = ""; this.messageTarget.className = "" }
+  _disableSubmit(flag) { if(this.hasSubmitTarget) this.submitTarget.disabled = flag }
+  _exceptionShown() { return this.hasExceptionTarget && this.exceptionTarget.style.display !== "none" }
 }

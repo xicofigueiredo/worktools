@@ -74,7 +74,7 @@
                   <td><%= leave.status.capitalize %></td>
 
                   <td class="text-nowrap">
-                    <%= button_to approve_confirmation_path(conf),
+                    <%= button_to approve_confirmation_leaves_path(conf),
                           method: :post,
                           data: { confirm: 'Approve?' },
                           form: { class: 'd-inline' },
@@ -90,7 +90,7 @@
                       title="Reject"
                       aria-label="Reject"
                       data-action="click->leave#open"
-                      data-reject-url="<%= reject_confirmation_path(conf) %>">
+                      data-reject-url="<%= reject_confirmation_leaves_path(conf) %>">
                       <i class="fa fa-times" aria-hidden="true"></i>
                     </button>
 

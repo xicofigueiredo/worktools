@@ -1,0 +1,27 @@
+<p>Dear <%= @visit.first_name %> and <%= @visit.learner_name %>,</p>
+
+<p>Thank you for scheduling your visit. We’re very excited to welcome you at the <strong><%= @hub.name %></strong> BGA hub. This is a great opportunity to experience our learning environment up close and get a real sense of how our model works in practice.</p>
+
+<p><strong>What to expect from your hub visit:</strong></p>
+<ul>
+  <li>Your visit will last between 30 minutes and 1 hour.</li>
+  <li>Explore the hub environment and see how it operates day to day.</li>
+  <li>Meet our Learning Coaches, who play a key role in supporting learners.</li>
+  <li>Get a feel for the atmosphere, routines, and learning culture in a BGA hub.</li>
+</ul>
+
+<p><strong>Please find below the details of your visit:</strong></p>
+<p>
+  <strong>Hub Address:</strong> <%= @hub.address %>
+  <% if @hub.google_map_link.present? %>
+    (<a href="<%= @hub.google_map_link %>">Google Maps</a>)
+  <% end %>
+  <br>
+  <strong>Date and Time:</strong> <%= @visit.start_time.strftime("%A, %B %d, %Y") %> at <%= @visit.start_time.strftime("%H:%M") %><br>
+  <strong>Learning Coaches:</strong> <%= @lcs %>
+</p>
+
+<p>We look forward to meeting you soon and helping you take the next step in your admissions journey. If you have any questions before your visit, feel free to reach out.</p>
+
+<p>Warm regards,</p>
+<p><strong>Admissions Team</strong></p>

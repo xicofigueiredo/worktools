@@ -2,7 +2,7 @@ class Confirmation < ApplicationRecord
   belongs_to :confirmable, polymorphic: true
   belongs_to :approver, class_name: 'User'
 
-  STATUSES = %w[pending approved rejected].freeze
+  STATUSES = %w[pending approved rejected cancelled].freeze
   validates :status, inclusion: { in: STATUSES }
 
   after_update :update_confirmable_status

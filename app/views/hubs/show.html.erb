@@ -381,9 +381,15 @@
       <div style="display: flex; gap: 20px; align-items: flex-start;">
         <div style="flex: 1 1 60%;">
           <div class="hub-title-section" style="margin-bottom: 16px;">
-            <div class="hub-title-main">
-              <%= h(@hub.country.presence || '-') %> - <%= h(@hub.name) %>
-              <span class="hub-title-type">| <%= display_type %></span>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="hub-title-main">
+                <%= h(@hub.country.presence || '-') %> - <%= h(@hub.name) %>
+                <span class="hub-title-type">| <%= display_type %></span>
+              </div>
+
+              <!--<%= link_to calendar_hub_path(@hub), class: "btn btn-sm btn-outline-secondary", data: { turbo: false } do %>
+                <i class="fas fa-calendar-alt"></i> Hub Calendar
+              <% end %>-->
             </div>
           </div>
 

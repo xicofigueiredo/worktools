@@ -3,7 +3,8 @@
     data: {
       controller: "leave",
       "leave-advance-days-value": StaffLeave::ADVANCE_DAYS,
-      "leave-preview-url-value": preview_leaves_path
+      "leave-preview-url-value": preview_leaves_path,
+      "leave-user-birthdate-value": current_user.collaborator_info&.birthdate&.to_s
     }
   } do |f| %>
 
@@ -20,7 +21,7 @@
       <div class="mb-2">
         <%= f.label :leave_type, "Type", class: "form-label" %>
         <%= f.select :leave_type,
-          [['Holiday', 'holiday'], ['Sick Leave', 'sick leave'], ['Paid Leave', 'paid leave'], ['Marriage Leave', 'marriage leave'], ['Parental Leave', 'parental leave'], ['Other', 'other']], {},
+          [['Holiday', 'holiday'], ['Sick Leave', 'sick leave'], ['Paid Leave', 'paid leave'], ['Marriage Leave', 'marriage leave'], ['Parental Leave', 'parental leave'], ['Birthday Leave', 'birthday'], ['Other', 'other']], {},
           data: { "leave-target": "type", action: "change->leave#validate" },
           class: "form-select" %>
       </div>
@@ -47,25 +48,37 @@
     </div>
 
     <!-- UI chooser that is only visible when carry is available -->
-    <div class="mb-3" data-leave-target="daysFromPrevWrapper" style="display:none;">
-      <label class="form-label">Use days from previous year?</label>
-      <div class="d-flex align-items-center gap-2">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="useCarry" data-leave-target="daysFromPrevCheckbox" data-action="change->leave#toggleUseCarry">
-          <label class="form-check-label" for="useCarry">Use carry-over days</label>
-        </div>
+    <div class="col-12" data-leave-target="daysFromPrevWrapper" style="display:none;">
+      <div class="card bg-light border-primary mb-3">
+        <div class="card-body py-2">
+          <div class="d-flex align-items-center flex-wrap gap-3">
 
-        <div style="min-width:120px;">
-          <input
-            type="number"
-            class="form-control form-control-sm"
-            data-leave-target="daysFromPrevInput"
-            min="0"
-            step="1"
-            value="0"
-            aria-label="Days from previous year"
-            disabled />
-          <div class="form-text small" data-leave-target="daysFromPrevInfo"></div>
+            <div class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" id="useCarry"
+                     data-leave-target="daysFromPrevCheckbox"
+                     data-action="change->leave#toggleUseCarry">
+              <label class="form-check-label fw-bold" for="useCarry">
+                Use carry-over days from previous year?
+              </label>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+              <label class="small text-muted mb-0">Days:</label>
+              <input
+                type="number"
+                class="form-control form-control-sm"
+                style="width: 70px;"
+                data-leave-target="daysFromPrevInput"
+                min="0"
+                step="1"
+                value="0"
+                disabled />
+            </div>
+
+            <div class="small text-primary fst-italic ms-auto" data-leave-target="daysFromPrevInfo">
+            </div>
+
+          </div>
         </div>
       </div>
     </div>

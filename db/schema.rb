@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
+ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -82,6 +82,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "department_id"
+    t.bigint "creator_id"
+    t.index ["creator_id"], name: "index_blocked_periods_on_creator_id"
     t.index ["department_id"], name: "index_blocked_periods_on_department_id"
     t.index ["hub_id"], name: "index_blocked_periods_on_hub_id"
     t.index ["user_id"], name: "index_blocked_periods_on_user_id"
@@ -112,6 +114,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
     t.boolean "can_teach_remote", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "birthdate"
     t.index ["user_id"], name: "index_collaborator_infos_on_user_id"
   end
 
@@ -295,7 +298,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
     t.integer "learning_coach_ids", default: [], array: true
     t.integer "timeline_id"
     t.string "specific_papers"
-    t.date "personalized_exam_date"
+    t.string "personalized_exam_date"
     t.string "paper1"
     t.string "paper2"
     t.string "paper3"
@@ -365,6 +368,34 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
     t.boolean "bga"
     t.string "country"
     t.index ["user_id"], name: "index_holidays_on_user_id"
+  end
+
+  create_table "hub_booking_configs", force: :cascade do |t|
+    t.bigint "hub_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "visit_slots", default: {}
+    t.index ["hub_id"], name: "index_hub_booking_configs_on_hub_id"
+  end
+
+  create_table "hub_visits", force: :cascade do |t|
+    t.bigint "hub_id", null: false
+    t.string "visit_type", null: false
+    t.datetime "start_time", null: false
+    t.datetime "end_time", null: false
+    t.string "status", default: "pending", null: false
+    t.string "first_name"
+    t.string "last_name"
+    t.string "email"
+    t.string "phone"
+    t.string "learner_name"
+    t.string "learner_age"
+    t.string "learner_academic_level"
+    t.text "special_requests"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["hub_id", "start_time", "end_time"], name: "index_hub_visits_on_hub_id_and_start_time_and_end_time"
+    t.index ["hub_id"], name: "index_hub_visits_on_hub_id"
   end
 
   create_table "hubps", force: :cascade do |t|
@@ -579,6 +610,15 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
     t.datetime "updated_at", null: false
     t.string "level"
     t.index ["user_id"], name: "index_lws_timelines_on_user_id"
+  end
+
+  create_table "mandatory_leaves", force: :cascade do |t|
+    t.string "name", null: false
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.boolean "global", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "monday_slots", force: :cascade do |t|
@@ -928,8 +968,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
     t.datetime "updated_at", null: false
     t.text "exception_errors"
     t.integer "days_from_previous_year", default: 0, null: false
+    t.bigint "mandatory_leave_id"
     t.index ["approver_user_id"], name: "index_staff_leaves_on_approver_user_id"
     t.index ["days_from_previous_year"], name: "index_staff_leaves_on_days_from_previous_year"
+    t.index ["mandatory_leave_id"], name: "index_staff_leaves_on_mandatory_leave_id"
     t.index ["start_date"], name: "index_staff_leaves_on_start_date"
     t.index ["status"], name: "index_staff_leaves_on_status"
     t.index ["user_id", "start_date"], name: "index_staff_leaves_on_user_id_and_start_date"
@@ -1175,6 +1217,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
   add_foreign_key "blocked_periods", "departments"
   add_foreign_key "blocked_periods", "hubs"
   add_foreign_key "blocked_periods", "users"
+  add_foreign_key "blocked_periods", "users", column: "creator_id"
   add_foreign_key "chat_messages", "chats"
   add_foreign_key "chats", "subjects"
   add_foreign_key "chats", "users"
@@ -1202,6 +1245,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
   add_foreign_key "friday_slots", "users", column: "learner_id"
   add_foreign_key "friday_slots", "weekly_meetings"
   add_foreign_key "holidays", "users"
+  add_foreign_key "hub_booking_configs", "hubs"
+  add_foreign_key "hub_visits", "hubs"
   add_foreign_key "hubps", "kdas"
   add_foreign_key "hubs", "users", column: "regional_manager_id"
   add_foreign_key "inis", "kdas"
@@ -1248,6 +1293,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_05_115812) do
   add_foreign_key "sprint_goals", "users"
   add_foreign_key "staff_leave_documents", "staff_leaves", column: "staff_leave_id"
   add_foreign_key "staff_leave_entitlements", "users"
+  add_foreign_key "staff_leaves", "mandatory_leaves", column: "mandatory_leave_id"
   add_foreign_key "staff_leaves", "users"
   add_foreign_key "staff_leaves", "users", column: "approver_user_id"
   add_foreign_key "submissions", "moodle_assignments"
