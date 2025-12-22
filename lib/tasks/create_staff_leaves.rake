@@ -5,7 +5,8 @@ namespace :db do
     require 'json'
 
     def log(level, message)
-      time = defined?(Time) && Time.respond_to?(:current) ? Time.current.iso8601 : Time.now.iso8601
+      time = defined?(Time) && Time.respond_to?(:current) ?
+               Time.current.iso8601 : Time.now.iso8601
       puts "[#{time}] #{level.to_s.upcase}: #{message}"
     end
 
@@ -62,7 +63,13 @@ namespace :db do
 
       # 4. Prepare Attributes
       valid_types = StaffLeave::LEAVE_TYPES
-      leave_type  = valid_types.include?(type_s) ? type_s : 'holiday'
+      if valid_types.include?(type_s)
+        leave_type = type_s
+        leave_notes = nil
+      else
+        leave_type = 'other'
+        leave_notes = "Original Leave Type: #{row['Type'] || row['Leave Type']}"
+      end
 
       # Convert to integers, default to 0 if empty
       total_days     = total_raw.to_f.round.to_i
@@ -83,7 +90,7 @@ namespace :db do
         status: 'approved',
         exception_requested: true, # Bypass advance notice and overlap rules for migration
         exception_reason: 'System Migration Import',
-        notes: "Imported via CSV (Line #{lineno})"
+        notes: leave_notes
       }
 
       # 5. Create Record
