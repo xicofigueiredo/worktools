@@ -42,7 +42,7 @@ class ReportsController < ApplicationController
         end
 
         # Ensure the current user has permission to view this learner's report
-        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin' || current_user.kids.include?(@learner.id)
+        unless ((current_user.hubs.ids & @learner.hubs.ids).present? || current_user.online_learners.include?(@learner.id))|| current_user.role == 'admin' || current_user.kids.include?(@learner.id)
           redirect_to reports_path, alert: "You do not have permission to access this report."
             return
         end
@@ -90,7 +90,7 @@ class ReportsController < ApplicationController
         end
 
         # Ensure the current user has permission to view this learner's report
-        unless (current_user.hubs.ids & @learner.hubs.ids).present? || current_user.role == 'admin'
+        unless ((current_user.hubs.ids & @learner.hubs.ids).present? || current_user.online_learners.include?(@learner.id)) || current_user.role == 'admin'
           redirect_to reports_path, alert: "You do not have permission to access this report."
           return
         end
@@ -369,7 +369,7 @@ class ReportsController < ApplicationController
     elsif current_user.role == 'learner' && current_user != @learner
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
-    elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.find_by(main: true)&.hub)
+    elsif current_user.role == 'lc' && (current_user.hubs.exclude?(@learner.users_hubs.find_by(main: true)&.hub) || current_user.online_learners.exclude?(@learner.id))
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
     elsif current_user.role == 'admin'
