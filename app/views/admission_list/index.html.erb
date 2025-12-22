@@ -41,6 +41,7 @@
                   local: true,
                   data: { controller: "admission-search", turbo_frame: "learner_infos" },
                   html: { style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" } do |f| %>
+    <%= hidden_field_tag :filter_applied, '1' %>
 
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Search</label>
@@ -306,7 +307,7 @@
       </div>
 
       <div style="display:flex; gap:8px; align-items:center; margin-top:18px;">
-        <%= link_to "Clear All", admissions_path,
+        <%= link_to "Clear All", admissions_path(reset: true),
             style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
 
         <button type="button"

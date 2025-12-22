@@ -61,7 +61,7 @@ class SprintGoalsController < ApplicationController
     @number_of_timelines = current_user.timelines.where(hidden: false).count + current_user.moodle_timelines.where(hidden: false).count
     assign_sprint_deadlines(@sprint_goal.sprint)
     @dropdown_options = current_user.timelines.where(hidden: false) + current_user.moodle_timelines.where(hidden: false)
-
+    
     Rails.logger.debug @sprint_goal.knowledges.inspect
 
     # If the @sprint_goal doesn't have associated knowledges, build them for both timeline types

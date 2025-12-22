@@ -38,7 +38,17 @@
 <%= form_with(model: @report, url: update_knowledges_report_path(@report), method: :patch, local: true, data: { controller: "save-knowledge" }) do |f| %>
   <div class="section">
     <div class="section-title">Knowledge <i class="fa-solid fa-circle-info" title="..."></i></div>
-    <%= link_to "LWS Calculator", "https://edubgabravegeneration.sharepoint.com/:x:/s/EducationalDepartment/EXneLAemM65AraRgL78x80UBUhDIJnKcE7zE8F6e8RTemw?e=84negu", class: "btn btn-primary", target: "_blank" %>
+    <div class="d-flex gap-2 mb-3">
+      <%= link_to "LWS Calculator", "https://edubgabravegeneration.sharepoint.com/:x:/s/EducationalDepartment/EXneLAemM65AraRgL78x80UBUhDIJnKcE7zE8F6e8RTemw?e=84negu", class: "btn btn-primary", target: "_blank" %>
+      <% if @sprint_goal_knowledges_count > @report_knowledges_count %>
+        <%= link_to reset_knowledges_from_sprint_goal_report_path(@report),
+            method: :post,
+            class: "btn btn-secondary",
+            data: { turbo_method: :post, turbo_confirm: "This will create report knowledge records for any missing knowledges from the sprint goal. Continue?" } do %>
+          Fetch from Sprint Goal
+        <% end %>
+      <% end %>
+    </div>
     <table class="knowledge-table">
       <thead>
         <tr>
@@ -63,11 +73,19 @@
             <% end %>
             <td><%= knowledge_form.text_field :grade, class: "form-control", rows: 1 %></td>
             <td><%= knowledge_form.text_field :exam_season, value: knowledge_form.object.exam_season.presence || 'N/A', class: "form-control" %></td>
+            <td class="text-center ">
+              <%= link_to destroy_report_knowledge_report_path(@report, knowledge_id: knowledge_form.object.id),
+                  class: "btn btn-danger btn-sm",
+                  data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete the knowledge record for #{knowledge_form.object.subject_name}?" },
+                  title: "Delete" do %>
+                <i class="fa-solid fa-trash text-white"></i>
+              <% end %>
+            </td>
           </tr>
         <% end %>
         <% if @report.report_knowledges.empty? %>
           <tr>
-            <td colspan="5">No knowledge records available.</td>
+            <td colspan="6">No knowledge records available.</td>
           </tr>
         <% end %>
       </tbody>

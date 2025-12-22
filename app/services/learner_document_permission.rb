@@ -2,20 +2,20 @@ class LearnerDocumentPermission
   attr_reader :user, :record, :role
 
   DOC_VIEW_BY_ROLE = {
-    'admin' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates],
-    'admissions' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates],
-    'edu' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates],
-    'finance' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates],
-    'ops' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates],
-    'it' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates],
-    'lc' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates],
-    'exams' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates]
+    'admin' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates transfer],
+    'admissions' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates transfer],
+    'edu' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates transfer],
+    'finance' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates transfer],
+    'ops' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates transfer],
+    'it' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates transfer],
+    'lc' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates transfer],
+    'exams' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates transfer]
   }.freeze
 
   DOC_EDIT_BY_ROLE = {
     'admin' => DOC_VIEW_BY_ROLE['admin'],
     'admissions' => DOC_VIEW_BY_ROLE['admissions'],
-    'edu' => %w[last_term_report],
+    'edu' => %w[last_term_report transfer],
     'finance' => [],
     'ops' => [],
     'it' => %w[credentials],

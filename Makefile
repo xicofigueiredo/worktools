@@ -110,7 +110,7 @@ create_exam_finances:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake exam_finance:create_for_all"
 
 update_timelines:
-	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake timelines:simulate_update"
+	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake timelines:update_timelines"
 
 sync_moodle_users:
 	docker exec -it worktools-server-1 bash -c "RAILS_ENV=production bundle exec rake moodle:sync_user_ids"

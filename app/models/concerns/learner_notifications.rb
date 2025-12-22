@@ -88,7 +88,7 @@ module LearnerNotifications
     # Fetch Users
     new_lc = User.find_by(id: new_lc_id)
     # TO DO: WHEN THIS FUNCTION CHANGE TO HAVE HUB LOGIC CHANGE HOW WE GET THE RM
-    rm = User.find_by(email: "michi@edubga.com")
+    rm = User.find_by(email: "shannen.vorster@edubga.com")
 
     # Notify New LC
     if new_lc

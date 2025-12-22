@@ -188,7 +188,7 @@ class UserMailer < Devise::Mailer
         attachments['Handbook.pdf'] = File.read(Rails.root.join('public', 'documents', 'handbook.pdf'))
       end
 
-      if billing_guide_curricula.any { |k| curriculum_raw.include?(k) }
+      if billing_guide_curricula.any? { |k| curriculum_raw.include?(k) }
         attachments['Billing_Guide.pdf'] = File.read(Rails.root.join('public', 'documents', 'billing_guide.pdf'))
       end
 

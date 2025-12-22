@@ -1,79 +1,81 @@
 require './app/controllers/concerns/working_days_and_holidays'
 require './app/controllers/concerns/generate_topic_deadlines'
+require './app/controllers/concerns/progress_calculations'
 # lib/tasks/simulate_update.rake
 include GenerateTopicDeadlines
+include ProgressCalculations
 
 namespace :timelines do
-  desc "Update moodle timelines"
+  desc "update moodle timelines"
   task update_timelines: :environment do
-    timelines = Timeline.where(hidden: false, subject_id: [566, 83])
-    array_of_timelines = timelines.to_a
+    timelines = Timeline.where(hidden: false)
 
     successful_updates = 0
     failed_updates = 0
     failed_timeline_ids = []
 
-    puts "Processing #{timelines.count} timelines..."
+    puts "processing #{timelines.count} timelines..."
 
     timelines.each do |timeline|
-      next if timeline.user.deactivate == true
+      next if timeline.user.deactivate == true || timeline.user_topics.count == timeline.subject.topics.count
       begin
-        puts "🔄 Processing Timeline ID #{timeline.id}..."
+        puts "🔄 processing timeline id #{timeline.id}..."
         generate_topic_deadlines(timeline)
+        calculate_progress_and_balance([timeline])
 
-        # Find an appropriate exam date for this timeline's subject
-        # Look for exam dates that are after the timeline's end date
-        # suitable_exam_date = ExamDate.where(subject_id: timeline.subject_id)
+        # find an appropriate exam date for this timeline's subject
+        # look for exam dates that are after the timeline's end date
+        # suitable_exam_date = examdate.where(subject_id: timeline.subject_id)
         #                             .where('date > ?', timeline.end_date)
         #                             .order(:date)
         #                             .first
 
         # if suitable_exam_date
         #   timeline.exam_date = suitable_exam_date
-        #   timeline.save! # Explicitly save
-        #   puts "📅 Set exam date: #{suitable_exam_date.date} for Timeline ID #{timeline.id}"
+        #   timeline.save! # explicitly save
+        #   puts "📅 set exam date: #{suitable_exam_date.date} for timeline id #{timeline.id}"
         # else
-        #   puts "⚠️  No suitable exam date found for Timeline ID #{timeline.id} (Subject: #{timeline.subject.name})"
+        #   puts "⚠️  no suitable exam date found for timeline id #{timeline.id} (subject: #{timeline.subject.name})"
         # end
 
         successful_updates += 1
-        puts "✅ Timeline ID #{timeline.id} updated successfully"
+        puts "✅ timeline id #{timeline.id} updated successfully"
       rescue ActiveRecord::RecordInvalid => e
         failed_updates += 1
         failed_timeline_ids << timeline.id
-        puts "❌ Timeline ID #{timeline.id} failed: #{e.message}"
-        puts "   Start date: #{timeline.start_date}, End date: #{timeline.end_date}"
-        puts "   Validation errors: #{timeline.errors.full_messages.join(', ')}"
+        puts "❌ timeline id #{timeline.id} failed: #{e.message}"
+        puts "   start date: #{timeline.start_date}, end date: #{timeline.end_date}"
+        puts "   validation errors: #{timeline.errors.full_messages.join(', ')}"
       rescue => e
         failed_updates += 1
         failed_timeline_ids << timeline.id
-        puts "❌ Timeline ID #{timeline.id} failed with unexpected error: #{e.message}"
+        puts "❌ timeline id #{timeline.id} failed with unexpected error: #{e.message}"
       end
     end
 
-    puts "\n=== SUMMARY ==="
-    puts "Total timelines processed: #{timelines.count}"
-    puts "Successful updates: #{successful_updates}"
-    puts "Failed updates: #{failed_updates}"
+    puts "\n=== summary ==="
+    puts "total timelines processed: #{timelines.count}"
+    puts "successful updates: #{successful_updates}"
+    puts "failed updates: #{failed_updates}"
 
     if failed_timeline_ids.any?
-      puts "\nFailed Timeline IDs:"
+      puts "\nfailed timeline ids:"
       puts failed_timeline_ids.join(", ")
 
-      puts "\nTo investigate specific timelines:"
+      puts "\nto investigate specific timelines:"
       failed_timeline_ids.each do |id|
-        puts "Timeline.find(#{id}).errors.full_messages"
+        puts "timeline.find(#{id}).errors.full_messages"
       end
     end
 
-    # puts "Timelines that have no exam date set:"
+    # puts "timelines that have no exam date set:"
     # count = 0
     # timelines.each do |timeline|
     #   next if timeline.user.deactivate == true
-    #   next if timeline.subject.category.in?(['lws7', 'lws8', 'lws9', 'up', 'other'])  # Skip lower secondary
+    #   next if timeline.subject.category.in?(['lws7', 'lws8', 'lws9', 'up', 'other'])  # skip lower secondary
     #   puts " #{timeline.end_date} - #{timeline.subject&.name} (#{timeline.user&.email})"
     #   count += 1
     # end
-    # puts "Total: #{count}"
+    # puts "total: #{count}"
   end
 end
