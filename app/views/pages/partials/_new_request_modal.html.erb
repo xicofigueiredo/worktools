@@ -1,0 +1,73 @@
+<button type="button" class="btn btn-primary mx-3" data-bs-toggle="modal" data-bs-target="#newRequestModal">
+  <i class="fa-solid fa-plus"></i> New Request
+</button>
+
+<div class="modal fade" id="newRequestModal" tabindex="-1" aria-labelledby="newRequestModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <%= form_with scope: :service_request, url: service_requests_path, local: true do |f| %>
+        <%= hidden_field_tag :hub_id, params[:hub_id] if params[:hub_id].present? %>
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="newRequestModalLabel">New Learner Request</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <%= f.label :learner_id, "Select Learner", class: "form-label" %>
+            <%= f.collection_select :learner_id, @users, :id, :full_name, { prompt: "Choose a learner..." }, { class: "form-select", required: true } %>
+          </div>
+
+          <div class="mb-3">
+            <%= f.label :type, "Request Type", class: "form-label" %>
+            <%= f.select :type,
+                [['Hub Transfer', 'HubTransferRequest'], ['Certificate', 'CertificateRequest']],
+                { prompt: "Select type..." },
+                { class: "form-select", id: "request_type_select", required: true, onchange: "toggleRequestFields()" }
+            %>
+          </div>
+
+          <div class="mb-3 d-none" id="field_hub_transfer">
+            <%= f.label :target_hub_id, "Target Hub", class: "form-label" %>
+            <%= f.collection_select :target_hub_id, Hub.order(:name), :id, :name, { prompt: "Select target hub..." }, { class: "form-select" } %>
+          </div>
+
+          <div class="mb-3 d-none" id="field_certificate">
+            <%= f.label :certificate_type, "Certificate Name/Type", class: "form-label" %>
+            <%= f.text_field :certificate_type, class: "form-control", placeholder: "e.g., Proof of Enrollment" %>
+          </div>
+
+          <div class="mb-3">
+            <%= f.label :reason, "Reason / Notes", class: "form-label" %>
+            <%= f.text_area :reason, class: "form-control", rows: 3, required: true %>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <%= f.submit "Submit Request", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleRequestFields() {
+    const type = document.getElementById('request_type_select').value;
+    const hubField = document.getElementById('field_hub_transfer');
+    const certField = document.getElementById('field_certificate');
+
+    // Reset visibility
+    hubField.classList.add('d-none');
+    certField.classList.add('d-none');
+
+    // Show based on selection
+    if (type === 'HubTransferRequest') {
+      hubField.classList.remove('d-none');
+    } else if (type === 'CertificateRequest') {
+      certField.classList.remove('d-none');
+    }
+  }
+</script>

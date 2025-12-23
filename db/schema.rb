@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
+ActiveRecord::Schema[7.0].define(version: 2025_12_23_182002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -22,6 +22,34 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["record_type", "record_id", "name"], name: "index_action_text_rich_texts_uniqueness", unique: true
+  end
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "assignments", force: :cascade do |t|
@@ -889,6 +917,23 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.index ["kda_id"], name: "index_sdls_on_kda_id"
   end
 
+  create_table "service_requests", force: :cascade do |t|
+    t.string "type", null: false
+    t.bigint "requester_id", null: false
+    t.bigint "learner_id", null: false
+    t.string "status", default: "pending", null: false
+    t.text "reason"
+    t.bigint "target_hub_id"
+    t.string "certificate_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["learner_id"], name: "index_service_requests_on_learner_id"
+    t.index ["requester_id"], name: "index_service_requests_on_requester_id"
+    t.index ["status"], name: "index_service_requests_on_status"
+    t.index ["target_hub_id"], name: "index_service_requests_on_target_hub_id"
+    t.index ["type"], name: "index_service_requests_on_type"
+  end
+
   create_table "skills", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
     t.string "extracurricular"
@@ -1209,6 +1254,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.index ["sprint_id"], name: "index_weeks_on_sprint_id"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "assignments", "subjects"
   add_foreign_key "assignments", "users"
   add_foreign_key "attendances", "users"
@@ -1286,6 +1333,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
   add_foreign_key "responses", "form_interrogation_joins"
   add_foreign_key "responses", "users"
   add_foreign_key "sdls", "kdas"
+  add_foreign_key "service_requests", "hubs", column: "target_hub_id"
+  add_foreign_key "service_requests", "users", column: "learner_id"
+  add_foreign_key "service_requests", "users", column: "requester_id"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "specific_papers", "exam_enrolls"
   add_foreign_key "specific_papers", "exam_finances"

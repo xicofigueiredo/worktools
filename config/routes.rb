@@ -112,6 +112,8 @@ Rails.application.routes.draw do
 
     resources :pricing_tiers, only: [:index, :update]
 
+    resources :service_requests, only: [:index, :create]
+
     resources :public_holidays, only: [:create, :destroy]
     resources :blocked_periods, only: [:create, :destroy]
     resources :mandatory_leaves, only: [:create, :destroy]
