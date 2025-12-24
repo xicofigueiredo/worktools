@@ -2,6 +2,8 @@ class HubTransferRequest < ServiceRequest
   belongs_to :target_hub, class_name: 'Hub'
 
   validates :target_hub_id, presence: true
+  validate :no_pending_transfer_exists, on: :create
+  validate :target_hub_has_capacity, on: :create
 
   after_update :finalize_transfer!, if: -> { saved_change_to_status?(to: 'approved') }
 
@@ -18,6 +20,20 @@ class HubTransferRequest < ServiceRequest
   end
 
   private
+
+  def no_pending_transfer_exists
+    if HubTransferRequest.where(learner_id: learner_id, status: 'pending').where.not(id: id).exists?
+      errors.add(:base, "This learner already has a pending transfer request.")
+    end
+  end
+
+  def target_hub_has_capacity
+    return unless target_hub
+
+    if target_hub.capacity.present? && target_hub.free_spots <= 0
+      errors.add(:target_hub_id, "is currently at full capacity.")
+    end
+  end
 
   def update_admission_record
     if learner.learner_info

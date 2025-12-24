@@ -27,9 +27,10 @@ class ServiceRequestsController < ApplicationController
       # Create initial confirmation (optional, based on your pattern)
       # @request.confirmations.create!(...)
 
-      redirect_to dashboard_lc_path(hub_id: params[:hub_id]), notice: "#{type.underscore.humanize} created successfully."
+      redirect_to dashboard_lc_path(hub_id: params[:hub_id]), notice: "#{type.underscore.humanize} submitted."
     else
-      redirect_to dashboard_lc_path(hub_id: params[:hub_id]), alert: "Error: #{@request.errors.full_messages.to_sentence}"
+      error_msg = @request.errors.full_messages.to_sentence
+      redirect_to dashboard_lc_path(hub_id: params[:hub_id]), alert: "Request failed: #{error_msg}"
     end
   end
 

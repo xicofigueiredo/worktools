@@ -30,7 +30,12 @@
 
           <div class="mb-3 d-none" id="field_hub_transfer">
             <%= f.label :target_hub_id, "Target Hub", class: "form-label" %>
-            <%= f.collection_select :target_hub_id, Hub.order(:name), :id, :name, { prompt: "Select target hub..." }, { class: "form-select" } %>
+            <%= f.select :target_hub_id,
+                options_for_select(@hub_options),
+                { prompt: "Select target hub..." },
+                { class: "form-select" }
+            %>
+            <div class="form-text text-muted">Spots are reserved as soon as you submit a request.</div>
           </div>
 
           <div class="mb-3 d-none" id="field_certificate">

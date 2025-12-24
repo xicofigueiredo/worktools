@@ -75,6 +75,21 @@ class PagesController < ApplicationController
     end
 
     @users = @users.order(topics_balance: :asc)
+
+    @hub_options = Hub.order(:name).map do |hub|
+      info = hub.capacity_info
+
+      label = hub.name
+      is_full = info[:total].present? && info[:free] <= 0
+
+      if is_full
+        label += " (FULL)"
+      elsif info[:total].present?
+        label += " (#{info[:free]} spots left)"
+      end
+
+      [label, hub.id, { disabled: is_full }]
+    end
   end
 
   def dashboard_cm

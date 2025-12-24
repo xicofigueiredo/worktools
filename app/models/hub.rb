@@ -60,39 +60,40 @@ class Hub < ApplicationRecord
         .count
   end
 
-  # Count of active learners
   def active_learners_count
     active_learners.count
   end
 
-  # Calculate free spots based on capacity
+  def pending_incoming_transfers_count
+    ServiceRequest.where(type: 'HubTransferRequest', status: 'pending', target_hub_id: id).count
+  end
+
+  def total_occupied_spots
+    active_learners_count + pending_incoming_transfers_count
+  end
+
   def free_spots
     return nil unless capacity.present? && capacity.positive?
-    [capacity - active_learners_count, 0].max
+    [capacity - total_occupied_spots, 0].max
   end
 
-  # Calculate capacity percentage
   def capacity_percentage
     return nil unless capacity.present? && capacity.positive?
-    ((active_learners_count.to_f / capacity.to_f) * 100).round(1)
+    ((total_occupied_spots.to_f / capacity.to_f) * 100).round(1)
   end
 
-  # Get capacity info as a hash
   def capacity_info
     if capacity.present? && capacity.positive?
+      occupied = total_occupied_spots
+      free = [capacity - occupied, 0].max
       {
         total: capacity,
-        used: active_learners_count,
-        free: free_spots,
-        percentage: capacity_percentage
+        used: occupied,
+        free: free,
+        percentage: ((occupied.to_f / capacity.to_f) * 100).round(1)
       }
     else
-      {
-        total: nil,
-        used: active_learners_count,
-        free: nil,
-        percentage: nil
-      }
+      { total: nil, used: active_learners_count, free: nil, percentage: nil }
     end
   end
 
