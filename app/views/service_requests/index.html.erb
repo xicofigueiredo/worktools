@@ -1,7 +1,9 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>My Service Requests</h2>
-    <%= link_to dashboard_lc_path, class: "btn btn-outline-secondary" do %>
+    <% back_path = params[:hub_id].present? ? dashboard_lc_path(hub_id: params[:hub_id]) : dashboard_lc_path %>
+
+    <%= link_to back_path, class: "btn btn-outline-secondary" do %>
       <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
     <% end %>
   </div>
