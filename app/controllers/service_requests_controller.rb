@@ -2,9 +2,9 @@ class ServiceRequestsController < ApplicationController
   before_action :authenticate_user!
 
   def index
-    # Show requests where the user is the requester OR the learner
     @requests = ServiceRequest.where(requester: current_user)
                               .or(ServiceRequest.where(learner: current_user))
+                              .includes(:learner, :requester, :confirmations)
                               .order(created_at: :desc)
   end
 

@@ -1,4 +1,10 @@
-<%= render 'pages/partials/new_request_modal' %>
+<div class="d-flex mb-3 align-items-center">
+  <%= render 'pages/partials/new_request_modal' %>
+
+  <%= link_to service_requests_path, class: "btn btn-outline-primary ms-2" do %>
+    <i class="fa-solid fa-list-check"></i> Track My Requests
+  <% end %>
+</div>
 <div class="container mt-3">
     <div class="d-flex justify-content-between mb-4">
       <h2><%= @selected_hub.name %></h2>
