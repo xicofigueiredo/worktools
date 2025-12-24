@@ -1147,9 +1147,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_23_182002) do
     t.string "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
-    t.string "confirmation_token"
-    t.datetime "confirmed_at"
-    t.datetime "confirmation_sent_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "full_name"
@@ -1159,6 +1156,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_23_182002) do
     t.date "birthday"
     t.string "nationality"
     t.string "profile_pic"
+    t.datetime "last_login_at"
+    t.string "confirmation_token"
+    t.datetime "confirmed_at"
+    t.datetime "confirmation_sent_at"
     t.string "unconfirmed_email"
     t.boolean "deactivate", default: false
     t.bigint "moodle_id"
