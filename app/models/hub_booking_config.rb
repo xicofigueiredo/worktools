@@ -40,7 +40,6 @@ class HubBookingConfig < ApplicationRecord
     # Any open day must have at least 9 slots
     open_days.each do |day, slots|
       if slots.count < 9
-        day_name = Date::DAYNAMES[day.to_i]
         errors.add(:visit_slots, "for a selected day must have at least 9 slots selected.")
       end
     end
