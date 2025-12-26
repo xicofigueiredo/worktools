@@ -13,6 +13,8 @@ class Hub < ApplicationRecord
 
   accepts_nested_attributes_for :booking_config
 
+  after_create :initialize_booking_config
+
   # Scopes for common queries
   scope :with_main_users, -> { joins(:users_hubs).where(users_hubs: { main: true }) }
 
@@ -99,5 +101,26 @@ class Hub < ApplicationRecord
 
   def settings
     booking_config || build_booking_config
+  end
+
+  private
+
+  def initialize_booking_config
+    return if booking_config.present?
+
+    all_slots = []
+    current = Time.zone.parse("10:00")
+    limit = Time.zone.parse("16:00")
+
+    while current <= limit
+      all_slots << current.strftime("%H:%M")
+      current += 30.minutes
+    end
+
+    default_visit_slots = (1..5).each_with_object({}) do |wday, hash|
+      hash[wday.to_s] = all_slots
+    end
+
+    create_booking_config(visit_slots: default_visit_slots)
   end
 end
