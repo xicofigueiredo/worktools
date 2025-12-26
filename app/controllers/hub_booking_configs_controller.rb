@@ -5,8 +5,8 @@ class HubBookingConfigsController < ApplicationController
   def update
     @config = @hub.booking_config || @hub.build_booking_config
 
+    # Extract and clean raw slots from params
     raw_slots = params.require(:hub_booking_config).permit(visit_slots: {})[:visit_slots]
-
     clean_slots = {}
     if raw_slots.present?
       raw_slots.each do |day, times|
@@ -17,10 +17,18 @@ class HubBookingConfigsController < ApplicationController
 
     @config.visit_slots = clean_slots
 
-    if @config.save
-      redirect_back fallback_location: calendar_hub_path(@hub), notice: 'Schedule updated successfully.'
-    else
-      redirect_back fallback_location: calendar_hub_path(@hub), alert: "Error: #{@config.errors.full_messages.join(', ')}"
+    respond_to do |format|
+      if @config.save
+        format.html { redirect_back fallback_location: calendar_hub_path(@hub), notice: 'Schedule updated successfully.' }
+      else
+        # Render Turbo Stream to update only the form partial with errors
+        format.turbo_stream {
+          render turbo_stream: turbo_stream.replace("booking_config_form_container",
+                               partial: "hub_booking_configs/form",
+                               locals: { config: @config, hub: @hub })
+        }
+        format.html { redirect_back fallback_location: calendar_hub_path(@hub), alert: "Error: #{@config.errors.full_messages.join(', ')}" }
+      end
     end
   end
 
