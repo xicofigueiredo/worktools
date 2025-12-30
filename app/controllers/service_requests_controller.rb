@@ -6,6 +6,9 @@ class ServiceRequestsController < ApplicationController
                               .or(ServiceRequest.where(learner: current_user))
                               .includes(:learner, :requester, :confirmations)
                               .order(created_at: :desc)
+
+    @users = User.where(role: 'learner', deactivate: [false, nil]).order(:full_name)
+    @hub_options = Hub.order(:name).map { |h| [h.name, h.id] }
   end
 
   def create
