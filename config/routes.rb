@@ -112,7 +112,11 @@ Rails.application.routes.draw do
 
     resources :pricing_tiers, only: [:index, :update]
 
-    resources :service_requests, only: [:index, :create]
+    resources :service_requests, only: [:index, :create] do
+      collection do
+        get :fetch_learners
+      end
+    end
 
     resources :public_holidays, only: [:create, :destroy]
     resources :blocked_periods, only: [:create, :destroy]

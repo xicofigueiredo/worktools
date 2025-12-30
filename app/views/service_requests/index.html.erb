@@ -1,7 +1,9 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>My Service Requests</h2>
-    <%= render 'pages/partials/new_request_form' %>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal">
+      <i class="fa-solid fa-plus me-1"></i> Create New Request
+    </button>
   </div>
 
   <div class="card shadow-sm">
@@ -84,3 +86,5 @@
     </div>
   </div>
 </div>
+
+<%= render 'service_requests/new_request_form' %>
