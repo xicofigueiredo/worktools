@@ -48,7 +48,14 @@ class ApplicationController < ActionController::Base
   end
 
   def count_pending_confirmations
-    @pending_confirmations_count = current_user ? Confirmation.pending.where(approver: current_user).count : 0
+    return unless user_signed_in?
+    pending_base = Confirmation.pending.where(approver: current_user)
+
+    @total_pending_count = pending_base.count
+    @leave_pending_count = pending_base.where(confirmable_type: 'StaffLeave').count
+
+    service_types = ['ServiceRequest', 'HubTransferRequest', 'CertificateRequest']
+    @service_pending_count = pending_base.where(confirmable_type: service_types).count
   end
 
   def check_browser
