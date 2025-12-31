@@ -27,7 +27,7 @@ class LeavesController < ApplicationController
     # 2. Manager View Logic
     if current_user.managed_departments.present?
       prepare_manager_entitlements if current_user&.managed_departments&.present?
-      @pending_confirmations = current_user.confirmations.pending
+      @pending_confirmations = current_user.confirmations.pending.where(confirmable_type: 'StaffLeave')
 
       depts = current_user.managed_departments
       is_top = depts.all? { |d| d.superior.nil? }
