@@ -58,10 +58,14 @@
 
                   <td>
                     <% if req.status == 'pending' %>
-                      <% pending_conf = req.confirmations.find { |c| c.status == 'pending' } %>
+                      <% pending_conf = req.confirmations.detect { |c| c.status == 'pending' } %>
                       <% if pending_conf && pending_conf.approver %>
                         <div class="d-flex align-items-center justify-content-center">
-                          <i class="fa-regular fa-clock me-2 text-secondary"></i>
+                          <i class="fa-regular fa-clock me-2 text-secondary"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Sent on: <%= pending_conf.created_at.strftime('%b %d, %H:%M') %>">
+                          </i>
                           <%= pending_conf.approver.full_name %>
                         </div>
                       <% else %>
@@ -88,3 +92,12 @@
 </div>
 
 <%= render 'service_requests/new_request_form' %>
+
+<script>
+  document.addEventListener("turbo:load", function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+  });
+</script>

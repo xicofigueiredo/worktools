@@ -6,7 +6,7 @@ class ServiceRequestsController < ApplicationController
   def index
     # Fetches requests where the user is either the creator or the learner
     @requests = ServiceRequest.where(requester: current_user)
-                              .includes(:learner, :requester, :confirmations)
+                              .includes(:learner, confirmations: :approver)
                               .order(created_at: :desc)
 
     # Smart Defaulting: Pre-load learners for the user's main hub
