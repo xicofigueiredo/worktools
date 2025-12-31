@@ -5,7 +5,22 @@ class HubTransferRequest < ServiceRequest
   validate :no_pending_transfer_exists, on: :create
   validate :target_hub_has_capacity, on: :create
 
+  after_create :create_initial_confirmation
   after_update :finalize_transfer!, if: -> { saved_change_to_status?(to: 'approved') }
+
+  def approval_chain
+    chain = []
+
+    # 1. Target Hub's Regional Manager (RM)
+    if target_hub&.regional_manager.present?
+      chain << target_hub.regional_manager
+    end
+
+    # LCS?
+    # Admissions?
+
+    chain.compact.uniq
+  end
 
   def finalize_transfer!
     ActiveRecord::Base.transaction do

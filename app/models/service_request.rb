@@ -15,13 +15,29 @@ class ServiceRequest < ApplicationRecord
     []
   end
 
-  # Interface for child classes to implement if needed
   def handle_confirmation_update(confirmation)
     if confirmation.status == 'approved'
-      # Logic to move to next approver or finalize
-      update(status: 'approved')
+      chain = approval_chain
+      next_index = chain.index(confirmation.approver).to_i + 1
+
+      if next_index < chain.length
+        # Move to the next person in the chain
+        confirmations.create!(type: 'Confirmation', approver: chain[next_index], status: 'pending')
+      else
+        # No more approvers, final approval
+        update!(status: 'approved')
+      end
     elsif confirmation.status == 'rejected'
-      update(status: 'rejected')
+      update!(status: 'rejected')
+    end
+  end
+
+  def create_initial_confirmation
+    chain = approval_chain
+    if chain.present?
+      confirmations.create!(type: 'Confirmation', approver: chain.first, status: 'pending')
+    else
+      update!(status: 'approved')
     end
   end
 end

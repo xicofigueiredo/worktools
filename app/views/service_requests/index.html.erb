@@ -60,7 +60,7 @@
                     <% if req.status == 'pending' %>
                       <% pending_conf = req.confirmations.find { |c| c.status == 'pending' } %>
                       <% if pending_conf && pending_conf.approver %>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center justify-content-center">
                           <i class="fa-regular fa-clock me-2 text-secondary"></i>
                           <%= pending_conf.approver.full_name %>
                         </div>
