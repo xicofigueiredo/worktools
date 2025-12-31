@@ -1,0 +1,50 @@
+<% if @confirmable.is_a?(StaffLeave) %>
+  <%= turbo_stream.replace "pending-leaves-container" do %>
+    <%= render partial: 'leaves/pending_confirmations' %>
+  <% end %>
+
+<% elsif @confirmable.is_a?(ServiceRequest) %>
+  <%= turbo_stream.remove "action-row-#{@confirmation.id}" %>
+
+  <%= turbo_stream.replace "request-row-#{@confirmable.id}" do %>
+    <%= render partial: 'service_requests/request_row', locals: { req: @confirmable } %>
+  <% end %>
+
+  <%= turbo_stream.prepend "history-table-body" do %>
+    <%= render partial: 'service_requests/history_row', locals: { conf: @confirmation } %>
+  <% end %>
+
+  <% if @manager_pending.empty? %>
+    <%= turbo_stream.remove "manager-action-center" %>
+  <% end %>
+<% end %>
+
+<%= turbo_stream.replace "total-requests-badge" do %>
+  <span id="total-requests-badge">
+    <% if @total_pending_count > 0 %>
+      <span class="badge rounded-pill bg-danger ms-1" style="font-size:0.65rem; padding:0.22rem 0.45rem;">
+        <%= @total_pending_count %>
+      </span>
+    <% end %>
+  </span>
+<% end %>
+
+<%= turbo_stream.replace "leave-requests-badge" do %>
+  <span id="leave-requests-badge">
+    <% if @leave_pending_count > 0 %>
+      <span class="badge rounded-pill bg-danger">
+        <%= @leave_pending_count %>
+      </span>
+    <% end %>
+  </span>
+<% end %>
+
+<%= turbo_stream.replace "service-requests-badge" do %>
+  <span id="service-requests-badge">
+    <% if @service_pending_count > 0 %>
+      <span class="badge rounded-pill bg-danger">
+        <%= @service_pending_count %>
+      </span>
+    <% end %>
+  </span>
+<% end %>

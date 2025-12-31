@@ -118,6 +118,13 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :confirmations, only: [] do
+      member do
+        post :approve
+        post :reject
+      end
+    end
+
     resources :public_holidays, only: [:create, :destroy]
     resources :blocked_periods, only: [:create, :destroy]
     resources :mandatory_leaves, only: [:create, :destroy]
@@ -128,9 +135,6 @@ Rails.application.routes.draw do
         post :update_entitlement
         post :create_entitlement
         get :users_without_entitlement
-
-        post 'approve_confirmation/:id', to: 'leaves#approve_confirmation', as: 'approve_confirmation'
-        post 'reject_confirmation/:id', to: 'leaves#reject_confirmation', as: 'reject_confirmation'
       end
 
       member do

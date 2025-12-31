@@ -53,9 +53,7 @@ class ApplicationController < ActionController::Base
 
     @total_pending_count = pending_base.count
     @leave_pending_count = pending_base.where(confirmable_type: 'StaffLeave').count
-
-    service_types = ['ServiceRequest', 'HubTransferRequest', 'CertificateRequest']
-    @service_pending_count = pending_base.where(confirmable_type: service_types).count
+    @service_pending_count = pending_base.where(confirmable_type: ['ServiceRequest'] + ServiceRequest::TYPES).count
   end
 
   def check_browser

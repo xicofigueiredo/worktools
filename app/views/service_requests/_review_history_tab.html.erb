@@ -1,0 +1,26 @@
+<div class="card shadow-sm border-0">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle text-center">
+        <thead class="table-light">
+          <tr>
+            <th class="text-start ps-4">Learner</th>
+            <th>Request Type</th>
+            <th>Action Taken</th>
+            <th>Date Acted</th>
+            <th class="text-start">Notes / Reason</th>
+          </tr>
+        </thead>
+        <tbody id="history-table-body">
+          <% if history.any? %>
+            <% history.each do |conf| %>
+              <%= render 'service_requests/history_row', conf: conf %>
+            <% end %>
+          <% else %>
+            <tr><td colspan="5" class="py-5 text-muted">You haven't reviewed any requests yet.</td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

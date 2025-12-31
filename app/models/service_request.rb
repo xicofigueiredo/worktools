@@ -1,16 +1,15 @@
 class ServiceRequest < ApplicationRecord
-  # Single Table Inheritance Parent
+  TYPES = %w[HubTransferRequest CertificateRequest].freeze
 
   belongs_to :requester, class_name: 'User'
   belongs_to :learner, class_name: 'User'
 
-  # Reusing your existing Confirmation system
   has_many :confirmations, as: :confirmable, dependent: :destroy
 
   validates :status, inclusion: { in: %w[pending approved rejected cancelled] }
   validates :reason, presence: true
 
-  # Placeholder: The prompt requested an empty array for now
+  # Placeholder
   def approval_chain
     []
   end

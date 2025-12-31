@@ -1,26 +1,23 @@
-<div data-controller="leave">
+<div id="pending-leaves-container" data-controller="leave confirmation">
   <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h2 class="h5 mb-0">Pending Confirmations</h2>
-      <!-- optional small helper / count -->
       <small class="text-muted"><%= pluralize(@pending_confirmations.count, "pending confirmation") %></small>
     </div>
 
     <div class="card-body p-0">
       <% if @pending_confirmations.any? %>
         <div class="table-responsive">
-          <table class="table mb-0">
+          <table class="table mb-0 align-middle">
             <thead class="table-light">
               <tr>
                 <th>Department</th>
                 <th>Name</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Total Days Used</th>
-                <th>Type of Leave</th>
-                <th>Confirmation</th>
-                <th class="text-center">Notes / Impediment</th>
-                <th>Status</th>
+                <th>Total Days</th>
+                <th>Type</th>
+                <th class="text-center">Notes</th>
                 <th class="text-nowrap">Actions</th>
               </tr>
             </thead>
@@ -33,104 +30,21 @@
                   <td><%= leave.start_date.strftime("%d/%m/%Y") %></td>
                   <td><%= leave.end_date.strftime("%d/%m/%Y") %></td>
                   <td><%= leave.total_days %></td>
-                  <td><%= leave.leave_type.capitalize %></td>
-
-                  <td>
-                    <% if conf.type == 'CancellationConfirmation' || conf.is_a?(CancellationConfirmation) %>
-                      <span class="badge bg-secondary">Cancellation</span>
-                    <% else %>
-                      <span class="badge bg-primary">Approval</span>
-                    <% end %>
-                  </td>
-
-                  <td class="text-center">
-                    <div class="d-flex justify-content-center gap-1">
-                      <% if conf.type == 'CancellationConfirmation' || conf.is_a?(CancellationConfirmation) %>
-                        <% days_until_start = (leave.start_date - Date.current).to_i rescue nil %>
-                        <% if leave.exception_requested && days_until_start && days_until_start < 16 %>
-                          <% tooltip_text = "User requested cancellation within #{days_until_start} day(s) (didn't ask earlier). Justification: #{leave.exception_reason}" %>
-                          <span class="badge bg-info text-dark" role="img" aria-label="Impediment" data-bs-toggle="tooltip" data-bs-placement="top" title="<%= h(tooltip_text) %>">i</span>
-                        <% elsif leave.exception_requested && leave.exception_approver_messages.any? %>
-                          <% tooltip_lines = leave.exception_approver_messages.dup %>
-                          <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
-                          <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
-                        <% end %>
-                      <% else %>
-                        <% if leave.exception_requested && leave.exception_approver_messages.any? %>
-                          <% tooltip_lines = leave.exception_approver_messages.dup %>
-                          <% tooltip_lines << "Justification: #{leave.exception_reason}" if leave.exception_reason.present? %>
-                          <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="<%= h(tooltip_lines.join(' | ')) %>">i</span>
-                        <% end %>
-                      <% end %>
-                      <% if leave.notes.present? %>
-                        <span class="badge bg-primary" data-bs-toggle="tooltip" title="Notes: <%= h(leave.notes) %>">i</span>
-                      <% end %>
-                    </div>
-                    <% if !leave.exception_requested && leave.exception_approver_messages.empty? && leave.notes.blank? %>
-                      -
-                    <% end %>
-                  </td>
-
-                  <td><%= leave.status.capitalize %></td>
-
+                  <td><%= leave.leave_type.humanize %></td>
+                  <td class="text-center text-muted"><small><%= leave.notes.presence || '—' %></small></td>
                   <td class="text-nowrap">
-                    <%= button_to approve_confirmation_leaves_path(conf),
-                          method: :post,
-                          data: { confirm: 'Approve?' },
-                          form: { class: 'd-inline' },
-                          class: 'btn btn-sm btn-success me-1',
-                          title: 'Approve',
-                          aria: { label: 'Approve' } do %>
-                      <i class="fa fa-check" aria-hidden="true"></i>
-                    <% end %>
-
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-danger me-1"
-                      title="Reject"
-                      aria-label="Reject"
-                      data-action="click->leave#open"
-                      data-reject-url="<%= reject_confirmation_leaves_path(conf) %>">
-                      <i class="fa fa-times" aria-hidden="true"></i>
-                    </button>
-
-                    <% if leave.staff_leave_documents.any? %>
-                      <% documents = leave.staff_leave_documents %>
-                      <% if documents.size == 1 %>
-                        <% doc = documents.first %>
-                        <%= link_to download_document_leafe_path(leave, doc.id),
-                                    class: 'btn btn-sm btn-outline-primary',
-                                    title: "Download document",
-                                    'data-bs-toggle': 'tooltip',
-                                    'data-bs-placement': 'top',
-                                    target: '_blank',
-                                    rel: 'noopener',
-                                    aria: { label: 'Download document' } do %>
-                          <i class="fa fa-download" aria-hidden="true"></i>
-                        <% end %>
-                      <% else %>
-                        <div class="btn-group" role="group">
-                          <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                  data-bs-toggle="dropdown"
-                                  aria-expanded="false"
-                                  title="Download documents"
-                                  data-bs-placement="top">
-                            <i class="fa fa-download" aria-hidden="true"></i>
-                          </button>
-                          <ul class="dropdown-menu">
-                            <% documents.each_with_index do |doc, index| %>
-                              <li>
-                                <%= link_to "Document #{index + 1}",
-                                            download_document_leafe_path(leave, doc.id),
-                                            class: "dropdown-item",
-                                            target: "_blank",
-                                            rel: "noopener" %>
-                              </li>
-                            <% end %>
-                          </ul>
-                        </div>
+                    <div class="d-flex gap-2">
+                      <%= button_to approve_confirmation_path(conf), method: :post, class: "btn btn-sm btn-success" do %>
+                        <i class="fa-solid fa-check"></i>
                       <% end %>
-                    <% end %>
+
+                      <button type="button"
+                              class="btn btn-sm btn-outline-danger"
+                              data-action="click->confirmation#openRejectModal"
+                              data-url="<%= reject_confirmation_path(conf) %>">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               <% end %>
@@ -139,38 +53,11 @@
         </div>
       <% else %>
         <div class="card-body">
-          <p class="mb-0">No pending confirmations.</p>
+          <p class="mb-0 text-muted">No pending leave confirmations.</p>
         </div>
       <% end %>
     </div>
   </div>
-
-  <!-- Reject reason modal (single instance). -->
-  <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form data-leave-target="form" method="post">
-          <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>" />
-          <div class="modal-header">
-            <h5 class="modal-title">Reject Leave Request</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-
-          <div class="modal-body">
-            <p class="small text-muted">Please provide a short reason for rejecting this leave request. This will be visible to the user.</p>
-
-            <div class="mb-3">
-              <label for="rejectionReason" class="form-label">Reason</label>
-              <textarea id="rejectionReason" name="rejection_reason" data-leave-target="reason" class="form-control" rows="4" required></textarea>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-danger">Reject Leave Request</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
 </div>
+
+<%= render 'shared/rejection_modal', title: "Reject Leave Request" %>

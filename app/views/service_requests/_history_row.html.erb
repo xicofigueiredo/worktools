@@ -1,0 +1,15 @@
+<tr id="history-row-<%= conf.id %>">
+  <td class="text-start ps-4">
+    <strong><%= conf.confirmable.learner.full_name %></strong>
+  </td>
+  <td><%= conf.confirmable.type.underscore.humanize %></td>
+  <td>
+    <span class="badge rounded-pill bg-<%= conf.status == 'approved' ? 'success' : 'danger' %>">
+      <%= conf.status.capitalize %>
+    </span>
+  </td>
+  <td><%= conf.validated_at&.strftime("%b %d, %Y") %></td>
+  <td class="text-start text-muted">
+    <small><%= conf.rejection_reason.presence || "—" %></small>
+  </td>
+</tr>

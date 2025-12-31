@@ -1,0 +1,39 @@
+<tr id="request-row-<%= req.id %>">
+  <td>
+    <strong>
+      <%= (req.respond_to?(:type) ? req.type : req.leave_type).underscore.humanize.titleize %>
+    </strong>
+
+    <% if req.respond_to?(:type) %>
+      <% if req.type == 'HubTransferRequest' && req.respond_to?(:target_hub) %>
+        <br><small class="text-muted"><i class="fa-solid fa-arrow-right"></i> <%= req.target_hub&.name %></small>
+      <% elsif req.type == 'CertificateRequest' && req.respond_to?(:certificate_type) %>
+        <br><small class="text-muted"><%= req.certificate_type %></small>
+      <% end %>
+    <% end %>
+  </td>
+
+  <td><%= (req.respond_to?(:learner) ? req.learner : req.user).full_name %></td>
+
+  <td><%= req.created_at.strftime("%b %d, %Y") %></td>
+
+  <td>
+    <span class="badge rounded-pill bg-<%= req.status == 'approved' ? 'success' : (req.status == 'rejected' ? 'danger' : 'warning text-dark') %>">
+      <%= req.status.capitalize %>
+    </span>
+  </td>
+
+  <td class="text-center">
+    <% if req.status == 'pending' %>
+      <% pending_conf = req.confirmations.detect { |c| c.status == 'pending' } %>
+      <% if pending_conf && pending_conf.approver %>
+        <div class="d-flex align-items-center justify-content-center">
+          <i class="fa-regular fa-clock me-2 text-secondary" data-bs-toggle="tooltip" title="Sent: <%= pending_conf.created_at.strftime('%b %d') %>"></i>
+          <%= pending_conf.approver.full_name %>
+        </div>
+      <% end %>
+    <% else %>
+      -
+    <% end %>
+  </td>
+</tr>

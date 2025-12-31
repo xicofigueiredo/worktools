@@ -385,31 +385,6 @@ class LeavesController < ApplicationController
     redirect_to leaves_path, alert: "Could not process cancellation: #{e.message}"
   end
 
-  def approve_confirmation
-    confirmation = current_user.confirmations.find(params[:id])
-    confirmation.update(status: 'approved', validated_at: Time.now)
-    redirect_to leaves_path(active_tab: 'manager'), notice: 'Confirmation approved.'
-  end
-
-  def reject_confirmation
-    confirmation = current_user.confirmations.find(params[:id])
-
-    # capture provided reason (may be nil)
-    reason = params[:rejection_reason].to_s.strip.presence
-
-    confirmation.update!(
-      status: 'rejected',
-      validated_at: Time.current,
-      rejection_reason: reason
-    )
-
-    redirect_to leaves_path(active_tab: 'manager'), notice: 'Confirmation rejected.'
-  rescue ActiveRecord::RecordNotFound
-    redirect_to leaves_path(active_tab: 'manager'), alert: 'Confirmation not found or you are not authorized.'
-  rescue ActiveRecord::RecordInvalid => e
-    redirect_to leaves_path(active_tab: 'manager'), alert: "Could not reject confirmation: #{e.record.errors.full_messages.to_sentence}"
-  end
-
   def create_entitlement
     params = entitlement_params  # Use strong params
     user = User.find_by(id: params[:user_id])

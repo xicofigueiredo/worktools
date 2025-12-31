@@ -1,0 +1,38 @@
+<div class="alert alert-light border shadow-sm mb-4 p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="alert-heading h5 mb-0"><i class="fa-solid fa-bolt-lightning text-warning me-2"></i>Action Center</h4>
+    <span class="badge bg-primary"><%= manager_pending.count %> Pending</span>
+  </div>
+
+  <div class="list-group list-group-flush">
+    <% manager_pending.each do |conf| %>
+      <div id="action-row-<%= conf.id %>" class="list-group-item bg-transparent px-0">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <strong><%= conf.confirmable.learner.full_name %></strong>
+            requested a <span class="text-primary"><%= conf.confirmable.type.underscore.humanize %></span>
+            <button class="btn btn-link btn-sm text-decoration-none p-0 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#desc-<%= conf.id %>">
+              (Details)
+            </button>
+          </div>
+          <div class="d-flex gap-2">
+            <%= button_to approve_confirmation_path(conf), method: :post, class: "btn btn-sm btn-success px-3" do %>
+              <i class="fa-solid fa-check"></i> Approve
+            <% end %>
+            <button type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    data-action="click->confirmation#openRejectModal"
+                    data-url="<%= reject_confirmation_path(conf) %>">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+        <div class="collapse mt-2" id="desc-<%= conf.id %>">
+          <div class="card card-body py-2 bg-white small text-muted">
+            <strong>Reason:</strong> <%= conf.confirmable.reason %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

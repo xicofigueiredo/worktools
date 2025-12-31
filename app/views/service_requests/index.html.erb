@@ -1,103 +1,37 @@
-<div class="container mt-4">
+<div class="container mt-4" data-controller="confirmation">
+  <div id="manager-action-center">
+    <%= render 'action_center', manager_pending: @manager_pending if @manager_pending.any? %>
+  </div>
+
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>My Service Requests</h2>
+    <h2>Service Requests</h2>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal">
-      <i class="fa-solid fa-plus me-1"></i> Create New Request
+      <i class="fa-solid fa-plus me-1"></i> New Request
     </button>
   </div>
 
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Type</th>
-              <th>Learner</th>
-              <th>Date Requested</th>
-              <th>Reason</th>
-              <th>Status</th>
-              <th>Waiting On</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if @requests.any? %>
-              <% @requests.each do |req| %>
-                <tr>
-                  <td>
-                    <strong><%= req.type.underscore.humanize.titleize %></strong>
-                    <% if req.type == 'HubTransferRequest' && req.respond_to?(:target_hub) %>
-                      <br><small class="text-muted"><i class="fa-solid fa-arrow-right"></i> <%= req.target_hub&.name %></small>
-                    <% elsif req.type == 'CertificateRequest' && req.respond_to?(:certificate_type) %>
-                      <br><small class="text-muted"><%= req.certificate_type %></small>
-                    <% end %>
-                  </td>
+  <% active_tab = params[:active_tab] || 'my_requests' %>
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <%= link_to "My Requests", service_requests_path(active_tab: 'my_requests'),
+          class: "nav-link #{'active' if active_tab == 'my_requests'}" %>
+    </li>
+    <% if @review_history.any? || @manager_pending.any? %>
+      <li class="nav-item">
+        <%= link_to "Review History", service_requests_path(active_tab: 'review_history'),
+            class: "nav-link #{'active' if active_tab == 'review_history'}" %>
+      </li>
+    <% end %>
+  </ul>
 
-                  <td><%= req.learner.full_name %></td>
-
-                  <td><%= req.created_at.strftime("%b %d, %Y") %></td>
-
-                  <td>
-                    <span title="<%= req.reason %>">
-                      <%= truncate(req.reason, length: 40) %>
-                    </span>
-                  </td>
-
-                  <td>
-                    <% case req.status %>
-                    <% when 'approved' %>
-                      <span class="badge bg-success rounded-pill">Approved</span>
-                    <% when 'rejected' %>
-                      <span class="badge bg-danger rounded-pill">Rejected</span>
-                    <% when 'cancelled' %>
-                      <span class="badge bg-secondary rounded-pill">Cancelled</span>
-                    <% else %>
-                      <span class="badge bg-warning text-dark rounded-pill">Pending</span>
-                    <% end %>
-                  </td>
-
-                  <td>
-                    <% if req.status == 'pending' %>
-                      <% pending_conf = req.confirmations.detect { |c| c.status == 'pending' } %>
-                      <% if pending_conf && pending_conf.approver %>
-                        <div class="d-flex align-items-center justify-content-center">
-                          <i class="fa-regular fa-clock me-2 text-secondary"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            title="Sent on: <%= pending_conf.created_at.strftime('%b %d, %H:%M') %>">
-                          </i>
-                          <%= pending_conf.approver.full_name %>
-                        </div>
-                      <% else %>
-                        <span class="text-muted">System Processing</span>
-                      <% end %>
-                    <% else %>
-                      <span class="text-muted">-</span>
-                    <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            <% else %>
-              <tr>
-                <td colspan="6" class="text-center py-5 text-muted">
-                  No requests found.
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
+  <div class="tab-content">
+    <% if active_tab == 'my_requests' %>
+      <%= render 'my_requests_tab', requests: @requests %>
+    <% else %>
+      <%= render 'review_history_tab', history: @review_history %>
+    <% end %>
   </div>
 </div>
 
+<%= render 'shared/rejection_modal', title: "Reject Service Request" %>
 <%= render 'service_requests/new_request_form' %>
-
-<script>
-  document.addEventListener("turbo:load", function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
-  });
-</script>
