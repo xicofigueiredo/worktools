@@ -12,7 +12,7 @@ class AdmissionListController < ApplicationController
       redirect_to admissions_path and return
     end
 
-    filter_keys = [:search, :status, :hub, :programme, :curriculum, :grade_year]
+    filter_keys = [:search, :status, :hub, :programme, :curriculum, :grade_year, :age_min, :age_max]
 
     has_active_filters = params[:filter_applied].present? || filter_keys.any? { |k| params[k].present? }
 
@@ -72,7 +72,7 @@ class AdmissionListController < ApplicationController
       end
     end
 
-    # Search filter (unchanged)
+    # Search filter
     if params[:search].present?
       search_term = "%#{params[:search].strip}%"
       filter_scope = filter_scope.where(
@@ -83,7 +83,7 @@ class AdmissionListController < ApplicationController
       )
     end
 
-    # Multi-select filters - UPDATED
+    # Multi-select filters
     if params[:status].present?
       statuses = Array(params[:status]).reject(&:blank?)
       filter_scope = filter_scope.where(status: statuses) if statuses.any?
@@ -118,6 +118,20 @@ class AdmissionListController < ApplicationController
           filter_scope = filter_scope.where("1 = 0")
         end
       end
+    end
+
+    # Age Range Logic
+    if params[:age_min].present? || params[:age_max].present?
+      # Default values if one is missing
+      min_age = params[:age_min].presence || 0
+      max_age = params[:age_max].presence || 25
+
+      # PostgreSQL calculation for age: EXTRACT(YEAR FROM AGE(birthdate))
+      filter_scope = filter_scope.where(
+        "EXTRACT(YEAR FROM AGE(birthdate)) BETWEEN ? AND ?",
+        min_age.to_i,
+        max_age.to_i
+      )
     end
 
     # counts
@@ -505,6 +519,12 @@ class AdmissionListController < ApplicationController
           filter_scope = filter_scope.where("1 = 0")
         end
       end
+    end
+
+    if params[:age_min].present? || params[:age_max].present?
+      min_age = params[:age_min].presence || 0
+      max_age = params[:age_max].presence || 50
+      filter_scope = filter_scope.where("EXTRACT(YEAR FROM AGE(birthdate)) BETWEEN ? AND ?", min_age.to_i, max_age.to_i)
     end
 
     # Generate CSV
