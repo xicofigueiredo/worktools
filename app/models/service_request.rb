@@ -14,6 +14,19 @@ class ServiceRequest < ApplicationRecord
     []
   end
 
+  def description_for_approver
+    helpers = Rails.application.routes.url_helpers
+    learner_info_id = learner.learner_info&.id
+
+    learner_link = if learner_info_id
+      "<a href='#{helpers.admission_path(learner_info_id)}' class='fw-bold text-primary text-decoration-none'>#{learner.full_name}</a>"
+    else
+      "<strong>#{learner.full_name}</strong>"
+    end
+
+    "<strong>#{requester.full_name}</strong> requested a #{self.class.name.underscore.humanize.downcase} for #{learner_link}".html_safe
+  end
+
   def handle_confirmation_update(confirmation)
     if confirmation.status == 'approved'
       chain = approval_chain

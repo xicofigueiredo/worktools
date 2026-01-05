@@ -10,7 +10,7 @@ class ServiceRequestsController < ApplicationController
 
     confirmations_scope = current_user.confirmations.where(confirmable_type: ['ServiceRequest'] + ServiceRequest::TYPES)
 
-    @manager_pending = confirmations_scope.pending.includes(confirmable: :learner)
+    @manager_pending = confirmations_scope.pending.includes(confirmable: [:learner, :requester])
     @review_history = confirmations_scope.where.not(status: 'pending')
                                         .includes(confirmable: :learner)
                                         .order(validated_at: :desc)

@@ -22,6 +22,21 @@ class HubTransferRequest < ServiceRequest
     chain.compact.uniq
   end
 
+  def description_for_approver
+    helpers = Rails.application.routes.url_helpers
+    learner_info_id = learner.learner_info&.id
+
+    learner_link = if learner_info_id
+      "<a href='#{helpers.admission_path(learner_info_id)}' class='fw-bold text-primary text-decoration-none'>#{learner.full_name}</a>"
+    else
+      "<strong>#{learner.full_name}</strong>"
+    end
+
+    hub_link = "<a href='#{helpers.hub_path(target_hub)}' class='fw-bold text-primary text-decoration-none'>#{target_hub.name}</a>"
+
+    "<strong>#{requester.full_name}</strong> requested a hub transfer for #{learner_link} to #{hub_link}".html_safe
+  end
+
   def finalize_transfer!
     ActiveRecord::Base.transaction do
       source_hub = learner.learner_info&.hub
