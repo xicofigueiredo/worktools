@@ -369,7 +369,7 @@ class ReportsController < ApplicationController
     elsif current_user.role == 'learner' && current_user != @learner
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
-    elsif current_user.role == 'lc' && (current_user.hubs.exclude?(@learner.users_hubs.find_by(main: true)&.hub) || current_user.online_learners.exclude?(@learner.id))
+    elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.find_by(main: true)&.hub) && !current_user.online_learners.where(id: @learner.id).exists?
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
     elsif current_user.role == 'admin'
