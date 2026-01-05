@@ -30,6 +30,50 @@
   .hidden {
     display: none !important;
   }
+
+  .age-slider-group {
+    position: relative;
+    width: 200px;
+    height: 40px;
+  }
+
+  /* Base track styling */
+  .age-slider-group input[type="range"] {
+    position: absolute;
+    pointer-events: none;
+    appearance: none;
+    width: 100%;
+    background: none;
+    outline: none;
+    margin: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Slider thumb styling (the handles) */
+  .age-slider-group input[type="range"]::-webkit-slider-thumb {
+    pointer-events: all;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background-color: #0d6efd;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  /* The actual bar behind the handles */
+  .slider-track {
+    width: 100%;
+    height: 5px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #e2e8f0;
+    border-radius: 5px;
+    z-index: 0;
+  }
 </style>
 
 <div style="padding: 0 24px;">
@@ -303,6 +347,26 @@
           </div>
 
           <div data-multi-select-target="hiddenContainer"></div>
+        </div>
+      </div>
+
+      <div style="position: relative; min-width: 210px;">
+        <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">
+          Age: <strong id="age-display"><%= params[:age_min] || 0 %> - <%= params[:age_max] || 50 %></strong>
+        </label>
+
+        <div class="age-slider-group">
+          <div class="slider-track"></div>
+
+          <%= range_field_tag :age_min, params[:age_min] || 0, min: 0, max: 50,
+                id: "age_min",
+                data: { action: "input->admission-search#searchInput" },
+                oninput: "updateAgeDisplay()" %>
+
+          <%= range_field_tag :age_max, params[:age_max] || 50, min: 0, max: 50,
+                id: "age_max",
+                data: { action: "input->admission-search#searchInput" },
+                oninput: "updateAgeDisplay()" %>
         </div>
       </div>
 
@@ -637,5 +701,20 @@
     } catch (e) {
       window.location.reload();
     }
+  }
+
+  function updateAgeDisplay() {
+    const min = document.getElementById('age_min');
+    const max = document.getElementById('age_max');
+    const display = document.getElementById('age-display');
+
+    // Ensure handles don't cross each other
+    if (parseInt(min.value) > parseInt(max.value)) {
+      let temp = min.value;
+      min.value = max.value;
+      max.value = temp;
+    }
+
+    display.innerText = min.value + " - " + max.value;
   }
 </script>

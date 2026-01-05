@@ -38,7 +38,7 @@ module LearnerNormalization
 
   GRADES_PER_CURRICULUM = {
     "British Curriculum" => ["UK Year 13", "UK Year 12", "UK Year 11", "UK Year 10", "UK Year 9", "UK Year 8"],
-    "American Curriculum" => ["US Year 12", "US Year 11", "US Year 10", "US Year 9", "US Year 8", "US Year 7", "US Year 6", "US Year 5"],
+    "American Curriculum" => ["US Grade 12", "US Grade 11", "US Grade 10", "US Grade 9", "US Grade 8", "US Grade 7", "US Grade 6", "US Grade 5"],
     "Portuguese Curriculum" => ["PT Year 12", "PT Year 11", "PT Year 10", "PT Year 9", "PT Year 8", "PT Year 7"],
     "Own Curriculum" => ["N/A"],
     "ESL Course" => ["N/A"],
@@ -105,13 +105,13 @@ module LearnerNormalization
 
       when 'American Curriculum'
         if us_match
-          "US Year #{us_match[1].to_i}"
+          "US Grade #{us_match[1].to_i}"
         elsif uk_match
           uk_year = uk_match[1].to_i
           us_grade = UK_TO_US_GRADE_MAP[uk_year] || uk_year
-          "US Year #{us_grade}"
+          "US Grade #{us_grade}"
         elsif simple_number
-          "US Year #{simple_number}"
+          "US Grade #{simple_number}"
         else
           raw_grade
         end
@@ -177,7 +177,7 @@ module LearnerNormalization
         prefix = 'UK Year '
       when "American Curriculum"
         final_year -= 1 unless final_year.zero?
-        prefix = 'US Year '
+        prefix = 'US Grade '
       when "Portuguese Curriculum"
         final_year -= 1 unless final_year.zero?
         prefix = 'PT Year '
