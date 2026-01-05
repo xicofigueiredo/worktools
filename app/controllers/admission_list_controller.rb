@@ -56,17 +56,19 @@ class AdmissionListController < ApplicationController
       if lc_hub_ids.any?
         filter_scope = filter_scope.where(
           "(learner_infos.hub_id IN (:hub_ids)) OR " \
+          "(learner_infos.learning_coach_id = :user_id) OR " \
           "(learner_infos.hub_id IS NULL AND EXISTS (" \
             "SELECT 1 FROM users_hubs uh " \
             "WHERE uh.user_id = learner_infos.user_id " \
             "AND uh.hub_id IN (:hub_ids) " \
             "AND uh.main = TRUE" \
           "))",
-          hub_ids: lc_hub_ids
+          hub_ids: lc_hub_ids,
+          user_id: current_user.id
         )
       else
-        # No hubs assigned to this LC, show nothing
-        filter_scope = filter_scope.where("1 = 0")
+
+        filter_scope = filter_scope.where(learning_coach_id: current_user.id)
       end
     end
 
