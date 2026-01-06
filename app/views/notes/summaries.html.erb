@@ -1,0 +1,83 @@
+<div class="container mt-3">
+  <h2>AI Summaries</h2>
+  <p>All AI-generated summaries for <%= @learner.full_name %>:</p>
+
+  <div class="d-flex gap-3 justify-content-end mb-3">
+    <%= link_to 'Create New Summary', summarize_user_notes_path(@learner),
+        data: { turbo_frame: "modal" },
+        class: 'btn btn-primary',
+        style: 'border-radius: 10px;' %>
+    <%= link_to 'Back', request.referer, class: 'btn btn-secondary', style: 'border-radius: 10px;' %>
+  </div>
+
+  <% if @summaries.any? %>
+    <div class="row">
+      <% @summaries.each do |summary| %>
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-sm" style="border-radius: 10px;">
+            <div class="card-header bg-primary text-white">
+              <h6 class="mb-0">
+                <i class="fa-solid fa-calendar me-2"></i>
+                <%= summary.start_date.strftime('%d %B %Y') %> - <%= summary.end_date.strftime('%d %B %Y') %>
+              </h6>
+            </div>
+            <div class="card-body">
+              <p class="text-muted mb-2">
+                <small>
+                  <i class="fa-solid fa-file-lines me-1"></i>
+                  <%= summary.notes_count %> notes
+                  <span class="ms-2">
+                    <i class="fa-solid fa-clock me-1"></i>
+                    <%= summary.created_at.strftime('%d %b %Y at %H:%M') %>
+                  </span>
+                </small>
+              </p>
+
+              <div class="mb-2">
+                <strong>Summary:</strong>
+                <p class="mt-1"><%= truncate(summary.summary, length: 200) %></p>
+              </div>
+
+              <% if summary.key_points.present? %>
+                <div class="mb-2">
+                  <strong>Key Points:</strong>
+                  <ul class="mt-1 mb-0">
+                    <%
+                      key_points = begin
+                        JSON.parse(summary.key_points)
+                      rescue
+                        summary.key_points.split("\n").reject(&:blank?)
+                      end
+                    %>
+                    <% key_points.first(3).each do |point| %>
+                      <li><%= truncate(point.to_s, length: 100) %></li>
+                    <% end %>
+                    <% if key_points.length > 3 %>
+                      <li><em>...and <%= key_points.length - 3 %> more</em></li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+
+              <% if summary.recommendations.present? %>
+                <div class="mb-2">
+                  <strong>Recommendations:</strong>
+                  <p class="mt-1"><%= truncate(summary.recommendations, length: 150) %></p>
+                </div>
+              <% end %>
+
+              <%= link_to 'View Full Summary', summarize_user_notes_path(@learner, start_date: summary.start_date, end_date: summary.end_date),
+                  data: { turbo_frame: "modal" },
+                  class: 'btn btn-sm btn-primary mt-2' %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-5">
+      <h3>No summaries available</h3>
+      <p>Generate your first summary by clicking "Summarize Notes" from the notes page.</p>
+    </div>
+  <% end %>
+</div>

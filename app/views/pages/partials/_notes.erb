@@ -43,11 +43,71 @@
       <% end %>
     </div>
   </div>
-  <div style="width: 100%" class="d-flex justify-content-end">
+  <div style="width: 100%" class="d-flex justify-content-end gap-2">
+    <%= link_to summarize_user_notes_path(@learner),
+        data: { turbo_frame: "modal", turbo_preload: false },
+        class: 'btn btn-info text-white',
+        id: 'summarize-notes-btn',
+        style: 'border-radius: 10px;' do %>
+      <span id="summarize-btn-text">Create New Summary</span>
+      <span id="summarize-btn-spinner" style="display: none;">
+        <i class="fa-solid fa-spinner fa-spin me-2"></i>Generating...
+      </span>
+    <% end %>
     <%= link_to 'Create New Note', new_user_note_path(@learner), data: { turbo_frame: "modal" }, class: 'btn btn-primary', style: 'border-radius: 10px;' %>
   </div>
   <!-- Button to view all notes -->
-  <div class="mt-3 d-flex justify-content-center">
-    <%= link_to 'View All Notes', user_notes_path(@learner), class: 'btn btn-secondary', style: 'border-radius: 10px;' %>
+  <div class="mt-3 d-flex justify-content-center gap-2">
+    <%= link_to 'View All Summaries', summaries_user_notes_path(@learner),
+        class: 'btn btn-secondary text-white',
+        style: 'border-radius: 10px; flex: 1; max-width: 200px;' %>
+    <%= link_to 'View All Notes', user_notes_path(@learner),
+        class: 'btn btn-secondary',
+        style: 'border-radius: 10px; flex: 1; max-width: 200px;' %>
   </div>
 </div>
+
+<script>
+  document.addEventListener('turbo:before-fetch-request', function(event) {
+    const summarizeBtn = document.getElementById('summarize-notes-btn');
+    if (summarizeBtn && event.detail.url.includes('summarize')) {
+      summarizeBtn.disabled = true;
+      summarizeBtn.style.pointerEvents = 'none';
+      document.getElementById('summarize-btn-text').style.display = 'none';
+      document.getElementById('summarize-btn-spinner').style.display = 'inline';
+
+      // Show loading in modal if it exists
+      const modalFrame = document.querySelector('turbo-frame#modal');
+      if (modalFrame) {
+        modalFrame.innerHTML = `
+          <div class="modal-backdrop">
+            <div class="custom-modal" style="max-width: 900px;">
+              <div class="d-flex justify-content-between mb-3">
+                <h1>AI Note Summary</h1>
+                <div>
+                  <button class="btn btn-secondary" onclick="document.querySelector('turbo-frame#modal').innerHTML=''">X</button>
+                </div>
+              </div>
+              <div class="text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted">Generating AI summary... This may take a few moments.</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+  });
+
+  document.addEventListener('turbo:frame-load', function(event) {
+    const summarizeBtn = document.getElementById('summarize-notes-btn');
+    if (summarizeBtn) {
+      summarizeBtn.disabled = false;
+      summarizeBtn.style.pointerEvents = 'auto';
+      document.getElementById('summarize-btn-text').style.display = 'inline';
+      document.getElementById('summarize-btn-spinner').style.display = 'none';
+    }
+  });
+</script>

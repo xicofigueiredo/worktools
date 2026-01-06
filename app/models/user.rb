@@ -31,7 +31,8 @@ class User < ApplicationRecord
   # has_many :thursday_slots_as_learner, class_name: 'ThursdaySlot', foreign_key: 'learner_id', dependent: :destroy
   # has_many :friday_slots_as_learner, class_name: 'FridaySlot', foreign_key: 'learner_id', dependent: :destroy
   has_many :lws_timelines, dependent: :destroy
-  has_many :attendances, dependent: :destroy
+  has_many :attendances
+  has_many :ai_summaries, dependent: :destroy
   has_many :notes, dependent: :destroy
   has_one :learner_flag, dependent: :destroy
   has_many :reports

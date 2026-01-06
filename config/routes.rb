@@ -241,7 +241,15 @@ Rails.application.routes.draw do
     end
 
     resources :users, only: [] do
-      resources :notes, except: [:show]
+      resources :notes, except: [:show] do
+        collection do
+          get :summarize
+          get :summaries
+        end
+        collection do
+          get :summarize
+        end
+      end
     end
     get 'moodle_index', to: 'timelines#moodle_index', as: :moodle_index
 

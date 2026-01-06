@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
+ActiveRecord::Schema[7.0].define(version: 2026_01_06_151915) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -50,6 +50,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "ai_summaries", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.text "summary"
+    t.text "key_points"
+    t.text "recommendations"
+    t.date "start_date"
+    t.date "end_date"
+    t.integer "notes_count", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "start_date", "end_date"], name: "index_ai_summaries_on_user_id_and_start_date_and_end_date"
+    t.index ["user_id"], name: "index_ai_summaries_on_user_id"
   end
 
   create_table "assignments", force: :cascade do |t|
@@ -1304,6 +1318,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ai_summaries", "users"
   add_foreign_key "assignments", "subjects"
   add_foreign_key "assignments", "users"
   add_foreign_key "attendances", "users"
