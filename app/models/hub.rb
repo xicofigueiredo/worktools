@@ -103,6 +103,13 @@ class Hub < ApplicationRecord
     booking_config || build_booking_config
   end
 
+  def all_cc_emails
+    emails = []
+    emails << hub_email if hub_email.present?
+    emails.concat(school_contact_emails) if school_contact_emails.any?
+    emails.uniq
+  end
+
   private
 
   def initialize_booking_config

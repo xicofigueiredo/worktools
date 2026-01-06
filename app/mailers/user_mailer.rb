@@ -249,9 +249,12 @@ class UserMailer < Devise::Mailer
     @hub = visit.hub
     @lcs = @hub.learning_coaches.map { |u| u.try(:full_name) || u.email }.to_sentence
 
+    cc_list = @hub.all_cc_emails
+    cc_list << ApplicationMailer::FROM_CONTACT
+
     mail(
       to: @visit.email,
-      cc: ApplicationMailer::FROM_CONTACT, # add hub_email
+      cc: cc_list.uniq,
       from: ApplicationMailer::FROM_CONTACT,
       subject: "Your Hub Visit for #{@hub.name} Is Confirmed!"
     )
@@ -262,9 +265,12 @@ class UserMailer < Devise::Mailer
     @hub = visit.hub
     @lcs = @hub.learning_coaches.map { |u| u.try(:full_name) || u.email }.to_sentence
 
+    cc_list = @hub.all_cc_emails
+    cc_list << ApplicationMailer::FROM_CONTACT
+
     mail(
       to: @visit.email,
-      cc: ApplicationMailer::FROM_CONTACT, # add hub_email
+      cc: cc_list.uniq,
       from: ApplicationMailer::FROM_CONTACT,
       subject: "Your Trial Day Is Booked!"
     )
