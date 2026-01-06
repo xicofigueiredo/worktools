@@ -61,6 +61,7 @@ Rails.application.routes.draw do
 
     # Attendances Routes
     get '/attendance', to: 'attendances#attendance'
+    get '/attendances/analysis', to: 'attendances#analysis', as: :attendance_analysis
     get '/attendances/:time_frame', to: 'attendances#index', as: :attendances
     get '/attendance/:learner_id', to: 'attendances#learner_attendances', as: 'learner_attendances'
     put '/attendances/update_attendance', to: 'attendances#update_attendance', as: :update_attendance

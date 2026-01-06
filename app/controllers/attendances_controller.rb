@@ -97,6 +97,20 @@ class AttendancesController < ApplicationController
     @attendances = @learner.attendances.where("attendance_date <= ?", Date.today).order(attendance_date: :desc)
   end
 
+  def analysis
+    hub = current_user.users_hubs.find_by(main: true)&.hub
+    start_date = params[:start_date] ? Date.parse(params[:start_date]) : 12.weeks.ago.beginning_of_week.to_date
+    end_date = params[:end_date] ? Date.parse(params[:end_date]) : Date.today.end_of_week
+
+    @service = AttendanceAnalysisService.new(hub: hub, start_date: start_date, end_date: end_date)
+    @analysis = @service.analyze
+    @learners_at_risk = @analysis[:learners_at_risk] || []
+    @correlations = @analysis[:attendance_performance_correlation] || []
+    @trends = @analysis[:attendance_trends] || []
+    @weekly_breakdown = @analysis[:weekly_breakdown] || []
+    @metrics = @analysis[:performance_metrics] || {}
+  end
+
   private
 
   def attendance_params

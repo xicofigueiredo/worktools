@@ -1,0 +1,356 @@
+<div class="mx-5 mt-3">
+  <div class="d-flex justify-content-between mb-4 align-items-center">
+    <h3>Attendance Pattern Analysis</h3>
+    <div class="d-flex gap-2">
+      <%= form_with url: attendance_analysis_path, method: :get, local: true, class: "d-flex gap-2 align-items-end" do |f| %>
+        <div>
+          <%= f.label :start_date, "Start Date", class: "form-label small" %>
+          <%= f.date_field :start_date, value: params[:start_date] || 12.weeks.ago.beginning_of_week, class: "form-control form-control-sm" %>
+        </div>
+        <div>
+          <%= f.label :end_date, "End Date", class: "form-label small" %>
+          <%= f.date_field :end_date, value: params[:end_date] || Date.today.end_of_week, class: "form-control form-control-sm" %>
+        </div>
+        <%= f.submit "Update Range", class: "btn btn-primary btn-sm" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Summary Metrics -->
+  <div class="row mb-4">
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2 text-muted">Total Learners</h6>
+          <h3 class="mb-0"><%= @metrics[:total_learners] %></h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2 text-muted">Average Attendance</h6>
+          <h3 class="mb-0"><%= @metrics[:average_attendance_rate] %>%</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2 text-muted">Avg Hours at Hub</h6>
+          <h3 class="mb-0 text-primary"><%= @metrics[:average_hours_at_hub] || 0 %>h</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2 text-muted">Below 70% Threshold</h6>
+          <h3 class="mb-0 text-warning"><%= @metrics[:learners_below_threshold] %></h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2 text-muted">Strong Correlations</h6>
+          <h3 class="mb-0 text-info"><%= @metrics[:strong_correlation_count] %></h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Learners at Risk -->
+  <div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+      <h5 class="mb-0"><i class="fa-solid fa-exclamation-triangle"></i> Learners Needing Support</h5>
+    </div>
+    <div class="card-body">
+      <% if @learners_at_risk.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Learner</th>
+                <th>Risk Score</th>
+                <th>Attendance Rate</th>
+                <th>Recent (2 weeks)</th>
+                <th>Avg Hours at Hub</th>
+                <th>Performance Impact</th>
+                <th>Risk Factors</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @learners_at_risk.each do |learner_data| %>
+                <tr>
+                  <td>
+                    <strong><%= learner_data[:learner].full_name %></strong>
+                  </td>
+                  <td>
+                    <span class="badge bg-<%= learner_data[:risk_score] > 0.7 ? 'danger' : learner_data[:risk_score] > 0.5 ? 'warning' : 'info' %>">
+                      <%= (learner_data[:risk_score] * 100).round(0) %>%
+                    </span>
+                  </td>
+                  <td><%= learner_data[:attendance_rate] %>%</td>
+                  <td><%= learner_data[:recent_attendance] %>%</td>
+                  <td><%= learner_data[:avg_hours_at_hub] || 0 %>h</td>
+                  <td>
+                    <% impact = learner_data[:performance_impact] %>
+                    <% if impact[:correlation] < -0.3 %>
+                      <span class="text-danger">
+                        <i class="fa-solid fa-arrow-down"></i> Strong Negative
+                      </span>
+                    <% elsif impact[:correlation] > 0.3 %>
+                      <span class="text-success">
+                        <i class="fa-solid fa-arrow-up"></i> Positive
+                      </span>
+                    <% else %>
+                      <span class="text-muted">Weak</span>
+                    <% end %>
+                    <br>
+                    <small class="text-muted">Perf: <%= impact[:average_performance]&.round(1) || 'N/A' %>%</small>
+                  </td>
+                  <td>
+                    <ul class="list-unstyled mb-0">
+                      <% learner_data[:risk_factors].each do |factor| %>
+                        <li><small class="text-danger"><i class="fa-solid fa-circle"></i> <%= factor %></small></li>
+                      <% end %>
+                    </ul>
+                  </td>
+                  <td>
+                    <%= link_to learner_profile_path(learner_data[:learner]), class: "btn btn-sm btn-outline-primary" do %>
+                      <i class="fa-solid fa-user"></i> View Profile
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="alert alert-success">
+          <i class="fa-solid fa-check-circle"></i> No learners currently flagged as at-risk based on attendance patterns.
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Attendance-Performance Correlation -->
+  <div class="card mb-4">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0"><i class="fa-solid fa-chart-line"></i> Attendance-Performance Correlation</h5>
+    </div>
+    <div class="card-body">
+      <% if @correlations.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Learner</th>
+                <th>Correlation</th>
+                <th>Attendance Rate</th>
+                <th>Avg Hours at Hub</th>
+                <th>Average Performance</th>
+                <th>Data Points</th>
+                <th>Interpretation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @correlations.each do |correlation| %>
+                <tr>
+                  <td><strong><%= correlation[:learner].full_name %></strong></td>
+                  <td>
+                    <% corr_value = correlation[:correlation] %>
+                    <span class="badge bg-<%= corr_value > 0.5 ? 'success' : corr_value < -0.5 ? 'danger' : 'secondary' %>">
+                      <%= corr_value.round(2) %>
+                    </span>
+                  </td>
+                  <td><%= correlation[:attendance_rate].round(1) %>%</td>
+                  <td><%= correlation[:avg_hours_at_hub] || 0 %>h</td>
+                  <td><%= correlation[:average_performance]&.round(1) || 'N/A' %>%</td>
+                  <td><%= correlation[:data_points] %></td>
+                  <td>
+                    <% if corr_value > 0.5 %>
+                      <span class="text-success">
+                        <i class="fa-solid fa-arrow-up"></i> Strong positive: Higher attendance = Better performance
+                      </span>
+                    <% elsif corr_value < -0.5 %>
+                      <span class="text-danger">
+                        <i class="fa-solid fa-arrow-down"></i> Strong negative: Attendance issues affecting performance
+                      </span>
+                    <% elsif corr_value > 0.3 %>
+                      <span class="text-info">
+                        <i class="fa-solid fa-arrow-up"></i> Moderate positive correlation
+                      </span>
+                    <% elsif corr_value < -0.3 %>
+                      <span class="text-warning">
+                        <i class="fa-solid fa-arrow-down"></i> Moderate negative correlation
+                      </span>
+                    <% else %>
+                      <span class="text-muted">Weak or no correlation</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="alert alert-info">
+          <i class="fa-solid fa-info-circle"></i> Insufficient data to calculate correlations. Need at least 5 days of attendance data.
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Attendance Trends -->
+  <div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+      <h5 class="mb-0"><i class="fa-solid fa-chart-area"></i> Attendance Trends</h5>
+    </div>
+    <div class="card-body">
+      <% declining_trends = @trends.select { |t| t[:trend] < -5 } %>
+      <% if declining_trends.any? %>
+        <div class="alert alert-warning mb-3">
+          <i class="fa-solid fa-exclamation-triangle"></i> <strong><%= declining_trends.count %></strong> learners showing declining attendance trends.
+        </div>
+      <% end %>
+
+      <% if @trends.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Learner</th>
+                <th>Trend</th>
+                <th>Current Rate</th>
+                <th>Previous Rate</th>
+                <th>Average Rate</th>
+                <th>Avg Hours at Hub</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @trends.each do |trend| %>
+                <tr>
+                  <td><strong><%= trend[:learner].full_name %></strong></td>
+                  <td>
+                    <% if trend[:trend] < -5 %>
+                      <span class="badge bg-danger">
+                        <i class="fa-solid fa-arrow-down"></i> <%= trend[:trend] %>%
+                      </span>
+                    <% elsif trend[:trend] > 5 %>
+                      <span class="badge bg-success">
+                        <i class="fa-solid fa-arrow-up"></i> +<%= trend[:trend] %>%
+                      </span>
+                    <% else %>
+                      <span class="badge bg-secondary">
+                        <%= trend[:trend] > 0 ? '+' : '' %><%= trend[:trend] %>%
+                      </span>
+                    <% end %>
+                  </td>
+                  <td><%= trend[:current_rate] %>%</td>
+                  <td><%= trend[:previous_rate] %>%</td>
+                  <td><%= trend[:average_rate].round(1) %>%</td>
+                  <td><%= trend[:avg_hours_at_hub] || 0 %>h</td>
+                  <td>
+                    <% if trend[:trend] < -5 %>
+                      <span class="text-danger"><i class="fa-solid fa-exclamation-circle"></i> Declining</span>
+                    <% elsif trend[:trend] > 5 %>
+                      <span class="text-success"><i class="fa-solid fa-check-circle"></i> Improving</span>
+                    <% else %>
+                      <span class="text-muted"><i class="fa-solid fa-minus"></i> Stable</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="alert alert-info">
+          <i class="fa-solid fa-info-circle"></i> No trend data available for the selected period.
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Weekly Breakdown -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0"><i class="fa-solid fa-calendar-week"></i> Weekly Attendance Breakdown</h5>
+    </div>
+    <div class="card-body">
+      <% if @weekly_breakdown.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Week</th>
+                <th>Total Learners</th>
+                <th>Present Days</th>
+                <th>Absent Days</th>
+                <th>Attendance Rate</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @weekly_breakdown.each do |week_data| %>
+                <tr>
+                  <td><strong><%= week_data[:week].name %></strong><br>
+                    <small class="text-muted">
+                      <%= week_data[:week].start_date.strftime('%d %b') %> -
+                      <%= week_data[:week].end_date.strftime('%d %b %Y') %>
+                    </small>
+                  </td>
+                  <td><%= week_data[:total_learners] %></td>
+                  <td class="text-success"><%= week_data[:present_count] %></td>
+                  <td class="text-danger"><%= week_data[:absent_count] %></td>
+                  <td>
+                    <div class="progress" style="height: 20px;">
+                      <div class="progress-bar bg-<%= week_data[:attendance_rate] >= 80 ? 'success' : week_data[:attendance_rate] >= 70 ? 'warning' : 'danger' %>"
+                           role="progressbar"
+                           style="width: <%= week_data[:attendance_rate] %>%"
+                           aria-valuenow="<%= week_data[:attendance_rate] %>"
+                           aria-valuemin="0"
+                           aria-valuemax="100">
+                        <%= week_data[:attendance_rate] %>%
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <% if week_data[:attendance_rate] >= 80 %>
+                      <span class="badge bg-success">Good</span>
+                    <% elsif week_data[:attendance_rate] >= 70 %>
+                      <span class="badge bg-warning">Fair</span>
+                    <% else %>
+                      <span class="badge bg-danger">Poor</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="alert alert-info">
+          <i class="fa-solid fa-info-circle"></i> No weekly data available for the selected period.
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Help Text -->
+  <div class="card">
+    <div class="card-body">
+      <h6 class="card-title"><i class="fa-solid fa-circle-info"></i> Understanding the Analysis</h6>
+      <ul class="mb-0">
+        <li><strong>Risk Score:</strong> Calculated based on multiple factors including attendance rate, trends, unjustified absences, and performance correlation. Higher scores indicate greater need for support.</li>
+        <li><strong>Correlation:</strong> Measures the relationship between attendance and performance. Values range from -1 (strong negative) to +1 (strong positive). Values above 0.5 or below -0.5 are considered significant.</li>
+        <li><strong>Trend:</strong> Compares recent attendance (last 2 weeks) with previous period. Negative values indicate declining attendance.</li>
+        <li><strong>Performance Impact:</strong> Shows how attendance correlates with assignment grades and timeline progress.</li>
+      </ul>
+    </div>
+  </div>
+</div>

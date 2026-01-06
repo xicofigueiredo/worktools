@@ -59,6 +59,25 @@
               <%= link_to "Assignments", moodle_assignments_path, class: "nav-link" %>
             </div>
           </li>
+          <li class="nav-item dropdown">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(attendance_path) || current_page?(attendance_analysis_path)%>">
+              <a class="nav-link dropdown-toggle" href="#" id="attendanceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Attendance
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="attendanceDropdown">
+                <li>
+                  <%= link_to attendance_path, class: "dropdown-item #{'active' if current_page?(attendance_path)}" do %>
+                    <i class="fa-solid fa-calendar-day me-2"></i>Daily Attendance
+                  <% end %>
+                </li>
+                <li>
+                  <%= link_to attendance_analysis_path, class: "dropdown-item #{'active' if current_page?(attendance_analysis_path)}" do %>
+                    <i class="fa-solid fa-chart-line me-2"></i>Attendance Analysis
+                  <% end %>
+                </li>
+              </ul>
+            </div>
+          </li>
           <li class="nav-item">
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(chats_path)%>">
               <%= link_to chats_path, class: "nav-link" do %>
