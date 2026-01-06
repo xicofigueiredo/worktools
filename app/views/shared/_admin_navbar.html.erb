@@ -68,11 +68,6 @@
             </div>
           </li>
           <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(timelines_path)%>">
-              <%= link_to "Timelines", timelines_path, class: "nav-link" %>
-            </div>
-          </li>
-          <li class="nav-item">
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(moodle_index_path)%>">
             <%= link_to "Moodle T.", moodle_timelines_path, class: "nav-link", data: { turbo: false }, onclick: "window.location.reload(true)" %>
             </div>
@@ -92,51 +87,11 @@
               <%= link_to "Create Notification", new_notification_path, class: "nav-link" %>
             </div>
           </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(dashboard_lc_path)%>">
-              <%= link_to "LC Dashboard", dashboard_lc_path, class: "nav-link" %>
-            </div>
-          </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(dashboard_lc_path)%>">
-              <%= link_to "CM Dashboard", dashboard_cm_path, class: "nav-link" %>
-            </div>
-          </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(attendance_path)%>">
-              <%= link_to "Attendance", attendance_path, class: "nav-link" %>
-            </div>
-          </li>
           <%# <li class="nav-item">
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(weekly_meetings_path)%>
               <%# <%= link_to "Weekly Meetings", weekly_meetings_path, class: "nav-link" %>
             <%# </div> %>
           <%# </li> %>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(kdas_path)%>">
-              <%= link_to "KDA's", kdas_path(date: Date.today), class: "nav-link" %>
-            </div>
-          </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(weekly_goals_navigator_path)%>">
-              <%= link_to "Weekly Goals", weekly_goals_navigator_path(date: Date.today), class: "nav-link" %>
-            </div>
-          </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(sprint_goals_path)%>">
-              <%= link_to "Sprint Goals", sprint_goals_path(date: Date.today), class: "nav-link" %>
-            </div>
-          </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(exam_enrolls_path)%>">
-              <%= link_to "Exam Registration", exam_enrolls_path, class: "nav-link" %>
-            </div>
-          </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(exam_finances_path)%>">
-              <%= link_to "Exams Finance", exam_finances_path, class: "nav-link" %>
-            </div>
-          </li>
           <li class="nav-item">
             <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(assignments_path)%>">
               <%= link_to "Assignments", moodle_assignments_path, class: "nav-link" %>
@@ -147,16 +102,6 @@
               <%= link_to chats_path, class: "nav-link" do %>
                 <i class="fas fa-robot me-1"></i>Aristotle
               <% end %>
-            </div>
-          </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(reports_path)%>">
-              <%= link_to "Reports", reports_path(date: Date.today), class: "nav-link" %>
-            </div>
-          </li>
-          <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(navigator_consents_path)%>">
-              <%= link_to "Build Week Activities", navigator_consents_path(date: Date.today), class: "nav-link" %>
             </div>
           </li>
           <li class="nav-item">

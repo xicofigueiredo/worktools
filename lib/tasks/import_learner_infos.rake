@@ -219,7 +219,7 @@ def normalize_grade(raw_grade, curriculum)
   when 'American Curriculum'
     if us_match
       grade_num = us_match[1].to_i
-      return "US Year #{grade_num}"
+      return "US Grade #{grade_num}"
     elsif uk_match
       # Convert UK to US using mapping
       uk_year = uk_match[1].to_i
@@ -232,9 +232,9 @@ def normalize_grade(raw_grade, curriculum)
                  when 8 then 7
                  else uk_year
                  end
-      return "US Year #{us_grade}"
+      return "US Grade #{us_grade}"
     elsif simple_number
-      return "US Year #{simple_number}"
+      return "US Grade #{simple_number}"
     end
   when 'Portuguese Curriculum'
     if pt_match
