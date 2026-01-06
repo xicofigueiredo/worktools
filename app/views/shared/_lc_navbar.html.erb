@@ -74,6 +74,13 @@
               <%= link_to "Build Week Activities", navigator_consents_path(date: Date.today), class: "nav-link" %>
             </div>
           </li>
+          <% if current_user.email == 'ricardo.crista@edubga.com' %>
+          <li class="nav-item">
+              <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(navigator_consents_path)%>">
+                <%= link_to "Exams Registration", exam_enrolls_path, class: "nav-link" %>
+              </div>
+            </li>
+          <% end %>
           <li class="nav-item">
             <div class="p-1 position-relative" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(forms_path) %>">
               <%= link_to notifications_path, class: "nav-link position-relative" do %>
