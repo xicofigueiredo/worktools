@@ -89,7 +89,7 @@ class LearnerInfo < ApplicationRecord
 
     has_notes = onboarding_meeting_notes.present?
     has_contract = learner_documents.exists?(document_type: 'contract')
-    is_powered_by_bga = hub.hub_type == 'Powered by BGA'
+    is_powered_by_bga = hub.hub_type == 'Powered by BGA' && !['Riebeek Kasteel', 'Hugenot'].include?(hub.name)
     has_proof = is_powered_by_bga || learner_documents.exists?(document_type: 'proof_of_payment')
     has_documents = has_contract && has_proof
     has_credentials = learner_documents.exists?(document_type: 'credentials')

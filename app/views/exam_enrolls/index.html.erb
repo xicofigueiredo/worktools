@@ -57,7 +57,7 @@
         </div>
 
         <!-- Exam Centre Filter (Admin only) -->
-        <% if current_user.role == 'admin' || current_user.role == 'exams' %>
+        <% if current_user.role == 'admin' || current_user.role == 'exams' || current_user.email == 'ricardo.crista@edubga.com' %>
           <div style="width: 150px;">
             <%= form.select :exam_centre,
                 options_for_select([['All Centres', 'all']] + @available_exam_centres.map { |centre| [centre, centre] }, @current_exam_centre),
