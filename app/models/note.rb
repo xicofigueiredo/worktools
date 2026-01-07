@@ -1,5 +1,6 @@
 class Note < ApplicationRecord
   belongs_to :user
+  belongs_to :written_by, class_name: 'User', optional: true
 
   validate :validate_category_for_cm
 

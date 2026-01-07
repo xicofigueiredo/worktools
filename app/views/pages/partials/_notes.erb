@@ -9,7 +9,8 @@
               <th class="lp-notes-topic-width">Topic</th>
               <th>Follow-up Action</th>
               <th class="lp-notes-status-width">Status</th>
-              <th style="width: 50px;">Edit</th>
+              <th style="width: 30px;"></th>
+              <th style="width: 30px;"></th>
             </tr>
           </thead>
           <tbody style="display: block; max-height: 400px; overflow: auto;">
@@ -26,7 +27,20 @@
                     <%= f.select :status, ['Not Done', 'In Progress', 'Completed'], {}, { onchange: "this.form.submit();" } %>
                   <% end %>
                 </td>
-                <td style="width: 50px;">
+                <td style="width: 30px;">
+                  <% if note.written_by.present? %>
+                    <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle email-tooltip"
+                          style="width: 24px; height: 24px; font-size: 0.75em; cursor: pointer;"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="<%= note.written_by.email %>">
+                      <%= email_initials(note.written_by.email) %>
+                    </span>
+                  <% else %>
+                    <span class="text-muted" style="font-size: 0.8em;">—</span>
+                  <% end %>
+                </td>
+                <td style="width: 30px;">
                   <%= link_to edit_user_note_path(@learner, note), data: { turbo_frame: "modal" } do %>
                     <i class="fa-solid fa-pencil"></i>
                   <% end %>
@@ -109,5 +123,28 @@
       document.getElementById('summarize-btn-text').style.display = 'inline';
       document.getElementById('summarize-btn-spinner').style.display = 'none';
     }
+
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+
+  // Initialize tooltips on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
   });
 </script>
+
+<style>
+  /* Make tooltips wider for email tooltips */
+  .tooltip .tooltip-inner {
+    max-width: 400px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+  }
+</style>

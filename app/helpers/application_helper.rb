@@ -36,4 +36,14 @@ module ApplicationHelper
       "#{rounded_hours}h"
     end
   end
+
+  def email_initials(email)
+    return '?' if email.blank? || email == 'System'
+
+    # Extract the part before @
+    local_part = email.split('@').first
+
+    # Get first letter only
+    local_part[0].upcase
+  end
 end

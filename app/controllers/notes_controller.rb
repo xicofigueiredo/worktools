@@ -4,7 +4,7 @@ class NotesController < ApplicationController
 
 
   def index
-    @notes = @learner.notes.order(date: :desc)
+    @notes = @learner.notes.includes(:written_by).order(date: :desc)
     @notes_by_month = @notes.group_by { |note| note.date.beginning_of_month }
   end
 
@@ -24,6 +24,7 @@ class NotesController < ApplicationController
     @note = @learner.notes.build(note_params)
     @note.date = Date.today
     @note.status = 'Not Done'
+    @note.written_by_id = current_user.id
 
     respond_to do |format|
       if @note.save

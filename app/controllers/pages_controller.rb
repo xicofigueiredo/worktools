@@ -500,9 +500,9 @@ class PagesController < ApplicationController
     date_threshold = today - 30.days
     @learner_flag = @learner.learner_flag
     @notes = if current_user.role != "cm"
-              @learner.notes.where("date >= ?", date_threshold).order(created_at: :desc)
+              @learner.notes.includes(:written_by).where("date >= ?", date_threshold).order(created_at: :desc)
             else
-              @learner.notes.where(category: "knowledge").where("date >= ?", date_threshold).order(created_at: :desc)
+              @learner.notes.includes(:written_by).where(category: "knowledge").where("date >= ?", date_threshold).order(created_at: :desc)
             end
     @timelines = @learner.timelines.where(hidden: false)
     @moodle_timelines = @learner.moodle_timelines.where(hidden: false)
