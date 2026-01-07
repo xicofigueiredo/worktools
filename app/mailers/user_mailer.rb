@@ -236,7 +236,7 @@ class UserMailer < Devise::Mailer
     Rails.logger.info("Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}")
     puts "Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}"
 
-    --- Send email --- Prod
+    #--- Send email --- Prod
     mail(
       to: real_to,
       cc: real_cc,
