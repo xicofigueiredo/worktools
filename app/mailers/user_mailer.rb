@@ -168,7 +168,6 @@ class UserMailer < Devise::Mailer
     subject = is_up ? "Welcome to the UP Program!" : "Onboarding Day - #{@learner.full_name}"
 
     # --- Attachments for everyone ---
-    attachments['Calendar.pdf'] = File.read(Rails.root.join('public', 'documents', 'calendar_2025.pdf'))
     attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
     credentials = @learner.learner_documents.find_by(document_type: 'credentials')
     if credentials&.file&.attached?
@@ -176,6 +175,17 @@ class UserMailer < Devise::Mailer
         mime_type: credentials.file.blob.content_type,
         content: credentials.file.download
       }
+    end
+
+    # --- Hub type attachments ---
+    unless hub_type_raw == "powered by bga"
+      calendar_filename = if ['portugal', 'spain'].include?(@hub.country&.downcase)
+                            'calendar_2026_europe.pdf'
+                          else
+                            'calendar_2026_africa.pdf'
+                          end
+
+      attachments['Calendar.pdf'] = File.read(Rails.root.join('public', 'documents', calendar_filename))
     end
 
     # --- Curriculum-specific attachments ---
@@ -227,21 +237,21 @@ class UserMailer < Devise::Mailer
     puts "Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}"
 
     # --- Send email --- Prod
-    mail(
-      to: real_to,
-      cc: real_cc,
-      from:          ApplicationMailer::FROM_CONTACT,
-      subject:       subject,
-      template_name: template_path
-    )
-
-    #--- Send email --- Dev
     # mail(
-    #   to: "guilherme@bravegenerationacademy.com",
+    #   to: real_to,
+    #   cc: real_cc,
     #   from:          ApplicationMailer::FROM_CONTACT,
     #   subject:       subject,
     #   template_name: template_path
     # )
+
+    #--- Send email --- Dev
+    mail(
+      to: "guilherme@bravegenerationacademy.com",
+      from:          ApplicationMailer::FROM_CONTACT,
+      subject:       subject,
+      template_name: template_path
+    )
   end
 
   def hub_visit_confirmation(visit)
