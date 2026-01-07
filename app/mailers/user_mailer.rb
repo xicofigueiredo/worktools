@@ -266,7 +266,7 @@ class UserMailer < Devise::Mailer
       to: @visit.email,
       cc: cc_list.uniq,
       from: ApplicationMailer::FROM_CONTACT,
-      subject: "Your Hub Visit for #{@hub.name} Is Confirmed!"
+      subject: "Your Hub Visit for #{@hub.name} is Confirmed!"
     )
   end
 
@@ -282,7 +282,7 @@ class UserMailer < Devise::Mailer
       to: @visit.email,
       cc: cc_list.uniq,
       from: ApplicationMailer::FROM_CONTACT,
-      subject: "Your Trial Day Is Booked!"
+      subject: "Your Trial Day is Booked!"
     )
   end
 end
