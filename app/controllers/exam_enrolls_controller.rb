@@ -76,7 +76,7 @@ class ExamEnrollsController < ApplicationController
       )
 
     # Role-based filtering
-    if current_user.role == 'real lc' #future lc logic
+    if current_user.role == 'real lc' && current_user.email != 'ricardo.crista@edubga.com' #future lc logic
       # Debug: Check current user's main hub
       main_hub = current_user.users_hubs.find_by(main: true)
 
@@ -100,7 +100,7 @@ class ExamEnrollsController < ApplicationController
         )
         .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
 
-    elsif current_user.role == 'lc' #dc logic
+    elsif current_user.role == 'lc' && current_user.email != 'ricardo.crista@edubga.com'  #dc logic
       # Get all hub IDs where the DC is assigned
       dc_hub_ids = current_user.users_hubs.pluck(:hub_id)
 
