@@ -236,22 +236,22 @@ class UserMailer < Devise::Mailer
     Rails.logger.info("Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}")
     puts "Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}"
 
-    # --- Send email --- Prod
-    # mail(
-    #   to: real_to,
-    #   cc: real_cc,
-    #   from:          ApplicationMailer::FROM_CONTACT,
-    #   subject:       subject,
-    #   template_name: template_path
-    # )
-
-    #--- Send email --- Dev
+    --- Send email --- Prod
     mail(
-      to: "guilherme@bravegenerationacademy.com",
+      to: real_to,
+      cc: real_cc,
       from:          ApplicationMailer::FROM_CONTACT,
       subject:       subject,
       template_name: template_path
     )
+
+    #--- Send email --- Dev
+    # mail(
+    #   to: "guilherme@bravegenerationacademy.com",
+    #   from:          ApplicationMailer::FROM_CONTACT,
+    #   subject:       subject,
+    #   template_name: template_path
+    # )
   end
 
   def hub_visit_confirmation(visit)
