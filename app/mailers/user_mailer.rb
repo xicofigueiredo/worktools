@@ -258,7 +258,7 @@ class UserMailer < Devise::Mailer
   def hub_visit_confirmation(visit)
     @visit = visit
     @hub = visit.hub
-    @lcs = @hub.learning_coaches.map { |u| u.try(:full_name) || u.email }.to_sentence
+    @lcs = @hub.learning_coaches_with_capacity.map { |u| u.try(:full_name) || u.email }.to_sentence
 
     cc_list = @hub.all_cc_emails
     cc_list << ApplicationMailer::FROM_CONTACT
@@ -279,7 +279,7 @@ class UserMailer < Devise::Mailer
   def trial_day_confirmation(visit)
     @visit = visit
     @hub = visit.hub
-    @lcs = @hub.learning_coaches.map { |u| u.try(:full_name) || u.email }.to_sentence
+    @lcs = @hub.learning_coaches_with_capacity.map { |u| u.try(:full_name) || u.email }.to_sentence
 
     cc_list = @hub.all_cc_emails
     cc_list << ApplicationMailer::FROM_CONTACT
