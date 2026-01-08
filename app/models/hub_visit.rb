@@ -14,6 +14,26 @@ class HubVisit < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
+  def to_ics
+    cal = Icalendar::Calendar.new
+
+    cal.event do |e|
+      e.dtstart     = Icalendar::Values::DateTime.new(start_time.utc)
+      e.dtend       = Icalendar::Values::DateTime.new(end_time.utc)
+      e.summary     = "#{visit_type.titleize}: #{hub.name}"
+      e.description = ["Learner: #{learner_name}",
+                       "Level: #{learner_academic_level}",
+                       "Parent: #{full_name}",
+                       "Notes: #{special_requests}"
+                      ].compact.join("\n")
+      e.location    = hub.name
+      e.ip_class    = "PUBLIC"
+    end
+
+    cal.publish
+    cal.to_ical
+  end
+
   private
 
   def check_availability

@@ -263,6 +263,11 @@ class UserMailer < Devise::Mailer
     cc_list = @hub.all_cc_emails
     cc_list << ApplicationMailer::FROM_CONTACT
 
+    attachments['invite.ics'] = {
+      mime_type: 'text/calendar',
+      content: @visit.to_ics
+    }
+
     mail(
       to: @visit.email,
       cc: cc_list.uniq,
@@ -278,6 +283,11 @@ class UserMailer < Devise::Mailer
 
     cc_list = @hub.all_cc_emails
     cc_list << ApplicationMailer::FROM_CONTACT
+
+    attachments['invite.ics'] = {
+      mime_type: 'text/calendar',
+      content: @visit.to_ics
+    }
 
     mail(
       to: @visit.email,
