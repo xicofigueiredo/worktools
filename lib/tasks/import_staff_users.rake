@@ -50,11 +50,11 @@ namespace :import do
       end
 
       # 2. Update the Name
-      user.full_name = full_name if user.respond_to?(:name=)
+      user.full_name = full_name
 
       if user.save
         state = is_new_record ? "Created" : "Updated"
-        puts "#{state} user: #{user.email} (Role: #{user.role})"
+        puts "#{state} user: #{user.email} (Role: #{user.role}) (Name: #{user.full_name})"
       else
         puts "Error saving #{email}: #{user.errors.full_messages.join(', ')}"
         next
