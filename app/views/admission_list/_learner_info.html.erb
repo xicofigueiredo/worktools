@@ -950,6 +950,28 @@
 <% end %>
 
 <script>
+  function isWeekend(dateString) {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const day = date.getUTCDay(); // 0 = Sunday, 6 = Saturday
+    return day === 0 || day === 6;
+  }
+
+  function setupStartDateWeekendValidation() {
+    const startDateInput = document.getElementById('learner_info_start_date');
+    if (!startDateInput) return;
+
+    startDateInput.addEventListener('change', function() {
+      if (isWeekend(this.value)) {
+        alert("Weekends are not allowed for the Start Date. Please select a Monday through Friday.");
+        this.value = ''; // Reset the field
+        this.classList.add('is-invalid');
+      } else {
+        this.classList.remove('is-invalid');
+      }
+    });
+  }
+
   function setupFinanceCalculations() {
     // Auto-calculate billable fields using percentages
     function calculateBillable(feeId, discountId, scholarshipId, billableId) {
@@ -1393,6 +1415,14 @@
 
     // Submit listener: show modals in sequence as needed.
     form.addEventListener('submit', function(e) {
+      if (startDateInput && isWeekend(startDateInput.value)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        alert("The selected Start Date falls on a weekend. Please select a weekday.");
+        startDateInput.classList.add('is-invalid');
+        startDateInput.focus();
+        return;
+      }
       // If both checks are already confirmed, allow submit
       if (pricingConfirmed && startConfirmed) {
         return; // let native submit proceed
@@ -1498,7 +1528,8 @@
     setupProgrammeHubHandler();
     setupLearningCoachSelection();
     setupInvoiceEmailHandler();
-    setupFormChecks(); // <-- unified checks
+    setupFormChecks();
+    setupStartDateWeekendValidation();
   });
   // Run on Turbo page loads (if using Turbo)
   document.addEventListener('turbo:load', function() {
@@ -1508,7 +1539,8 @@
     setupProgrammeHubHandler();
     setupLearningCoachSelection();
     setupInvoiceEmailHandler();
-    setupFormChecks(); // <-- unified checks
+    setupFormChecks();
+    setupStartDateWeekendValidation();
   });
   // Run immediately if DOM is already loaded
   if (document.readyState === 'loading') {
@@ -1520,6 +1552,7 @@
     setupGradeYearHandler();
     setupProgrammeHubHandler();
     setupInvoiceEmailHandler();
-    setupFormChecks(); // <-- unified checks
+    setupFormChecks()
+    setupStartDateWeekendValidation();
   }
 </script>
