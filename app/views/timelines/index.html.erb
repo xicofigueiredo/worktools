@@ -43,6 +43,12 @@
             <p>Create and manage your holidays here:</p>
           </div>
           <div>
+            <span class="text-muted">Holidays taken:</span>
+            <span class="badge bg-info text-dark fs-6 px-3 py-2" style="border-radius: 8px;">
+              <strong><%= @holidays_taken %></strong> / 45
+            </span>
+          </div>
+          <div>
             <%= link_to "New Holiday", new_holiday_path, class: "btn btn-primary", style: 'border-radius: 10px;' %>
             <%= link_to "Archive", archived_timelines_path, class: "btn btn-secondary ms-2", style: 'border-radius: 10px;' %>
           </div>

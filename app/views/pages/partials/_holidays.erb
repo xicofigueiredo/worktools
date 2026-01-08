@@ -5,7 +5,12 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="text-align: left;">Holiday Name</th>
+            <th style="text-align: left;">
+              <span class="text-muted"><%= Date.today.year %> Holidays taken:</span>
+              <span class="badge bg-info text-dark fs-6 px-3 py-2" style="border-radius: 8px;">
+              <strong><%= @holidays_taken || 0%></strong> / 45
+              </span>
+            </th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Status</th>
