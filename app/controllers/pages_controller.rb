@@ -239,7 +239,7 @@ class PagesController < ApplicationController
     end
 
     current_date = Date.today
-    user = current_user
+    user = @learner
 
     user_holidays ||= user.holidays.flat_map { |holiday| (holiday.start_date...holiday.end_date).to_a }
     bga_holidays ||= Holiday.where(bga: true).flat_map { |holiday| (holiday.start_date...holiday.end_date).to_a }
