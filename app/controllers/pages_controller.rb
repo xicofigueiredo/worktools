@@ -241,17 +241,8 @@ class PagesController < ApplicationController
     current_date = Date.today
     user = @learner
 
-    user_holidays ||= user.holidays.flat_map { |holiday| (holiday.start_date...holiday.end_date).to_a }
-    bga_holidays ||= Holiday.where(bga: true).flat_map { |holiday| (holiday.start_date...holiday.end_date).to_a }
-    hub_holidays ||= Holiday.where(country: user.users_hubs.find_by(main: true)&.hub.country).flat_map do |holiday|
-      (holiday.start_date...holiday.end_date).to_a
-    end
-    build_weeks ||= Week.where("name ILIKE ?", "%Build Week%").flat_map { |week| (week.start_date..week.end_date).to_a }
-    holidays_taken = user_holidays.reject do |holiday|
-      holiday.year != current_date.year || holiday.saturday? || holiday.sunday? || bga_holidays.include?(holiday) || hub_holidays.include?(holiday) || build_weeks.include?(holiday)
-    end
+    @holidays_taken = Attendance.where(user_id: @learner.id, attendance_date: "1/1/2026"..."31/12/2026", absence: 'Holiday').count
 
-    @holidays_taken = holidays_taken.count
 
     @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", current_date, "%Build%").order(:start_date).first
 

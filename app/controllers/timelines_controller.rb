@@ -23,7 +23,7 @@ class TimelinesController < ApplicationController
     # @monthly_goals = calculate_monthly_goals(@timelines)
 
     @holidays = @learner.holidays.where("end_date >= ?", 4.months.ago)
-    @holidays_taken = calculate_holidays_left(@learner)
+    @holidays_taken = Attendance.where(user_id: @learner.id, attendance_date: "1/1/2026"..."31/12/2026", absence: 'Holiday').count
 
     @has_exam_date  = @timelines.any? { |timeline| timeline.exam_date_id.present? }
     @has_timeline = @learner.timelines.where(hidden: false).any?
@@ -247,20 +247,6 @@ class TimelinesController < ApplicationController
     @exam_dates = scope.includes(:subject).map do |exam_date|
       { id: exam_date.id, name: exam_date.formatted_date, subject_id: exam_date.subject_id }
     end
-  end
-
-  def calculate_holidays_left(user)
-    user_holidays ||= user.holidays.flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
-    bga_holidays ||= Holiday.where(bga: true).flat_map { |holiday| (holiday.start_date..holiday.end_date).to_a }
-    hub_holidays ||= Holiday.where(country: user.users_hubs.find_by(main: true)&.hub.country).flat_map do |holiday|
-      (holiday.start_date..holiday.end_date).to_a
-    end
-    build_weeks ||= Week.where("name ILIKE ?", "%Build Week%").flat_map { |week| (week.start_date..week.end_date).to_a }
-    holidays_taken = user_holidays.reject do |holiday|
-      holiday.year != Date.today.year || holiday.saturday? || holiday.sunday? || bga_holidays.include?(holiday) || hub_holidays.include?(holiday) || build_weeks.include?(holiday)
-    end
-
-    holidays_taken.count
   end
 
 
