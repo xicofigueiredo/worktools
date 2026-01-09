@@ -80,26 +80,19 @@
                       <% if visits %>
                         <% classes << 'has-visits' if visits.any? %>
 
-                        <% visits.sort_by(&:start_time).each do |v| %>
-                           <%
-                              time_str = v.start_time.strftime("%H:%M")
-                              type_label = v.visit_type == 'trial' ? 'Trial' : 'Visit'
+                        <%# The service already handles sorting and formatting %>
+                        <% visits.each do |v| %>
+                          <%
+                              # Access the pre-formatted time and labels from the hash
+                              display_time = v[:time].split(' - ').first # Gets just the start time for the small label
+                              type_label   = v[:type]
 
-                              visit_data = {
-                                type: type_label,
-                                date: v.start_time.strftime("%B %d, %Y"),
-                                time: "#{time_str} - #{v.end_time.strftime('%H:%M')}",
-                                name: "#{v.first_name} #{v.last_name}",
-                                email: v.email,
-                                phone: v.phone,
-                                learner_name: v.learner_name,
-                                learner_age: v.learner_age,
-                                learner_level: v.learner_academic_level,
-                                notes: v.special_requests
-                              }
-                           %>
-                           <% info_btn = "<button class='btn btn-link p-0 ms-2 text-dark' data-visit='#{ERB::Util.html_escape(visit_data.to_json)}' onclick='openVisitModal(this.getAttribute(\"data-visit\")); event.stopPropagation();'><i class='fas fa-info-circle'></i></button>" %>
-                           <% popover_items << "<div class='mb-1 pb-1 border-bottom small text-dark d-flex justify-content-between align-items-center'><span><strong>#{time_str} #{type_label}</strong>: #{v.learner_name}</span> #{info_btn}</div>" %>
+                              # v is already the 'visit_data' hash we need for the modal
+                              visit_json = v.to_json
+                          %>
+                          <% info_btn = "<button class='btn btn-link p-0 ms-2 text-dark' data-visit='#{ERB::Util.html_escape(visit_json)}' onclick='openVisitModal(this.getAttribute(\"data-visit\")); event.stopPropagation();'><i class='fas fa-info-circle'></i></button>" %>
+
+                          <% popover_items << "<div class='mb-1 pb-1 border-bottom small text-dark d-flex justify-content-between align-items-center'><span><strong>#{display_time} #{type_label}</strong>: #{v[:learner_name]}</span> #{info_btn}</div>" %>
                         <% end %>
                       <% end %>
 

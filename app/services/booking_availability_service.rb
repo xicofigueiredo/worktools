@@ -13,34 +13,38 @@ class BookingAvailabilityService
     return [] unless @config
     return [] if @date < Date.current
 
-    # A/B Testing: Target RM (ID 106) gets 36h, others 48h
-    lead_hours = (@hub.regional_manager_id == 106) ? 36 : 48
-    earliest_allowed_time = calculate_business_lead_time(lead_hours)
+    hub_tz = HubVisit::COUNTRY_TIMEZONES[@hub.country] || 'UTC'
 
-    day_slots = @config.slots_for_day(@date.wday)
-    # Check if the hub is closed on the target date (Holidays, Blocks, or Mandatory Leave)
-    return [] if day_slots.empty? || closed_on?(@date)
+    Time.use_zone(hub_tz) do
+      # A/B Testing: Target RM (ID 106) gets 36h, others 48h
+      lead_hours = (@hub.regional_manager_id == 106) ? 36 : 48
+      earliest_allowed_time = calculate_business_lead_time(lead_hours)
 
-    duration = (@visit_type == 'trial') ? HubBookingConfig::TRIAL_DURATION : HubBookingConfig::VISIT_DURATION
-    limit_time = Time.zone.parse("#{@date} #{CLOSING_LIMIT_HOUR}:00")
-    limit_time -= duration.minutes if @visit_type == 'trial'
+      day_slots = @config.slots_for_day(@date.wday)
+      # Check if the hub is closed on the target date (Holidays, Blocks, or Mandatory Leave)
+      return [] if day_slots.empty? || closed_on?(@date)
 
-    available = []
-    day_slots.each do |time_str|
-      start_time = Time.zone.parse("#{@date} #{time_str}")
-      next unless start_time
+      duration = (@visit_type == 'trial') ? HubBookingConfig::TRIAL_DURATION : HubBookingConfig::VISIT_DURATION
+      limit_time = Time.zone.parse("#{@date} #{CLOSING_LIMIT_HOUR}:00")
+      limit_time -= duration.minutes if @visit_type == 'trial'
 
-      # Business rule: Must be after lead time AND before closing limit
-      next if start_time < earliest_allowed_time
-      next if start_time > limit_time
+      available = []
+      day_slots.each do |time_str|
+        start_time = Time.zone.parse("#{@date} #{time_str}")
+        next unless start_time
 
-      end_time = start_time + duration.minutes
-      unless slot_taken?(start_time, end_time)
-        available << time_str
+        # Business rule: Must be after lead time AND before closing limit
+        next if start_time < earliest_allowed_time
+        next if start_time > limit_time
+
+        end_time = start_time + duration.minutes
+        unless slot_taken?(start_time, end_time)
+          available << time_str
+        end
       end
-    end
 
-    available.sort
+      available.sort
+    end
   end
 
   private

@@ -48,14 +48,18 @@ class HubsController < ApplicationController
     @prev_year = @year - 1
     @next_year = @year + 1
 
-    # Call Service to get data
-    service = CalendarDataService.new(year: @year, hub: @hub, include_visits: true)
-    data = service.call
+    hub_tz = HubVisit::COUNTRY_TIMEZONES[@hub.country] || 'UTC'
 
-    @holidays_by_date = data[:holidays]
-    @blocked_by_date  = data[:blocked]
-    @mandatory_leaves = data[:mandatory]
-    @visits_by_date   = data[:visits]
+    Time.use_zone(hub_tz) do
+    # Call Service to get data
+      service = CalendarDataService.new(year: @year, hub: @hub, include_visits: true)
+      data = service.call
+
+      @holidays_by_date = data[:holidays]
+      @blocked_by_date  = data[:blocked]
+      @mandatory_leaves = data[:mandatory]
+      @visits_by_date   = data[:visits]
+    end
 
     @new_blocked_period = BlockedPeriod.new
   end

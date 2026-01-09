@@ -10,22 +10,42 @@ class HubVisit < ApplicationRecord
 
   validate :check_availability, on: :create
 
+  COUNTRY_TIMEZONES = {
+    "Portugal"     => "Europe/Lisbon",
+    "South Africa" => "Africa/Johannesburg",
+    "Switzerland"  => "Europe/Zurich",
+    "Kenya"        => "Africa/Nairobi",
+    "Afghanistan"  => "Asia/Kabul",
+    "Namibia"      => "Africa/Windhoek",
+    "Spain"        => "Europe/Madrid",
+    "Mozambique"   => "Africa/Maputo",
+    "UK"           => "Europe/London"
+  }.freeze
+
   def full_name
     "#{first_name} #{last_name}"
   end
 
+  def hub_timezone
+    COUNTRY_TIMEZONES[hub.country] || 'UTC'
+  end
+
   def to_ics
     cal = Icalendar::Calendar.new
+    tz_name = hub_timezone
+    local_time_hub = start_time.in_time_zone(tz_name).strftime("%H:%M")
 
     cal.event do |e|
       e.dtstart     = Icalendar::Values::DateTime.new(start_time.utc)
       e.dtend       = Icalendar::Values::DateTime.new(end_time.utc)
       e.summary     = "#{visit_type.titleize}: #{hub.name}"
-      e.description = ["Learner: #{learner_name}",
-                       "Level: #{learner_academic_level}",
-                       "Parent: #{full_name}",
-                       "Notes: #{special_requests}"
-                      ].compact.join("\n")
+      e.description = [
+        "Learner: #{learner_name}",
+        "LOCAL HUB TIME: #{local_time_hub} (#{hub.country})",
+        "------------------------------------------",
+        "Note: Your calendar may show a different time if you are in a different timezone.",
+        "Details: #{special_requests}"
+      ].compact.join("\n")
       e.location    = hub.name
       e.ip_class    = "PUBLIC"
     end

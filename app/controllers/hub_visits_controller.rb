@@ -61,16 +61,22 @@ class HubVisitsController < ApplicationController
 
   def create
     @hub = Hub.find(params[:hub_id])
-    config = @hub.booking_config
 
-    duration_minutes = params[:hub_visit][:visit_type] == 'trial' ? 180 : 60
+    duration_minutes = if params[:hub_visit][:visit_type] == 'trial'
+                       HubBookingConfig::TRIAL_DURATION
+                     else
+                       HubBookingConfig::VISIT_DURATION
+                     end
 
     @visit = @hub.hub_visits.new(visit_params)
 
     if params[:date].present? && params[:time].present?
-      start_time = Time.zone.parse("#{params[:date]} #{params[:time]}")
-      @visit.start_time = start_time
-      @visit.end_time = start_time + duration_minutes.minutes
+      hub_tz = HubVisit::COUNTRY_TIMEZONES[@hub.country] || 'UTC'
+      Time.use_zone(hub_tz) do
+        start_time = Time.zone.parse("#{params[:date]} #{params[:time]}")
+        @visit.start_time = start_time
+        @visit.end_time = start_time + duration_minutes.minutes
+      end
     end
 
     if @visit.save
