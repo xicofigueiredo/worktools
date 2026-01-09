@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_01_06_144028) do
+ActiveRecord::Schema[7.0].define(version: 2026_01_09_170938) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -422,6 +422,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_06_144028) do
     t.text "special_requests"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "outlook_event_id"
     t.index ["hub_id", "start_time", "end_time"], name: "index_hub_visits_on_hub_id_and_start_time_and_end_time"
     t.index ["hub_id"], name: "index_hub_visits_on_hub_id"
   end

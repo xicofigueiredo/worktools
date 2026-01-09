@@ -86,6 +86,8 @@ class HubVisitsController < ApplicationController
         UserMailer.trial_day_confirmation(@visit).deliver_later
       end
 
+      SyncOutlookEventJob.perform_later(@visit.id)
+
       render json: { success: true, message: "Booking Request Sent!" }
     else
       render json: { success: false, errors: @visit.errors.full_messages }, status: :unprocessable_entity
