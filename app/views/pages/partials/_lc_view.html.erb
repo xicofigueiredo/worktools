@@ -74,7 +74,8 @@
       <span class="badge bg-info text-dark fs-6 px-3 py-2" style="border-radius: 8px;">
         <strong><%= @holidays_taken || 0%></strong> / 45
       </span>
-      <i class="fa-solid fa-circle-info" title="In case you are on track or ahead on your timelines, this number is subject to change. If this is your case, please discuss it with your Learning Coach."></i>
+            <i class="fa-solid fa-circle-info" title="In case you are on track or ahead on your timelines, this number is subject to change. If this is your case, please discuss it with your Learning Coach.
+Holidays countdown is connected to attendance."></i>
       <div class="mb-3">
         <%= render 'pages/partials/holidays', holidays: @holidays %>
       </div>
