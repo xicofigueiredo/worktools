@@ -10,6 +10,7 @@ class SprintGoalsController < ApplicationController
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
     calc_nav_dates(@sprint)
 
+
     if @sprint
       @sprint_goal = current_user.sprint_goals.find_by(sprint: @sprint)
 
@@ -28,6 +29,7 @@ class SprintGoalsController < ApplicationController
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @sprint = Sprint.find_by("start_date <= ? AND end_date >= ?", @date, @date)
     @number_of_timelines = current_user.timelines.where(hidden: false).count + current_user.moodle_timelines.count
+    @dropdown_options = current_user.timelines.where(hidden: false) + current_user.moodle_timelines.where(hidden: false)
 
     @sprint_goal = current_user.sprint_goals.find_or_create_by(sprint: @sprint) do |sg|
       sg.sprint = @sprint
@@ -60,8 +62,8 @@ class SprintGoalsController < ApplicationController
     @knowledges_subject_names = @sprint_goal.knowledges.pluck(:subject_name)
     @number_of_timelines = current_user.timelines.where(hidden: false).count + current_user.moodle_timelines.where(hidden: false).count
     assign_sprint_deadlines(@sprint_goal.sprint)
-    @dropdown_options = current_user.timelines.where(hidden: false) + current_user.moodle_timelines.where(hidden: false)
-    
+    @dropdown_options = ["Select timeline"] + current_user.timelines.where(hidden: false) + current_user.moodle_timelines.where(hidden: false)
+
     Rails.logger.debug @sprint_goal.knowledges.inspect
 
     # If the @sprint_goal doesn't have associated knowledges, build them for both timeline types
