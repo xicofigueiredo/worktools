@@ -93,7 +93,7 @@
               </tbody>
             </table>
             <div class="d-flex justify-content-center mb-3">
-              <% if @sprint_goal.knowledges.count >= @number_of_timelines %>
+              <% if @dropdown_options.empty? || @sprint_goal.knowledges.count >= @number_of_timelines %>
                 <button disabled class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="knowledges" data-knowledge-add-btn style='border-radius: 10px;'>Add</button>
               <% else %>
                 <button class="btn btn-primary" data-action="click->nested-form#addRow" data-kind="knowledges" data-knowledge-add-btn style='border-radius: 10px;'>Add</button>
@@ -106,19 +106,23 @@
                   <td>
                     <div data-subject-cell>
                       <select name="Timeline Select" id="Timeline Select" class="form-select" data-action="change->nested-form#createKnowledge">
-                        <option value="" disabled selected>Select timeline</option>
-                        <% @dropdown_options.each do |timeline| %>
-                          <% exam_date = timeline.exam_date&.date %>
+                        <% if @dropdown_options.empty? %>
+                          <option value="" disabled selected>No timelines available</option>
+                        <% else %>
+                          <option value="" disabled selected>Select timeline</option>
+                          <% @dropdown_options.each do |timeline| %>
+                            <% exam_date = timeline.exam_date&.date %>
 
-                          <% matched_sprint_goal = @sprint_deadlines.find do |sprint_goal|
-                              sprint_goal[:timeline].subject.name == (timeline.subject.name.presence || timeline.personalized_name)
-                            end %>
+                            <% matched_sprint_goal = @sprint_deadlines.find do |sprint_goal|
+                                sprint_goal[:timeline].subject.name == (timeline.subject.name.presence || timeline.personalized_name)
+                              end %>
 
-                          <% sprint_goal = matched_sprint_goal ? (matched_sprint_goal[:topic] ? matched_sprint_goal[:topic][:name] : 'No goal found') : 'No goal found' %>
+                            <% sprint_goal = matched_sprint_goal ? (matched_sprint_goal[:topic] ? matched_sprint_goal[:topic][:name] : 'No goal found') : 'No goal found' %>
 
-                          <option value="<%= [timeline.subject.name.presence || timeline.personalized_name, exam_date, timeline.mock50, timeline.mock100, sprint_goal].join('||') %>">
-                            <%= timeline.subject.name.presence || timeline.personalized_name %>
-                          </option>
+                            <option value="<%= [timeline.subject.name.presence || timeline.personalized_name, exam_date, timeline.mock50, timeline.mock100, sprint_goal].join('||') %>">
+                              <%= timeline.subject.name.presence || timeline.personalized_name %>
+                            </option>
+                          <% end %>
                         <% end %>
                       </select>
                     </div>
