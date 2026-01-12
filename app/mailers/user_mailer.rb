@@ -171,9 +171,15 @@ class UserMailer < Devise::Mailer
     attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
     credentials = @learner.learner_documents.find_by(document_type: 'credentials')
     if credentials&.file&.attached?
-      attachments["Credentials_Document.pdf"] = {
-        mime_type: credentials.file.blob.content_type,
-        content: credentials.file.download
+      blob = credentials.file.blob
+      extension = File.extname(blob.filename.to_s).presence || ".pdf"
+
+      # 2. Construct the filename with the correct extension
+      attachment_name = "Credentials_Document#{extension}"
+
+      attachments[attachment_name] = {
+        mime_type: blob.content_type,
+        content: blob.download
       }
     end
 
