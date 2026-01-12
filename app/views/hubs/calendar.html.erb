@@ -10,13 +10,15 @@
         <i class="fas fa-share-alt"></i> Share Booking Link
       </button>
 
-      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bookingSettingsModal">
-        <i class="fas fa-cog"></i> Settings
-      </button>
+      <% if current_user&.admin? %>
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bookingSettingsModal">
+          <i class="fas fa-cog"></i> Settings
+        </button>
 
-      <button class="btn btn-warning" onclick="openHubBlockModal('<%= Date.current %>')">
-        <i class="fas fa-plus"></i> Block Period
-      </button>
+        <button class="btn btn-warning" onclick="openHubBlockModal('<%= Date.current %>')">
+          <i class="fas fa-plus"></i> Block Period
+        </button>
+      <% end %>
 
       <div class="btn-group">
         <%= link_to calendar_hub_path(@hub, year: @prev_year), class: 'btn btn-outline-secondary' do %>
