@@ -436,6 +436,7 @@ class LeavesController < ApplicationController
       result = entitlement.update_for_manager(
         annual_holidays: [params[:annual_total].to_i, 0].max,
         holidays_left: [params[:new_holidays_left].to_i, 0].max,
+        days_from_previous_year: [params[:days_from_prev_year].to_i, 0].max,
         manager: current_user
       )
     end
@@ -490,7 +491,7 @@ class LeavesController < ApplicationController
   private
 
   def entitlement_params
-    params.permit(:user_id, :year, :annual_holidays, :holidays_left, :annual_total, :new_holidays_left, :start_date)
+    params.permit(:user_id, :year, :annual_holidays, :holidays_left, :annual_total, :new_holidays_left, :start_date, :days_from_prev_year)
   end
 
   def staff_leave_params
@@ -501,6 +502,7 @@ class LeavesController < ApplicationController
     entitlement = StaffLeaveEntitlement.find_by(user: user, year: year)
     total_holidays = entitlement&.annual_holidays || 25
     holidays_left = entitlement&.holidays_left || 25
+    carry_over_pool = entitlement&.days_from_previous_year || 0
 
     # 1. Fetch relevant leaves (Pending & Approved) that overlap this year
     # We fetch broadly and filter in Ruby to ensure split-year accuracy
@@ -567,6 +569,8 @@ class LeavesController < ApplicationController
       primary_department: user.departments.first,
 
       total_holidays: total_holidays,
+      days_from_previous_year: carry_over_pool,
+      total_display: total_holidays + carry_over_pool,
       holidays_left: holidays_left,
 
       mandatory_days: mandatory_days,

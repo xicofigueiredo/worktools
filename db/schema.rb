@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_01_09_170938) do
+ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -996,6 +996,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_09_170938) do
     t.integer "days_from_previous_year_used", default: 0, null: false
     t.integer "sick_leaves_used", default: 0, null: false
     t.integer "annual_holidays", default: 25
+    t.integer "days_from_previous_year", default: 0, null: false
     t.index ["user_id", "year"], name: "index_staff_leave_entitlements_on_user_id_and_year", unique: true
     t.index ["user_id"], name: "index_staff_leave_entitlements_on_user_id"
   end
