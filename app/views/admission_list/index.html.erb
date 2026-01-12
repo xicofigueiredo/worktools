@@ -352,18 +352,22 @@
 
       <div style="position: relative; min-width: 210px;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">
-          Age: <strong id="age-display"><%= params[:age_min] || 0 %> - <%= params[:age_max] || 50 %></strong>
+          Age: <strong id="age-display"><%= @current_min_age %> - <%= @current_max_age %></strong>
         </label>
 
         <div class="age-slider-group">
           <div class="slider-track"></div>
 
-          <%= range_field_tag :age_min, params[:age_min] || 0, min: 0, max: 50,
+          <%= range_field_tag :age_min, @current_min_age,
+                min: @db_min_age,
+                max: @db_max_age,
                 id: "age_min",
                 data: { action: "input->admission-search#searchInput" },
                 oninput: "updateAgeDisplay()" %>
 
-          <%= range_field_tag :age_max, params[:age_max] || 50, min: 0, max: 50,
+          <%= range_field_tag :age_max, @current_max_age,
+                min: @db_min_age,
+                max: @db_max_age,
                 id: "age_max",
                 data: { action: "input->admission-search#searchInput" },
                 oninput: "updateAgeDisplay()" %>
@@ -392,6 +396,12 @@
 
           <%= link_to "Manage Pricing Tiers", pricing_tiers_path, data: { turbo: false },
               style: "padding:7px 12px; border-radius:6px; background:#0d6efd; color:white; border:1px solid #0d6efd; display:flex; align-items:center; gap:6px; cursor:pointer; text-decoration:none;" %>
+
+          <%= link_to new_admission_path,
+                class: "btn btn-success",
+                style: "padding:7px 12px; border-radius:6px; background:#28a745; color:white; border:1px solid #28a745; display:flex; align-items:center; gap:6px; text-decoration:none;" do %>
+            <i class="fa fa-plus"></i> New Learner
+          <% end %>
         <% end %>
       </div>
 

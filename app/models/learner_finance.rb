@@ -42,11 +42,11 @@ class LearnerFinance < ApplicationRecord
 
       message = "Finance updated for #{learner_info.full_name}. Fields changed: #{changed_list}."
 
-      notify_recipients(self.class.finance_users, message)
+      notify_recipients(self.class.finance_users(self), message)
     end
   end
 
   def notify_finance_created
-    notify_recipients(self.class.finance_users, "Finance record created for #{learner_info.full_name}.")
+    notify_recipients(self.class.finance_users(self), "Finance record created for #{learner_info.full_name}.")
   end
 end
