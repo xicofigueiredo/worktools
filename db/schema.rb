@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
+ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -186,7 +186,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "name"
-    t.bigint "hub_id"
+    t.bigint "hub_id", null: false
     t.bigint "week_id"
     t.index ["day"], name: "index_consent_activities_on_day"
     t.index ["hub_id"], name: "index_consent_activities_on_hub_id"
@@ -289,6 +289,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.string "subject_name"
     t.string "code"
     t.string "qualification"
+    t.boolean "progress_cut_off", default: false
     t.string "mock_results"
     t.string "bga_exam_centre"
     t.string "exam_board"
@@ -325,7 +326,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.integer "learning_coach_ids", default: [], array: true
     t.integer "timeline_id"
     t.string "specific_papers"
-    t.boolean "progress_cut_off", default: false
     t.string "personalized_exam_date"
     t.string "paper1"
     t.string "paper2"
@@ -337,7 +337,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.float "paper3_cost"
     t.float "paper4_cost"
     t.float "paper5_cost"
-    t.jsonb "status_changes", default: []
+    t.jsonb "status_changes"
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
     t.index ["timeline_id"], name: "index_exam_enrolls_on_timeline_id"
   end
@@ -354,11 +354,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.integer "number_of_subjects", default: 0, null: false
     t.jsonb "status_changes", default: []
     t.index ["user_id"], name: "index_exam_finances_on_user_id"
-  end
-
-  create_table "excel_imports", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
   end
 
   create_table "form_interrogation_joins", force: :cascade do |t|
@@ -427,6 +422,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.text "special_requests"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "outlook_event_id"
     t.index ["hub_id", "start_time", "end_time"], name: "index_hub_visits_on_hub_id_and_start_time_and_end_time"
     t.index ["hub_id"], name: "index_hub_visits_on_hub_id"
   end
@@ -455,6 +451,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.text "parents_whatsapp_group"
     t.string "hubspot_key"
     t.bigint "regional_manager_id"
+    t.string "hub_email"
+    t.string "school_contact_emails", default: [], array: true
     t.index ["hub_type"], name: "index_hubs_on_hub_type"
     t.index ["hubspot_key"], name: "index_hubs_on_hubspot_key", unique: true
     t.index ["region"], name: "index_hubs_on_region"
@@ -680,63 +678,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.index ["moodle_course_id"], name: "index_moodle_assignments_on_moodle_course_id"
     t.index ["moodle_id"], name: "index_moodle_assignments_on_moodle_id", unique: true
     t.index ["subject_id"], name: "index_moodle_assignments_on_subject_id"
-  end
-
-  create_table "moodle_course_files", force: :cascade do |t|
-    t.bigint "moodle_course_module_id", null: false
-    t.string "file_name", null: false
-    t.integer "file_size"
-    t.string "mime_type"
-    t.integer "moodle_file_id"
-    t.string "moodle_file_url"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["moodle_course_module_id", "file_name"], name: "index_moodle_files_on_module_and_name"
-    t.index ["moodle_course_module_id"], name: "index_moodle_course_files_on_moodle_course_module_id"
-    t.index ["moodle_file_id"], name: "index_moodle_course_files_on_moodle_file_id"
-  end
-
-  create_table "moodle_course_modules", force: :cascade do |t|
-    t.bigint "moodle_course_section_id", null: false
-    t.integer "moodle_id"
-    t.string "name"
-    t.string "mod_type"
-    t.boolean "visible"
-    t.integer "module_order"
-    t.text "description"
-    t.string "url"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.text "content_text"
-    t.index ["mod_type"], name: "index_moodle_course_modules_on_mod_type"
-    t.index ["module_order"], name: "index_moodle_course_modules_on_module_order"
-    t.index ["moodle_course_section_id"], name: "index_moodle_course_modules_on_moodle_course_section_id"
-    t.index ["moodle_id"], name: "index_moodle_course_modules_on_moodle_id"
-  end
-
-  create_table "moodle_course_sections", force: :cascade do |t|
-    t.bigint "moodle_course_id", null: false
-    t.integer "moodle_id"
-    t.string "name"
-    t.text "summary"
-    t.boolean "visible"
-    t.integer "section_order"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["moodle_course_id"], name: "index_moodle_course_sections_on_moodle_course_id"
-    t.index ["moodle_id"], name: "index_moodle_course_sections_on_moodle_id"
-    t.index ["section_order"], name: "index_moodle_course_sections_on_section_order"
-  end
-
-  create_table "moodle_courses", force: :cascade do |t|
-    t.integer "moodle_id"
-    t.string "name"
-    t.string "shortname"
-    t.integer "category_id"
-    t.text "summary"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["moodle_id"], name: "index_moodle_courses_on_moodle_id", unique: true
   end
 
   create_table "moodle_timelines", force: :cascade do |t|
@@ -979,6 +920,23 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.index ["kda_id"], name: "index_sdls_on_kda_id"
   end
 
+  create_table "service_requests", force: :cascade do |t|
+    t.string "type", null: false
+    t.bigint "requester_id", null: false
+    t.bigint "learner_id", null: false
+    t.string "status", default: "pending", null: false
+    t.text "reason"
+    t.bigint "target_hub_id"
+    t.string "certificate_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["learner_id"], name: "index_service_requests_on_learner_id"
+    t.index ["requester_id"], name: "index_service_requests_on_requester_id"
+    t.index ["status"], name: "index_service_requests_on_status"
+    t.index ["target_hub_id"], name: "index_service_requests_on_target_hub_id"
+    t.index ["type"], name: "index_service_requests_on_type"
+  end
+
   create_table "skills", force: :cascade do |t|
     t.bigint "sprint_goal_id", null: false
     t.string "extracurricular"
@@ -1038,6 +996,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.integer "days_from_previous_year_used", default: 0, null: false
     t.integer "sick_leaves_used", default: 0, null: false
     t.integer "annual_holidays", default: 25
+    t.integer "days_from_previous_year", default: 0, null: false
     t.index ["user_id", "year"], name: "index_staff_leave_entitlements_on_user_id_and_year", unique: true
     t.index ["user_id"], name: "index_staff_leave_entitlements_on_user_id"
   end
@@ -1131,7 +1090,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.integer "progress"
     t.bigint "exam_date_id"
     t.boolean "anulado"
-    t.bigint "lws_timeline_id"
     t.datetime "mock50"
     t.datetime "mock100"
     t.string "personalized_name"
@@ -1139,7 +1097,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
     t.boolean "hidden", default: false
     t.integer "difference"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
-    t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
   end
@@ -1349,6 +1306,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
   add_foreign_key "kdas", "weeks"
   add_foreign_key "knowledges", "moodle_timelines"
   add_foreign_key "knowledges", "sprint_goals"
+  add_foreign_key "knowledges", "timelines", on_delete: :cascade
   add_foreign_key "learner_documents", "learner_infos"
   add_foreign_key "learner_finances", "learner_infos"
   add_foreign_key "learner_flags", "users"
@@ -1360,9 +1318,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
   add_foreign_key "monday_slots", "users", column: "learner_id"
   add_foreign_key "monday_slots", "weekly_meetings"
   add_foreign_key "moodle_assignments", "subjects"
-  add_foreign_key "moodle_course_files", "moodle_course_modules"
-  add_foreign_key "moodle_course_modules", "moodle_course_sections"
-  add_foreign_key "moodle_course_sections", "moodle_courses"
   add_foreign_key "moodle_timelines", "exam_dates"
   add_foreign_key "moodle_timelines", "subjects"
   add_foreign_key "moodle_timelines", "users"
@@ -1383,6 +1338,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
   add_foreign_key "responses", "form_interrogation_joins"
   add_foreign_key "responses", "users"
   add_foreign_key "sdls", "kdas"
+  add_foreign_key "service_requests", "hubs", column: "target_hub_id"
+  add_foreign_key "service_requests", "users", column: "learner_id"
+  add_foreign_key "service_requests", "users", column: "requester_id"
   add_foreign_key "skills", "sprint_goals"
   add_foreign_key "specific_papers", "exam_enrolls"
   add_foreign_key "specific_papers", "exam_finances"
@@ -1400,6 +1358,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_17_151732) do
   add_foreign_key "timeline_progresses", "timelines"
   add_foreign_key "timeline_progresses", "weeks"
   add_foreign_key "timelines", "exam_dates"
+  add_foreign_key "timelines", "subjects"
   add_foreign_key "timelines", "users"
   add_foreign_key "topics", "subjects"
   add_foreign_key "tuesday_slots", "users", column: "lc_id"

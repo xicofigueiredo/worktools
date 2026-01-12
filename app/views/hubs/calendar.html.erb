@@ -10,13 +10,15 @@
         <i class="fas fa-share-alt"></i> Share Booking Link
       </button>
 
-      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bookingSettingsModal">
-        <i class="fas fa-cog"></i> Settings
-      </button>
+      <% if current_user&.admin? %>
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bookingSettingsModal">
+          <i class="fas fa-cog"></i> Settings
+        </button>
 
-      <button class="btn btn-warning" onclick="openHubBlockModal('<%= Date.current %>')">
-        <i class="fas fa-plus"></i> Block Period
-      </button>
+        <button class="btn btn-warning" onclick="openHubBlockModal('<%= Date.current %>')">
+          <i class="fas fa-plus"></i> Block Period
+        </button>
+      <% end %>
 
       <div class="btn-group">
         <%= link_to calendar_hub_path(@hub, year: @prev_year), class: 'btn btn-outline-secondary' do %>
@@ -52,89 +54,14 @@
       } %>
 </div>
 
-<div class="modal fade" id="bookingSettingsModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="bookingSettingsModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Hub Booking Configuration</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <% config = @hub.settings %>
-      <%= form_with(model: config, url: hub_booking_config_path(@hub), method: :patch, local: true) do |f| %>
-        <div class="modal-body">
-          <div class="alert alert-info small mb-3">
-            <i class="fas fa-info-circle"></i>
-            <strong>Note:</strong> Durations are fixed by the system.<br>
-            Hub Visit: <strong><%= HubBookingConfig::VISIT_DURATION %> mins</strong> |
-            Trial Day: <strong><%= HubBookingConfig::TRIAL_DURATION %> mins</strong>
-          </div>
-
-          <h6 class="border-bottom pb-2 mb-3">Weekly Schedule</h6>
-
-          <ul class="nav nav-tabs mb-3" id="scheduleTabs" role="tablist">
-            <% (1..5).each_with_index do |wday, index| %>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link <%= 'active' if index == 0 %>"
-                        id="day-<%= wday %>-tab"
-                        data-bs-toggle="tab"
-                        data-bs-target="#day-<%= wday %>-content"
-                        type="button" role="tab"
-                        aria-controls="day-<%= wday %>-content"
-                        aria-selected="<%= index == 0 %>">
-                  <%= Date::DAYNAMES[wday] %>
-                </button>
-              </li>
-            <% end %>
-          </ul>
-
-          <div class="tab-content" id="scheduleTabsContent">
-            <% (1..5).each_with_index do |wday, index| %>
-              <div class="tab-pane fade <%= 'show active' if index == 0 %>" id="day-<%= wday %>-content" role="tabpanel" aria-labelledby="day-<%= wday %>-tab">
-                <div class="p-3 border rounded bg-light">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="mb-0 text-primary">Available Slots for <%= Date::DAYNAMES[wday] %></h6>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllSlots(<%= wday %>)">Toggle All</button>
-                  </div>
-
-                  <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
-                    <%
-                       # Generate 10:00 to 16:00
-                       start_gen = Time.parse("#{HubBookingConfig::OPENING_HOUR}:00")
-                       end_gen = Time.parse("#{HubBookingConfig::CLOSING_HOUR}:00")
-                       current = start_gen
-
-                       # Get currently saved slots for this day (wday)
-                       saved_slots = config.slots_for_day(wday)
-                    %>
-                    <% while current <= end_gen %>
-                      <% time_str = current.strftime("%H:%M") %>
-                      <% is_checked = saved_slots.include?(time_str) %>
-
-                      <div class="form-check position-relative bg-white rounded border px-2 py-1">
-                        <input class="form-check-input ms-0 me-2 day-chk-<%= wday %>"
-                               type="checkbox"
-                               name="hub_booking_config[visit_slots][<%= wday %>][]"
-                               value="<%= time_str %>"
-                               id="slot_<%= wday %>_<%= time_str %>"
-                               <%= 'checked' if is_checked %>>
-                        <label class="form-check-label small stretched-link" for="slot_<%= wday %>_<%= time_str %>">
-                          <%= time_str %>
-                        </label>
-                      </div>
-                      <% current += 30.minutes %>
-                    <% end %>
-                  </div>
-                </div>
-              </div>
-            <% end %>
-          </div>
-
-        </div>
-        <div class="modal-footer bg-light">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-primary px-4">Save Schedule</button>
-        </div>
-      <% end %>
+      <%= render partial: "hub_booking_configs/form", locals: { config: @hub.settings, hub: @hub } %>
     </div>
   </div>
 </div>
@@ -383,4 +310,28 @@
     const shouldCheck = !checkboxes[0].checked;
     checkboxes.forEach(c => c.checked = shouldCheck);
   }
+
+  document.addEventListener('turbo:submit-start', function(event) {
+    const btn = document.getElementById('saveBookingConfigBtn');
+    const spinner = document.getElementById('saveBtnSpinner');
+    if (btn && event.target.id === 'booking_config_form') {
+      btn.disabled = true;
+      spinner.classList.remove('d-none');
+    }
+  });
+
+  function toggleAllSlots(wday) {
+    const checkboxes = document.querySelectorAll(`.day-chk-${wday}`);
+    if (checkboxes.length === 0) return;
+    const shouldCheck = !checkboxes[0].checked;
+    checkboxes.forEach(c => c.checked = shouldCheck);
+  }
+
+  // Ensure Tabs work after Turbo Stream replacement
+  document.addEventListener('turbo:render', function() {
+    var triggerTabList = [].slice.call(document.querySelectorAll('#scheduleTabs button'))
+    triggerTabList.forEach(function (triggerEl) {
+      new bootstrap.Tab(triggerEl);
+    });
+  });
 </script>

@@ -33,9 +33,24 @@ class CalendarDataService
                      .where.not(status: ['cancelled', 'rejected'])
 
     events = {}
-    visits.find_each do |v|
-      date = v.start_time.to_date
-      (events[date] ||= []) << v
+    visits.each do |v|
+      local_start = v.start_time.in_time_zone(Time.zone)
+      local_end   = v.end_time.in_time_zone(Time.zone)
+      date        = local_start.to_date
+
+      (events[date] ||= []) << {
+        id: v.id,
+        type: v.visit_type.titleize,
+        name: v.full_name,
+        date: local_start.strftime("%B %d, %Y"),
+        time: "#{local_start.strftime('%H:%M')} - #{local_end.strftime('%H:%M')}",
+        email: v.email,
+        phone: v.phone,
+        learner_name: v.learner_name,
+        learner_age: v.learner_age,
+        learner_level: v.learner_academic_level,
+        notes: v.special_requests
+      }
     end
     events
   end

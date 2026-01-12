@@ -150,9 +150,9 @@
 <style>
   body {
     background-image: url('/backgrounds/background_bga.jpg');
-    background-size: 125% auto;
+    background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+    background-attachment: scroll;
     background-repeat: no-repeat;
     background-color: #DCF000;
   }
@@ -200,8 +200,97 @@
   .flatpickr-calendar { box-shadow: none !important; border: 1px solid #e5e7eb !important; margin: 0 auto; }
 
   @media(max-width: 768px) {
+    .booking-container {
+      margin: 20px auto;
+      padding: 0 10px;
+    }
+
+    .booking-card {
+      padding: 20px;
+    }
+
+    .progress-container {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .step-indicator {
+      font-size: 0.85rem;
+    }
+
     .service-options { grid-template-columns: 1fr; }
+
+    .service-card {
+      padding: 15px;
+    }
+
+    .slots-grid {
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 8px;
+    }
+
+    .time-slot-btn {
+      font-size: 0.8rem;
+      padding: 6px;
+    }
+
     .col-md-6.border-end { border-right: none !important; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 20px; }
+
+    .flatpickr-calendar {
+      width: 100% !important;
+      font-size: 0.85rem;
+    }
+
+    .flatpickr-month {
+      height: 30px !important;
+    }
+
+    .flatpickr-weekdays .flatpickr-weekday {
+      height: 30px !important;
+      line-height: 30px !important;
+    }
+
+    .flatpickr-days {
+      width: 100% !important;
+    }
+
+    .flatpickr-day {
+      max-width: calc(100% / 7) !important;
+      height: 30px !important;
+      line-height: 30px !important;
+      font-size: 0.85rem;
+    }
+
+    .flatpickr-calendar.inline {
+      margin: 0 auto;
+    }
+  }
+
+  @media(max-width: 576px) {
+    .booking-header h2 {
+      font-size: 1.5rem;
+    }
+
+    .booking-header p {
+      font-size: 0.9rem;
+    }
+
+    h4.mb-4 {
+      font-size: 1.25rem;
+    }
+
+    .service-card .icon {
+      font-size: 1.5rem;
+    }
+
+    .service-card h5 {
+      font-size: 1.1rem;
+    }
+
+    .service-card p {
+      font-size: 0.85rem;
+    }
   }
 </style>
 
@@ -216,6 +305,11 @@
   let bookingData = { type: null, date: null, time: null };
   let fpInstance = null;
 
+  // Detect if mobile
+  function isMobile() {
+    return window.innerWidth <= 768;
+  }
+
   // --- Step 1: Type Selection ---
   function selectType(type, element) {
     bookingData.type = type;
@@ -228,9 +322,8 @@
 
   // --- Step 2: Date & Time Logic ---
   document.addEventListener("DOMContentLoaded", function() {
-    // Initialize Flatpickr (Inline)
-    fpInstance = flatpickr("#flatpickr-container", {
-      inline: true,
+    // Initialize Flatpickr (Inline on desktop, input on mobile for better UX)
+    const flatpickrConfig = {
       minDate: new Date().getTime() + 24 * 60 * 60 * 1000,
       // Disable logic: Block blackout dates AND days not in allowedDays
       disable: [
@@ -251,7 +344,25 @@
         document.getElementById('hidden_date').value = dateStr;
         fetchSlots(); // Trigger AJAX
       }
-    });
+    };
+
+    if (isMobile()) {
+      // On mobile, use non-inline with input for better touch experience
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'form-control';
+      input.placeholder = 'Select a date';
+      document.getElementById('flatpickr-container').appendChild(input);
+      flatpickrConfig.inline = false;
+      flatpickrConfig.altInput = true;
+      flatpickrConfig.altFormat = 'F j, Y';
+      flatpickrConfig.dateFormat = 'Y-m-d';
+      fpInstance = flatpickr(input, flatpickrConfig);
+    } else {
+      // On desktop, keep inline
+      flatpickrConfig.inline = true;
+      fpInstance = flatpickr("#flatpickr-container", flatpickrConfig);
+    }
   });
 
   function fetchSlots() {

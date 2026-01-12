@@ -90,33 +90,25 @@ class StaffLeave < ApplicationRecord
 
   def handle_confirmation_update(confirmation)
     if confirmation.status == 'rejected'
-      # For regular confirmations: mark leave rejected
-      # For cancellation confirmations: rejection means the cancellation was refused (leave remains as-is)
       update(status: 'rejected') unless confirmation.is_a?(CancellationConfirmation)
     elsif confirmation.status == 'approved'
       if confirmation.is_a?(CancellationConfirmation)
-        # Get the list of approvers who have approved the original leave
-        approved_confs = confirmations.where(status: 'approved', type: 'Confirmation').order(:updated_at)
-        approved_approvers = approved_confs.map(&:approver)
-        # Find the index of the current approver in the approved list
-        idx = approved_approvers.index(confirmation.approver) || 0
-
-        if idx < (approved_approvers.length - 1)
-          # Ask the next manager who approved the original leave to approve the cancellation
-          next_approver = approved_approvers[idx + 1]
-          confirmations.create!(type: 'CancellationConfirmation', approver: next_approver, status: 'pending')
-        else
-          # Last approver approved cancellation -> cancel the leave
-          update(status: 'cancelled')
-        end
+        handle_cancellation_approval(confirmation)
       else
-        # Normal approval chain for creating approvals
+        # Normal approval chain
         chain = approval_chain
-        next_index = chain.index(confirmation.approver) + 1
-        if next_index < chain.length
-          confirmations.create!(type: 'Confirmation', approver: chain[next_index], status: 'pending')
+        current_idx = chain.index(confirmation.approver)
+
+        # If current approver is not found or is the last one in the chain
+        if current_idx.nil? || current_idx + 1 >= chain.length
+          update!(status: 'approved')
         else
-          update(status: 'approved')
+          # Move to the next manager in the hierarchy
+          confirmations.create!(
+            type: 'Confirmation',
+            approver: chain[current_idx + 1],
+            status: 'pending'
+          )
         end
       end
     end

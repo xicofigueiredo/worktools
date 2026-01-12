@@ -1,0 +1,10 @@
+<%= turbo_stream.replace "learner_selection_frame" do %>
+  <div id="learner_selection_frame" class="mb-3">
+    <label class="form-label">Select Learner</label>
+    <%= select_tag "service_request[learner_id]",
+        options_from_collection_for_select(@users, :id, :full_name),
+        prompt: "Choose a learner...",
+        class: "form-select",
+        required: true %>
+  </div>
+<% end %>

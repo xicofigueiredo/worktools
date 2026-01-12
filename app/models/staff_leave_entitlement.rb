@@ -44,7 +44,7 @@ class StaffLeaveEntitlement < ApplicationRecord
   end
 
   # Create entitlement with validation
-  def self.create_for_user(user:, year:, annual_holidays:, holidays_left:, manager:)
+  def self.create_for_user(user:, year:, annual_holidays:, holidays_left:, days_from_previous_year:, manager:)
     # Check authorization
     is_admin_or_hr = manager.role == 'admin' || manager.email == 'humanresources@bravegenerationacademy.com'
 
@@ -63,7 +63,8 @@ class StaffLeaveEntitlement < ApplicationRecord
       user: user,
       year: year,
       annual_holidays: annual_holidays,
-      holidays_left: holidays_left
+      holidays_left: holidays_left,
+      days_from_previous_year: days_from_previous_year
     )
 
     if entitlement.save
@@ -74,7 +75,7 @@ class StaffLeaveEntitlement < ApplicationRecord
   end
 
   # Update entitlement with validation
-  def update_for_manager(annual_holidays:, holidays_left:, manager:)
+  def update_for_manager(annual_holidays:, holidays_left:, days_from_previous_year:, manager:)
     # Check authorization
     is_admin_or_hr = manager.role == 'admin' || manager.email == 'humanresources@bravegenerationacademy.com'
 
@@ -84,7 +85,7 @@ class StaffLeaveEntitlement < ApplicationRecord
 
     return { success: false, error: 'Unauthorized', status: :unauthorized } unless authorized
 
-    if update(annual_holidays: annual_holidays, holidays_left: holidays_left)
+    if update(annual_holidays: annual_holidays, holidays_left: holidays_left, days_from_previous_year: days_from_previous_year)
       { success: true, entitlement: self }
     else
       { success: false, error: errors.full_messages.to_sentence, status: :unprocessable_entity }

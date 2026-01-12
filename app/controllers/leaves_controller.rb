@@ -27,7 +27,7 @@ class LeavesController < ApplicationController
     # 2. Manager View Logic
     if current_user.managed_departments.present?
       prepare_manager_entitlements if current_user&.managed_departments&.present?
-      @pending_confirmations = current_user.confirmations.pending
+      @pending_confirmations = current_user.confirmations.pending.where(confirmable_type: 'StaffLeave')
 
       depts = current_user.managed_departments
       is_top = depts.all? { |d| d.superior.nil? }
@@ -385,31 +385,6 @@ class LeavesController < ApplicationController
     redirect_to leaves_path, alert: "Could not process cancellation: #{e.message}"
   end
 
-  def approve_confirmation
-    confirmation = current_user.confirmations.find(params[:id])
-    confirmation.update(status: 'approved', validated_at: Time.now)
-    redirect_to leaves_path(active_tab: 'manager'), notice: 'Confirmation approved.'
-  end
-
-  def reject_confirmation
-    confirmation = current_user.confirmations.find(params[:id])
-
-    # capture provided reason (may be nil)
-    reason = params[:rejection_reason].to_s.strip.presence
-
-    confirmation.update!(
-      status: 'rejected',
-      validated_at: Time.current,
-      rejection_reason: reason
-    )
-
-    redirect_to leaves_path(active_tab: 'manager'), notice: 'Confirmation rejected.'
-  rescue ActiveRecord::RecordNotFound
-    redirect_to leaves_path(active_tab: 'manager'), alert: 'Confirmation not found or you are not authorized.'
-  rescue ActiveRecord::RecordInvalid => e
-    redirect_to leaves_path(active_tab: 'manager'), alert: "Could not reject confirmation: #{e.record.errors.full_messages.to_sentence}"
-  end
-
   def create_entitlement
     params = entitlement_params  # Use strong params
     user = User.find_by(id: params[:user_id])
@@ -455,12 +430,14 @@ class LeavesController < ApplicationController
         year: year,
         annual_holidays: [params[:annual_total].to_i, 0].max,
         holidays_left: [params[:new_holidays_left].to_i, 0].max,
+        days_from_previous_year: [params[:days_from_prev_year].to_i, 0].max,
         manager: current_user
       )
     else
       result = entitlement.update_for_manager(
         annual_holidays: [params[:annual_total].to_i, 0].max,
         holidays_left: [params[:new_holidays_left].to_i, 0].max,
+        days_from_previous_year: [params[:days_from_prev_year].to_i, 0].max,
         manager: current_user
       )
     end
@@ -515,7 +492,7 @@ class LeavesController < ApplicationController
   private
 
   def entitlement_params
-    params.permit(:user_id, :year, :annual_holidays, :holidays_left, :annual_total, :new_holidays_left, :start_date)
+    params.permit(:user_id, :year, :annual_holidays, :holidays_left, :annual_total, :new_holidays_left, :start_date, :days_from_prev_year)
   end
 
   def staff_leave_params
@@ -526,6 +503,7 @@ class LeavesController < ApplicationController
     entitlement = StaffLeaveEntitlement.find_by(user: user, year: year)
     total_holidays = entitlement&.annual_holidays || 25
     holidays_left = entitlement&.holidays_left || 25
+    carry_over_pool = entitlement&.days_from_previous_year || 0
 
     # 1. Fetch relevant leaves (Pending & Approved) that overlap this year
     # We fetch broadly and filter in Ruby to ensure split-year accuracy
@@ -592,6 +570,8 @@ class LeavesController < ApplicationController
       primary_department: user.departments.first,
 
       total_holidays: total_holidays,
+      days_from_previous_year: carry_over_pool,
+      total_display: total_holidays + carry_over_pool,
       holidays_left: holidays_left,
 
       mandatory_days: mandatory_days,

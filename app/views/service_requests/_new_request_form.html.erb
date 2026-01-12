@@ -1,0 +1,75 @@
+<div class="modal fade" id="newRequestModal" tabindex="-1" aria-labelledby="newRequestModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <%= form_with scope: :service_request, url: service_requests_path, local: true do |f| %>
+        <div class="modal-header">
+          <h5 class="modal-title" id="newRequestModalLabel">New Service Request</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <%# Hub Selection: Pre-selects main hub and disables if only one hub exists %>
+          <div class="mb-3">
+            <label class="form-label">Select Hub</label>
+            <%= select_tag :hub_id,
+                options_from_collection_for_select(@user_hubs, :id, :name, current_user.main_hub&.id),
+                class: "form-select",
+                disabled: @user_hubs.count <= 1,
+                onchange: "fetch('/service_requests/fetch_learners?hub_id=' + this.value, { headers: { 'Accept': 'text/vnd.turbo-stream.html' } })
+                           .then(r => r.text())
+                           .then(html => Turbo.renderStreamMessage(html))" %>
+            <% if @user_hubs.count <= 1 %>
+              <input type="hidden" name="hub_id" value="<%= current_user.main_hub&.id %>">
+            <% end %>
+          </div>
+
+          <%# Dynamic Learner Frame: Pre-populated with main hub learners on load %>
+          <div id="learner_selection_frame" class="mb-3">
+            <label class="form-label">Select Learner</label>
+            <%= f.collection_select :learner_id, @users, :id, :full_name,
+                { prompt: "Choose a learner..." }, { class: "form-select", required: true } %>
+          </div>
+
+          <div class="mb-3">
+            <%= f.label :type, "Request Type", class: "form-label" %>
+            <%= f.select :type,
+                [['Hub Transfer', 'HubTransferRequest'], ['Certificate', 'CertificateRequest']],
+                { prompt: "Select type..." },
+                { class: "form-select", id: "request_type_select", required: true, onchange: "toggleFields()" } %>
+          </div>
+
+          <div class="mb-3 d-none" id="field_hub_transfer">
+            <%= f.label :target_hub_id, "Target Hub", class: "form-label" %>
+            <%= f.select :target_hub_id, options_for_select(@hub_options), { prompt: "Select destination..." }, { class: "form-select" } %>
+          </div>
+
+          <div class="mb-3 d-none" id="field_certificate">
+            <%= f.label :certificate_type, "Certificate Name/Type", class: "form-label" %>
+            <%= f.text_field :certificate_type, class: "form-control", placeholder: "e.g., Enrollment Proof" %>
+          </div>
+
+          <div class="mb-3">
+            <%= f.label :reason, "Reason / Notes", class: "form-label" %>
+            <%= f.text_area :reason, class: "form-control", rows: 3, required: true %>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <%= f.submit "Submit Request", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleFields() {
+    const type = document.getElementById('request_type_select').value;
+    const hub = document.getElementById('field_hub_transfer');
+    const cert = document.getElementById('field_certificate');
+
+    hub.classList.toggle('d-none', type !== 'HubTransferRequest');
+    cert.classList.toggle('d-none', type !== 'CertificateRequest');
+  }
+</script>

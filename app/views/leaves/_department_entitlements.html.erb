@@ -81,7 +81,12 @@
               <tr data-dept-id="<%= primary_dept&.id %>">
                 <td><%= primary_dept&.name || '—' %></td>
                 <td><%= "#{r[:user].full_name}" %></td>
-                <td><%= r[:total_holidays] %></td>
+                <td>
+                  <%= r[:total_display] %>
+                  <% if r[:days_from_previous_year].to_i > 0 %>
+                    <small class="text-muted">(<%= r[:days_from_previous_year] %>)</small>
+                  <% end %>
+                </td>
 
                 <td>
                   <%= r[:mandatory_days] %>
@@ -110,6 +115,7 @@
                             data-user-id="<%= r[:user].id %>"
                             data-year="<%= year_now %>"
                             data-current-total="<%= r[:total_holidays] %>"
+                            data-days-prev-year="<%= r[:days_from_previous_year] %>" <%# Added %>
                             data-current-booked="<%= r[:booked_holiday] %>"
                             data-current-pending="<%= r[:pending_holiday] %>"
                             data-current-left="<%= r[:holidays_left] %>">Edit</button>
@@ -181,8 +187,14 @@
           <input type="hidden" name="user_id" id="edit-user-id">
           <input type="hidden" name="year" id="edit-year">
           <div class="mb-3">
-            <label for="annual-total" class="form-label">Total (Annual Allowance)</label>
+            <label for="annual-total" class="form-label">Annual Allowance</label>
             <input type="number" class="form-control" id="annual-total" name="annual_total" min="0">
+          </div>
+
+          <div class="mb-3">
+            <label for="days-from-prev-year" class="form-label">Days from Previous Year</label>
+            <input type="number" class="form-control" id="days-from-prev-year" name="days_from_prev_year" min="0">
+            <small class="text-muted">Manually allocated carry-over days.</small>
           </div>
           <div class="mb-3">
             <label for="remaining-left" class="form-label">Left (Remaining Days)</label>
@@ -489,9 +501,11 @@
         var currentBooked = parseInt(btn.dataset.currentBooked) || 0;
         var currentPending = parseInt(btn.dataset.currentPending) || 0;
         var currentLeft = parseInt(btn.dataset.currentLeft) || 0;
+        var daysPrevYear = btn.dataset.daysPrevYear || 0;
 
         document.getElementById('edit-user-id').value = userId;
         document.getElementById('edit-year').value = year;
+        document.getElementById('days-from-prev-year').value = daysPrevYear;
         var totalInput = document.getElementById('annual-total');
         var leftInput = document.getElementById('remaining-left');
 

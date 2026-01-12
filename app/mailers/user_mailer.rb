@@ -247,7 +247,8 @@ class UserMailer < Devise::Mailer
 
     #--- Send email --- Dev
     # mail(
-    #   to: "guilherme@bravegenerationacademy.com",
+    #   to: real_to,
+    #   cc: real_cc,
     #   from:          ApplicationMailer::FROM_CONTACT,
     #   subject:       subject,
     #   template_name: template_path
@@ -257,26 +258,42 @@ class UserMailer < Devise::Mailer
   def hub_visit_confirmation(visit)
     @visit = visit
     @hub = visit.hub
-    @lcs = @hub.learning_coaches.map { |u| u.try(:full_name) || u.email }.to_sentence
+    @lcs = @hub.learning_coaches_with_capacity.map { |u| u.try(:full_name) || u.email }.to_sentence
+
+    cc_list = @hub.all_cc_emails
+    cc_list << ApplicationMailer::FROM_CONTACT
+
+    attachments['invite.ics'] = {
+      mime_type: 'text/calendar',
+      content: @visit.to_ics
+    }
 
     mail(
       to: @visit.email,
-      cc: ApplicationMailer::FROM_CONTACT, # add hub_email
+      cc: cc_list.uniq,
       from: ApplicationMailer::FROM_CONTACT,
-      subject: "Your Hub Visit for #{@hub.name} Is Confirmed!"
+      subject: "Your Hub Visit for #{@hub.name} is Confirmed!"
     )
   end
 
   def trial_day_confirmation(visit)
     @visit = visit
     @hub = visit.hub
-    @lcs = @hub.learning_coaches.map { |u| u.try(:full_name) || u.email }.to_sentence
+    @lcs = @hub.learning_coaches_with_capacity.map { |u| u.try(:full_name) || u.email }.to_sentence
+
+    cc_list = @hub.all_cc_emails
+    cc_list << ApplicationMailer::FROM_CONTACT
+
+    attachments['invite.ics'] = {
+      mime_type: 'text/calendar',
+      content: @visit.to_ics
+    }
 
     mail(
       to: @visit.email,
-      cc: ApplicationMailer::FROM_CONTACT, # add hub_email
+      cc: cc_list.uniq,
       from: ApplicationMailer::FROM_CONTACT,
-      subject: "Your Trial Day Is Booked!"
+      subject: "Your Trial Day is Booked!"
     )
   end
 end

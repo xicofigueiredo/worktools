@@ -13,6 +13,8 @@ class Hub < ApplicationRecord
 
   accepts_nested_attributes_for :booking_config
 
+  after_create :initialize_booking_config
+
   # Scopes for common queries
   scope :with_main_users, -> { joins(:users_hubs).where(users_hubs: { main: true }) }
 
@@ -60,43 +62,72 @@ class Hub < ApplicationRecord
         .count
   end
 
-  # Count of active learners
   def active_learners_count
     active_learners.count
   end
 
-  # Calculate free spots based on capacity
+  def pending_incoming_transfers_count
+    ServiceRequest.where(type: 'HubTransferRequest', status: 'pending', target_hub_id: id).count
+  end
+
+  def total_occupied_spots
+    active_learners_count + pending_incoming_transfers_count
+  end
+
   def free_spots
     return nil unless capacity.present? && capacity.positive?
-    [capacity - active_learners_count, 0].max
+    [capacity - total_occupied_spots, 0].max
   end
 
-  # Calculate capacity percentage
   def capacity_percentage
     return nil unless capacity.present? && capacity.positive?
-    ((active_learners_count.to_f / capacity.to_f) * 100).round(1)
+    ((total_occupied_spots.to_f / capacity.to_f) * 100).round(1)
   end
 
-  # Get capacity info as a hash
   def capacity_info
     if capacity.present? && capacity.positive?
+      occupied = total_occupied_spots
+      free = [capacity - occupied, 0].max
       {
         total: capacity,
-        used: active_learners_count,
-        free: free_spots,
-        percentage: capacity_percentage
+        used: occupied,
+        free: free,
+        percentage: ((occupied.to_f / capacity.to_f) * 100).round(1)
       }
     else
-      {
-        total: nil,
-        used: active_learners_count,
-        free: nil,
-        percentage: nil
-      }
+      { total: nil, used: active_learners_count, free: nil, percentage: nil }
     end
   end
 
   def settings
     booking_config || build_booking_config
+  end
+
+  def all_cc_emails
+    emails = []
+    emails << hub_email if hub_email.present?
+    emails.concat(school_contact_emails) if school_contact_emails.any?
+    emails.uniq
+  end
+
+  private
+
+  def initialize_booking_config
+    return if booking_config.present?
+
+    all_slots = []
+    current = Time.zone.parse("10:00")
+    limit = Time.zone.parse("16:00")
+
+    while current <= limit
+      all_slots << current.strftime("%H:%M")
+      current += 30.minutes
+    end
+
+    default_visit_slots = (1..5).each_with_object({}) do |wday, hash|
+      hash[wday.to_s] = all_slots
+    end
+
+    create_booking_config(visit_slots: default_visit_slots)
   end
 end

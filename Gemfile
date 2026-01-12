@@ -91,3 +91,5 @@ gem 'httparty'
 gem "down", "~> 5.0"
 
 gem 'whenever', require: false
+
+gem 'icalendar'

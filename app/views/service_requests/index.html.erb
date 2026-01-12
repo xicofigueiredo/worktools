@@ -1,0 +1,37 @@
+<div class="container mt-4" data-controller="confirmation">
+  <div id="manager-action-center">
+    <%= render 'action_center', manager_pending: @manager_pending if @manager_pending.any? %>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Service Requests</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal">
+      <i class="fa-solid fa-plus me-1"></i> New Request
+    </button>
+  </div>
+
+  <% active_tab = params[:active_tab] || 'my_requests' %>
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <%= link_to "My Requests", service_requests_path(active_tab: 'my_requests'),
+          class: "nav-link #{'active' if active_tab == 'my_requests'}" %>
+    </li>
+    <% if @review_history.any? || @manager_pending.any? %>
+      <li class="nav-item">
+        <%= link_to "Review History", service_requests_path(active_tab: 'review_history'),
+            class: "nav-link #{'active' if active_tab == 'review_history'}" %>
+      </li>
+    <% end %>
+  </ul>
+
+  <div class="tab-content">
+    <% if active_tab == 'my_requests' %>
+      <%= render 'my_requests_tab', requests: @requests %>
+    <% else %>
+      <%= render 'review_history_tab', history: @review_history %>
+    <% end %>
+  </div>
+</div>
+
+<%= render 'shared/rejection_modal', title: "Reject Service Request" %>
+<%= render 'service_requests/new_request_form' %>

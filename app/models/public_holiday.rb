@@ -35,4 +35,15 @@ class PublicHoliday < ApplicationRecord
 
     (explicit_dates + recurring_dates).uniq.sort
   end
+
+  def self.is_holiday_on?(date, hub)
+    country = hub&.country
+    rel = where("(hub_id = :h_id) OR (hub_id IS NULL AND country = :c) OR (hub_id IS NULL AND country IS NULL)",
+                h_id: hub&.id, c: country)
+
+    rel.where(date: date).exists? ||
+    rel.where(recurring: true)
+      .where("EXTRACT(MONTH FROM date) = ? AND EXTRACT(DAY FROM date) = ?", date.month, date.day)
+      .exists?
+  end
 end

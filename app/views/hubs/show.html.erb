@@ -387,9 +387,9 @@
                 <span class="hub-title-type">| <%= display_type %></span>
               </div>
 
-              <!--<%= link_to calendar_hub_path(@hub), class: "btn btn-sm btn-outline-secondary", data: { turbo: false } do %>
+              <%= link_to calendar_hub_path(@hub), class: "btn btn-sm btn-outline-secondary", data: { turbo: false } do %>
                 <i class="fas fa-calendar-alt"></i> Hub Calendar
-              <% end %>-->
+              <% end %>
             </div>
           </div>
 
@@ -412,34 +412,69 @@
             <% end %>
           </div>
 
-          <% if @hub.address.present? %>
-            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e5e7eb;">
-              <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; font-weight: 600; color: #374151;">Location</h4>
+          <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #e5e7eb;">
+            <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; font-weight: 600; color: #374151;">Contact & Location</h4>
 
-              <div style="display: flex; gap: 10px; align-items: flex-start;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; margin-top: 2px;">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
+            <%# --- HUB EMAIL (Always shows, with fallback messages) --- %>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; color: var(--muted); flex-shrink: 0;">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <div style="font-size: 0.9rem; color: #4b5563;">
+                <% if @hub.hub_email.present? %>
+                  <%= mail_to @hub.hub_email, @hub.hub_email, style: "color: var(--accent-1); text-decoration: none; font-weight: 500;" %>
+                <% else %>
+                  <span style="color: var(--muted); font-style: italic;">Hub email not configured</span>
+                <% end %>
+              </div>
+            </div>
 
-                <div style="font-size: 0.9rem; color: #4b5563; line-height: 1.5;">
+            <%# --- SCHOOL CONTACTS (Only shows if present) --- %>
+            <% if @hub.respond_to?(:school_contact_emails) && @hub.school_contact_emails.any? %>
+              <% @hub.school_contact_emails.each do |email| %>
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; color: var(--accent-2); flex-shrink: 0;">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  </svg>
+                  <div style="font-size: 0.9rem; color: #4b5563;">
+                    <span style="font-weight: 600; color: var(--muted); margin-right: 4px;">School Contact:</span>
+                    <%= mail_to email, email, style: "color: var(--accent-1); text-decoration: none; font-weight: 500;" %>
+                  </div>
+                </div>
+              <% end %>
+            <% end %>
+
+            <%# --- ADDRESS & GOOGLE MAPS (Always shows, with fallback messages) --- %>
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; margin-top: 2px;">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+
+              <div style="font-size: 0.9rem; color: #4b5563; line-height: 1.5;">
+                <% if @hub.address.present? %>
                   <div><%= simple_format(h(@hub.address), {}, wrapper_tag: "span") %></div>
+                <% else %>
+                  <div style="color: var(--muted); font-style: italic;">Hub address not configured</div>
+                <% end %>
 
+                <div style="margin-top: 6px;">
                   <% if @hub.google_map_link.present? %>
-                    <div style="margin-top: 6px;">
-                      <a href="<%= @hub.google_map_link %>" target="_blank" rel="noopener noreferrer" style="color: var(--accent-1); text-decoration: none; font-weight: 500; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
-                        <span>View on Google Maps</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 14px; height: 14px;">
-                          <path fill-rule="evenodd" d="M5 10a5 5 0 1110 0 5 5 0 01-10 0zm11.414-2.586a2 2 0 00-2.828-2.828L9.586 8.586A2 2 0 009 10v.015l4.586 4.571a2 2 0 002.828-2.828l-3-3 3-3z" clip-rule="evenodd" />
-                          <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                        </svg>
-                      </a>
-                    </div>
+                    <a href="<%= @hub.google_map_link %>" target="_blank" rel="noopener noreferrer" style="color: var(--accent-1); text-decoration: none; font-weight: 500; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
+                      <span>View on Google Maps</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 14px; height: 14px;">
+                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                      </svg>
+                    </a>
+                  <% else %>
+                    <span style="color: var(--muted); font-size: 0.85rem; font-style: italic;">Google Maps link not configured</span>
                   <% end %>
                 </div>
               </div>
             </div>
-          <% end %>
+          </div>
         </div>
 
         <div style="flex: 1 1 40%; border-left: 1px solid #e5e7eb; padding-left: 20px;">

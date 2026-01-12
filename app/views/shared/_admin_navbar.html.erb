@@ -17,16 +17,54 @@
             </div>
           </li>
           <li class="nav-item">
-            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(leaves_path) %>">
-              <%= link_to leaves_path, class: 'nav-link d-inline-flex align-items-center' do %>
-                Leaves
-                <% if @pending_confirmations_count.to_i.positive? %>
-                  <span class="badge rounded-pill bg-danger ms-0" style="font-size:0.65rem; line-height:1; padding:0.22rem 0.45rem; transform: translateY(-7px);">
-                    <%= @pending_confirmations_count %>
-                    <span class="visually-hidden">pending confirmations</span>
+            <%
+              is_requests_active = current_user && (current_page?(leaves_path) ||
+                                  request.path.include?('/leaves') ||
+                                  current_page?(service_requests_path) ||
+                                  request.path.include?('/service_requests'))
+            %>
+
+            <div class="dropdown p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%);' if is_requests_active %>">
+              <a class="nav-link dropdown-toggle d-flex align-items-center"
+                href="#"
+                id="navbarRequestsDropdown"
+                role="button"
+                data-bs-toggle="dropdown"
+                data-bs-offset="0,-2"
+                aria-expanded="false">
+                Requests
+                <span id="total-requests-badge">
+                  <% if @total_pending_count > 0 %>
+                    <span class="badge rounded-pill bg-danger ms-1" style="font-size:0.65rem; padding:0.22rem 0.45rem;">
+                      <%= @total_pending_count %>
+                    </span>
+                  <% end %>
+                </span>
+              </a>
+
+              <div class="dropdown-menu shadow-sm custom-requests-menu" aria-labelledby="navbarRequestsDropdown">
+                <%= link_to leaves_path, class: "dropdown-item d-flex justify-content-between align-items-center" do %>
+                  <span><i class="fa-solid fa-calendar-day me-2"></i> Leaves</span>
+                  <span id="leave-requests-badge">
+                    <% if @leave_pending_count > 0 %>
+                      <span class="badge rounded-pill bg-danger">
+                        <%= @leave_pending_count %>
+                      </span>
+                    <% end %>
                   </span>
                 <% end %>
-              <% end %>
+
+                <%= link_to service_requests_path, class: "dropdown-item" do %>
+                  <span><i class="fa-solid fa-clipboard-list me-2"></i> Service Requests</span>
+                  <span id="service-requests-badge">
+                    <% if @service_pending_count > 0 %>
+                      <span class="badge rounded-pill bg-danger">
+                        <%= @service_pending_count %>
+                      </span>
+                    <% end %>
+                  </span>
+                <% end %>
+              </div>
             </div>
           </li>
           <li class="nav-item">

@@ -1,0 +1,82 @@
+<div id="booking_config_form_container">
+  <%= form_with(model: config, url: hub_booking_config_path(hub), method: :patch, id: "booking_config_form") do |f| %>
+    <div class="modal-body">
+      <% if config.errors.any? %>
+        <div class="alert alert-danger small animate__animated animate__shakeX">
+          <ul class="mb-0">
+            <% config.errors.full_messages.each do |msg| %>
+              <li><i class="fas fa-exclamation-triangle me-1"></i> <%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="alert alert-info small mb-3">
+        <i class="fas fa-info-circle"></i>
+        <strong>Note:</strong> Durations are fixed.
+        Visit: <strong><%= HubBookingConfig::VISIT_DURATION / 60 %>h</strong> |
+        Trial: <strong><%= HubBookingConfig::TRIAL_DURATION / 60 %>h</strong>
+      </div>
+
+      <ul class="nav nav-tabs mb-3" id="scheduleTabs" role="tablist">
+        <% (1..5).each_with_index do |wday, index| %>
+          <%
+            day_name = Date::DAYNAMES[wday]
+            # Check if this specific day has a validation error
+            has_error = config.errors.full_messages.any? { |m| m.include?(day_name) }
+          %>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link <%= 'active' if index == 0 %> <%= 'text-danger fw-bold' if has_error %>"
+                    id="day-<%= wday %>-tab" data-bs-toggle="tab" data-bs-target="#day-<%= wday %>-content"
+                    type="button" role="tab">
+              <%= day_name %>
+              <% if has_error %><i class="fas fa-exclamation-circle ms-1"></i><% end %>
+            </button>
+          </li>
+        <% end %>
+      </ul>
+
+      <div class="tab-content" id="scheduleTabsContent">
+        <% (1..5).each_with_index do |wday, index| %>
+          <div class="tab-pane fade <%= 'show active' if index == 0 %>" id="day-<%= wday %>-content" role="tabpanel">
+            <div class="p-3 border rounded bg-light">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Slots for <%= Date::DAYNAMES[wday] %></h6>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAllSlots(<%= wday %>)">Toggle All</button>
+              </div>
+
+              <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
+                <%
+                  start_gen = Time.parse("#{HubBookingConfig::OPENING_HOUR}:00")
+                  end_gen = Time.parse("#{HubBookingConfig::CLOSING_HOUR}:00")
+                  current = start_gen
+                  saved_slots = config.slots_for_day(wday)
+                %>
+                <% while current <= end_gen %>
+                  <% time_str = current.strftime("%H:%M") %>
+                  <div class="form-check position-relative bg-white rounded border px-2 py-1">
+                    <input class="form-check-input ms-0 me-2 day-chk-<%= wday %>"
+                           type="checkbox" name="hub_booking_config[visit_slots][<%= wday %>][]"
+                           value="<%= time_str %>" id="slot_<%= wday %>_<%= time_str %>"
+                           <%= 'checked' if saved_slots.include?(time_str) %>>
+                    <label class="form-check-label small stretched-link" for="slot_<%= wday %>_<%= time_str %>">
+                      <%= time_str %>
+                    </label>
+                  </div>
+                  <% current += 30.minutes %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <div class="modal-footer bg-light">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <button type="submit" class="btn btn-primary px-4" id="saveBookingConfigBtn">
+        <span class="spinner-border spinner-border-sm d-none" id="saveBtnSpinner"></span>
+        Save Schedule
+      </button>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,108 @@
+class HubTransferRequest < ServiceRequest
+  belongs_to :target_hub, class_name: 'Hub'
+
+  validates :target_hub_id, presence: true
+  validate :no_pending_transfer_exists, on: :create
+  validate :target_hub_has_capacity, on: :create
+
+  after_create :create_initial_confirmation
+  after_update :finalize_transfer!, if: -> { saved_change_to_status?(to: 'approved') }
+
+  def approval_chain
+    chain = []
+
+    # 1. Target Hub's Regional Manager (RM)
+    if target_hub&.regional_manager.present?
+      chain << target_hub.regional_manager
+    end
+
+    # LCS?
+    # Admissions?
+
+    chain.compact.uniq
+  end
+
+  def description_for_approver
+    helpers = Rails.application.routes.url_helpers
+    learner_info_id = learner.learner_info&.id
+
+    learner_link = if learner_info_id
+      "<a href='#{helpers.admission_path(learner_info_id)}' class='fw-bold text-primary text-decoration-none'>#{learner.full_name}</a>"
+    else
+      "<strong>#{learner.full_name}</strong>"
+    end
+
+    hub_link = "<a href='#{helpers.hub_path(target_hub)}' class='fw-bold text-primary text-decoration-none'>#{target_hub.name}</a>"
+
+    "<strong>#{requester.full_name}</strong> requested a hub transfer for #{learner_link} to #{hub_link}".html_safe
+  end
+
+  def finalize_transfer!
+    ActiveRecord::Base.transaction do
+      source_hub = learner.learner_info&.hub
+
+      update_admission_record
+      rotate_hub_access(source_hub)
+      recalculate_finance
+
+      schedule_notification
+    end
+  end
+
+  private
+
+  def no_pending_transfer_exists
+    if HubTransferRequest.where(learner_id: learner_id, status: 'pending').where.not(id: id).exists?
+      errors.add(:base, "This learner already has a pending transfer request.")
+    end
+  end
+
+  def target_hub_has_capacity
+    return unless target_hub
+
+    if target_hub.capacity.present? && target_hub.free_spots <= 0
+      errors.add(:target_hub_id, "is currently at full capacity.")
+    end
+  end
+
+  def update_admission_record
+    if learner.learner_info
+      learner.learner_info.update!(hub: target_hub)
+    else
+      Rails.logger.warn "Transfer Warning: Learner #{learner_id} missing LearnerInfo."
+    end
+  end
+
+  def rotate_hub_access(source_hub)
+    is_main = resolve_main_status(source_hub)
+
+    remove_old_access(source_hub) if source_hub
+
+    UsersHub.create!(user: learner, hub: target_hub, main: is_main)
+  end
+
+  def resolve_main_status(source_hub)
+    if source_hub
+      # If replacing an existing hub, inherit its 'main' status
+      old_entry = UsersHub.find_by(user: learner, hub: source_hub)
+      old_entry&.main || false
+    else
+      # If no previous hub, it's main only if they don't have another main hub
+      !UsersHub.exists?(user: learner, main: true)
+    end
+  end
+
+  def remove_old_access(source_hub)
+    UsersHub.where(user: learner, hub: source_hub).destroy_all
+  end
+
+  def recalculate_finance
+    # Placeholder
+    Rails.logger.info "TODO: Check pricing change after transfer to #{target_hub.name}"
+  end
+
+  def schedule_notification
+    # Placeholder
+    Rails.logger.info "TODO: Send email to parents about transfer to #{target_hub.name}"
+  end
+end

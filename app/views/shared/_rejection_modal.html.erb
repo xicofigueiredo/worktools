@@ -1,0 +1,25 @@
+<div class="modal fade"
+     id="sharedRejectModal"
+     tabindex="-1"
+     aria-hidden="true"
+     data-controller="confirmation"
+     data-confirmation-target="modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="rejectionForm" method="post" data-action="turbo:submit-end->confirmation#closeModal">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>" />
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title"><%= local_assigns[:title] || "Reject Request" %></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <textarea name="rejection_reason" class="form-control" rows="4" required placeholder="Reason..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
