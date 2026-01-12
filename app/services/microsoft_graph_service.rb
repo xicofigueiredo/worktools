@@ -14,9 +14,7 @@ class MicrosoftGraphService
     token = fetch_access_token
     return nil unless token
 
-    # Ensure your Hub model has an email field for their Outlook account
-    hub_email = visit.hub.hub_email
-    tz = visit.hub_timezone # From your HubVisit model
+    tz = visit.hub_timezone
 
     # Map the visit details to Microsoft's Event structure
     body = {
@@ -36,17 +34,22 @@ class MicrosoftGraphService
       location: { displayName: visit.hub.name }
     }
 
-    # Use httparty to post the event
-    response = self.class.post(
-      "#{GRAPH_URL}/users/#{hub_email}/calendar/events",
-      headers: {
-        'Authorization' => "Bearer #{token}",
-        'Content-Type'  => 'application/json'
-      },
-      body: body.to_json
-    )
+    target_emails = [visit.hub.hub_email, 'contact@bravegenerationacademy.com']
+    primary_response = nil
 
-    response.success? ? response.parsed_response : nil
+    target_emails.each do |email|
+      response = self.class.post(
+        "#{GRAPH_URL}/users/#{email}/calendar/events",
+        headers: {
+          'Authorization' => "Bearer #{token}",
+          'Content-Type'  => 'application/json'
+        },
+        body: body.to_json
+      )
+      primary_response = response.parsed_response if email == visit.hub.hub_email
+    end
+
+    primary_response.success? ? response.parsed_response : nil
   end
 
   private

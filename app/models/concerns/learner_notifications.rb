@@ -12,7 +12,15 @@ module LearnerNotifications
       [User.find_by(email: "contact@bravegenerationacademy.com")].compact
     end
 
-    def finance_users
+    def finance_users(record = nil)
+      learner = record.is_a?(LearnerFinance) ? record.learner_info : record
+
+      return [] unless learner
+
+      return [] if learner.start_date.blank?
+
+      return [] if learner.hub&.country&.casecmp?('Spain')
+
       [User.find_by(email: "maria.m@bravegenerationacademy.com")].compact
     end
 
