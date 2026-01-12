@@ -121,16 +121,18 @@ class AdmissionListController < ApplicationController
     end
 
     # Age Range Logic
-    if params[:age_min].present? || params[:age_max].present?
-      # Default values if one is missing
-      min_age = params[:age_min].presence || 0
-      max_age = params[:age_max].presence || 25
+    age_bounds = LearnerInfo.pluck(Arel.sql("MIN(EXTRACT(YEAR FROM AGE(birthdate))), MAX(EXTRACT(YEAR FROM AGE(birthdate)))")).first
+    @db_min_age = age_bounds[0]&.to_i || 0
+    @db_max_age = age_bounds[1]&.to_i || 50 # Fallback to 50 if table is empty
 
-      # PostgreSQL calculation for age: EXTRACT(YEAR FROM AGE(birthdate))
+    @current_min_age = params[:age_min].presence ? params[:age_min].to_i : @db_min_age
+    @current_max_age = params[:age_max].presence ? params[:age_max].to_i : @db_max_age
+
+    if params[:age_min].present? || params[:age_max].present?
       filter_scope = filter_scope.where(
         "EXTRACT(YEAR FROM AGE(birthdate)) BETWEEN ? AND ?",
-        min_age.to_i,
-        max_age.to_i
+        @current_min_age,
+        @current_max_age
       )
     end
 
@@ -501,6 +503,9 @@ class AdmissionListController < ApplicationController
     @grades    = LearnerInfo.distinct.pluck(:grade_year).compact.sort
     @programmes = LearnerInfo.distinct.pluck(:programme).compact.sort
     @hubs = Hub.order(:name).pluck(:name)
+    age_bounds = LearnerInfo.pluck(Arel.sql("MIN(EXTRACT(YEAR FROM AGE(birthdate))), MAX(EXTRACT(YEAR FROM AGE(birthdate)))")).first
+    @db_min_age = age_bounds[0]&.to_i || 0
+    @db_max_age = age_bounds[1]&.to_i || 50
 
     # Render without layout for AJAX requests
     render layout: false

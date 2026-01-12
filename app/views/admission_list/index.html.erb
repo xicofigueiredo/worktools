@@ -352,18 +352,22 @@
 
       <div style="position: relative; min-width: 210px;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">
-          Age: <strong id="age-display"><%= params[:age_min] || 0 %> - <%= params[:age_max] || 50 %></strong>
+          Age: <strong id="age-display"><%= @current_min_age %> - <%= @current_max_age %></strong>
         </label>
 
         <div class="age-slider-group">
           <div class="slider-track"></div>
 
-          <%= range_field_tag :age_min, params[:age_min] || 0, min: 0, max: 50,
+          <%= range_field_tag :age_min, @current_min_age,
+                min: @db_min_age,
+                max: @db_max_age,
                 id: "age_min",
                 data: { action: "input->admission-search#searchInput" },
                 oninput: "updateAgeDisplay()" %>
 
-          <%= range_field_tag :age_max, params[:age_max] || 50, min: 0, max: 50,
+          <%= range_field_tag :age_max, @current_max_age,
+                min: @db_min_age,
+                max: @db_max_age,
                 id: "age_max",
                 data: { action: "input->admission-search#searchInput" },
                 oninput: "updateAgeDisplay()" %>

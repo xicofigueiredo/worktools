@@ -247,12 +247,12 @@
           <div style="display: flex; align-items: center; gap: 12px; background: white; padding: 10px; border-radius: 6px; border: 1px solid #ced4da;">
             <div style="flex: 1;">
               <span style="font-size: 0.8rem; color: #666; display: block;">Min Age</span>
-              <%= number_field_tag :age_min, params[:age_min], min: 0, max: 25, style: "width: 100%; border: none; outline: none;" %>
+              <%= number_field_tag :age_min, params[:age_min], min: @db_min_age, max: @db_max_age, style: "width: 100%; border: none; outline: none;" %>
             </div>
             <div style="color: #ccc;">|</div>
             <div style="flex: 1;">
               <span style="font-size: 0.8rem; color: #666; display: block;">Max Age</span>
-              <%= number_field_tag :age_max, params[:age_max], min: 0, max: 25, style: "width: 100%; border: none; outline: none;" %>
+              <%= number_field_tag :age_max, params[:age_max], min: @db_min_age, max: @db_max_age, style: "width: 100%; border: none; outline: none;" %>
             </div>
           </div>
           <p style="font-size: 0.75rem; color: #888; margin-top: 4px;">Adjust range if you only want a specific age group in the CSV.</p>
