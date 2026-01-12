@@ -511,6 +511,8 @@ class AdmissionListController < ApplicationController
     visible_learner_fields = @permission.visible_learner_fields
     visible_finance_fields = @permission.visible_finance_fields
 
+    mandatory_columns = [:status, :hub_name, :hub_country]
+
     # Get selected fields from form
     selected_fields = params[:fields]&.select { |f| visible_learner_fields.include?(f.to_sym) || visible_finance_fields.include?(f.to_sym) } || []
 
@@ -518,6 +520,8 @@ class AdmissionListController < ApplicationController
       flash[:alert] = "Please select at least one field to export"
       return redirect_to admissions_path
     end
+
+    all_export_columns = (mandatory_columns + selected_fields).uniq
 
     # Build scope
     filter_scope = LearnerInfo.includes(:learner_finance)
@@ -563,18 +567,25 @@ class AdmissionListController < ApplicationController
     # Generate CSV
     csv_string = "\xEF\xBB\xBF" + CSV.generate(headers: true) do |csv|
       # Add headers (humanized field names)
-      csv << selected_fields.map { |f| f.to_s.humanize }
+      csv << all_export_columns.map { |f| f.to_s.humanize }
 
       # Add data rows
       filter_scope.find_each do |learner|
-        row = selected_fields.map do |field|
-          field_sym = field.to_sym
-          if visible_learner_fields.include?(field_sym)
-            learner.send(field)
-          elsif visible_finance_fields.include?(field_sym)
-            learner.learner_finance&.send(field)
+        row = all_export_columns.map do |field|
+          case field
+          when :hub_name
+            learner.hub&.name || "No Hub"
+          when :hub_country
+            learner.hub&.country || "-"
           else
-            nil
+            field_sym = field.to_sym
+            if visible_learner_fields.include?(field_sym)
+              learner.send(field)
+            elsif visible_finance_fields.include?(field_sym)
+              learner.learner_finance&.send(field)
+            else
+              nil
+            end
           end
         end
         csv << row
