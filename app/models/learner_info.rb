@@ -260,7 +260,7 @@ class LearnerInfo < ApplicationRecord
 
       message = "Date updates for #{full_name}: #{parts.join(', ')}."
 
-      notify_recipients(self.class.finance_users, message)
+      notify_recipients(self.class.finance_users(self), message)
     end
   end
 
@@ -286,7 +286,7 @@ class LearnerInfo < ApplicationRecord
       end
     when "In progress"
       message = "#{full_name} is enrolling for: #{hub&.name}. Check the profile on the link."
-      notify_recipients(learning_coaches + self.class.finance_users, message)
+      notify_recipients(learning_coaches + self.class.finance_users(self), message)
 
       curr = curriculum_course_option.to_s.strip.downcase
       link = Rails.application.routes.url_helpers.admission_url(self)
@@ -311,7 +311,7 @@ class LearnerInfo < ApplicationRecord
       notify_recipients(regional_manager, rm_message)
     when "In progress - ok"
       message = "#{full_name} had the onboarding meeting. Check here."
-      notify_recipients(learning_coaches + regional_manager + self.class.finance_users, message)
+      notify_recipients(learning_coaches + regional_manager + self.class.finance_users(self), message)
 
       link = Rails.application.routes.url_helpers.admission_url(self)
       adm_message = "The learner #{full_name} had the onboarding meeting today. Check his profile here: #{link}"
@@ -328,7 +328,7 @@ class LearnerInfo < ApplicationRecord
     when "Inactive"
       # Notify finance users when a learner becomes Inactive
       message = "#{full_name} status has been changed to Inactive."
-      notify_recipients(self.class.finance_users, message)
+      notify_recipients(self.class.finance_users(self), message)
 
       lc_message = "#{full_name} has become Inactive. Please ensure the parents are removed from the WhatsApp group."
       notify_recipients(learning_coaches, lc_message)
