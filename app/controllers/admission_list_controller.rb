@@ -228,6 +228,39 @@ class AdmissionListController < ApplicationController
     end
   end
 
+  def new
+    head :forbidden and return unless current_user.admin? || current_user.admissions?
+
+    @learner_info = LearnerInfo.new
+    @learner_finance = @learner_info.build_learner_finance
+    @permission = LearnerInfoPermission.new(current_user, @learner_info)
+
+    @online_hubs = Hub.where(hub_type: 'Online').pluck(:name, :id)
+    @hybrid_hubs = Hub.where.not(hub_type: 'Online').pluck(:name, :id)
+    @currency_symbol = '€'
+
+    render :show
+  end
+
+  def create
+    head :forbidden and return unless current_user.admin? || current_user.admissions?
+
+    @learner_info = LearnerInfo.new
+    @permission = LearnerInfoPermission.new(current_user, @learner_info)
+    @learner_info.assign_attributes(learner_info_params_from_permission)
+
+    if @learner_info.save
+      @learner_info.log_update(current_user, @learner_info.saved_changes, note: "Manual creation")
+      flash[:notice] = "Learner created successfully."
+      redirect_to admission_path(@learner_info)
+    else
+      @permission = LearnerInfoPermission.new(current_user, @learner_info)
+      @online_hubs = Hub.where(hub_type: 'Online').pluck(:name, :id)
+      @hybrid_hubs = Hub.where.not(hub_type: 'Online').pluck(:name, :id)
+      render :show, status: :unprocessable_entity
+    end
+  end
+
   def check_pricing_impact
     head :forbidden and return unless @permission.show?
 

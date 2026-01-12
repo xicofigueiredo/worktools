@@ -4,17 +4,21 @@
       <h2 class="h5 mb-0">General Info</h2>
     </button>
   </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">
-      <h2 class="h5 mb-0">Documents</h2>
-    </button>
-  </li>
-  <% if current_user.role.in?(['admin', 'admissions']) %>
+
+  <% unless @learner_info.new_record? %>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button" role="tab" aria-controls="logs" aria-selected="false">
-        <h2 class="h5 mb-0">Activity Log</h2>
+      <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">
+        <h2 class="h5 mb-0">Documents</h2>
       </button>
     </li>
+
+    <% if current_user.role.in?(['admin', 'admissions']) %>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button" role="tab" aria-controls="logs" aria-selected="false">
+          <h2 class="h5 mb-0">Activity Log</h2>
+        </button>
+      </li>
+    <% end %>
   <% end %>
 </ul>
 
@@ -25,17 +29,19 @@
     </div>
   </div>
 
-  <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
-    <div class="px-4">
-      <%= render 'learner_documents' %>
+  <% unless @learner_info.new_record? %>
+    <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+      <div class="px-4">
+        <%= render 'learner_documents' %>
+      </div>
     </div>
-  </div>
 
-  <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
-    <div class="px-4">
-      <%= render 'logs' %>
+    <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
+      <div class="px-4">
+        <%= render 'logs' %>
+      </div>
     </div>
-  </div>
+  <% end %>
 </div>
 
 <script>

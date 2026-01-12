@@ -39,7 +39,7 @@
 </style>
 
 
-<% edit_mode = params[:edit] == '1' || @learner_info.errors.any? %>
+<% edit_mode = @learner_info.new_record? || params[:edit] == '1' || @learner_info.errors.any? %>
 <% perm = @permission || LearnerInfoPermission.new(current_user, @learner_info) %>
 <% visible_learner_fields = perm.visible_learner_fields.map(&:to_sym) %>
 <% visible_finance_fields = perm.visible_finance_fields.map(&:to_sym) %>
@@ -379,8 +379,8 @@
   <% end %>
 
   <%= form_with model: @learner_info,
-                url: admission_path(@learner_info),
-                method: :patch,
+                url: @learner_info.new_record? ? admissions_path : admission_path(@learner_info),
+                method: @learner_info.new_record? ? :post : :patch,
                 local: true,
                 html: {
                   id: 'learner-info-form',
@@ -390,8 +390,8 @@
     <%= f.hidden_field :learning_coach_id, id: 'hidden-learning-coach-id' %>
 
     <div class="mb-3 d-flex justify-content-end gap-2">
-      <%= f.submit "Save changes", class: "btn btn-primary" %>
-      <%= link_to 'Cancel', admission_path(@learner_info), class: 'btn btn-secondary' %>
+      <%= f.submit @learner_info.new_record? ? "Create Learner" : "Save changes", class: "btn btn-primary" %>
+      <%= link_to 'Cancel', admissions_path, class: 'btn btn-secondary' %>
     </div>
 
     <div class="li-section li-grid">
