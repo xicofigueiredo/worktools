@@ -102,7 +102,7 @@
     "UP Computing",
     "UP Business (GENEX)"
   ]},
-  grade_year: { type: :select, col: '6', choices: grades_per_curriculum[@learner_info.curriculum_course_option] || [], prompt: 'Select Grade/Year' },
+  grade_year: { type: :select, col: '6', choices: grades_per_curriculum[@learner_info.curriculum_course_option] || [] },
   start_date: { type: :date, col: '3' },
   birthdate: { type: :date, col: '4' },
   transfer_of_programme_date: { type: :date, col: '3' },
@@ -247,12 +247,26 @@
         <% end %>
       <% when :select %>
         <% choices = opts[:choices] || [] %>
+        <%
+          include_blank = opts[:prompt] || opts[:include_blank] || false
+
+          if attr_sym == :grade_year
+            current_curriculum = object.send(:curriculum_course_option)
+            curriculum_options = grades_per_curriculum[current_curriculum] || []
+
+            if curriculum_options.length == 1
+              include_blank = false
+            else
+              include_blank = 'Select Grade/Year'
+            end
+          end
+        %>
         <% select_classes = disabled_flag ? "form-select" : "form-select editable-input" %>
         <% stimulus_attrs = {} %>
         <% html_options = stimulus_attrs.merge(class: select_classes, disabled: disabled_flag) %>
         <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
           <%= f.label(attr, label) %>
-          <%= f.select(attr, choices, { prompt: opts[:prompt] || opts[:include_blank] || false }, html_options) %>
+          <%= f.select(attr, choices, { include_blank: include_blank }, html_options) %>
         <% end %>
       <% when :checkbox %>
         <%= content_tag(:div, class: "mb-3 col-md-#{col}") do %>
@@ -1044,21 +1058,32 @@
     const curriculumSelect = document.getElementById('learner_info_curriculum_course_option');
     const gradeSelect = document.getElementById('learner_info_grade_year');
     const gradesPerCurriculum = <%= grades_per_curriculum.to_json.html_safe %>;
+
     if (curriculumSelect && gradeSelect) {
       curriculumSelect.addEventListener('change', function() {
         const options = gradesPerCurriculum[this.value] || [];
         gradeSelect.innerHTML = '';
-        const promptOption = document.createElement('option');
-        promptOption.value = '';
-        promptOption.text = 'Select Grade/Year';
-        gradeSelect.add(promptOption);
+
+        if (options.length !== 1) {
+          const promptOption = document.createElement('option');
+          promptOption.value = '';
+          promptOption.text = 'Select Grade/Year';
+          gradeSelect.add(promptOption);
+        }
+
         options.forEach(function(opt) {
           const option = document.createElement('option');
           option.value = opt;
           option.text = opt;
           gradeSelect.add(option);
         });
-        gradeSelect.value = ''; // Reset to prompt, requiring user to select new value
+
+        if (options.length === 1) {
+          gradeSelect.value = options[0];
+          gradeSelect.dispatchEvent(new Event('change'));
+        } else {
+          gradeSelect.value = '';
+        }
       });
     }
   }
