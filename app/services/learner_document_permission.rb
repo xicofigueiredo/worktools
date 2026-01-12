@@ -19,7 +19,7 @@ class LearnerDocumentPermission
     'finance' => [],
     'ops' => [],
     'it' => %w[credentials],
-    'lc' => %w[last_term_report exam_certificates],
+    'lc' => %w[last_term_report exam_certificates picture],
     'exams' => %w[exam_certificates]
   }.freeze
 
