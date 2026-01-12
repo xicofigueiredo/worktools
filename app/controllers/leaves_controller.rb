@@ -430,6 +430,7 @@ class LeavesController < ApplicationController
         year: year,
         annual_holidays: [params[:annual_total].to_i, 0].max,
         holidays_left: [params[:new_holidays_left].to_i, 0].max,
+        days_from_previous_year: [params[:days_from_prev_year].to_i, 0].max,
         manager: current_user
       )
     else
