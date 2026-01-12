@@ -69,9 +69,7 @@ class BookingAvailabilityService
   end
 
   def is_holiday?(check_date)
-    PublicHoliday.where(date: check_date)
-                 .where("(hub_id = ? OR (hub_id IS NULL AND country = ?))", @hub.id, @hub.country)
-                 .exists?
+    PublicHoliday.is_holiday_on?(check_date, @hub)
   end
 
   def is_blocked?(check_date)
