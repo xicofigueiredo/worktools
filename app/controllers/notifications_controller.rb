@@ -83,6 +83,31 @@ class NotificationsController < ApplicationController
     end
   end
 
+  def mark_as_unread
+    notification = Notification.find(params[:id])
+    if notification.update(read: false)
+      respond_to do |format|
+        format.html {
+          flash[:success] = "Notification marked as unread."
+          redirect_back fallback_location: profile_path
+        }
+        format.json {
+          render json: { status: 'success' }
+        }
+      end
+    else
+      respond_to do |format|
+        format.html {
+          flash[:error] = "Unable to mark notification as unread."
+          redirect_back fallback_location: profile_path
+        }
+        format.json {
+          render json: { status: 'error' }, status: :unprocessable_entity
+        }
+      end
+    end
+  end
+
   def mark_all_as_read
     current_user.notifications.where(read: false).update_all(read: true)
     redirect_to notifications_path, notice: "All notifications marked as resolved."

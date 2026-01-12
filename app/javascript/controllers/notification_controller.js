@@ -16,6 +16,11 @@ export default class extends Controller {
     this.markNotificationAsRead()
   }
 
+  markAsUnread(event) {
+    event.preventDefault()
+    this.markNotificationAsUnread()
+  }
+
   markNotificationAsRead() {
     fetch(`/notifications/${this.idValue}/mark_as_read`, {
       method: 'PATCH',
@@ -40,6 +45,37 @@ export default class extends Controller {
         }
       } else {
         console.error('Failed to mark notification as read')
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error)
+    })
+  }
+
+  markNotificationAsUnread() {
+    fetch(`/notifications/${this.idValue}/mark_as_unread`, {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => {
+      if (response.ok) {
+        this.itemTarget.classList.remove('resolved')
+        const buttonTarget = this.element.querySelector('[data-notification-target="button"]')
+        if (buttonTarget) {
+          buttonTarget.remove()
+        }
+        // Update the envelope icon
+        const iconContainer = this.itemTarget.querySelector('.d-flex')
+        if (iconContainer) {
+          iconContainer.innerHTML = '<i class="fa-regular fa-envelope"></i>'
+        }
+      } else {
+        console.error('Failed to mark notification as unread')
       }
     })
     .catch(error => {

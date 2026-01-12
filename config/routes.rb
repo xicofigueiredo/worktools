@@ -228,6 +228,7 @@ Rails.application.routes.draw do
     resources :notifications, only: [:index, :new, :create] do
       member do
         patch :mark_as_read
+        patch :mark_as_unread
         delete :destroy
       end
       collection do
