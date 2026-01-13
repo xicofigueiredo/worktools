@@ -89,11 +89,11 @@ class ReportsController < ApplicationController
           return
         end
 
-        # Ensure the current user has permission to view this learner's report
-        unless ((current_user.hubs.ids & @learner.hubs.ids).present? || current_user.online_learners.include?(@learner.id)) || current_user.role == 'admin'
-          redirect_to reports_path, alert: "You do not have permission to access this report."
-          return
-        end
+        # # Ensure the current user has permission to view this learner's report
+        # unless ((current_user.hubs.ids & @learner.hubs.ids).present? || current_user.online_learners.include?(@learner.id)) || current_user.role == 'admin'
+        #   redirect_to reports_path, alert: "You do not have permission to access this report."
+        #   return
+        # end
       else
         @learner = @learners.first
       end
@@ -230,7 +230,7 @@ class ReportsController < ApplicationController
     if current_user.role == 'learner' && @learner == current_user
       # The learner can edit their report
       @role = 'learner'
-    elsif current_user.role == 'lc' && (current_user.hubs & @learner.hubs).any?
+    elsif current_user.role == 'lc' && ((current_user.hubs & @learner.hubs).any? || @learner.main_hub&.name&.include?("Remote"))
       # The LC can edit the report related to them
       @role = 'lc'
     elsif current_user.role == 'admin'
@@ -369,7 +369,7 @@ class ReportsController < ApplicationController
     elsif current_user.role == 'learner' && current_user != @learner
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
-    elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.find_by(main: true)&.hub) && !current_user.online_learners.where(id: @learner.id).exists?
+    elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.find_by(main: true)&.hub) && @learner.users_hubs.find_by(main: true).name.include?("Remote")
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
     elsif current_user.role == 'admin'
