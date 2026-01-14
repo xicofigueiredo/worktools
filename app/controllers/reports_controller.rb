@@ -225,6 +225,19 @@ class ReportsController < ApplicationController
 
         end
       end
+
+      timeline_done = timelines.joins(:subject).find_by(subjects: { name: "Travel & Tourism IGCSE (M50% done)" })
+      timeline_not_done = timelines.joins(:subject).find_by(subjects: { name: "Travel & Tourism IGCSE (M50% not done)" })
+
+      if timeline_done || timeline_not_done
+        knowledge_record = @report.report_knowledges.find_by(subject_name: "Travel & Tourism IGCSE")
+        if knowledge_record
+          timeline = timeline_done || timeline_not_done
+          knowledge_record.progress = timeline&.progress || 0
+          knowledge_record.difference = timeline&.difference || 0
+          knowledge_record.save
+        end
+      end
     end
 
     if current_user.role == 'learner' && @learner == current_user

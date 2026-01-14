@@ -52,6 +52,20 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "ai_summaries", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.text "summary"
+    t.text "key_points"
+    t.text "recommendations"
+    t.date "start_date"
+    t.date "end_date"
+    t.integer "notes_count", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "start_date", "end_date"], name: "index_ai_summaries_on_user_id_and_start_date_and_end_date"
+    t.index ["user_id"], name: "index_ai_summaries_on_user_id"
+  end
+
   create_table "assignments", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "subject_id", null: false
@@ -186,7 +200,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "name"
-    t.bigint "hub_id", null: false
+    t.bigint "hub_id"
     t.bigint "week_id"
     t.index ["day"], name: "index_consent_activities_on_day"
     t.index ["hub_id"], name: "index_consent_activities_on_hub_id"
@@ -289,7 +303,6 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.string "subject_name"
     t.string "code"
     t.string "qualification"
-    t.boolean "progress_cut_off", default: false
     t.string "mock_results"
     t.string "bga_exam_centre"
     t.string "exam_board"
@@ -326,6 +339,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.integer "learning_coach_ids", default: [], array: true
     t.integer "timeline_id"
     t.string "specific_papers"
+    t.boolean "progress_cut_off", default: false
     t.string "personalized_exam_date"
     t.string "paper1"
     t.string "paper2"
@@ -337,7 +351,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.float "paper3_cost"
     t.float "paper4_cost"
     t.float "paper5_cost"
-    t.jsonb "status_changes"
+    t.jsonb "status_changes", default: []
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
     t.index ["timeline_id"], name: "index_exam_enrolls_on_timeline_id"
   end
@@ -354,6 +368,11 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.integer "number_of_subjects", default: 0, null: false
     t.jsonb "status_changes", default: []
     t.index ["user_id"], name: "index_exam_finances_on_user_id"
+  end
+
+  create_table "excel_imports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "form_interrogation_joins", force: :cascade do |t|
@@ -680,6 +699,63 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.index ["subject_id"], name: "index_moodle_assignments_on_subject_id"
   end
 
+  create_table "moodle_course_files", force: :cascade do |t|
+    t.bigint "moodle_course_module_id", null: false
+    t.string "file_name", null: false
+    t.integer "file_size"
+    t.string "mime_type"
+    t.integer "moodle_file_id"
+    t.string "moodle_file_url"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["moodle_course_module_id", "file_name"], name: "index_moodle_files_on_module_and_name"
+    t.index ["moodle_course_module_id"], name: "index_moodle_course_files_on_moodle_course_module_id"
+    t.index ["moodle_file_id"], name: "index_moodle_course_files_on_moodle_file_id"
+  end
+
+  create_table "moodle_course_modules", force: :cascade do |t|
+    t.bigint "moodle_course_section_id", null: false
+    t.integer "moodle_id"
+    t.string "name"
+    t.string "mod_type"
+    t.boolean "visible"
+    t.integer "module_order"
+    t.text "description"
+    t.string "url"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "content_text"
+    t.index ["mod_type"], name: "index_moodle_course_modules_on_mod_type"
+    t.index ["module_order"], name: "index_moodle_course_modules_on_module_order"
+    t.index ["moodle_course_section_id"], name: "index_moodle_course_modules_on_moodle_course_section_id"
+    t.index ["moodle_id"], name: "index_moodle_course_modules_on_moodle_id"
+  end
+
+  create_table "moodle_course_sections", force: :cascade do |t|
+    t.bigint "moodle_course_id", null: false
+    t.integer "moodle_id"
+    t.string "name"
+    t.text "summary"
+    t.boolean "visible"
+    t.integer "section_order"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["moodle_course_id"], name: "index_moodle_course_sections_on_moodle_course_id"
+    t.index ["moodle_id"], name: "index_moodle_course_sections_on_moodle_id"
+    t.index ["section_order"], name: "index_moodle_course_sections_on_section_order"
+  end
+
+  create_table "moodle_courses", force: :cascade do |t|
+    t.integer "moodle_id"
+    t.string "name"
+    t.string "shortname"
+    t.integer "category_id"
+    t.text "summary"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["moodle_id"], name: "index_moodle_courses_on_moodle_id", unique: true
+  end
+
   create_table "moodle_timelines", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.date "start_date"
@@ -776,7 +852,9 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.string "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "written_by_id"
     t.index ["user_id"], name: "index_notes_on_user_id"
+    t.index ["written_by_id"], name: "index_notes_on_written_by_id"
   end
 
   create_table "notifications", force: :cascade do |t|
@@ -1090,6 +1168,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.integer "progress"
     t.bigint "exam_date_id"
     t.boolean "anulado"
+    t.bigint "lws_timeline_id"
     t.datetime "mock50"
     t.datetime "mock100"
     t.string "personalized_name"
@@ -1097,6 +1176,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.boolean "hidden", default: false
     t.integer "difference"
     t.index ["exam_date_id"], name: "index_timelines_on_exam_date_id"
+    t.index ["lws_timeline_id"], name: "index_timelines_on_lws_timeline_id"
     t.index ["subject_id"], name: "index_timelines_on_subject_id"
     t.index ["user_id"], name: "index_timelines_on_user_id"
   end
@@ -1261,6 +1341,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ai_summaries", "users"
   add_foreign_key "assignments", "subjects"
   add_foreign_key "assignments", "users"
   add_foreign_key "attendances", "users"
@@ -1306,7 +1387,6 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
   add_foreign_key "kdas", "weeks"
   add_foreign_key "knowledges", "moodle_timelines"
   add_foreign_key "knowledges", "sprint_goals"
-  add_foreign_key "knowledges", "timelines", on_delete: :cascade
   add_foreign_key "learner_documents", "learner_infos"
   add_foreign_key "learner_finances", "learner_infos"
   add_foreign_key "learner_flags", "users"
@@ -1318,6 +1398,9 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
   add_foreign_key "monday_slots", "users", column: "learner_id"
   add_foreign_key "monday_slots", "weekly_meetings"
   add_foreign_key "moodle_assignments", "subjects"
+  add_foreign_key "moodle_course_files", "moodle_course_modules"
+  add_foreign_key "moodle_course_modules", "moodle_course_sections"
+  add_foreign_key "moodle_course_sections", "moodle_courses"
   add_foreign_key "moodle_timelines", "exam_dates"
   add_foreign_key "moodle_timelines", "subjects"
   add_foreign_key "moodle_timelines", "users"
@@ -1325,6 +1408,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
   add_foreign_key "moodle_topics", "timelines"
   add_foreign_key "mots", "kdas"
   add_foreign_key "notes", "users"
+  add_foreign_key "notes", "users", column: "written_by_id"
   add_foreign_key "notifications", "users"
   add_foreign_key "p2ps", "kdas"
   add_foreign_key "public_holidays", "hubs"
@@ -1358,7 +1442,6 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
   add_foreign_key "timeline_progresses", "timelines"
   add_foreign_key "timeline_progresses", "weeks"
   add_foreign_key "timelines", "exam_dates"
-  add_foreign_key "timelines", "subjects"
   add_foreign_key "timelines", "users"
   add_foreign_key "topics", "subjects"
   add_foreign_key "tuesday_slots", "users", column: "lc_id"
