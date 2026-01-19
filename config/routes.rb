@@ -225,6 +225,16 @@ Rails.application.routes.draw do
       end
     end
 
+    resource :csc_diploma, only: [:show] do
+      post :fetch_activities, on: :member
+    end
+
+    resources :csc_activities, only: [:edit, :update] do
+      member do
+        patch :toggle_hidden
+      end
+    end
+
     resources :notifications, only: [:index, :new, :create] do
       member do
         patch :mark_as_read

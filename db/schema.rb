@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
+ActiveRecord::Schema[7.0].define(version: 2026_01_19_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -263,6 +263,31 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
     t.index ["user_id", "week_id"], name: "index_consents_on_user_id_and_week_id"
     t.index ["user_id"], name: "index_consents_on_user_id"
     t.index ["week_id"], name: "index_consents_on_week_id"
+  end
+
+  create_table "csc_activities", force: :cascade do |t|
+    t.bigint "csc_diploma_id", null: false
+    t.string "activitable_type", null: false
+    t.bigint "activitable_id", null: false
+    t.integer "hours"
+    t.integer "weight"
+    t.integer "credits"
+    t.string "rubric_score"
+    t.boolean "validated", default: false, null: false
+    t.boolean "hidden", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["activitable_type", "activitable_id"], name: "index_csc_activities_on_activitable"
+    t.index ["activitable_type", "activitable_id"], name: "index_csc_activities_on_activitable_unique", unique: true
+    t.index ["csc_diploma_id"], name: "index_csc_activities_on_csc_diploma_id"
+  end
+
+  create_table "csc_diplomas", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.boolean "issued", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_csc_diplomas_on_user_id"
   end
 
   create_table "departments", force: :cascade do |t|
@@ -1365,6 +1390,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_12_102644) do
   add_foreign_key "consents", "sprints"
   add_foreign_key "consents", "users"
   add_foreign_key "consents", "weeks"
+  add_foreign_key "csc_activities", "csc_diplomas"
+  add_foreign_key "csc_diplomas", "users"
   add_foreign_key "departments", "departments", column: "superior_id"
   add_foreign_key "departments", "users", column: "manager_id"
   add_foreign_key "exam_dates", "subjects"

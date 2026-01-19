@@ -1,0 +1,59 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Edit Activity</h5>
+          <%= link_to csc_diploma_path, class: "btn-close" %>
+        </div>
+        <div class="card-body">
+          <div class="mb-3 p-3 bg-light rounded">
+            <strong>Activity:</strong>
+            <% if @csc_activity.activitable.is_a?(Skill) %>
+              <%= @csc_activity.activitable.extracurricular %>
+            <% elsif @csc_activity.activitable.is_a?(Community) %>
+              <%= @csc_activity.activitable.involved %>
+            <% end %>
+            <span class="badge <%= @csc_activity.activitable_type == 'Skill' ? 'bg-info' : 'bg-primary' %> ms-2">
+              <%= @csc_activity.activitable_type %>
+            </span>
+          </div>
+
+          <%= form_with model: @csc_activity, url: csc_activity_path(@csc_activity), method: :patch, local: true do |f| %>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <%= f.label :hours, class: "form-label" %>
+                <%= f.number_field :hours, class: "form-control", min: 0 %>
+              </div>
+              <div class="col-md-4 mb-3">
+                <%= f.label :weight, class: "form-label" %>
+                <%= f.number_field :weight, class: "form-control", min: 0 %>
+              </div>
+              <div class="col-md-4 mb-3">
+                <%= f.label :credits, class: "form-label" %>
+                <%= f.number_field :credits, class: "form-control", min: 0 %>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :rubric_score, "Rubric Score", class: "form-label" %>
+              <%= f.text_field :rubric_score, class: "form-control" %>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <%= f.check_box :validated, class: "form-check-input" %>
+                <%= f.label :validated, "Validated", class: "form-check-label" %>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <%= link_to "Cancel", csc_diploma_path, class: "btn btn-secondary" %>
+              <%= f.submit "Save Changes", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
