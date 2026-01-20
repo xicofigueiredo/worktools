@@ -68,8 +68,8 @@ export default class extends Controller {
     const examDate = this.allExamDates.find((exam) => exam.id === selectedExamId);
 
     if (examDate) {
-      const month = new Date(examDate.name).getMonth() + 1; // Adjust based on your exam date format
-      const year = new Date(examDate.name).getFullYear();
+      const month = examDate.month;
+      const year = examDate.year;
 
       const expectedEndDate = this.getExpectedEndDate(month, year);
       if (endDate.getTime() > expectedEndDate.getTime()) {
