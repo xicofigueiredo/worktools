@@ -1,4 +1,5 @@
 <%= form_with(model: exam_enroll, local: true) do |f| %>
+  <%= f.hidden_field :timeline_id %>
   <% if flash[:alert] %>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
       <%= flash[:alert] %>

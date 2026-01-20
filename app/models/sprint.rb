@@ -81,6 +81,26 @@ class Sprint < ApplicationRecord
     end
   end
 
+  # Returns an array of exam_season values that match the season
+  # Used to query ExamFinance records since display_exam_date uses "%B %Y" format
+  # e.g., "May/June 2026" -> ["May 2026", "June 2026"]
+  # e.g., "Oct/Nov 2026" -> ["October 2026", "November 2026"]
+  # e.g., "January 2026" -> ["January 2026"]
+  def self.exam_season_matches(season_data)
+    current_start = season_data[:start_date]
+    year = current_start.year
+
+    if current_start.month == 1 # January season
+      ["January #{year}"]
+    elsif current_start.month == 5 # May/June season
+      ["May #{year}", "June #{year}"]
+    elsif current_start.month == 10 # Oct/Nov season
+      ["October #{year}", "November #{year}"]
+    else
+      [season_data[:name]]
+    end
+  end
+
   def count_absences(user)
     date_range = start_date..end_date
 

@@ -14,8 +14,8 @@ class ExamFinancesController < ApplicationController
     @previous_season = Sprint.previous_season(@season)
     @next_season = Sprint.next_season(@season)
 
-    # Convert season name to match exam_season format (e.g., "January 2026" or "May/June 2026")
-    season_name = @season[:name]
+    # Get the exam_season values that match this season (e.g., ["May 2026", "June 2026"] for May/June)
+    season_matches = Sprint.exam_season_matches(@season)
 
     # Get all unique statuses for the filter dropdown
     @available_statuses = ExamFinance.distinct.pluck(:status).compact.sort
@@ -38,7 +38,7 @@ class ExamFinancesController < ApplicationController
     # Load exam finances for the selected season
     exam_finances = ExamFinance.includes(user: [:main_hub, { users_hubs: :hub }])
                               .joins(:user)
-                              .where(exam_season: season_name)
+                              .where(exam_season: season_matches)
                               .order('users.full_name ASC')
 
     # Apply status filter directly on ExamFinance

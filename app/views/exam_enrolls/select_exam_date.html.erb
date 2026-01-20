@@ -18,9 +18,8 @@
             <div class="mb-3">
               <%= form.label :personalized_exam_date, "Select Exam Date", class: "form-label" %>
               <%= form.select :personalized_exam_date,
-                  options_for_select([
-                    ["November 2025", "2025-11-03"]
-                  ]),
+                  options_for_select(@exam_dates.map { |exam_date| [exam_date.formatted_name, exam_date.date] }),
+
                   { prompt: "Choose an exam session..." },
                   { class: "form-select", required: true } %>
               <div class="form-text">Choose the exam session for this timeline.</div>
