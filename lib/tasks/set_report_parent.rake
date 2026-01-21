@@ -3,7 +3,7 @@ namespace :db do
   task set_report_parent: :environment do
     updated_count = 0
     skipped_count = 0
-    excluded_hub_ids = [166]
+    excluded_hub_ids = [166, 194]
 
     # Find all learners from all hubs except the specified ones through the users_hubs join table
     User.joins(:users_hubs)
@@ -12,7 +12,7 @@ namespace :db do
         .distinct
         .find_each do |learner|
       # Find report with sprint 13
-      report = learner.reports.find_by(sprint: 13)
+      report = learner.reports.find_by(sprint: 14)
 
       if report && report.parent != true
         # Update the report's parent field to true
