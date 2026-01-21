@@ -293,6 +293,40 @@ class LeavesController < ApplicationController
     }
   end
 
+  def leave_history
+    user = User.find(params[:user_id])
+    year = params[:year].to_i
+
+    summary = calculate_user_entitlement_data(user, year)
+
+    leaves = user.staff_leaves
+                .where("extract(year from start_date) = ? OR extract(year from end_date) = ?", year, year)
+                .order(start_date: :desc)
+
+    render json: {
+      user_name: user.full_name,
+      summary: {
+        total: summary[:total_display],
+        booked: summary[:voluntary_booked] + summary[:mandatory_days],
+        pending: summary[:pending_holiday],
+        left: summary[:holidays_left]
+      },
+      leaves: leaves.map { |l|
+        days_in_yr = l.days_in_year(year)
+        carry_used = (l.days_from_previous_year.to_i > 0 && l.end_date.year == year) ? [l.days_from_previous_year.to_i, days_in_yr].min : 0
+        standard_days = days_in_yr - carry_used
+
+        {
+          dates: "#{l.start_date.strftime('%d %b')} - #{l.end_date.strftime('%d %b %Y')}",
+          standard_days: standard_days,
+          carry_days: carry_used,
+          type: l.leave_type.titleize,
+          status: l.status.titleize
+        }
+      }
+    }
+  end
+
   def cancel
     @staff_leave = current_user.staff_leaves.find(params[:id])
 

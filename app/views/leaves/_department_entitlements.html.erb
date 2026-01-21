@@ -109,16 +109,30 @@
                 <td><%= r[:holidays_left] %></td>
 
                 <% if show_actions %>
-                  <td>
-                    <button type="button"
-                            class="btn btn-sm btn-outline-primary edit-entitlement"
-                            data-user-id="<%= r[:user].id %>"
-                            data-year="<%= year_now %>"
-                            data-current-total="<%= r[:total_holidays] %>"
-                            data-days-prev-year="<%= r[:days_from_previous_year] %>" <%# Added %>
-                            data-current-booked="<%= r[:booked_holiday] %>"
-                            data-current-pending="<%= r[:pending_holiday] %>"
-                            data-current-left="<%= r[:holidays_left] %>">Edit</button>
+                  <td class="text-center">
+                    <div class="d-flex justify-content-center gap-2">
+                      <button type="button"
+                              class="btn btn-sm btn-outline-info view-history"
+                              data-user-id="<%= r[:user].id %>"
+                              data-year="<%= year_now %>"
+                              data-user-name="<%= r[:user].full_name %>"
+                              title="View History">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                      </button>
+
+                      <button type="button"
+                              class="btn btn-sm btn-outline-primary edit-entitlement"
+                              data-user-id="<%= r[:user].id %>"
+                              data-year="<%= year_now %>"
+                              data-current-total="<%= r[:total_holidays] %>"
+                              data-days-prev-year="<%= r[:days_from_previous_year] %>"
+                              data-current-booked="<%= r[:booked_holiday] %>"
+                              data-current-pending="<%= r[:pending_holiday] %>"
+                              data-current-left="<%= r[:holidays_left] %>"
+                              title="Edit">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
+                    </div>
                   </td>
                 <% end %>
               </tr>
@@ -207,6 +221,35 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" id="save-entitlement">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="view-history-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Leave History: <span id="history-user-name"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="history-summary" class="d-flex justify-content-around bg-light rounded p-3 mb-4 text-center">
+          </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Dates</th>
+                <th class="text-center">Days (<%= year_now %>)</th>
+                <th class="text-center">From <%= year_now - 1 %></th>
+                <th>Type</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -491,6 +534,46 @@
         });
       });
     }
+
+    // History Modal
+    document.querySelectorAll('.view-history').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const userId = btn.dataset.userId;
+        const year = btn.dataset.year;
+        const modal = new bootstrap.Modal(document.getElementById('view-history-modal'));
+
+        document.getElementById('history-user-name').innerText = btn.dataset.userName;
+        const tableBody = document.getElementById('history-table-body');
+        const summaryDiv = document.getElementById('history-summary');
+
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>';
+
+        fetch(`/leaves/leave_history?user_id=${userId}&year=${year}`)
+          .then(response => response.json())
+          .then(data => {
+            summaryDiv.innerHTML = `
+              <div><small class="text-muted d-block">Total</small><strong>${data.summary.total}</strong></div>
+              <div><small class="text-muted d-block">Booked</small><strong class="text-success">${data.summary.booked}</strong></div>
+              <div><small class="text-muted d-block">Pending</small><strong class="text-warning">${data.summary.pending}</strong></div>
+              <div><small class="text-muted d-block">Remaining</small><strong class="text-primary">${data.summary.left}</strong></div>
+            `;
+
+            tableBody.innerHTML = data.leaves.length === 0
+              ? '<tr><td colspan="5" class="text-center text-muted py-3">No records for this year.</td></tr>'
+              : data.leaves.map(l => `
+                <tr>
+                  <td><small class="fw-medium">${l.dates}</small></td>
+                  <td class="text-center">${l.standard_days > 0 ? l.standard_days : '—'}</td>
+                  <td class="text-center text-info">${l.carry_days > 0 ? l.carry_days : '—'}</td>
+                  <td><small>${l.type}</small></td>
+                  <td><span class="badge ${l.status === 'Approved' ? 'bg-success-subtle text-success' : 'bg-light text-dark'} border">${l.status}</span></td>
+                </tr>
+              `).join('');
+          });
+
+        modal.show();
+      });
+    });
 
     // Edit Modal
     document.querySelectorAll('.edit-entitlement').forEach(function (btn) {

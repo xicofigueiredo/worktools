@@ -131,6 +131,7 @@ Rails.application.routes.draw do
 
     resources :leaves, only: [:index, :new, :create, :show] do
       collection do
+        get :leave_history
         post :preview
         post :update_entitlement
         post :create_entitlement
