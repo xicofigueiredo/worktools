@@ -12,7 +12,7 @@ namespace :db do
         .distinct
         .find_each do |learner|
       # Find report with sprint 13
-      report = learner.reports.find_by(sprint: 14)
+      report = learner.reports.find_by(sprint: 15)
 
       if report && report.parent != true
         # Update the report's parent field to true
