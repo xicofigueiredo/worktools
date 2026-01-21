@@ -22,7 +22,7 @@ namespace :db do
       else
         if report.nil?
           skipped_count += 1
-          puts "No sprint 13 report found for learner ID: #{learner.id} (hub: #{learner.users_hubs.where.not(hub_id: excluded_hub_ids).first.hub_id})"
+          puts "No sprint 15 report found for learner ID: #{learner.id} (hub: #{learner.users_hubs.where.not(hub_id: excluded_hub_ids).first.hub_id})"
         else
           skipped_count += 1
           puts "Report ID: #{report.id} for learner ID: #{learner.id} (hub: #{learner.users_hubs.where.not(hub_id: excluded_hub_ids).first.hub_id}) is already set to parent: #{report.parent}"
