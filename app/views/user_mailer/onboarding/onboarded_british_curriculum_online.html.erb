@@ -23,10 +23,7 @@
   <li>
     <strong>Platform Access:</strong><br>
     <%= @learner.full_name.split.first %> will start <%= @learner.curriculum_course_option %> : <%= @learner.grade_year %> and below you can find the login credentials for access to our platform. Please wait for the Learning Coach in order to access it for the first time.<br><br>
-    <p>
-      Username: <strong><%= @learner.platform_username %></strong><br>
-      Password: a password was automatically created and sent to the learner's Microsoft email account.
-    </p>
+    <p><%= @platform_details %></p>
   </li>
   <br>
   <li>
