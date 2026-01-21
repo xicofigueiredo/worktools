@@ -11,7 +11,7 @@ namespace :db do
         .where.not(users_hubs: { hub_id: excluded_hub_ids })
         .distinct
         .find_each do |learner|
-      # Find report with sprint 13
+      # Find report with sprint 15
       report = learner.reports.find_by(sprint: 15)
 
       if report && report.parent != true
