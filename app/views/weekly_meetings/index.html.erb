@@ -21,17 +21,22 @@
   <%# </div> %>
 <%# <% end %>
 <%# <h2>Weekly Meetings cooming soon...</h2> %>
-
-    <div class="row justify-content-center">
-      <%= image_tag "rules.png"%>
+<div class="container py-4">
+  <div class="card shadow-sm border-0 mx-auto" style="max-width: 1000px;">
+    <div class="card-body text-center p-4">
+      <h4 class="card-title mb-3 text-muted">
+        <i class="bi bi-calendar-event me-2"></i>Exam Season Information
+      </h4>
+      <p class="text-secondary mb-4">View the exam registration rules and important dates below</p>
+      <%= link_to "https://edubgabravegeneration-my.sharepoint.com/:x:/g/personal/princess_carmela_bravegenerationacademy_com/IQALwQTlHHeBSbk4_eng4EPaAZnVPMhRdnQSPxVUqdBSsP4?e=c9dtA4",
+         class: "btn btn-primary btn-lg px-4 mb-4",
+         target: "_blank",
+         rel: "noopener noreferrer" do %>
+        <i class="bi bi-file-earmark-text me-2"></i>More info about exam seasons
+      <% end %>
     </div>
-    <br>
-    <h2 class="card-title text-center mb-4">IGCSE's</h2>
-    <div class="row justify-content-center">
-      <%= image_tag "IGCSE.png" %>
+    <div class="card-img-bottom">
+      <%= image_tag "rules.png", class: "img-fluid rounded-bottom", alt: "Exam registration rules" %>
     </div>
-    <br>
-    <h2 class="card-title text-center mb-4">A-Levels</h2>
-    <div class="row justify-content-center">
-      <%= image_tag "A-Levels.png" %>
-    </div>
+  </div>
+</div>

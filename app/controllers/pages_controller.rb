@@ -435,7 +435,7 @@ class PagesController < ApplicationController
   end
 
   def check_admin_role
-    return if current_user.role == "admin"
+    return if current_user.role == "admin" || current_user.role == "exams"
 
     redirect_to root_path, alert: "You are not authorized to access this page."
   end
@@ -508,7 +508,7 @@ class PagesController < ApplicationController
   end
 
   def authorize_user
-    allowed_roles = %w(admin lc cm)
+    allowed_roles = %w(admin lc cm exams)
     unless current_user.kids.include?(@learner.id) || allowed_roles.include?(current_user.role)
       redirect_to root_path and return
     end
