@@ -247,6 +247,14 @@ export default class extends Controller {
     }
 
     if (this.softErrors.length > 0) {
+      messages.push(`
+        <div class="alert alert-warning mb-2 py-2" style="font-size: 0.85rem;">
+          <i class="fas fa-info-circle"></i>
+          <strong>Action Required:</strong> To proceed with this request, you must click the
+          <strong>"Exception Request"</strong> button below and provide a justification.
+        </div>
+      `)
+
       this.softErrors.forEach(msg => messages.push(`<div class="text-orange"><i class="fas fa-exclamation-triangle"></i> ${msg}</div>`))
 
       this._show(this.exceptionBtnTarget)

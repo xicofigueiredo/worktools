@@ -33,7 +33,7 @@
                   <td><%= leave.leave_type.humanize %></td>
                   <td class="text-center text-muted"><small><%= leave.notes.presence || '—' %></small></td>
                   <td class="text-nowrap">
-                    <div class="d-flex gap-2">
+                    <div class="d-flex justify-content-center gap-2">
                       <%= button_to approve_confirmation_path(conf), method: :post, class: "btn btn-sm btn-success" do %>
                         <i class="fa-solid fa-check"></i>
                       <% end %>
