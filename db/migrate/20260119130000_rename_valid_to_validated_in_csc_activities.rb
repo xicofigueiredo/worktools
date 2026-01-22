@@ -3,3 +3,4 @@ class RenameValidToValidatedInCscActivities < ActiveRecord::Migration[7.0]
     rename_column :csc_activities, :valid, :validated
   end
 end
+
