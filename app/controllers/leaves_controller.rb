@@ -180,7 +180,12 @@ class LeavesController < ApplicationController
     leave_type = params[:leave_type].to_s
 
     # 1. Total Days Calculation
-    temp_leave = StaffLeave.new(user: current_user, start_date: start_date, end_date: end_date, leave_type: leave_type)
+    temp_leave = current_user.staff_leaves.new(
+      start_date: start_date,
+      end_date: end_date,
+      leave_type: leave_type,
+      exception_requested: false
+    )
     temp_leave.calculate_total_days
     total_days_count = temp_leave.total_days.to_i
 
@@ -261,9 +266,9 @@ class LeavesController < ApplicationController
 
     # 5. Errors / Soft Validation
     temp_leave.valid?
-    blocked = temp_leave.errors.where(:base).any? { |e| e.message.include?("Blocked") }
-    blocked_messages = []
-    blocked_messages << "Period contains blocked dates." if blocked
+    all_soft_errors = temp_leave.errors[:base]
+    blocked_messages = all_soft_errors.select { |m| m.include?("blocked period") }
+    dept_messages    = all_soft_errors.select { |m| m.include?("Department members") }
 
     overlapping_conflict = temp_leave.errors.where(:base).any? { |e| e.message.include?("already have") }
 
@@ -286,9 +291,9 @@ class LeavesController < ApplicationController
       days_by_year: days_by_year,
       jan_apr_segments: jan_apr_segments,
       entitlements_by_year: entitlements_by_year,
-      blocked: blocked,
-      blocked_messages: blocked_messages,
-      overlapping_conflict: overlapping_conflict,
+      blocked: blocked_messages.any? || dept_messages.any?,
+      blocked_messages: blocked_messages + dept_messages,
+      overlapping_conflict: temp_leave.errors[:base].any? { |m| m.include?("already have") },
       exceeds: exceeds
     }
   end

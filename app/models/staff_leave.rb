@@ -345,14 +345,30 @@ class StaffLeave < ApplicationRecord
 
     hub_id = user.users_hubs.find_by(main: true)&.hub_id
     department_ids = user.department_ids
-    user_type = user.role # Adjusted to role as per note
+    user_type = user.role
 
     blocked = BlockedPeriod.where("(user_id = :user_id OR user_type = :user_type OR hub_id = :hub_id OR department_id IN (:department_ids)) AND start_date <= :end_date AND end_date >= :start_date",
                                   user_id: user.id, user_type: user_type, hub_id: hub_id, department_ids: department_ids,
                                   start_date: start_date, end_date: end_date)
 
     if blocked.exists? && !exception_requested
-      errors.add(:base, "Overlaps with blocked periods. Request an exception to proceed.")
+        blocked.each do |bp|
+        # Determine the name/context of the block
+        context_name = if bp.user_id == user.id then "User: #{user.full_name}"
+                       elsif bp.department_id.present? then "Department: #{bp.department.name}"
+                       elsif bp.hub_id.present? then "Hub: #{bp.hub.name}"
+                       else "Global Period"
+                       end
+
+        # Format the date range
+        date_str = if bp.start_date == bp.end_date
+                     bp.start_date.strftime('%d/%m/%Y')
+                   else
+                     "#{bp.start_date.strftime('%d/%m/%Y')} to #{bp.end_date.strftime('%d/%m/%Y')}"
+                   end
+
+        errors.add(:base, "Your selected range overlaps with a blocked period for #{context_name} on: #{date_str}")
+      end
     end
   end
 
