@@ -286,6 +286,7 @@ class ExamEnrollsController < ApplicationController
       redirect_to select_learner_exam_enrolls_path, alert: "You don't have permission to access this learner."
       return
     end
+    @exam_dates = ExamDate.where(subject_id: @timeline.subject_id).where("date >= ?", Date.today).order(:date)
 
     # Check if this timeline already has an exam enroll
     if ExamEnroll.exists?(timeline_id: @timeline.id)

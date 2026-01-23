@@ -51,6 +51,12 @@
                             data-notification-target="button">
                       Mark as resolved
                     </button>
+                  <% else %>
+                    <button class="btn btn-outline"
+                            data-action="notification#markAsUnread"
+                            data-notification-target="button">
+                      Mark as unread
+                    </button>
                   <% end %>
 
                   <% if notification_type == "error" && (notification.message.include?("timeline") || notification.message.include?("update your")) %>

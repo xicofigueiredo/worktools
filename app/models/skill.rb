@@ -1,6 +1,7 @@
 class Skill < ApplicationRecord
   belongs_to :sprint_goal
   has_one :report_activity, dependent: :destroy
+  has_one :csc_activity, as: :activitable, dependent: :destroy
 
   after_create :create_report_activity
   after_update :update_report_activity

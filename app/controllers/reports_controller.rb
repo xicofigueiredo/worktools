@@ -89,11 +89,11 @@ class ReportsController < ApplicationController
           return
         end
 
-        # Ensure the current user has permission to view this learner's report
-        unless ((current_user.hubs.ids & @learner.hubs.ids).present? || current_user.online_learners.include?(@learner.id)) || current_user.role == 'admin'
-          redirect_to reports_path, alert: "You do not have permission to access this report."
-          return
-        end
+        # # Ensure the current user has permission to view this learner's report
+        # unless ((current_user.hubs.ids & @learner.hubs.ids).present? || current_user.online_learners.include?(@learner.id)) || current_user.role == 'admin'
+        #   redirect_to reports_path, alert: "You do not have permission to access this report."
+        #   return
+        # end
       else
         @learner = @learners.first
       end
@@ -225,12 +225,25 @@ class ReportsController < ApplicationController
 
         end
       end
+
+      timeline_done = timelines.joins(:subject).find_by(subjects: { name: "Travel & Tourism IGCSE (M50% done)" })
+      timeline_not_done = timelines.joins(:subject).find_by(subjects: { name: "Travel & Tourism IGCSE (M50% not done)" })
+
+      if timeline_done || timeline_not_done
+        knowledge_record = @report.report_knowledges.find_by(subject_name: "Travel & Tourism IGCSE")
+        if knowledge_record
+          timeline = timeline_done || timeline_not_done
+          knowledge_record.progress = timeline&.progress || 0
+          knowledge_record.difference = timeline&.difference || 0
+          knowledge_record.save
+        end
+      end
     end
 
     if current_user.role == 'learner' && @learner == current_user
       # The learner can edit their report
       @role = 'learner'
-    elsif current_user.role == 'lc' && (current_user.hubs & @learner.hubs).any?
+    elsif current_user.role == 'lc' && ((current_user.hubs & @learner.hubs).any? || @learner.main_hub&.name&.include?("Remote"))
       # The LC can edit the report related to them
       @role = 'lc'
     elsif current_user.role == 'admin'
@@ -369,7 +382,7 @@ class ReportsController < ApplicationController
     elsif current_user.role == 'learner' && current_user != @learner
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
-    elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.users_hubs.find_by(main: true)&.hub) && !current_user.online_learners.where(id: @learner.id).exists?
+    elsif current_user.role == 'lc' && current_user.hubs.exclude?(@learner.main_hub) && !@learner.main_hub&.name&.include?("Remote")
       redirect_back fallback_location: root_path, alert: "You do not have permission to access this report."
       return
     elsif current_user.role == 'admin'

@@ -1,114 +1,135 @@
-require 'csv'
-
 namespace :db do
-  desc "Create or update parent accounts in bulk from a CSV file"
+  desc "Create parent accounts for all active learner_infos that don't have parent accounts yet"
   task create_parents: :environment do
-    file_path = 'lib/tasks/admissions_list.csv' # Adjust the path as necessary
-    kid_nil_counter = 0
+    created_count = 0
+    updated_count = 0
+    skipped_count = 0
+    error_count = 0
 
     # Method to create or update a parent account
-    create_parent_method = lambda do |name, email, password, kid_email|
-      return if email.blank? || password.blank? || kid_email.blank?
+    create_parent_method = lambda do |name, email, kid_user, hub|
+      return nil if email.blank? || kid_user.blank?
 
-      # Find or create the parent
-      parent = User.find_or_initialize_by(email: email.strip.downcase)
-      kid = User.find_by(email: kid_email.strip.downcase)
+      email = email.strip.downcase
+      password = SecureRandom.hex(8)
 
-      if kid && kid.deactivate?
-        puts "Kid with email #{kid_email} is deactivated, skipping parent creation for #{email}."
-        return
-      elsif kid.nil?
-        puts "Kid with email #{kid_email} not found, skipping parent creation for #{email}."
-        kid_nil_counter += 1
-        return
-      end
+      # Find or initialize the parent
+      parent = User.find_or_initialize_by(email: email)
 
       if parent.new_record?
-        if kid.present?
-          parent.assign_attributes(
-            full_name: name,
-            password: password,
-            password_confirmation: password,
-            confirmed_at: Time.now,
-            role: 'Parent',
-            kids: [kid.id]
-            )
+        parent.assign_attributes(
+          full_name: name.presence || email.split('@').first.humanize,
+          password: password,
+          password_confirmation: password,
+          confirmed_at: Time.current,
+          role: 'Parent',
+          kids: [kid_user.id]
+        )
 
-          # Find LC with less than 3 hubs linked to the kid's hub (only non-deactivated LCs)
-          lcs = kid.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc', deactivate: false).select { |lc| lc.hubs.count < 3 }
+        # Temporarily skip email domain validation
+        parent.define_singleton_method(:email_domain_check) { true }
 
-          # Temporarily skip email domain validation for this rake task
-          parent.define_singleton_method(:email_domain_check) { true }
+        if parent.save
+          puts "✅ Created parent account for #{email}"
 
-          if parent.save
-            puts "Parent account for #{email} created successfully."
+          # Find LCs with less than 3 hubs linked to the kid's hub (only non-deactivated LCs)
+          lcs = hub&.users&.where(role: 'lc', deactivate: false)&.select { |lc| lc.hubs.count < 3 } || []
+
+          # Send welcome email
+          begin
             UserMailer.welcome_parent(parent, password, lcs).deliver_now
-          else
-            puts "Failed to save new parent account for #{email}: #{parent.errors.full_messages.join(', ')}"
+            puts "   📧 Welcome email sent to #{email}"
+          rescue => e
+            puts "   ⚠️  Failed to send welcome email to #{email}: #{e.message}"
           end
+
+          :created
         else
-          puts "Kid with email #{kid_email} not found, skipping parent creation for #{email}."
+          puts "❌ Failed to save new parent account for #{email}: #{parent.errors.full_messages.join(', ')}"
+          :error
         end
       else
-        # Update existing parent
-        parent.kids << kid.id if kid && !parent.kids.include?(kid.id)
-        if parent.save
-          kid_emails = parent.kids.map { |kid_id| User.find(kid_id).email }
-          puts "Parent account for #{email} updated. Kids linked: #{kid_emails.join(', ')}"
+        # Update existing parent - add kid if not already linked
+        if !parent.kids.include?(kid_user.id)
+          parent.kids << kid_user.id
+          if parent.save
+            puts "🔄 Updated parent account for #{email} - linked kid #{kid_user.email}"
+            :updated
+          else
+            puts "❌ Failed to update parent account for #{email}: #{parent.errors.full_messages.join(', ')}"
+            :error
+          end
         else
-          puts "Failed to update parent account for #{email}: #{parent.errors.full_messages.join(', ')}"
+          :skipped
         end
       end
     end
 
-    puts "Kid nil counter: #{kid_nil_counter}"
+    puts "=" * 60
+    puts "Starting parent account creation from learner_infos..."
+    puts "=" * 60
+    puts ""
 
-    # Try different encodings for CSV processing
-    encodings_to_try = ['UTF-8', 'ISO-8859-1', 'Windows-1252']
-    successful = false
+    # Get all active learner_infos with associated user
+    learner_infos = LearnerInfo.active.includes(:user, :hub).where.not(user_id: nil)
 
-    encodings_to_try.each do |encoding|
-      begin
-        puts "Trying CSV.foreach with encoding: #{encoding}"
+    puts "Found #{learner_infos.count} active learner_infos with linked users"
+    puts ""
 
-        # Process each row in the CSV with encoding handling
-        CSV.foreach(file_path, headers: true, encoding: "#{encoding}:UTF-8") do |row|
-          next if row['InstitutionalEmail'].blank? || row['Status'] != 'Active'
+    learner_infos.find_each do |learner_info|
+      kid_user = learner_info.user
+      hub = learner_info.hub
 
-          kid_email = row['InstitutionalEmail'].strip.downcase
-
-          if row['Parent 1 - Full Name (Section 6)'].present? && row['Parent 1 - Email (6)'].present?
-            # Create or update the first parent
-            parent1_name = row['Parent 1 - Full Name (Section 6)'].strip
-            parent1_email = row['Parent 1 - Email (6)'].strip.downcase
-            parent1_password = SecureRandom.hex(8)
-            create_parent_method.call(parent1_name, parent1_email, parent1_password, kid_email)
-          end
-
-          # Create or update the second parent if present
-          if row['Parent 2 - Full Name (6)'].present? && row['Parent 2 - Email (6)'].present?
-            parent2_name = row['Parent 2 - Full Name (6)'].strip
-            parent2_email = row['Parent 2 - Email (6)'].strip.downcase
-            parent2_password = SecureRandom.hex(8)
-            create_parent_method.call(parent2_name, parent2_email, parent2_password, kid_email)
-          end
-        end
-
-        puts "✅ Successfully processed CSV with #{encoding} encoding"
-        successful = true
-        break
-
-      rescue => e
-        puts "❌ Failed with #{encoding}: #{e.message}"
+      # Skip if kid is deactivated
+      if kid_user.deactivate?
+        puts "⏭️  Skipping #{learner_info.full_name} - user is deactivated"
+        skipped_count += 1
         next
       end
+
+      puts "Processing learner: #{learner_info.full_name} (#{kid_user.email})"
+
+      # Process Parent 1
+      if learner_info.parent1_email.present?
+        result = create_parent_method.call(
+          learner_info.parent1_full_name,
+          learner_info.parent1_email,
+          kid_user,
+          hub
+        )
+        case result
+        when :created then created_count += 1
+        when :updated then updated_count += 1
+        when :skipped then skipped_count += 1
+        when :error then error_count += 1
+        end
+      end
+
+      # Process Parent 2
+      if learner_info.parent2_email.present?
+        result = create_parent_method.call(
+          learner_info.parent2_full_name,
+          learner_info.parent2_email,
+          kid_user,
+          hub
+        )
+        case result
+        when :created then created_count += 1
+        when :updated then updated_count += 1
+        when :skipped then skipped_count += 1
+        when :error then error_count += 1
+        end
+      end
+
+      puts ""
     end
 
-    unless successful
-      puts "❌ Could not process CSV with any encoding"
-      exit 1
-    end
-
-    puts "Final kid nil counter: #{kid_nil_counter}"
+    puts "=" * 60
+    puts "Summary:"
+    puts "  ✅ Created: #{created_count}"
+    puts "  🔄 Updated: #{updated_count}"
+    puts "  ⏭️  Skipped: #{skipped_count}"
+    puts "  ❌ Errors: #{error_count}"
+    puts "=" * 60
   end
 end

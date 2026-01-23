@@ -245,7 +245,7 @@ class TimelinesController < ApplicationController
   def set_exam_dates(filter_future: false)
     scope = filter_future ? ExamDate.where("date >= ?", Date.today) : ExamDate.all
     @exam_dates = scope.includes(:subject).map do |exam_date|
-      { id: exam_date.id, name: exam_date.formatted_date, subject_id: exam_date.subject_id }
+      { id: exam_date.id, name: exam_date.formatted_date, subject_id: exam_date.subject_id, month: exam_date.date.month, year: exam_date.date.year }
     end
   end
 

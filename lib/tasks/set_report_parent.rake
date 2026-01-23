@@ -3,7 +3,7 @@ namespace :db do
   task set_report_parent: :environment do
     updated_count = 0
     skipped_count = 0
-    excluded_hub_ids = [166]
+    excluded_hub_ids = [166, 194]
 
     # Find all learners from all hubs except the specified ones through the users_hubs join table
     User.joins(:users_hubs)
@@ -11,8 +11,8 @@ namespace :db do
         .where.not(users_hubs: { hub_id: excluded_hub_ids })
         .distinct
         .find_each do |learner|
-      # Find report with sprint 13
-      report = learner.reports.find_by(sprint: 13)
+      # Find report with sprint 15
+      report = learner.reports.find_by(sprint: 15)
 
       if report && report.parent != true
         # Update the report's parent field to true
@@ -22,7 +22,7 @@ namespace :db do
       else
         if report.nil?
           skipped_count += 1
-          puts "No sprint 13 report found for learner ID: #{learner.id} (hub: #{learner.users_hubs.where.not(hub_id: excluded_hub_ids).first.hub_id})"
+          puts "No sprint 15 report found for learner ID: #{learner.id} (hub: #{learner.users_hubs.where.not(hub_id: excluded_hub_ids).first.hub_id})"
         else
           skipped_count += 1
           puts "Report ID: #{report.id} for learner ID: #{learner.id} (hub: #{learner.users_hubs.where.not(hub_id: excluded_hub_ids).first.hub_id}) is already set to parent: #{report.parent}"

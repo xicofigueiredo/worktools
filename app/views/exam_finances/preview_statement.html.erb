@@ -82,20 +82,6 @@
                         style: 'width: 80px;',
                         onchange: 'this.form.requestSubmit()'
                     %>
-                    <%= f.select :currency,
-                        options_for_select([
-                          ['EUR', 'EUR'],
-                          ['ZAR', 'ZAR'],
-                          ['NAD', 'NAD'],
-                          ['MZN', 'MZN']
-                        ], @exam_finance.currency || 'EUR'),
-                        {},
-                        {
-                          class: 'form-select',
-                          style: 'width: auto; max-width: 80px;',
-                          onchange: 'this.form.requestSubmit()'
-                        }
-                    %>
                   </div>
                   <div id="cost-update-message" class="text-success" style="display: none;">
                     Updated!

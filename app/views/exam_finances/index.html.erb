@@ -84,7 +84,7 @@
                       <span class="text-muted">No subjects</span>
                     <% end %>
                   </td>
-                  <td><%= exam_finance.total_cost %></td>
+                  <td><%= exam_finance.total_cost %> <%= exam_finance.currency %></td>
                   <td>
                     <span class="badge <%= finance_status_badge_class(exam_finance.status) %>">
                       <%= exam_finance.status %>

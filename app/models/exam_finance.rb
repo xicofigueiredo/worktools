@@ -10,6 +10,8 @@ class ExamFinance < ApplicationRecord
   after_create :log_initial_creation
   before_save :log_status_change, if: :status_changed?
 
+  before_save :set_currency
+
   def update_number_of_subjects(count)
     update_column(:number_of_subjects, count)
   end
@@ -23,6 +25,15 @@ class ExamFinance < ApplicationRecord
         'changed_by' => change['changed_by'] || change[:changed_by]
       }
     end
+  end
+
+  def set_currency
+
+    hub = user.main_hub
+    return unless hub # Skip if user has no main hub
+
+    pricing_tier = PricingTier.find_by(country: hub.country)
+    self.currency = pricing_tier&.currency
   end
 
   private
