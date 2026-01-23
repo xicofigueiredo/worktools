@@ -515,9 +515,13 @@ class LearnerInfo < ApplicationRecord
   end
 
   def self.send_onboarding_emails!(today)
-    # Find Onboarded learners starting in next 7 days who haven't received the email
-    candidates = where(status: "Onboarded", onboarding_email_sent: false)
-                 .where(start_date: (today + 1.day)..(today + 7.days))
+    candidates = where(onboarding_email_sent: false)
+                  .where(status: "Onboarded")
+                  .where(start_date: (today + 1.day)..(today + 7.days))
+                  .or(
+                    where(onboarding_email_sent: false)
+                    .where(status: "Active")
+                  )
 
     count = 0
     candidates.find_each do |learner|
