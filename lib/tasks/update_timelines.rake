@@ -8,7 +8,19 @@ include ProgressCalculations
 namespace :timelines do
   desc "update moodle timelines"
   task update_timelines: :environment do
-    timelines = Timeline.where(hidden: false)
+    puts "Enter the subject id: "
+    id = gets.chomp.to_i
+    puts "You entered: #{id}"
+    puts "Are you sure you want to update timelines for subject id #{id}? (y/n)"
+    confirm = gets.chomp
+    if confirm == "y"
+      puts "Updating timelines for subject id #{id}..."
+    end
+    if confirm == "n"
+      puts "Exiting..."
+      exit
+    end
+    timelines = Timeline.where(hidden: false, subject_id: id)
 
     successful_updates = 0
     failed_updates = 0

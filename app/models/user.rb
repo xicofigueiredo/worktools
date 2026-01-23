@@ -60,11 +60,11 @@ class User < ApplicationRecord
     rm: 'Regional Manager',
     guardian: 'Parent',
     cm: 'Course Manager',
-    exams: 'Exams', #princess
+    exams: 'Exams',
     edu: 'Edu',
     staff: 'Staff',
     admissions: 'Admissions',
-    finance: 'Finance', #maria
+    finance: 'Finance',
     ops: 'Operations',
     it: 'IT Support'
   }
