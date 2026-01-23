@@ -385,6 +385,13 @@ class LearnerInfo < ApplicationRecord
 
   private
 
+  def ensure_platform_password!
+    return if platform_password.present?
+
+    generated_password = SecureRandom.hex(6) # 12 characters
+    update_column(:platform_password, generated_password)
+  end
+
   def create_or_link_learner_user!
     return if user.present?
 
@@ -395,6 +402,8 @@ class LearnerInfo < ApplicationRecord
       update_column(:user_id, existing_user.id)
       return
     end
+
+    ensure_platform_password!
 
     new_user = User.create!(
       full_name: full_name,
@@ -433,6 +442,7 @@ class LearnerInfo < ApplicationRecord
 
     return if kid_user.deactivate?
 
+    ensure_platform_password!
     password = platform_password
 
     [
@@ -445,22 +455,31 @@ class LearnerInfo < ApplicationRecord
       full_name = data[:name]&.strip.presence || email.split("@").first.humanize
 
       parent = User.find_or_initialize_by(email: email)
-      parent.assign_attributes(
-        full_name: full_name,
-        password: password,
-        password_confirmation: password,
-        confirmed_at: Time.current,
-        role: "Parent"
-      )
+      is_new_parent = parent.new_record?
 
-      # Temporarily bypass email domain validation
-      parent.define_singleton_method(:email_domain_check) { true } if parent.new_record?
+      if is_new_parent
+        parent.assign_attributes(
+          full_name: full_name,
+          password: password,
+          password_confirmation: password,
+          confirmed_at: Time.current,
+          role: "Parent"
+        )
+        # Temporarily bypass email domain validation
+        parent.define_singleton_method(:email_domain_check) { true }
+      end
 
       if parent.save
         unless parent.kids.include?(kid_user)
           parent.kids << kid_user.id if kid_user && !parent.kids.include?(kid_user.id)
           parent.save!
           Rails.logger.info "[LearnerInfo##{id}] Linked parent #{email} to kid #{kid_user.email}"
+        end
+
+        # 2. Trigger Email only for new parent records
+        if is_new_parent
+          UserMailer.welcome_parent(parent, password, learning_coaches).deliver_now
+          Rails.logger.info "[LearnerInfo##{id}] Welcome email sent to parent: #{email}"
         end
       else
         Rails.logger.warn "[LearnerInfo##{id}] Failed to save parent #{email}: #{parent.errors.full_messages}"
