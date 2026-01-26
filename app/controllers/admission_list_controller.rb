@@ -13,7 +13,6 @@ class AdmissionListController < ApplicationController
     end
 
     filter_keys = [:search, :status, :hub, :programme, :curriculum, :grade_year, :age_min, :age_max]
-
     has_active_filters = params[:filter_applied].present? || filter_keys.any? { |k| params[k].present? }
 
     if has_active_filters
@@ -30,116 +29,39 @@ class AdmissionListController < ApplicationController
       redirect_to admissions_path(session[:admission_filters]) and return
     end
 
+    # Setup dropdown data
     @statuses  = LearnerInfo.distinct.pluck(:status).compact.sort
     @curricula = LearnerInfo.distinct.pluck(:curriculum_course_option).compact.sort
     @grades    = LearnerInfo.distinct.pluck(:grade_year).compact.sort
     @programmes = LearnerInfo.distinct.pluck(:programme).compact.sort
 
-    # Determine hubs scope (limit for LC users)
+    # Determine hubs scope
     hubs_scope = Hub.all
-    lc_hub_ids = nil
     if current_user.lc?
       lc_hub_ids = current_user.users_hubs.pluck(:hub_id)
       hubs_scope = hubs_scope.where(id: lc_hub_ids) if lc_hub_ids.any?
     end
 
-    # Prepare grouped hubs (assume Hub has :country column)
+    # Prepare grouped hubs
     hubs_data = hubs_scope.select(:country, :name).distinct.order(:country, :name)
     @hubs_grouped = hubs_data.group_by { |h| h.country || 'Other' }
     @hubs_grouped.transform_values! { |v| v.map { |h| [h.name, h.name] } }
 
-    # build a scope purely for filtering/counting (no select/order)
-    filter_scope = LearnerInfo.all
-
-    # LC only see hub learners
-    if current_user.lc?
-      if lc_hub_ids.any?
-        filter_scope = filter_scope.where(
-          "(learner_infos.hub_id IN (:hub_ids)) OR " \
-          "(learner_infos.learning_coach_id = :user_id) OR " \
-          "(learner_infos.hub_id IS NULL AND EXISTS (" \
-            "SELECT 1 FROM users_hubs uh " \
-            "WHERE uh.user_id = learner_infos.user_id " \
-            "AND uh.hub_id IN (:hub_ids) " \
-            "AND uh.main = TRUE" \
-          "))",
-          hub_ids: lc_hub_ids,
-          user_id: current_user.id
-        )
-      else
-
-        filter_scope = filter_scope.where(learning_coach_id: current_user.id)
-      end
-    end
-
-    # Search filter
-    if params[:search].present?
-      search_term = "%#{params[:search].strip}%"
-      filter_scope = filter_scope.where(
-        "full_name ILIKE :search OR personal_email ILIKE :search OR institutional_email ILIKE :search OR " \
-        "parent1_full_name ILIKE :search OR parent1_email ILIKE :search OR " \
-        "parent2_full_name ILIKE :search OR parent2_email ILIKE :search",
-        search: search_term
-      )
-    end
-
-    # Multi-select filters
-    if params[:status].present?
-      statuses = Array(params[:status]).reject(&:blank?)
-      filter_scope = filter_scope.where(status: statuses) if statuses.any?
-    end
-
-    if params[:curriculum].present?
-      curricula = Array(params[:curriculum]).reject(&:blank?)
-      filter_scope = filter_scope.where(curriculum_course_option: curricula) if curricula.any?
-    end
-
-    if params[:grade_year].present?
-      grades = Array(params[:grade_year]).reject(&:blank?)
-      filter_scope = filter_scope.where(grade_year: grades) if grades.any?
-    end
-
-    if params[:programme].present?
-      programmes = Array(params[:programme]).reject(&:blank?)
-      filter_scope = filter_scope.where(programme: programmes) if programmes.any?
-    end
-
-    if params[:hub].present?
-      hub_names = Array(params[:hub]).reject(&:blank?)
-      if hub_names.any?
-        hubs = Hub.where(name: hub_names)
-        if hubs.any?
-          hub_ids = hubs.pluck(:id)
-          filter_scope = filter_scope.where(
-            "(learner_infos.hub_id IN (:hub_ids)) OR (learner_infos.hub_id IS NULL AND EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id IN (:hub_ids) AND uh.main = TRUE))",
-            hub_ids: hub_ids
-          )
-        else
-          filter_scope = filter_scope.where("1 = 0")
-        end
-      end
-    end
-
     # Age Range Logic
     age_bounds = LearnerInfo.pluck(Arel.sql("MIN(EXTRACT(YEAR FROM AGE(birthdate))), MAX(EXTRACT(YEAR FROM AGE(birthdate)))")).first
     @db_min_age = age_bounds[0]&.to_i || 0
-    @db_max_age = age_bounds[1]&.to_i || 50 # Fallback to 50 if table is empty
-
+    @db_max_age = age_bounds[1]&.to_i || 50
     @current_min_age = params[:age_min].presence ? params[:age_min].to_i : @db_min_age
     @current_max_age = params[:age_max].presence ? params[:age_max].to_i : @db_max_age
 
-    if params[:age_min].present? || params[:age_max].present?
-      filter_scope = filter_scope.where(
-        "EXTRACT(YEAR FROM AGE(birthdate)) BETWEEN ? AND ?",
-        @current_min_age,
-        @current_max_age
-      )
-    end
+    # Apply Filters via shared method
+    filter_scope = apply_filters(LearnerInfo.all)
 
-    # counts
+    # Counts
     @total_count    = LearnerInfo.count
     @filtered_count = filter_scope.count
 
+    # Subqueries for display
     hub_name_subquery = <<~SQL.squish
       CASE
         WHEN learner_infos.hub_id IS NOT NULL THEN (SELECT name FROM hubs WHERE id = learner_infos.hub_id LIMIT 1)
@@ -158,7 +80,7 @@ class AdmissionListController < ApplicationController
       (SELECT lf.has_debt FROM learner_finances lf WHERE lf.learner_info_id = learner_infos.id LIMIT 1) AS has_debt
     SQL
 
-    # final scope used to render table (add select/order as you had before)
+    # Final scope used to render table
     scope = filter_scope.select(:id, :full_name, :curriculum_course_option, :grade_year, :student_number, :status, :programme, Arel.sql(hub_id_subquery), Arel.sql(hub_name_subquery), Arel.sql(has_debt_subquery))
     scope = scope.order(Arel.sql("COALESCE(student_number, 99999999), id"))
 
@@ -511,14 +433,50 @@ class AdmissionListController < ApplicationController
     render layout: false
   end
 
+  def generate_bulk_emails
+    # 1. Apply filters to get the target population
+    scope = apply_filters(LearnerInfo.all)
+
+    # 2. Preload necessary associations
+    scope = scope.includes(:learner_finance)
+
+    emails = Set.new
+
+    # 3. Collect emails based on params
+    scope.find_each do |learner|
+      if params[:include_personal_email] == 'true' && learner.personal_email.present?
+        emails.add(learner.personal_email)
+      end
+
+      if params[:include_institutional_email] == 'true' && learner.institutional_email.present?
+        emails.add(learner.institutional_email)
+      end
+
+      if params[:include_parent1] == 'true' && learner.parent1_email.present?
+        emails.add(learner.parent1_email)
+      end
+
+      if params[:include_parent2] == 'true' && learner.parent2_email.present?
+        emails.add(learner.parent2_email)
+      end
+
+      if params[:include_finance] == 'true' && learner.learner_finance&.financial_email.present?
+        emails.add(learner.learner_finance.financial_email)
+      end
+    end
+
+    render json: {
+      count: emails.size,
+      emails: emails.to_a.sort.join('; ')
+    }
+  end
+
   def export_csv
     @permission = LearnerInfoPermission.new(current_user, nil)
     visible_learner_fields = @permission.visible_learner_fields
     visible_finance_fields = @permission.visible_finance_fields
-
     mandatory_columns = [:status, :hub_name, :hub_country]
 
-    # Get selected fields from form
     selected_fields = params[:fields]&.select { |f| visible_learner_fields.include?(f.to_sym) || visible_finance_fields.include?(f.to_sym) } || []
 
     if selected_fields.empty?
@@ -528,53 +486,11 @@ class AdmissionListController < ApplicationController
 
     all_export_columns = (mandatory_columns + selected_fields).uniq
 
-    # Build scope
-    filter_scope = LearnerInfo.includes(:learner_finance)
+    # Re-use the centralized filter logic
+    filter_scope = apply_filters(LearnerInfo.includes(:learner_finance))
 
-    # Apply multi-select filters
-    if params[:status].present? && params[:status].is_a?(Array)
-      filter_scope = filter_scope.where(status: params[:status].reject(&:blank?))
-    end
-
-    if params[:curriculum].present? && params[:curriculum].is_a?(Array)
-      filter_scope = filter_scope.where(curriculum_course_option: params[:curriculum].reject(&:blank?))
-    end
-
-    if params[:grade_year].present? && params[:grade_year].is_a?(Array)
-      filter_scope = filter_scope.where(grade_year: params[:grade_year].reject(&:blank?))
-    end
-
-    if params[:programme].present? && params[:programme].is_a?(Array)
-      filter_scope = filter_scope.where(programme: params[:programme].reject(&:blank?))
-    end
-
-    if params[:hub].present? && params[:hub].is_a?(Array)
-      hub_names = params[:hub].reject(&:blank?)
-      if hub_names.any?
-        hubs = Hub.where(name: hub_names)
-        if hubs.any?
-          filter_scope = filter_scope.where(
-            "EXISTS (SELECT 1 FROM users_hubs uh WHERE uh.user_id = learner_infos.user_id AND uh.hub_id IN (?) AND uh.main = TRUE)",
-            hubs.pluck(:id)
-          )
-        else
-          filter_scope = filter_scope.where("1 = 0")
-        end
-      end
-    end
-
-    if params[:age_min].present? || params[:age_max].present?
-      min_age = params[:age_min].presence || 0
-      max_age = params[:age_max].presence || 50
-      filter_scope = filter_scope.where("EXTRACT(YEAR FROM AGE(birthdate)) BETWEEN ? AND ?", min_age.to_i, max_age.to_i)
-    end
-
-    # Generate CSV
     csv_string = "\xEF\xBB\xBF" + CSV.generate(headers: true) do |csv|
-      # Add headers (humanized field names)
       csv << all_export_columns.map { |f| f.to_s.humanize }
-
-      # Add data rows
       filter_scope.find_each do |learner|
         row = all_export_columns.map do |field|
           case field
@@ -597,7 +513,6 @@ class AdmissionListController < ApplicationController
       end
     end
 
-    # Send file
     send_data csv_string,
       filename: "learners_export_#{Date.today.strftime('%Y%m%d')}.csv",
       type: 'text/csv',
@@ -635,12 +550,106 @@ class AdmissionListController < ApplicationController
 
   private
 
+  def apply_filters(scope)
+    # LC Permission Scope
+    if current_user.lc?
+      lc_hub_ids = current_user.users_hubs.pluck(:hub_id)
+      if lc_hub_ids.any?
+        scope = scope.where(
+          "(learner_infos.hub_id IN (:hub_ids)) OR " \
+          "(learner_infos.learning_coach_id = :user_id) OR " \
+          "(learner_infos.hub_id IS NULL AND EXISTS (" \
+            "SELECT 1 FROM users_hubs uh " \
+            "WHERE uh.user_id = learner_infos.user_id " \
+            "AND uh.hub_id IN (:hub_ids) " \
+            "AND uh.main = TRUE" \
+          "))",
+          hub_ids: lc_hub_ids,
+          user_id: current_user.id
+        )
+      else
+        scope = scope.where(learning_coach_id: current_user.id)
+      end
+    end
+
+    # Advanced Search: Split words and ensure ALL words match somewhere in the record
+    if params[:search].present?
+      search_terms = params[:search].strip.split(/\s+/)
+      search_terms.each do |term|
+        term_pattern = "%#{term}%"
+        scope = scope.where(
+          "full_name ILIKE :pattern OR " \
+          "personal_email ILIKE :pattern OR institutional_email ILIKE :pattern OR " \
+          "parent1_full_name ILIKE :pattern OR parent1_email ILIKE :pattern OR " \
+          "parent2_full_name ILIKE :pattern OR parent2_email ILIKE :pattern",
+          pattern: term_pattern
+        )
+      end
+    end
+
+    # Multi-select filters
+    if params[:status].present?
+      statuses = Array(params[:status]).reject(&:blank?)
+      scope = scope.where(status: statuses) if statuses.any?
+    end
+
+    if params[:curriculum].present?
+      curricula = Array(params[:curriculum]).reject(&:blank?)
+      scope = scope.where(curriculum_course_option: curricula) if curricula.any?
+    end
+
+    if params[:grade_year].present?
+      grades = Array(params[:grade_year]).reject(&:blank?)
+      scope = scope.where(grade_year: grades) if grades.any?
+    end
+
+    if params[:programme].present?
+      programmes = Array(params[:programme]).reject(&:blank?)
+      scope = scope.where(programme: programmes) if programmes.any?
+    end
+
+    # Complex Hub Filtering
+    if params[:hub].present?
+      hub_names = Array(params[:hub]).reject(&:blank?)
+      if hub_names.any?
+        hubs = Hub.where(name: hub_names)
+        if hubs.any?
+          hub_ids = hubs.pluck(:id)
+          scope = scope.where(
+            "(learner_infos.hub_id IN (:hub_ids)) OR " \
+            "(learner_infos.hub_id IS NULL AND EXISTS (" \
+              "SELECT 1 FROM users_hubs uh " \
+              "WHERE uh.user_id = learner_infos.user_id " \
+              "AND uh.hub_id IN (:hub_ids) " \
+              "AND uh.main = TRUE" \
+            "))",
+            hub_ids: hub_ids
+          )
+        else
+          scope = scope.where("1 = 0")
+        end
+      end
+    end
+
+    # Age Range
+    if params[:age_min].present? || params[:age_max].present?
+      current_min = params[:age_min].presence&.to_i || 0
+      current_max = params[:age_max].presence&.to_i || 100
+      scope = scope.where(
+        "EXTRACT(YEAR FROM AGE(birthdate)) BETWEEN ? AND ?",
+        current_min,
+        current_max
+      )
+    end
+
+    scope
+  end
+
   def require_staff
     redirect_to root_path unless current_user&.staff?
   end
 
   def set_learner_info
-    # include user for view convenience
     @learner_info = LearnerInfo.includes(:user).find(params[:id])
     @permission   = LearnerInfoPermission.new(current_user, @learner_info)
   end
