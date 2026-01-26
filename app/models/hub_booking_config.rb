@@ -29,19 +29,25 @@ class HubBookingConfig < ApplicationRecord
   private
 
   def validate_minimum_schedule
-    return if visit_slots.blank?
+    # Filter only days that have actual slots selected
+    current_slots = visit_slots || {}
+    open_days = current_slots.select { |_, slots| slots.present? && slots.any? }
 
-    # At least 3 days must have slots
-    open_days = visit_slots.select { |_, slots| slots.present? && slots.any? }
+    # Rule 1: At least 3 days must have slots
     if open_days.keys.count < 3
       errors.add(:visit_slots, "must have at least 3 days configured.")
     end
 
-    # Any open day must have at least 9 slots
-    open_days.each do |day, slots|
-      if slots.count < 9
-        errors.add(:visit_slots, "for a selected day must have at least 9 slots selected.")
-      end
+    # Rule 2: At least 30 slots total (distributed across all days)
+    total_slots = open_days.values.flatten.count
+    if total_slots < 30
+      errors.add(:visit_slots, "must have at least 30 slots selected in total (currently #{total_slots}).")
+    end
+
+    # Rule 3: At least 2 of the selected days must have 9 or more slots
+    days_with_nine_plus = open_days.count { |_, slots| slots.count >= 9 }
+    if days_with_nine_plus < 2
+      errors.add(:visit_slots, "must include at least 2 days with 9 or more slots.")
     end
   end
 end
