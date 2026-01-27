@@ -59,7 +59,7 @@ class ExamFinancesController < ApplicationController
       @exam_enrolls_by_finance[finance.id] = ExamEnroll.joins(:timeline)
                                                        .where(timelines: { user_id: finance.user_id, hidden: false })
                                                        .select { |enroll| enroll.display_exam_date == finance.exam_season }
-                                                       .sort_by(&:subject_name)
+                                                       .sort_by { |enroll| enroll.subject_name.to_s.downcase }
     end
 
     # If default filter was applied but no results found, fall back to 'all'
@@ -78,7 +78,7 @@ class ExamFinancesController < ApplicationController
                              .includes(:timeline)
                              .where(timelines: { user_id: @exam_finance.user_id, hidden: false })
                              .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
-                             .sort_by(&:subject_name)
+                             .sort_by { |enroll| enroll.subject_name.to_s.downcase }
 
     @exam_finance.update_number_of_subjects(@exam_enrolls.count)
 
@@ -141,7 +141,7 @@ class ExamFinancesController < ApplicationController
                              .includes(:timeline)
                              .where(timelines: { user_id: @exam_finance.user_id, hidden: false })
                              .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
-                             .sort_by(&:subject_name)
+                             .sort_by { |enroll| enroll.subject_name.to_s.downcase }
   end
 
   def generate_statement

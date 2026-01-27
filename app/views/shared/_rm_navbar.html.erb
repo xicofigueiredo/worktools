@@ -1,0 +1,105 @@
+<div class="navbar navbar-expand-sm navbar-light navbar-lewagon sticky-top" style="margin-bottom: 12px; border-bottom: 1px solid #e9ecef;">
+  <div class="container-fluid">
+    <%= link_to "#", class: "navbar-brand" do %>
+      <div ><%= image_tag "bga_logo.png" %></div>
+    <% end %>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto">
+        <% if user_signed_in? %>
+          <%# <li class="nav-item">
+            <%# <%= link_to "Subjects", subjects_path, class: "nav-link" %>
+          <%# </li> %>
+
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(leaves_path)%>">
+              <%= link_to leaves_path, class: "nav-link" do %>
+                <span></i> Leave</span>
+                <span id="leave-requests-badge">
+                  <% if @leave_pending_count > 0 %>
+                    <span class="badge rounded-pill bg-danger">
+                      <%= @leave_pending_count %>
+                    </span>
+                  <% end %>
+                </span>
+              <% end %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(admissions_path)%>">
+              <%= link_to "Admission List", admissions_path, class: "nav-link" %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(attendance_path)%>">
+              <%= link_to "Attendance", attendance_path, class: "nav-link" %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(dashboard_lc_path)%>">
+              <%= link_to "RM Dashboard", dashboard_lc_path, class: "nav-link" %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(exam_enrolls_path)%>">
+              <%= link_to "Exam Registration", exam_enrolls_path, class: "nav-link" %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(weekly_meetings_path)%>">
+              <%= link_to "Exams Seasons", weekly_meetings_path, class: "nav-link" %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(lc_view_path)%>">
+              <%= link_to "Reports", reports_path, class: "nav-link" %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(navigator_consents_path)%>">
+              <%= link_to "Build Week Activities", navigator_consents_path(date: Date.today), class: "nav-link" %>
+            </div>
+          </li>
+          <li class="nav-item">
+            <div class="p-1 position-relative" style="border-radius: 10px; <%= 'background-color: rgb(126 128 128 / 20%); color: white;' if current_page?(forms_path) %>">
+              <%= link_to notifications_path, class: "nav-link position-relative" do %>
+                <i class="fa-solid fa-bell"></i>
+                <% if @notification_count.to_i.positive? %>
+                  <span class="position-absolute top-10 start-80 translate-middle badge rounded-pill bg-danger" style="transform: translate(-50%, -50%); font-size: 0.6em;">
+                    <%= @notification_count %>
+                    <span class="visually-hidden">unread notifications</span>
+                  </span>
+                <% end %>
+              <% end %>
+            </div>
+          </li>
+          <li class="nav-item dropdown">
+            <%= link_to 'Profile', class: 'avatar', id: 'navbarDropdown', 'data-bs-toggle': 'dropdown', 'aria-haspopup': true, 'aria-expanded': false do %>
+              <%= image_tag "profile.jpeg", class: "avatar", alt: "dropdown menu" %>
+            <% end %>
+          </a>
+            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+              <%= link_to about_path, class: "dropdown-item" do %>
+                <i class="fa-regular fa-circle-question"></i> About
+              <% end %>
+              <%= link_to edit_user_registration_path, class: "dropdown-item" do %>
+                <i class="fa-solid fa-rotate"></i> Password
+              <% end %>
+              <%= link_to destroy_user_session_path, class: "dropdown-item", data: {turbo_method: :delete} do %>
+                <i class="fa fa-sign-out"></i> Logout
+              <% end %>
+            </div>
+          </li>
+        <% else %>
+          <li class="nav-item">
+            <%= link_to "Login", new_user_session_path, class: "nav-link" %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+</div>
