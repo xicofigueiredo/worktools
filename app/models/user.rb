@@ -48,7 +48,7 @@ class User < ApplicationRecord
 
   has_one :learner_info, dependent: :destroy
   has_one :collaborator_info, dependent: :destroy
-  has_one :csc_diploma, dependent: :destroy
+  has_many :csc_diplomas, dependent: :destroy
   delegate :can_teach_pt_plus, :can_teach_pt_plus?,
            :can_teach_remote, :can_teach_remote?,
            to: :collaborator_info, allow_nil: true

@@ -42,8 +42,9 @@
               <tr>
                 <th>Activity</th>
                 <th>Type</th>
+                <th>Sprint</th>
                 <th>Hours</th>
-                <th>Credits</th>
+                <th>Base Credits</th>
                 <th>Weight</th>
                 <th>Final Credits</th>
                 <th>Rubric Score(1-4)</th>
@@ -67,12 +68,28 @@
                     </span>
                   </td>
                   <td>
+                    <% if activity.activitable.respond_to?(:sprint_goal) && activity.activitable.sprint_goal&.sprint %>
+                      <%= activity.activitable.sprint_goal.sprint.name %> <%= activity.activitable.sprint_goal.sprint.start_date&.year %>
+                    <% else %>
+                      <span class="text-muted">-</span>
+                    <% end %>
+                  </td>
+                  <td>
                     <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" form="<%= form_id %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="1">
                   </td>
-                  <td><%= activity.credits || '-' %></td>
+                  <td>
+                    <%
+                      base_credits = '-'
+                      if activity.credits.present? && activity.weight.present? && activity.credits > 0 && activity.weight > 0
+                        base_credits = (activity.credits / (activity.weight / 100.0)).round(2)
+                      end
+                    %>
+                    <%= base_credits %>
+                  </td>
                   <td>
                     <input type="number" name="csc_activity[weight]" value="<%= activity.weight %>" form="<%= form_id %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="0.1">
                   </td>
+                  <td><%= activity.credits || '-' %></td>
                   <td><%= activity.rubric_score || '-' %></td>
                   <td class="d-flex gap-1">
                     <%= link_to edit_csc_activity_path(activity), class: "btn btn-sm btn-outline-primary", title: "Edit all fields" do %>
@@ -87,7 +104,7 @@
 
               <% if @hidden_activities.any? %>
                 <tr>
-                  <td colspan="8" class="text-center py-2">
+                  <td colspan="9" class="text-center py-2">
                     <hr class="my-1">
                     <small class="text-muted">Hidden Activities</small>
                     <hr class="my-1">
@@ -109,19 +126,29 @@
                       </span>
                     </td>
                     <td>
+                      <% if activity.activitable.respond_to?(:sprint_goal) && activity.activitable.sprint_goal&.sprint %>
+                        <%= activity.activitable.sprint_goal.sprint.name %> <%= activity.activitable.sprint_goal.sprint.start_date&.year %>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                    <td>
                       <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" form="<%= hidden_form_id %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="1">
+                    </td>
+                    <td>
+                      <%
+                        base_credits = '-'
+                        if activity.credits.present? && activity.weight.present? && activity.credits > 0 && activity.weight > 0
+                          base_credits = (activity.credits / (activity.weight / 100.0)).round(2)
+                        end
+                      %>
+                      <%= base_credits %>
                     </td>
                     <td>
                       <input type="number" name="csc_activity[weight]" value="<%= activity.weight %>" form="<%= hidden_form_id %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="0.1">
                     </td>
                     <td><%= activity.credits || '-' %></td>
-                    <td>
-                      <% if activity.validated %>
-                        <span class="badge bg-secondary">Valid</span>
-                      <% else %>
-                        <span class="badge bg-secondary">Pending</span>
-                      <% end %>
-                    </td>
+                    <td><%= activity.rubric_score || '-' %></td>
                     <td class="d-flex gap-1">
                       <%= form_with model: activity, url: csc_activity_path(activity), method: :patch, local: true, id: hidden_form_id, class: "d-inline" do |f| %>
                         <button type="submit" class="btn btn-sm btn-outline-success" title="Save changes">
@@ -148,7 +175,7 @@
               <strong>Total Hours:</strong> <%= @csc_activities.sum { |a| a.hours.to_i } %>
             </div>
             <div class="col-md-4">
-              <strong>Total Credits:</strong> <%= @csc_activities.sum { |a| a.credits.to_i } %>
+              <strong>Total Credits:</strong> <%= @csc_activities.sum { |a| a.credits.to_f } %>
             </div>
             <div class="col-md-4">
               <strong>Valid Activities:</strong> <%= @csc_activities.count { |a| a.validated } %> / <%= @csc_activities.count %>
