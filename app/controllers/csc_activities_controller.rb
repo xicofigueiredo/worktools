@@ -27,9 +27,15 @@ class CscActivitiesController < ApplicationController
     end
 
     if @csc_activity.update(params_hash)
-      redirect_to csc_diploma_path, notice: "Activity updated successfully."
+      respond_to do |format|
+        format.turbo_stream { head :ok }
+        format.html { redirect_to csc_diploma_path, notice: "Activity updated successfully." }
+      end
     else
-      render :edit, status: :unprocessable_entity
+      respond_to do |format|
+        format.turbo_stream { head :unprocessable_entity }
+        format.html { render :edit, status: :unprocessable_entity }
+      end
     end
   end
 

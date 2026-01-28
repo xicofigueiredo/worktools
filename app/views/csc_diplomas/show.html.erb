@@ -43,18 +43,22 @@
                 <th>Activity</th>
                 <th>Type</th>
                 <th>Sprint</th>
-                <th>Hours</th>
-                <th>Base Credits</th>
-                <th>Weight</th>
-                <th>Final Credits</th>
-                <th>Rubric Score(1-4)</th>
+                <th colspan="5">
+                  <div class="d-flex gap-3">
+                    <span style="width: 70px;">Hours</span>
+                    <span style="min-width: 50px;">Base</span>
+                    <span style="width: 70px;">Weight</span>
+                    <span style="min-width: 50px;">Credits</span>
+                    <span style="min-width: 80px;">Rubric</span>
+                    <span></span>
+                  </div>
+                </th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               <% @csc_activities.each do |activity| %>
-                <% form_id = "activity_form_#{activity.id}" %>
-                <tr>
+                <tr data-controller="activity-row-calculator">
                   <td>
                     <% if activity.activitable.is_a?(Skill) %>
                       <%= activity.activitable.extracurricular %>
@@ -74,23 +78,25 @@
                       <span class="text-muted">-</span>
                     <% end %>
                   </td>
-                  <td>
-                    <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" form="<%= form_id %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="1">
+                  <td colspan="5">
+                    <%= form_with model: activity, url: csc_activity_path(activity), method: :patch, class: "d-flex align-items-center gap-2", data: { activity_row_calculator_target: "form" } do |f| %>
+                      <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                      <%
+                        base_credits = '-'
+                        if activity.hours.present? && activity.hours > 0
+                          base_credits = [activity.hours / 8.0, 1.5].min.round(2)
+                        end
+                      %>
+                      <span data-activity-row-calculator-target="baseCredits" style="min-width: 50px;"><%= base_credits %></span>
+                      <input type="number" name="csc_activity[weight]" value="<%= activity.weight %>" class="form-control form-control-sm" style="width: 70px;" min="0" max="200" step="10" data-activity-row-calculator-target="weight" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                      <input type="hidden" name="csc_activity[credits]" value="<%= activity.credits %>" data-activity-row-calculator-target="creditsHidden">
+                      <span data-activity-row-calculator-target="finalCredits" style="min-width: 50px;"><%= activity.credits || '-' %></span>
+                      <span style="min-width: 80px;"><%= activity.rubric_score || '-' %></span>
+                      <button type="submit" class="btn btn-sm btn-outline-success" title="Save changes">
+                        <i class="fa-solid fa-check"></i>
+                      </button>
+                    <% end %>
                   </td>
-                  <td>
-                    <%
-                      base_credits = '-'
-                      if activity.credits.present? && activity.weight.present? && activity.credits > 0 && activity.weight > 0
-                        base_credits = (activity.credits / (activity.weight / 100.0)).round(2)
-                      end
-                    %>
-                    <%= base_credits %>
-                  </td>
-                  <td>
-                    <input type="number" name="csc_activity[weight]" value="<%= activity.weight %>" form="<%= form_id %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="0.1">
-                  </td>
-                  <td><%= activity.credits || '-' %></td>
-                  <td><%= activity.rubric_score || '-' %></td>
                   <td class="d-flex gap-1">
                     <%= link_to edit_csc_activity_path(activity), class: "btn btn-sm btn-outline-primary", title: "Edit all fields" do %>
                       <i class="fa-solid fa-pen"></i>
@@ -104,15 +110,14 @@
 
               <% if @hidden_activities.any? %>
                 <tr>
-                  <td colspan="9" class="text-center py-2">
+                  <td colspan="5" class="text-center py-2">
                     <hr class="my-1">
                     <small class="text-muted">Hidden Activities</small>
                     <hr class="my-1">
                   </td>
                 </tr>
                 <% @hidden_activities.each do |activity| %>
-                  <% hidden_form_id = "hidden_activity_form_#{activity.id}" %>
-                  <tr class="table-secondary text-muted" style="opacity: 0.6;">
+                  <tr class="table-secondary text-muted" style="opacity: 0.6;" data-controller="activity-row-calculator">
                     <td>
                       <% if activity.activitable.is_a?(Skill) %>
                         <%= activity.activitable.extracurricular %>
@@ -132,29 +137,26 @@
                         <span class="text-muted">-</span>
                       <% end %>
                     </td>
-                    <td>
-                      <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" form="<%= hidden_form_id %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="1">
-                    </td>
-                    <td>
-                      <%
-                        base_credits = '-'
-                        if activity.credits.present? && activity.weight.present? && activity.credits > 0 && activity.weight > 0
-                          base_credits = (activity.credits / (activity.weight / 100.0)).round(2)
-                        end
-                      %>
-                      <%= base_credits %>
-                    </td>
-                    <td>
-                      <input type="number" name="csc_activity[weight]" value="<%= activity.weight %>" form="<%= hidden_form_id %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="0.1">
-                    </td>
-                    <td><%= activity.credits || '-' %></td>
-                    <td><%= activity.rubric_score || '-' %></td>
-                    <td class="d-flex gap-1">
-                      <%= form_with model: activity, url: csc_activity_path(activity), method: :patch, local: true, id: hidden_form_id, class: "d-inline" do |f| %>
+                    <td colspan="5">
+                      <%= form_with model: activity, url: csc_activity_path(activity), method: :patch, class: "d-flex align-items-center gap-2", data: { activity_row_calculator_target: "form" } do |f| %>
+                        <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                        <%
+                          base_credits = '-'
+                          if activity.hours.present? && activity.hours > 0
+                            base_credits = [activity.hours / 8.0, 1.5].min.round(2)
+                          end
+                        %>
+                        <span data-activity-row-calculator-target="baseCredits" style="min-width: 50px;"><%= base_credits %></span>
+                        <input type="number" name="csc_activity[weight]" value="<%= activity.weight %>" class="form-control form-control-sm" style="width: 70px;" min="0" step="0.1" data-activity-row-calculator-target="weight" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                        <input type="hidden" name="csc_activity[credits]" value="<%= activity.credits %>" data-activity-row-calculator-target="creditsHidden">
+                        <span data-activity-row-calculator-target="finalCredits" style="min-width: 50px;"><%= activity.credits || '-' %></span>
+                        <span style="min-width: 80px;"><%= activity.rubric_score || '-' %></span>
                         <button type="submit" class="btn btn-sm btn-outline-success" title="Save changes">
                           <i class="fa-solid fa-check"></i>
                         </button>
                       <% end %>
+                    </td>
+                    <td class="d-flex gap-1">
                       <%= link_to edit_csc_activity_path(activity), class: "btn btn-sm btn-outline-secondary", title: "Edit all fields" do %>
                         <i class="fa-solid fa-pen"></i>
                       <% end %>
@@ -169,13 +171,13 @@
           </table>
         </div>
 
-        <div class="mt-3 p-3 bg-light rounded">
+        <div class="mt-3 p-3 bg-light rounded" data-controller="totals-calculator">
           <div class="row">
             <div class="col-md-4">
-              <strong>Total Hours:</strong> <%= @csc_activities.sum { |a| a.hours.to_i } %>
+              <strong>Total Hours:</strong> <span data-totals-calculator-target="totalHours"><%= @csc_activities.sum { |a| a.hours.to_i } %></span>
             </div>
             <div class="col-md-4">
-              <strong>Total Credits:</strong> <%= @csc_activities.sum { |a| a.credits.to_f } %>
+              <strong>Total Credits:</strong> <span data-totals-calculator-target="totalCredits"><%= @csc_activities.sum { |a| a.credits.to_f }.round(2) %></span>
             </div>
             <div class="col-md-4">
               <strong>Valid Activities:</strong> <%= @csc_activities.count { |a| a.validated } %> / <%= @csc_activities.count %>

@@ -19,7 +19,7 @@
             </span>
           </div>
 
-          <%= form_with model: @csc_activity, url: csc_activity_path(@csc_activity), method: :patch, local: true, data: { controller: "credits-calculator" } do |f| %>
+          <%= form_with model: @csc_activity, url: csc_activity_path(@csc_activity), method: :patch, data: { controller: "credits-calculator", turbo: false } do |f| %>
             <%= f.hidden_field :credits, data: { credits_calculator_target: "credits" } %>
 
             <div class="row">
@@ -29,7 +29,7 @@
               </div>
               <div class="col-md-6 mb-3">
                 <%= f.label :weight, class: "form-label" %>
-                <%= f.number_field :weight, class: "form-control", min: 0, step: 0.1, data: { credits_calculator_target: "weight", action: "input->credits-calculator#calculateFinalCredits change->credits-calculator#calculateFinalCredits keyup->credits-calculator#calculateFinalCredits paste->credits-calculator#handlePaste" } %>
+                <%= f.number_field :weight, class: "form-control", min: 0, max: 200, step: 10, data: { credits_calculator_target: "weight", action: "input->credits-calculator#calculateFinalCredits change->credits-calculator#calculateFinalCredits keyup->credits-calculator#calculateFinalCredits paste->credits-calculator#handlePaste" } %>
                 <small class="form-text text-muted">Percentage (e.g., 50 = 50%)</small>
               </div>
             </div>
