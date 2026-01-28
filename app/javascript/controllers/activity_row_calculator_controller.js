@@ -38,6 +38,9 @@ export default class extends Controller {
     if (this.hasCreditsHiddenTarget) {
       this.creditsHiddenTarget.value = finalCredits > 0 ? finalCredits.toFixed(2) : ''
     }
+
+    // Dispatch event to update weight warnings in real-time
+    document.dispatchEvent(new CustomEvent('activity:weightChanged'))
   }
 
   async save(event) {
