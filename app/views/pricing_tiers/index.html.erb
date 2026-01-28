@@ -123,237 +123,74 @@
   }
 </style>
 
-<div style="padding: 0 24px;">
-  <h1>Pricing Tiers</h1>
-  <!-- Filters Section -->
-  <div style="margin-bottom: 20px;">
-    <%= form_with url: pricing_tiers_path, method: :get, local: true do |f| %>
-      <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; padding: 20px;">
-        <h2 style="font-size: 1.1rem; margin-bottom: 16px; color: #333;">Filters</h2>
+<div style="margin-bottom: 20px;">
+  <%= form_with url: pricing_tiers_path, method: :get, local: true do |f| %>
+    <div>
+      <%= f.label :year, "Year", style: "..." %>
+      <%= f.select :year,
+          options_for_select([["All Years", ""]] + @years, params[:year]),
+          {}, style: "..." %>
+    </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
-          <div>
-            <%= f.label :model, "Model", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :model,
-                options_for_select([["All Models", ""]] + @models.map { |m| [m, m] }, params[:model]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
-          </div>
+    <div>
+      <%= f.label :hub_id, "Specific Hub", style: "..." %>
+      <%= f.select :hub_id,
+          options_for_select([["All Hubs", ""], ["Generic (No Specific Hub)", "generic"]] + @specific_hubs, params[:hub_id]),
+          {}, style: "..." %>
+    </div>
 
-          <div>
-            <%= f.label :country, "Country", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :country,
-                options_for_select([["All Countries", ""]] + @countries.map { |c| [c, c] }, params[:country]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
-          </div>
-
-          <div>
-            <%= f.label :hub_type, "Hub Type", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :hub_type,
-                options_for_select([["All Hub Types", ""]] + @hub_types.map { |h| [h, h] }, params[:hub_type]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
-          </div>
-
-          <div>
-            <%= f.label :specific_hub, "Specific Hub", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :specific_hub,
-                options_for_select([["All Specific Hubs", ""]] + @specific_hubs.map { |s| [s, s] }, params[:specific_hub]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
-          </div>
-
-          <div>
-            <%= f.label :curriculum, "Curriculum", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :curriculum,
-                options_for_select([["All Curriculums", ""]] + @curriculums.map { |c| [c, c] }, params[:curriculum]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 8px;">
-          <%= f.submit "Apply Filters", style: "padding: 7px 12px; border-radius: 6px; background: #0d6efd; color: white; border: 1px solid #0d6efd; cursor: pointer;" %>
-          <%= link_to "Clear All", pricing_tiers_path, style: "padding: 7px 12px; border-radius: 6px; background: #f0f0f0; color: #333; text-decoration: none; border: 1px solid #ddd;" %>
-        </div>
-      </div>
     <% end %>
-  </div>
-
-  <!-- Results Count -->
-  <div style="margin-bottom: 12px; font-size: 0.95rem; color: #333;">
-    Showing <strong><%= @pricing_tiers.count %></strong> pricing tier<%= "s" if @pricing_tiers.count != 1 %>
-  </div>
-
-  <!-- Pricing Tiers Table -->
-  <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: auto;">
-    <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
-      <thead>
-        <tr>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Model</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Country</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Currency</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Hub Type</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Specific Hub</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Curriculum</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Admission Fee</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Monthly Fee</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Renewal Fee</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Invoice To</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if @pricing_tiers.any? %>
-          <% @pricing_tiers.each do |tier| %>
-            <tr class="pricing-tier-row" id="tier-<%= tier.id %>">
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.model %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.country %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.currency %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.hub_type %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.specific_hub %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.curriculum %>
-              </td>
-
-              <!-- Admission Fee -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="admission_fee">
-                    <%= number_to_currency(tier.admission_fee || 0, unit: "") %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <input type="number" class="edit-input" data-field="admission_fee" value="<%= tier.admission_fee %>" step="1">
-                  </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="admission_fee" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="admission_fee" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="admission_fee" title="Cancel">
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              </td>
-
-              <!-- Monthly Fee -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="monthly_fee">
-                    <%= number_to_currency(tier.monthly_fee || 0, unit: "") %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <input type="number" class="edit-input" data-field="monthly_fee" value="<%= tier.monthly_fee %>" step="1">
-                  </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="monthly_fee" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="monthly_fee" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="monthly_fee" title="Cancel">
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              </td>
-
-              <!-- Renewal Fee -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="renewal_fee">
-                    <%= number_to_currency(tier.renewal_fee || 0, unit: "") %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <input type="number" class="edit-input" data-field="renewal_fee" value="<%= tier.renewal_fee %>" step="1">
-                  </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="renewal_fee" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="renewal_fee" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="renewal_fee" title="Cancel">
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              </td>
-
-              <!-- Invoice Recipient -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="invoice_recipient">
-                    <%= tier.invoice_recipient %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <input type="text" class="edit-input" data-field="invoice_recipient" value="<%= tier.invoice_recipient %>">
-                  </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="invoice_recipient" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="invoice_recipient" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="invoice_recipient" title="Cancel">
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              </td>
-
-              <!-- Notes -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle; max-width: 300px;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="notes" style="display: block; word-wrap: break-word;">
-                    <%= tier.notes %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <textarea class="edit-textarea" data-field="notes" rows="3"><%= tier.notes %></textarea>
-                  </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="notes" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="notes" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="notes" title="Cancel">
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          <% end %>
-        <% else %>
-          <tr>
-            <td colspan="11" style="padding: 16px; text-align: center; color: #888;">
-              No pricing tiers found matching your filters.
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
 </div>
+
+<thead>
+  <tr>
+    <th>Year</th> <th>Model</th>
+    <th>Country</th>
+    <th>Hub Type</th>
+    <th>Specific Hub</th>
+    <th>Curriculum</th>
+    <th>Admission Fee</th>
+    <th>Monthly Fee</th>
+    <th>Renewal Fee</th>
+    <th>Invoice To</th>
+    <th>Notes</th>
+  </tr>
+</thead>
+
+<tbody>
+  <% @pricing_tiers.each do |tier| %>
+    <tr class="pricing-tier-row" id="tier-<%= tier.id %>">
+      <td style="padding: 10px 16px;"><%= tier.year %></td>
+
+      <td style="padding: 10px 16px;"><%= tier.model %></td>
+
+      <td style="padding: 10px 16px;"><%= tier.country %></td>
+
+      <td style="padding: 10px 16px;"><%= tier.hub_type %></td>
+
+      <td style="padding: 10px 16px;">
+        <% if tier.hub %>
+          <span style="color: #0d6efd; font-weight: 500;"><%= tier.hub.name %></span>
+        <% else %>
+          <span style="color: #888; font-style: italic;">Generic</span>
+        <% end %>
+      </td>
+
+      <td style="padding: 10px 16px;"><%= tier.curriculum %></td>
+
+      <% currency = tier.currency_symbol %>
+
+      <td style="padding: 10px 16px;">
+        <div class="edit-field-container">
+          <span class="view-mode">
+            <%= currency %> <%= number_with_precision(tier.admission_fee, precision: 2) %>
+          </span>
+          </div>
+      </td>
+
+      </tr>
+  <% end %>
+</tbody>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

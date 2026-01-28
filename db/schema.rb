@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_01_19_130000) do
+ActiveRecord::Schema[7.0].define(version: 2026_01_27_200423) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -827,19 +827,20 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_19_130000) do
   create_table "pricing_tiers", force: :cascade do |t|
     t.string "model", null: false
     t.string "country", null: false
-    t.string "currency", null: false
     t.string "hub_type", null: false
     t.string "specific_hub"
     t.string "curriculum"
-    t.integer "admission_fee"
-    t.integer "monthly_fee"
-    t.integer "renewal_fee"
+    t.decimal "admission_fee", precision: 10, scale: 2, default: "0.0"
+    t.decimal "monthly_fee", precision: 10, scale: 2, default: "0.0"
+    t.decimal "renewal_fee", precision: 10, scale: 2, default: "0.0"
     t.string "invoice_recipient"
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "hub_id"
+    t.integer "year", default: 2025
     t.index ["curriculum"], name: "index_pricing_tiers_on_curriculum"
-    t.index ["model", "country", "currency", "hub_type", "specific_hub", "curriculum"], name: "index_pricing_tiers_on_unique_combination"
+    t.index ["hub_id"], name: "index_pricing_tiers_on_hub_id"
     t.index ["model", "country", "hub_type"], name: "index_pricing_tiers_on_model_and_country_and_hub_type"
   end
 
@@ -1354,6 +1355,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_19_130000) do
   add_foreign_key "notes", "users"
   add_foreign_key "notifications", "users"
   add_foreign_key "p2ps", "kdas"
+  add_foreign_key "pricing_tiers", "hubs"
   add_foreign_key "public_holidays", "hubs"
   add_foreign_key "report_activities", "communities"
   add_foreign_key "report_activities", "reports"

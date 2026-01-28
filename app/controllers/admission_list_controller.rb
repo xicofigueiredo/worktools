@@ -91,22 +91,14 @@ class AdmissionListController < ApplicationController
     head :forbidden and return unless @permission.show?
 
     @learner_finance = @learner_info.learner_finance
-
     @main_hub = @learner_info.hub || PricingTierMatcher.get_main_hub_for_learner(@learner_info)
 
     @currency_symbol = '€'
+
     if @learner_info.hub.presence
       hub = @learner_info.hub
-      if %w[Online Remote\ 1 Remote\ 2 Remote\ 3 Undetermined].include?(hub.name)
-        @currency_symbol = '$'
-      else
-        # Fetch any pricing tier for the hub's country to extract currency symbol
-        pricing_tier = PricingTier.where(country: @learner_info.hub.country).first
-        if pricing_tier && pricing_tier.currency
-          match = pricing_tier.currency.match(/\(([^)]+)\)/)
-          @currency_symbol = match ? match[1] : '€'
-        end
-      end
+      sample_tier = PricingTier.find_by(country: hub.country)
+      @currency_symbol = sample_tier&.currency_symbol || PricingTier::CURRENCY_MAPPING[hub.country] || '€'
     end
 
     # Prepare hub options based on programme type
@@ -203,7 +195,7 @@ class AdmissionListController < ApplicationController
     end
 
     # Get new pricing for the selected combination
-    new_pricing = PricingTierMatcher.for_learner(@learner_info, curriculum, hub)
+    new_pricing = PricingTierMatcher.for_learner(@learner_info, curriculum, hub, Date.today.year)
 
     # Get or build current finance values
     current_finance = @learner_info.learner_finance || @learner_info.build_learner_finance
@@ -240,13 +232,7 @@ class AdmissionListController < ApplicationController
     Rails.logger.info("Pricing comparison: changed=#{pricing_changed}, new_record=#{current_finance.new_record?}, requires_confirmation=#{requires_confirmation}")
 
     # Calculate new currency symbol based on the same logic as in show action
-    new_currency_symbol = '€'
-    if %w[Online Remote\ 1 Remote\ 2 Remote\ 3 Undetermined].include?(hub.name)
-      new_currency_symbol = '$'
-    else
-      match = new_pricing.currency.match(/\(([^)]+)\)/) if new_pricing.currency
-      new_currency_symbol = match ? match[1] : '€'
-    end
+    new_currency_symbol = new_pricing.currency_symbol || '€'
 
     render json: {
       requires_confirmation: requires_confirmation,

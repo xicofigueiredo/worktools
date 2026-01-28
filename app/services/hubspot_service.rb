@@ -286,61 +286,49 @@ class HubspotService
   end
 
   def self.create_learner_finances(learner_info, fields)
-    payment_plan = fields[:payment_plan]
-    financial_responsibility = fields[:financial_responsibility]
+  payment_plan = fields[:payment_plan]
+  financial_responsibility = fields[:financial_responsibility]
 
-    finance_attrs = {
-      payment_plan: payment_plan,
-      financial_responsibility: financial_responsibility,
-      discount_mf: 0,
-      scholarship: 0,
-      discount_af: 0,
-      discount_rf: 0
-    }
+  finance_attrs = {
+    payment_plan: payment_plan,
+    financial_responsibility: financial_responsibility,
+    discount_mf: 0,
+    scholarship: 0,
+    discount_af: 0,
+    discount_rf: 0
+  }
 
-    # Fetch pricing tier if hub is associated
-    if learner_info.hub
-      hub = learner_info.hub
-      program = (hub.name == "Online") ? "Online" : "Hybrid"
-      country = hub.country
-      hub_type = hub.hub_type
-      specific_hub = ["Sommerschield", "Tofo", "DHS", "HHS"].include?(hub.name) ? hub.name : "N/A"
-      curriculum = learner_info.curriculum_course_option
+  # Fetch pricing tier if hub is associated
+  if learner_info.hub
+    tier = PricingTierMatcher.for_learner(
+      learner_info,
+      learner_info.curriculum_course_option,
+      learner_info.hub,
+      Date.today.year
+    )
 
-      if country && hub_type && curriculum
-        tier = PricingTier.find_by(
-          model: program,
-          country: country,
-          hub_type: hub_type,
-          specific_hub: specific_hub,
-          curriculum: curriculum
-        )
-
-        if tier
-          finance_attrs[:monthly_fee] = tier.monthly_fee
-          finance_attrs[:admission_fee] = tier.admission_fee
-          finance_attrs[:renewal_fee] = tier.renewal_fee
-          Rails.logger.info("Applied pricing tier for LearnerInfo ID: #{learner_info.id} - Monthly: #{tier.monthly_fee}, Admission: #{tier.admission_fee}, Renewal: #{tier.renewal_fee}")
-        else
-          Rails.logger.warn("No matching pricing tier found for LearnerInfo ID: #{learner_info.id} (program: #{program}, country: #{country}, hub_type: #{hub_type}, specific_hub: #{specific_hub}, curriculum: #{curriculum})")
-        end
-      else
-        Rails.logger.warn("Insufficient data to fetch pricing tier for LearnerInfo ID: #{learner_info.id}")
-      end
+    if tier
+      finance_attrs[:monthly_fee] = tier.monthly_fee
+      finance_attrs[:admission_fee] = tier.admission_fee
+      finance_attrs[:renewal_fee] = tier.renewal_fee
+      Rails.logger.info("Applied pricing tier for LearnerInfo ID: #{learner_info.id} - Tier ID: #{tier.id} (Year: #{academic_year})")
     else
-      Rails.logger.warn("No hub associated for LearnerInfo ID: #{learner_info.id} - Skipping pricing tier lookup")
+      Rails.logger.warn("No matching pricing tier found for LearnerInfo ID: #{learner_info.id} (Hub: #{learner_info.hub.name}, Curriculum: #{learner_info.curriculum_course_option}, Year: #{year})")
     end
-
-    finance_record = learner_info.build_learner_finance(finance_attrs)
-
-    if finance_record.save
-      Rails.logger.info("Successfully created LearnerFinances for LearnerInfo ID: #{learner_info.id}")
-    else
-      Rails.logger.error("Failed to save LearnerFinances for #{learner_info.full_name}: #{finance_record.errors.full_messages.join(', ')}")
-    end
-
-    finance_record
+  else
+    Rails.logger.warn("No hub associated for LearnerInfo ID: #{learner_info.id} - Skipping pricing tier lookup")
   end
+
+  finance_record = learner_info.build_learner_finance(finance_attrs)
+
+  if finance_record.save
+    Rails.logger.info("Successfully created LearnerFinances for LearnerInfo ID: #{learner_info.id}")
+  else
+    Rails.logger.error("Failed to save LearnerFinances for #{learner_info.full_name}: #{finance_record.errors.full_messages.join(', ')}")
+  end
+
+  finance_record
+end
 
   def self.attach_files_for_learner(learner_info, fields)
     file_field_mapping = {
