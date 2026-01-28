@@ -4,63 +4,16 @@
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Edit Activity</h5>
-          <%= link_to csc_diploma_path, class: "btn-close" %>
-        </div>
-        <div class="card-body">
-          <div class="mb-3 p-3 bg-light rounded">
-            <strong>Activity:</strong>
-            <% if @csc_activity.activitable.is_a?(Skill) %>
-              <%= @csc_activity.activitable.extracurricular %>
-            <% elsif @csc_activity.activitable.is_a?(Community) %>
-              <%= @csc_activity.activitable.involved %>
-            <% end %>
             <span class="badge <%= @csc_activity.activitable_type == 'Skill' ? 'bg-info' : 'bg-primary' %> ms-2">
               <%= @csc_activity.activitable_type %>
             </span>
-          </div>
+          <%= link_to csc_diploma_path, class: "btn-close" %>
+        </div>
+        <div class="card-body">
 
           <%= form_with model: @csc_activity, url: csc_activity_path(@csc_activity), method: :patch, data: { controller: "credits-calculator", turbo: false } do |f| %>
             <%= f.hidden_field :credits, data: { credits_calculator_target: "credits" } %>
 
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <%= f.label :hours, class: "form-label" %>
-                <%= f.number_field :hours, class: "form-control", min: 0, step: 1, data: { credits_calculator_target: "hours", action: "input->credits-calculator#calculate change->credits-calculator#calculate keyup->credits-calculator#calculate paste->credits-calculator#handlePaste" } %>
-              </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :weight, class: "form-label" %>
-                <%= f.number_field :weight, class: "form-control", min: 0, max: 200, step: 10, data: { credits_calculator_target: "weight", action: "input->credits-calculator#calculateFinalCredits change->credits-calculator#calculateFinalCredits keyup->credits-calculator#calculateFinalCredits paste->credits-calculator#handlePaste" } %>
-                <small class="form-text text-muted">Percentage (e.g., 50 = 50%)</small>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Base Credits</label>
-                <%
-                  # Calculate base credits from saved credits and weight for display
-                  base_credits_display = '-'
-                  if @csc_activity.credits.present? && @csc_activity.weight.present? && @csc_activity.credits > 0 && @csc_activity.weight > 0
-                    # Reverse calculate: base_credits = final_credits / (weight / 100)
-                    base_credits_display = (@csc_activity.credits / (@csc_activity.weight / 100.0)).round(2)
-                  end
-                %>
-                <input type="text" class="form-control" data-credits-calculator-target="creditsDisplay" readonly value="<%= base_credits_display %>">
-                <small class="form-text text-muted">Hours ÷ 8 (max 1.5)</small>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Final Credits</label>
-                <input type="text" class="form-control" data-credits-calculator-target="finalCreditsDisplay" readonly value="<%= @csc_activity.credits || '-' %>">
-                <small class="form-text text-muted">Credits × Weight</small>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">Rubric Score</label>
-                <%= @csc_activity.rubric_score.present? ? @csc_activity.rubric_score : '-' %>
-              </div>
-            </div>
 
             <h6 class="mb-3">Section 1 - Learner Information</h6>
 
