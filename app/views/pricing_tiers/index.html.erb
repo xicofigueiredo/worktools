@@ -1,331 +1,109 @@
-<style>
-  .pricing-tier-row:hover {
-    background-color: #f8f9fa;
-  }
+<div class="container-fluid">
+  <div class="row min-vh-100">
 
-  .edit-field-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .edit-field-container .field-value {
-    flex: 1;
-  }
-
-  .edit-btn-small {
-    padding: 6px 8px;
-    background: #0d6efd;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    white-space: nowrap;
-    position: relative;
-    transition: background-color 0.2s;
-    min-width: 32px;
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .edit-btn-small:hover {
-    background: #0b5ed7;
-  }
-
-  .save-btn-small {
-    padding: 6px 8px;
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    position: relative;
-    transition: background-color 0.2s;
-    min-width: 32px;
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .save-btn-small:hover {
-    background: #218838;
-  }
-
-  .cancel-btn-small {
-    padding: 6px 8px;
-    background: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    position: relative;
-    transition: background-color 0.2s;
-    min-width: 32px;
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .cancel-btn-small:hover {
-    background: #5a6268;
-  }
-
-  /* Tooltip styles */
-  .edit-btn-small::after,
-  .save-btn-small::after,
-  .cancel-btn-small::after {
-    content: attr(title);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-    margin-bottom: 5px;
-    z-index: 1000;
-  }
-
-  .edit-btn-small:hover::after,
-  .save-btn-small:hover::after,
-  .cancel-btn-small:hover::after {
-    opacity: 1;
-  }
-
-  .edit-input {
-    width: 100%;
-    padding: 4px 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-
-  .edit-textarea {
-    width: 100%;
-    padding: 4px 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 14px;
-    resize: vertical;
-  }
-</style>
-
-<div style="margin-bottom: 20px;">
-  <%= form_with url: pricing_tiers_path, method: :get, local: true do |f| %>
-    <div>
-      <%= f.label :year, "Year", style: "..." %>
-      <%= f.select :year,
-          options_for_select([["All Years", ""]] + @years, params[:year]),
-          {}, style: "..." %>
-    </div>
-
-    <div>
-      <%= f.label :hub_id, "Specific Hub", style: "..." %>
-      <%= f.select :hub_id,
-          options_for_select([["All Hubs", ""], ["Generic (No Specific Hub)", "generic"]] + @specific_hubs, params[:hub_id]),
-          {}, style: "..." %>
-    </div>
-
-    <% end %>
-</div>
-
-<thead>
-  <tr>
-    <th>Year</th> <th>Model</th>
-    <th>Country</th>
-    <th>Hub Type</th>
-    <th>Specific Hub</th>
-    <th>Curriculum</th>
-    <th>Admission Fee</th>
-    <th>Monthly Fee</th>
-    <th>Renewal Fee</th>
-    <th>Invoice To</th>
-    <th>Notes</th>
-  </tr>
-</thead>
-
-<tbody>
-  <% @pricing_tiers.each do |tier| %>
-    <tr class="pricing-tier-row" id="tier-<%= tier.id %>">
-      <td style="padding: 10px 16px;"><%= tier.year %></td>
-
-      <td style="padding: 10px 16px;"><%= tier.model %></td>
-
-      <td style="padding: 10px 16px;"><%= tier.country %></td>
-
-      <td style="padding: 10px 16px;"><%= tier.hub_type %></td>
-
-      <td style="padding: 10px 16px;">
-        <% if tier.hub %>
-          <span style="color: #0d6efd; font-weight: 500;"><%= tier.hub.name %></span>
-        <% else %>
-          <span style="color: #888; font-style: italic;">Generic</span>
+    <div class="col-md-2 border-end py-4">
+      <h6 class="px-3 text-uppercase text-muted small fw-bold mb-3">Countries</h6>
+      <div class="list-group list-group-flush">
+        <% @countries.each do |country| %>
+          <%= link_to country,
+              pricing_tiers_path(year: @selected_year, country: country, hub_type: @selected_hub_type),
+              class: "list-group-item list-group-item-action border-0 px-3 py-2 rounded #{'active fw-bold' if country == @selected_country}" %>
         <% end %>
-      </td>
+      </div>
+    </div>
 
-      <td style="padding: 10px 16px;"><%= tier.curriculum %></td>
+    <div class="col-md-10 py-4 px-md-5">
 
-      <% currency = tier.currency_symbol %>
+      <div class="mb-4">
+        <ul class="nav nav-pills justify-content-center">
+          <% @years.each do |year| %>
+            <li class="nav-item mx-1">
+              <%= link_to year,
+                  pricing_tiers_path(year: year, country: @selected_country, hub_id: @selected_hub_id, hub_type: @selected_hub_type),
+                  class: "nav-link px-4 #{'active shadow-sm' if year == @selected_year}" %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
 
-      <td style="padding: 10px 16px;">
-        <div class="edit-field-container">
-          <span class="view-mode">
-            <%= currency %> <%= number_with_precision(tier.admission_fee, precision: 2) %>
-          </span>
+      <% if @available_hubs.any? %>
+        <ul class="nav nav-tabs border-bottom-0 ms-1">
+          <% @available_hubs.each do |hub| %>
+            <% is_active = (hub[:hub_id].to_s == @selected_hub_id.to_s && hub[:type] == @selected_hub_type) %>
+            <li class="nav-item">
+              <%= link_to hub[:name],
+                  pricing_tiers_path(year: @selected_year, country: @selected_country, hub_id: hub[:hub_id], hub_type: hub[:type]),
+                  class: "nav-link #{'active fw-bold' if is_active} #{'text-muted' unless is_active}" %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <div class="card shadow-sm border-0 mb-5">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-center">
+              <thead class="bg-light">
+                <tr>
+                  <th class="text-start ps-4 py-3 text-secondary text-uppercase small" style="width: 25%;">Curriculum</th>
+                  <th class="py-3 text-secondary text-uppercase small">Admission</th>
+                  <th class="py-3 text-secondary text-uppercase small">Monthly</th>
+                  <th class="py-3 text-secondary text-uppercase small">Renewal</th>
+                  <th class="py-3 text-secondary text-uppercase small">Invoice To</th>
+                  <th class="py-3 text-secondary text-uppercase small">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if @curriculums.empty? %>
+                  <tr>
+                    <td colspan="6" class="py-5 text-muted">No pricing data found for this selection.</td>
+                  </tr>
+                <% else %>
+                  <% @curriculums.each do |curr| %>
+                    <% tier = @matrix_tiers[curr] %>
+                    <tr>
+                      <td class="text-start ps-4 fw-bold text-dark"><%= curr %></td>
+
+                      <td class="text-dark">
+                        <% if tier.admission_fee.to_f.positive? %>
+                          <%= tier.currency_symbol %><%= number_with_precision(tier.admission_fee, precision: 2) %>
+                        <% else %>
+                          -
+                        <% end %>
+                      </td>
+
+                      <td class="text-dark">
+                        <% if tier.monthly_fee.to_f.positive? %>
+                          <%= tier.currency_symbol %><%= number_with_precision(tier.monthly_fee, precision: 2) %>
+                        <% else %>
+                          -
+                        <% end %>
+                      </td>
+
+                      <td class="text-dark">
+                        <% if tier.renewal_fee.to_f.positive? %>
+                          <%= tier.currency_symbol %><%= number_with_precision(tier.renewal_fee, precision: 2) %>
+                        <% else %>
+                          -
+                        <% end %>
+                      </td>
+
+                      <td class="text-dark">
+                         <%= tier.invoice_recipient.presence || "-" %>
+                      </td>
+
+                      <td class="text-dark small">
+                        <%= tier.notes.presence || "-" %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
           </div>
-      </td>
+        </div>
+      </div>
 
-      </tr>
-  <% end %>
-</tbody>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const csrfToken = document.querySelector('[name="csrf-token"]').content;
-
-  // Store original values
-  const originalValues = {};
-
-  document.querySelectorAll('.edit-field-container').forEach(container => {
-    const field = container.querySelector('[data-field]').dataset.field;
-    const tierId = container.querySelector('.edit-trigger').dataset.tierId;
-    const key = `${tierId}-${field}`;
-    const viewValue = container.querySelector('.view-mode').textContent.trim();
-    originalValues[key] = viewValue;
-  });
-
-  // Edit button click handlers
-  document.querySelectorAll('.edit-trigger').forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      const tierId = this.dataset.tierId;
-      const field = this.dataset.field;
-      const container = this.closest('.edit-field-container');
-      const key = `${tierId}-${field}`;
-
-      // Reset input to original database value
-      const input = container.querySelector('.edit-mode [data-field]');
-      const originalValue = originalValues[key];
-
-      if (input.tagName === 'TEXTAREA') {
-        input.value = originalValue;
-      } else if (input.type === 'number') {
-        // Remove formatting for number inputs
-        input.value = originalValue.replace(/,/g, '');
-      } else {
-        input.value = originalValue;
-      }
-
-      // Hide view mode and show edit mode
-      container.querySelector('.view-mode').style.display = 'none';
-      container.querySelector('.edit-mode').style.display = 'block';
-
-      // Hide edit button, show save/cancel buttons
-      this.style.display = 'none';
-      container.querySelector('.edit-actions').style.display = 'flex';
-      container.querySelector('.edit-actions').style.gap = '4px';
-    });
-  });
-
-  // Cancel button click handlers
-  document.querySelectorAll('.cancel-trigger').forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      const container = this.closest('.edit-field-container');
-
-      // Show view mode and hide edit mode
-      container.querySelector('.view-mode').style.display = 'block';
-      container.querySelector('.edit-mode').style.display = 'none';
-
-      // Show edit button, hide save/cancel buttons
-      container.querySelector('.edit-trigger').style.display = 'inline-block';
-      container.querySelector('.edit-actions').style.display = 'none';
-
-      // Reset input value to original
-      const input = container.querySelector('[data-field]');
-      const originalValue = container.querySelector('.view-mode').textContent.trim();
-      if (input.tagName === 'TEXTAREA') {
-        input.value = originalValue;
-      } else if (input.type === 'number') {
-        // Parse the number from the formatted display
-        input.value = originalValue.replace(/,/g, '');
-      } else {
-        input.value = originalValue;
-      }
-    });
-  });
-
-  // Save button click handlers
-  document.querySelectorAll('.save-trigger').forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      const tierId = this.dataset.tierId;
-      const field = this.dataset.field;
-      const container = this.closest('.edit-field-container');
-      const input = container.querySelector('.edit-mode [data-field]');
-      const newValue = input.value;
-
-      const data = {
-        pricing_tier: {
-          [field]: newValue
-        }
-      };
-
-      fetch(`/pricing_tiers/${tierId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          // Update the display value
-          const viewSpan = container.querySelector('.view-mode');
-          if (field === 'admission_fee' || field === 'monthly_fee' || field === 'renewal_fee') {
-            // Format as currency
-            const formatted = parseFloat(newValue || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            viewSpan.textContent = formatted;
-          } else {
-            viewSpan.textContent = newValue;
-          }
-
-          // Switch back to view mode
-          viewSpan.style.display = 'block';
-          container.querySelector('.edit-mode').style.display = 'none';
-          container.querySelector('.edit-trigger').style.display = 'inline-block';
-          container.querySelector('.edit-actions').style.display = 'none';
-
-          // Show success message
-          const successMsg = document.createElement('div');
-          successMsg.textContent = '✓ Saved';
-          successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 12px 20px; border-radius: 6px; z-index: 10000; box-shadow: 0 2px 8px rgba(0,0,0,0.2);';
-          document.body.appendChild(successMsg);
-          setTimeout(() => successMsg.remove(), 2000);
-        } else {
-          alert('Error updating pricing tier: ' + (result.errors ? result.errors.join(', ') : 'Unknown error'));
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating the pricing tier.');
-      });
-    });
-  });
-});
-</script>
+    </div>
+  </div>
+</div>
