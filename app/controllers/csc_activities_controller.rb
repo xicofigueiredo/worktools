@@ -60,7 +60,9 @@ class CscActivitiesController < ApplicationController
     params.require(:csc_activity).permit(
       :hours, :weight, :credits, :validated,
       :full_name, :date_of_submission, :expected_hours,
-      :partner, :activity_description, :reflection,
+      :activity_name, :activity_type, :start_date, :end_date,
+      :partner, :partner_person, :partner_contact, :confirmation_participation,
+      :activity_description, :reflection,
       :unpaid, :not_academic, :time_investment, :evidence,
       :review_date, :reviewed_by, :notes,
       :planing, :effort, :skill, :community,

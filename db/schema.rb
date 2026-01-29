@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_01_27_153554) do
+ActiveRecord::Schema[7.0].define(version: 2026_01_28_155648) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -295,6 +295,13 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_27_153554) do
     t.integer "effort"
     t.integer "skill"
     t.integer "community"
+    t.string "partner_person"
+    t.string "partner_contact"
+    t.string "confirmation_participation"
+    t.string "activity_name"
+    t.string "activity_type"
+    t.date "start_date"
+    t.date "end_date"
     t.index ["activitable_type", "activitable_id"], name: "index_csc_activities_on_activitable"
     t.index ["activitable_type", "activitable_id"], name: "index_csc_activities_on_activitable_unique", unique: true
     t.index ["csc_diploma_id"], name: "index_csc_activities_on_csc_diploma_id"

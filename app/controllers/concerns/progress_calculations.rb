@@ -87,12 +87,12 @@ module ProgressCalculations
         elsif !topic.done && topic.deadline && topic.deadline < Date.today && (topic.time.positive? || timeline.subject.category == 0 || timeline.subject.category == 1 || timeline.subject.category == 2)
           balance -= 1
         end
-        percentage = topic.time / total_time if topic.time.positive? && total_time.positive?
+        percentage = (topic.time.positive? && total_time.positive?) ? (topic.time / total_time) : nil
 
         # Sum progress if topic is done (guard against NaN/nil percentages)
-        progress += percentage if topic.done && percentage.to_f.finite?
+        progress += percentage if topic.done && percentage && percentage.to_f.finite?
         # Sum expected progress if deadline has passed
-        expected_progress += percentage if topic.deadline && topic.deadline < Date.today && percentage.to_f.finite?
+        expected_progress += percentage if topic.deadline && topic.deadline < Date.today && percentage && percentage.to_f.finite?
       end
 
 
