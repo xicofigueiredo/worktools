@@ -6,6 +6,9 @@ class Skill < ApplicationRecord
   after_create :create_report_activity
   after_update :update_report_activity
 
+  after_create :create_csc_activity
+  after_update :update_csc_activity
+
   CATEGORY_GROUPS = {
     "Creative / Arts" => [
       "Visual Arts",
@@ -59,5 +62,14 @@ class Skill < ApplicationRecord
       activity: self.extracurricular,
       goal: self.smartgoals
     )
+  end
+
+  def create_csc_activity
+    CscActivity.create(activitable: self, full_name: self.sprint_goal.user.full_name, date_of_submission: self.created_at, activity_name: self.extracurricular, activity_type: "skill", start_date: self.sprint_goal.sprint.start_date, end_date: self.sprint_goal.sprint.end_date)
+  end
+
+  def update_csc_activity
+    return unless self.sprint_goal.user.csc_diploma.csc_activities.where(activitable: self).present?
+    self.sprint_goal.user.csc_diploma.csc_activities.where(activitable: self).first.update(activitable: self)
   end
 end

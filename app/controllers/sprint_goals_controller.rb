@@ -113,23 +113,36 @@ class SprintGoalsController < ApplicationController
   def update
     clean_params = sprint_goal_params
 
-    # filtrar communites vazias
+    # filtrar communities vazias (only filter out existing records with no content)
     clean_params[:communities_attributes]&.each do |key, attributes|
-      if attributes.keys == ["id"] || (attributes[:involved].blank? && attributes[:smartgoals].blank? && attributes[:difficulties].blank? && attributes[:plan].blank?)
+      has_id = attributes[:id].present?
+      has_content = attributes[:involved].present? || attributes[:smartgoals].present? || attributes[:difficulties].present? || attributes[:plan].present? || (attributes[:categories].present? && attributes[:categories].reject(&:blank?).any?)
+
+      # Only filter out records that have an ID but no content (existing empty records)
+      # Keep new records (no ID) even if partially empty, let the model handle validation
+      if has_id && !has_content
         clean_params[:communities_attributes].delete(key)
       end
     end
 
-    # filtrar skills vazias
+    # filtrar skills vazias (only filter out existing records with no content)
     clean_params[:skills_attributes]&.each do |key, attributes|
-      if attributes.keys == ["id"] || (attributes[:extracurricular].blank? && attributes[:smartgoals].blank? && attributes[:difficulties].blank? && attributes[:plan].blank?)
+      has_id = attributes[:id].present?
+      has_content = attributes[:extracurricular].present? || attributes[:smartgoals].present? || attributes[:difficulties].present? || attributes[:plan].present? || (attributes[:categories].present? && attributes[:categories].reject(&:blank?).any?)
+
+      # Only filter out records that have an ID but no content (existing empty records)
+      if has_id && !has_content
         clean_params[:skills_attributes].delete(key)
       end
     end
 
-    # filtrar knodleges vazias
+    # filtrar knowledges vazias (only filter out existing records with no content)
     clean_params[:knowledges_attributes]&.each do |key, attributes|
-      if attributes.keys == ["id"] || (attributes[:subject_name].present? && attributes[:subject_name].blank?)
+      has_id = attributes[:id].present?
+      has_content = attributes[:subject_name].present? || attributes[:difficulties].present? || attributes[:plan].present?
+
+      # Only filter out records that have an ID but no content (existing empty records)
+      if has_id && !has_content
         clean_params[:knowledges_attributes].delete(key)
       end
     end

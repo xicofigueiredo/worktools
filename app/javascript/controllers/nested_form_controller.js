@@ -139,15 +139,16 @@ export default class extends Controller {
 
       content = this.disableOptions(content, this.createdKnowledges);
 
-      if (kind === "skills") {
-        this.skillsContainerTarget.insertAdjacentHTML("beforeend", content);
-        initializeCategoryMultiselects();
-      } else if (kind === "communities") {
-        this.communitiesContainerTarget.insertAdjacentHTML(
-          "beforeend",
-          content
-        );
-      } else if (kind === "knowledges") {
+    if (kind === "skills") {
+      this.skillsContainerTarget.insertAdjacentHTML("beforeend", content);
+      initializeCategoryMultiselects();
+    } else if (kind === "communities") {
+      this.communitiesContainerTarget.insertAdjacentHTML(
+        "beforeend",
+        content
+      );
+      initializeCategoryMultiselects();
+    } else if (kind === "knowledges") {
         this.knowledgesContainerTarget.insertAdjacentHTML("beforeend", content);
       }
 

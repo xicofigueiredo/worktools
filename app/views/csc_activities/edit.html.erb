@@ -1,291 +1,339 @@
 <div class="container mt-4">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">Edit Activity</h5>
-            <span class="badge <%= @csc_activity.activitable_type == 'Skill' ? 'bg-info' : 'bg-primary' %> ms-2">
-              <%= @csc_activity.activitable_type %>
-            </span>
-          <%= link_to csc_diploma_path, class: "btn-close" %>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-2">
+      <h1>Edit Activity</h1>
+      <span class="badge <%= @csc_activity.activitable_type == 'Skill' ? 'bg-info' : 'bg-primary' %> fs-6">
+        <%= @csc_activity.activitable_type %>
+      </span>
+    </div>
+    <%= link_to csc_diploma_path, class: "btn btn-outline-secondary" do %>
+      <i class="fa-solid fa-arrow-left me-1"></i> Back to Diploma
+    <% end %>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <%= form_with model: @csc_activity, url: csc_activity_path(@csc_activity), method: :patch, data: { controller: "credits-calculator", turbo: false } do |f| %>
+        <%= f.hidden_field :credits, data: { credits_calculator_target: "credits" } %>
+
+        <h5 class="mb-3 text-primary"><i class="fa-solid fa-user me-2"></i>Section 1 – Learner Information</h5>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <%= f.label :full_name, "Full Name", class: "form-label" %>
+            <%= f.text_field :full_name, class: "form-control" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :date_of_submission, "Date of Submission", class: "form-label" %>
+            <%= f.date_field :date_of_submission, class: "form-control" %>
+          </div>
         </div>
-        <div class="card-body">
 
-          <%= form_with model: @csc_activity, url: csc_activity_path(@csc_activity), method: :patch, data: { controller: "credits-calculator", turbo: false } do |f| %>
-            <%= f.hidden_field :credits, data: { credits_calculator_target: "credits" } %>
+        <hr class="my-4">
 
-
-            <h6 class="mb-3">Section 1 - Learner Information</h6>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <%= f.label :full_name, "Full Name", class: "form-label" %>
-                <%= f.text_field :full_name, class: "form-control" %>
+        <h5 class="mb-3 text-primary"><i class="fa-solid fa-clipboard-list me-2"></i>Section 2 – Activity Information</h5>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <%= f.label :activity_name, "Activity Title", class: "form-label" %>
+            <% default_name = @csc_activity.activity_name.presence || @csc_activity.activitable&.try(:extracurricular) || @csc_activity.activitable&.try(:involved) %>
+            <%= f.text_field :activity_name, value: default_name, class: "form-control" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :activity_type, "Activity Type (Community / Skills)", class: "form-label" %>
+            <% default_type = @csc_activity.activity_type.presence || @csc_activity.activitable_type %>
+            <%= f.text_field :activity_type, value: default_type, class: "form-control" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :start_date, "Start Date", class: "form-label" %>
+            <%= f.date_field :start_date, class: "form-control" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :end_date, "End Date", class: "form-label" %>
+            <%= f.date_field :end_date, class: "form-control" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :expected_hours, "Total Hours Expected", class: "form-label" %>
+            <%= f.number_field :expected_hours, class: "form-control", min: 0, step: 1 %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :hours, "Total Hours Completed", class: "form-label" %>
+            <%= f.number_field :hours, class: "form-control", min: 0, step: 1 %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :credits, "Credits Earned", class: "form-label" %>
+            <div class="form-control bg-light"><%= @csc_activity.credits || '-' %></div>
+            <small class="text-muted">1 credit = 8 verified hours</small>
+          </div>
+        </div>
+        <div class="mb-3">
+          <%= f.label :tags, "Tags (select all that apply)", class: "form-label" %>
+          <div class="row">
+            <% CscActivity::TAG_OPTIONS.each do |tag| %>
+              <div class="col-md-4 col-sm-6 mb-2">
+                <div class="form-check">
+                  <%= check_box_tag "csc_activity[tags][]", tag, @csc_activity.tags&.include?(tag), id: "csc_activity_tags_#{tag.downcase.gsub(' ', '_')}", class: "form-check-input" %>
+                  <%= label_tag "csc_activity_tags_#{tag.downcase.gsub(' ', '_')}", tag, class: "form-check-label" %>
+                </div>
               </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :date_of_submission, "Date of Submission", class: "form-label" %>
-                <%= f.date_field :date_of_submission, class: "form-control" %>
+            <% end %>
+          </div>
+          <%= hidden_field_tag "csc_activity[tags][]", "" %>
+          <small class="text-muted">Note: Build Week activities (up to 4 per level) may count toward CSC credits if verified and documented according to CSC guidelines.</small>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="mb-3 text-primary"><i class="fa-solid fa-handshake me-2"></i>Section 3 – Partner / Organization (if applicable)</h5>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <%= f.label :partner, "Partner / Organization Name", class: "form-label" %>
+            <%= f.text_field :partner, class: "form-control" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :partner_person, "Contact Person", class: "form-label" %>
+            <%= f.text_field :partner_person, class: "form-control" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :partner_contact, "Email / Phone", class: "form-label" %>
+            <%= f.text_field :partner_contact, class: "form-control" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :confirmation_participation, "Confirmation of Participation (signature or email)", class: "form-label" %>
+            <%= f.text_field :confirmation_participation, class: "form-control" %>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="mb-3 text-primary"><i class="fa-solid fa-pen-to-square me-2"></i>Section 4 – Description & Reflection</h5>
+        <div class="row">
+          <div class="col-12 mb-3">
+            <%= f.label :activity_description, "Describe your activity", class: "form-label" %>
+            <%= f.text_area :activity_description, class: "form-control", rows: 4 %>
+          </div>
+          <div class="col-12 mb-3">
+            <%= f.label :reflection, class: "form-label" %>
+            <span class="text-muted">Reflection (minimum 150 words): What did you do? What challenges did you face? What did you learn? How will this experience help you in the future?</span>
+            <%= f.text_area :reflection, class: "form-control", rows: 6 %>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="mb-3 text-primary"><i class="fa-solid fa-file-lines me-2"></i>Section 5 – Evidence & Documentation</h5>
+        <p class="text-muted mb-3">Attach supporting evidence such as photos, certificates, or partner confirmation emails.</p>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <%= f.label :files, "Attach files or links", class: "form-label" %>
+            <%= f.file_field :files, multiple: true, class: "form-control", accept: "image/*,.pdf" %>
+            <% if @csc_activity.files.attached? %>
+              <div class="mt-2">
+                <small class="text-muted">Current files:</small>
+                <ul class="list-unstyled mt-1">
+                  <% @csc_activity.files.each do |file| %>
+                    <li>
+                      <%= link_to file.filename.to_s, rails_blob_path(file, disposition: "attachment"), class: "text-decoration-none" %>
+                      <%= link_to "Remove", purge_attachment_csc_activity_path(@csc_activity, attachment_id: file.id), method: :delete, class: "text-danger ms-2", data: { confirm: "Are you sure?" } %>
+                    </li>
+                  <% end %>
+                </ul>
               </div>
+            <% end %>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="mb-3 text-primary"><i class="fa-solid fa-check-circle me-2"></i>Section 6 – Eligibility Confirmation</h5>
+        <p class="text-muted mb-3">Tick (✓) each statement to confirm your activity meets the CSC requirements:</p>
+        <div class="mb-3">
+          <div class="form-check mb-2">
+            <%= f.check_box :unpaid, class: "form-check-input", id: "unpaid" %>
+            <%= f.label :unpaid, "The activity was unpaid (not a job or paid service).", class: "form-check-label" %>
+          </div>
+          <div class="form-check mb-2">
+            <%= f.check_box :not_academic, class: "form-check-input", id: "not_academic" %>
+            <%= f.label :not_academic, "The activity was not part of academic coursework or graded work.", class: "form-check-label" %>
+          </div>
+          <div class="form-check mb-2">
+            <%= f.check_box :time_investment, class: "form-check-input", id: "time_investment" %>
+            <%= f.label :time_investment, "The activity involved sustained effort and time investment.", class: "form-check-label" %>
+          </div>
+          <div class="form-check mb-2">
+            <%= f.check_box :evidence, class: "form-check-input", id: "evidence" %>
+            <%= f.label :evidence, "I have provided evidence/documentation for this activity.", class: "form-check-label" %>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="mb-3 text-primary"><i class="fa-solid fa-user-check me-2"></i>Section 7 – Staff Validation (Learning Coach / Reviewer)</h5>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <%= f.label :review_date, "Review Date", class: "form-label" %>
+            <%= f.date_field :review_date, class: "form-control" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :reviewed_by, "Reviewed by (Name)", class: "form-label" %>
+            <%= f.text_field :reviewed_by, class: "form-control" %>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="mb-3 text-primary"><i class="fa-solid fa-star me-2"></i>Rubric Scoring</h5>
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 20%;">Domain</th>
+                <th style="width: 20%;">4 - Exceeds Expectations</th>
+                <th style="width: 20%;">3 - Meets Expectations</th>
+                <th style="width: 20%;">2 - Approaches Expectations</th>
+                <th style="width: 20%;">1 - Below Expectations</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Planning</strong></td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="planing_4">
+                    <%= f.radio_button :planing, 4, class: "d-none", id: "planing_4" %>
+                    <small class="text-muted">Demonstrates exceptional dedication (>100 hours/year); consistent engagement.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="planing_3">
+                    <%= f.radio_button :planing, 3, class: "d-none", id: "planing_3" %>
+                    <small class="text-muted">Meets expected time commitment; regular participation.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="planing_2">
+                    <%= f.radio_button :planing, 2, class: "d-none", id: "planing_2" %>
+                    <small class="text-muted">Inconsistent participation; below expected hours.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="planing_1">
+                    <%= f.radio_button :planing, 1, class: "d-none", id: "planing_1" %>
+                    <small class="text-muted">Minimal or no participation.</small>
+                  </label>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Effort</strong></td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="effort_4">
+                    <%= f.radio_button :effort, 4, class: "d-none", id: "effort_4" %>
+                    <small class="text-muted">Exceptional effort and commitment; goes above and beyond expectations.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="effort_3">
+                    <%= f.radio_button :effort, 3, class: "d-none", id: "effort_3" %>
+                    <small class="text-muted">Consistent effort; meets expectations.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="effort_2">
+                    <%= f.radio_button :effort, 2, class: "d-none", id: "effort_2" %>
+                    <small class="text-muted">Variable effort; sometimes meets expectations.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="effort_1">
+                    <%= f.radio_button :effort, 1, class: "d-none", id: "effort_1" %>
+                    <small class="text-muted">Minimal effort; does not meet expectations.</small>
+                  </label>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Skill</strong></td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="skill_4">
+                    <%= f.radio_button :skill, 4, class: "d-none", id: "skill_4" %>
+                    <small class="text-muted">Demonstrates advanced skills; shows leadership and innovation.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="skill_3">
+                    <%= f.radio_button :skill, 3, class: "d-none", id: "skill_3" %>
+                    <small class="text-muted">Demonstrates competent skills; applies knowledge effectively.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="skill_2">
+                    <%= f.radio_button :skill, 2, class: "d-none", id: "skill_2" %>
+                    <small class="text-muted">Basic skills demonstrated; needs development.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="skill_1">
+                    <%= f.radio_button :skill, 1, class: "d-none", id: "skill_1" %>
+                    <small class="text-muted">Limited or no skill demonstration.</small>
+                  </label>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Community</strong></td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="community_4">
+                    <%= f.radio_button :community, 4, class: "d-none", id: "community_4" %>
+                    <small class="text-muted">Significant positive impact on community; demonstrates leadership and initiative.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="community_3">
+                    <%= f.radio_button :community, 3, class: "d-none", id: "community_3" %>
+                    <small class="text-muted">Positive contribution to community; active engagement.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="community_2">
+                    <%= f.radio_button :community, 2, class: "d-none", id: "community_2" %>
+                    <small class="text-muted">Limited community engagement; minimal impact.</small>
+                  </label>
+                </td>
+                <td>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="community_1">
+                    <%= f.radio_button :community, 1, class: "d-none", id: "community_1" %>
+                    <small class="text-muted">No evidence of community engagement or impact.</small>
+                  </label>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <style>
+          .table tbody td:has(input[type="radio"]:checked) {
+            background-color: #d1e7dd;
+          }
+          .table tbody td label:hover {
+            background-color: #d6f10f;
+          }
+        </style>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="form-check">
+              <%= f.check_box :validated, class: "form-check-input", id: "validated" %>
+              <%= f.label :validated, "Validated", class: "form-check-label" %>
             </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :notes, "Comments / Notes", class: "form-label" %>
+            <%= f.text_area :notes, class: "form-control", rows: 4 %>
+          </div>
+        </div>
 
-            <h6 class="mb-3">Section 2 - Activity Information</h6>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <%= f.label :activity_name, "Activity Name", class: "form-label" %>
-                <%= f.text_field :activity_name, class: "form-control" %>
-              </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :activity_type, "Activity Type", class: "form-label" %>
-                <%= f.text_field :activity_type, class: "form-control" %>
-              </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :start_date, "Start Date", class: "form-label" %>
-                <%= f.date_field :start_date, class: "form-control" %>
-              </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :end_date, "End Date", class: "form-label" %>
-                <%= f.date_field :end_date, class: "form-control" %>
-              </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :expected_hours, "Expected Hours", class: "form-label" %>
-                <%= f.number_field :expected_hours, class: "form-control", min: 0, step: 1 %>
-              </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :hours, "Hours", class: "form-label" %>
-                <%= f.number_field :hours, class: "form-control", min: 0, step: 1 %>
-              </div>
-            </div>
-
-            <h6 class="mb-3">Section 3 - Partner</h6>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <%= f.label :partner, "Partner", class: "form-label" %>
-                <%= f.text_field :partner, class: "form-control" %>
-              </div>
-            </div>
-
-            <h6 class="mb-3">Section 4 - Description & Reflection</h6>
-              <div class="col-md-6 mb-3">
-                <%= f.label :activity_description, "Activity Description", class: "form-label" %>
-                <%= f.text_area :activity_description, class: "form-control", rows: 4 %>
-              </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :reflection, "Reflection", class: "form-label" %>
-                <%= f.text_area :reflection, class: "form-control", rows: 4 %>
-              </div>
-            </div>
-
-            <h6 class="mb-3">Section 5 - Evidence & Documentation</h6>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <%= f.label :files, "Files", class: "form-label" %>
-                <%= f.file_field :files, multiple: true, class: "form-control", accept: "image/*,.pdf" %>
-                <% if @csc_activity.files.attached? %>
-                  <div class="mt-2">
-                    <small class="text-muted">Current files:</small>
-                    <ul class="list-unstyled mt-1">
-                      <% @csc_activity.files.each do |file| %>
-                        <li>
-                          <%= link_to file.filename.to_s, rails_blob_path(file, disposition: "attachment"), class: "text-decoration-none" %>
-                          <%= link_to "Remove", purge_attachment_csc_activity_path(@csc_activity, attachment_id: file.id), method: :delete, class: "text-danger ms-2", data: { confirm: "Are you sure?" } %>
-                        </li>
-                      <% end %>
-                    </ul>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-            <h6 class="mb-3">Section 6 - Eligibility Confirmation</h6>
-
-            <div class="mb-3">
-              <%= f.label :tags, "Tags (select all that apply)", class: "form-label" %>
-              <div class="row">
-                <% CscActivity::TAG_OPTIONS.each do |tag| %>
-                  <div class="col-md-4 col-sm-6 mb-2">
-                    <div class="form-check">
-                      <%= check_box_tag "csc_activity[tags][]", tag, @csc_activity.tags&.include?(tag), id: "csc_activity_tags_#{tag.downcase.gsub(' ', '_')}", class: "form-check-input" %>
-                      <%= label_tag "csc_activity_tags_#{tag.downcase.gsub(' ', '_')}", tag, class: "form-check-label" %>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-              <%= hidden_field_tag "csc_activity[tags][]", "" %>
-            </div>
-
-            <h6 class="mb-3">Section 7 - Staff Validation(Learning Coach/Reviewer)</h6>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <%= f.label :review_date, "Review Date", class: "form-label" %>
-                <%= f.date_field :review_date, class: "form-control" %>
-              </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :reviewed_by, "Reviewed By", class: "form-label" %>
-                <%= f.text_field :reviewed_by, class: "form-control" %>
-              </div>
-            </div>
-
-            <h6 class="mb-3 mt-4">Rubric Scoring</h6>
-            <div class="table-responsive mb-4">
-              <table class="table table-bordered table-sm">
-                <thead class="table-light">
-                  <tr>
-                    <th style="width: 20%;">Domain</th>
-                    <th style="width: 20%;">4 - Exceeds Expectations</th>
-                    <th style="width: 20%;">3 - Meets Expectations</th>
-                    <th style="width: 20%;">2 - Approaches Expectations</th>
-                    <th style="width: 20%;">1 - Below Expectations</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Planning</strong></td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :planing, 4, class: "form-check-input", id: "planing_4" %>
-                        <label class="form-check-label" for="planing_4">4</label>
-                      </div>
-                      <small class="text-muted">Demonstrates exceptional dedication (>100 hours/year); consistent engagement.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :planing, 3, class: "form-check-input", id: "planing_3" %>
-                        <label class="form-check-label" for="planing_3">3</label>
-                      </div>
-                      <small class="text-muted">Meets expected time commitment; regular participation.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :planing, 2, class: "form-check-input", id: "planing_2" %>
-                        <label class="form-check-label" for="planing_2">2</label>
-                      </div>
-                      <small class="text-muted">Inconsistent participation; below expected hours.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :planing, 1, class: "form-check-input", id: "planing_1" %>
-                        <label class="form-check-label" for="planing_1">1</label>
-                      </div>
-                      <small class="text-muted">Minimal or no participation.</small>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Effort</strong></td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :effort, 4, class: "form-check-input", id: "effort_4" %>
-                        <label class="form-check-label" for="effort_4">4</label>
-                      </div>
-                      <small class="text-muted">Exceptional effort and commitment; goes above and beyond expectations.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :effort, 3, class: "form-check-input", id: "effort_3" %>
-                        <label class="form-check-label" for="effort_3">3</label>
-                      </div>
-                      <small class="text-muted">Consistent effort; meets expectations.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :effort, 2, class: "form-check-input", id: "effort_2" %>
-                        <label class="form-check-label" for="effort_2">2</label>
-                      </div>
-                      <small class="text-muted">Variable effort; sometimes meets expectations.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :effort, 1, class: "form-check-input", id: "effort_1" %>
-                        <label class="form-check-label" for="effort_1">1</label>
-                      </div>
-                      <small class="text-muted">Minimal effort; does not meet expectations.</small>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Skill</strong></td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :skill, 4, class: "form-check-input", id: "skill_4" %>
-                        <label class="form-check-label" for="skill_4">4</label>
-                      </div>
-                      <small class="text-muted">Demonstrates advanced skills; shows leadership and innovation.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :skill, 3, class: "form-check-input", id: "skill_3" %>
-                        <label class="form-check-label" for="skill_3">3</label>
-                      </div>
-                      <small class="text-muted">Demonstrates competent skills; applies knowledge effectively.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :skill, 2, class: "form-check-input", id: "skill_2" %>
-                        <label class="form-check-label" for="skill_2">2</label>
-                      </div>
-                      <small class="text-muted">Basic skills demonstrated; needs development.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :skill, 1, class: "form-check-input", id: "skill_1" %>
-                        <label class="form-check-label" for="skill_1">1</label>
-                      </div>
-                      <small class="text-muted">Limited or no skill demonstration.</small>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Community</strong></td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :community, 4, class: "form-check-input", id: "community_4" %>
-                        <label class="form-check-label" for="community_4">4</label>
-                      </div>
-                      <small class="text-muted">Significant positive impact on community; demonstrates leadership and initiative.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :community, 3, class: "form-check-input", id: "community_3" %>
-                        <label class="form-check-label" for="community_3">3</label>
-                      </div>
-                      <small class="text-muted">Positive contribution to community; active engagement.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :community, 2, class: "form-check-input", id: "community_2" %>
-                        <label class="form-check-label" for="community_2">2</label>
-                      </div>
-                      <small class="text-muted">Limited community engagement; minimal impact.</small>
-                    </td>
-                    <td>
-                      <div class="form-check">
-                        <%= f.radio_button :community, 1, class: "form-check-input", id: "community_1" %>
-                        <label class="form-check-label" for="community_1">1</label>
-                      </div>
-                      <small class="text-muted">No evidence of community engagement or impact.</small>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <%= f.label :validated, "Validated", class: "form-label" %>
-                <%= f.check_box :validated, class: "form-check-input" %>
-              </div>
-              <div class="col-md-6 mb-3">
-                <%= f.label :notes, "Notes", class: "form-label" %>
-                <%= f.text_area :notes, class: "form-control", rows: 4 %>
-              </div>
-            </div>
-
-
-            <div class="d-flex justify-content-between">
-              <%= link_to "Cancel", csc_diploma_path, class: "btn btn-secondary" %>
-              <%= f.submit "Save Changes", class: "btn btn-primary" %>
-            </div>
+        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+          <%= link_to csc_diploma_path, class: "btn btn-outline-secondary" do %>
+            <i class="fa-solid fa-arrow-left me-1"></i> Cancel
           <% end %>
+          <%= f.submit "Save Changes", class: "btn btn-primary" %>
         </div>
-      </div>
+      <% end %>
     </div>
   </div>
 </div>

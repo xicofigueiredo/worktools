@@ -61,9 +61,9 @@
                 <tr data-controller="activity-row-calculator" data-activity-type="<%= activity.activitable_type %>" class="text-center">
                   <td class="text-start">
                     <% if activity.activitable.is_a?(Skill) %>
-                      <%= activity.activitable.extracurricular %>
+                      <%= activity.activity_name || activity.activitable.extracurricular %>
                     <% elsif activity.activitable.is_a?(Community) %>
-                      <%= activity.activitable.involved %>
+                      <%= activity.activity_name || activity.activitable.involved %>
                     <% end %>
                   </td>
                   <td>
