@@ -15,7 +15,7 @@
 
     <div style="display: flex; flex-direction: column;">
       <%= form.label :role, style: "font-weight: bold; margin-bottom: 4px;" %>
-      <%= form.select :role, %w[learner lc cm guardian exams admin edu staff admissions finance ops it], { include_blank: true }, class: "form-input" %>
+      <%= form.select :role, %w[learner lc rm cm guardian exams admin edu staff admissions finance ops it], { include_blank: true }, class: "form-input" %>
     </div>
 
     <% if @is_learner || @is_admin %>
@@ -45,7 +45,7 @@
       </div>
     <% end %>
 
-    <% if @is_learner || @is_admin || @is_lc %>
+    <% if @is_learner || @is_admin || @is_lc || @is_rm %>
       <div data-controller="hub-associations"
            data-hub-associations-user-id-value="<%= @user.id %>"
            data-hub-associations-main-hub-id-value="<%= @user.users_hubs.find_by(main: true)&.hub&.id %>">
