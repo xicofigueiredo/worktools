@@ -2,35 +2,30 @@ class PricingTiersController < ApplicationController
   before_action :require_admin_or_admissions
 
   def index
-    # 1. Setup Navigation Options
+    # Setup Navigation
     @years = PricingTier.distinct.pluck(:year).compact.sort.reverse
     @countries = PricingTier.distinct.pluck(:country).compact.sort
 
-    # 2. Determine Current Year & Country (Default to latest/first)
+    # Defaults
     @selected_year = params[:year].present? ? params[:year].to_i : @years.first
     @selected_country = params[:country].presence || @countries.first
 
-    # 3. Fetch Available Hubs for this specific context
+    # Available Hubs
     context_tiers = PricingTier.where(year: @selected_year, country: @selected_country)
-
-    # Build a clean list of options: { type, hub_id, name }
     @available_hubs = context_tiers.pluck(:hub_type, :hub_id).uniq.map do |type, hub_id|
       name = hub_id ? Hub.find(hub_id).name : type
       { type: type, hub_id: hub_id, name: name }
     end.sort_by { |h| h[:name] }
 
-    # 4. Determine Selected Hub
-    #    If user clicked a specific hub, use it. Otherwise, default to the first available option.
+    # Determine Active Hub
     requested_hub_exists = @available_hubs.any? do |h|
       h[:hub_id].to_s == params[:hub_id].to_s && h[:type] == params[:hub_type]
     end
 
     if requested_hub_exists
-      # If the hub from the URL is valid for this country, keep it.
       @selected_hub_id = params[:hub_id]
       @selected_hub_type = params[:hub_type]
     else
-      # If the hub from the URL is NOT valid (or no hub selected), default to the first available.
       default_hub = @available_hubs.first
       if default_hub
         @selected_hub_id = default_hub[:hub_id]
@@ -38,8 +33,7 @@ class PricingTiersController < ApplicationController
       end
     end
 
-    # 5. Fetch Matrix Data
-    # Query specific tiers based on the 3 active filters
+    # Fetch Data
     query = PricingTier.where(
       year: @selected_year,
       country: @selected_country,
@@ -49,6 +43,9 @@ class PricingTiersController < ApplicationController
 
     @matrix_tiers = query.index_by(&:curriculum)
     @curriculums = @matrix_tiers.keys.sort
+
+    # Initialize a dummy object for the shared form
+    @shared_tier = PricingTier.new
   end
 
   def destroy
@@ -86,27 +83,37 @@ class PricingTiersController < ApplicationController
   def update
     @pricing_tier = PricingTier.find(params[:id])
 
-    # Allow updating year and fees
+    # Capture context to return to the exact same view
+    redirect_params = {
+      year: @pricing_tier.year,
+      country: @pricing_tier.country,
+      hub_type: @pricing_tier.hub_type,
+      hub_id: @pricing_tier.hub_id
+    }
+
+    # Update and Redirect
     if @pricing_tier.update(pricing_tier_params)
-      render json: {
-        success: true,
-        message: 'Pricing tier updated successfully',
-        formatted_admission: @pricing_tier.admission_fee,
-        formatted_monthly: @pricing_tier.monthly_fee,
-        formatted_renewal: @pricing_tier.renewal_fee
-      }
+      redirect_to pricing_tiers_path(redirect_params), notice: "Pricing for #{@pricing_tier.curriculum} updated successfully."
     else
-      render json: { success: false, errors: @pricing_tier.errors.full_messages }, status: :unprocessable_entity
+      redirect_to pricing_tiers_path(redirect_params), alert: "Error updating pricing: #{@pricing_tier.errors.full_messages.join(', ')}"
     end
   end
 
   private
 
   def pricing_tier_params
-    params.require(:pricing_tier).permit(
+    # Permitted parameters
+    p = params.require(:pricing_tier).permit(
       :admission_fee, :monthly_fee, :renewal_fee,
       :invoice_recipient, :notes, :year
     )
+
+    # Convert empty strings to nil to avoid "Not a Number" errors
+    [:admission_fee, :monthly_fee, :renewal_fee].each do |field|
+      p[field] = nil if p[field].blank?
+    end
+
+    p
   end
 
   def require_admin_or_admissions

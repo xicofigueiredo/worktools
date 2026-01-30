@@ -6,7 +6,7 @@
       <div class="list-group list-group-flush">
         <% @countries.each do |country| %>
           <%= link_to country,
-              pricing_tiers_path(year: @selected_year, country: country, hub_type: @selected_hub_type),
+              pricing_tiers_path(year: @selected_year, country: country),
               class: "list-group-item list-group-item-action border-0 px-3 py-2 rounded #{'active fw-bold' if country == @selected_country}" %>
         <% end %>
       </div>
@@ -57,7 +57,7 @@
               <tbody>
                 <% if @curriculums.empty? %>
                   <tr>
-                    <td colspan="6" class="py-5 text-muted">No pricing data found for this selection.</td>
+                    <td colspan="7" class="py-5 text-muted">No pricing data found for this selection.</td>
                   </tr>
                 <% else %>
                   <% @curriculums.each do |curr| %>
@@ -66,51 +66,47 @@
                       <td class="text-start ps-4 fw-bold text-dark"><%= curr %></td>
 
                       <td class="text-dark">
-                        <% if tier.admission_fee.to_f.positive? %>
-                          <%= tier.currency_symbol %><%= number_with_precision(tier.admission_fee, precision: 2) %>
-                        <% else %>
-                          -
-                        <% end %>
+                        <%= tier.admission_fee.to_f.positive? ? "#{tier.currency_symbol}#{number_with_precision(tier.admission_fee, precision: 2)}" : "-" %>
                       </td>
-
                       <td class="text-dark">
-                        <% if tier.monthly_fee.to_f.positive? %>
-                          <%= tier.currency_symbol %><%= number_with_precision(tier.monthly_fee, precision: 2) %>
-                        <% else %>
-                          -
-                        <% end %>
+                        <%= tier.monthly_fee.to_f.positive? ? "#{tier.currency_symbol}#{number_with_precision(tier.monthly_fee, precision: 2)}" : "-" %>
                       </td>
-
                       <td class="text-dark">
-                        <% if tier.renewal_fee.to_f.positive? %>
-                          <%= tier.currency_symbol %><%= number_with_precision(tier.renewal_fee, precision: 2) %>
-                        <% else %>
-                          -
-                        <% end %>
+                        <%= tier.renewal_fee.to_f.positive? ? "#{tier.currency_symbol}#{number_with_precision(tier.renewal_fee, precision: 2)}" : "-" %>
                       </td>
-
-                      <td class="text-dark">
-                         <%= tier.invoice_recipient.presence || "-" %>
-                      </td>
-
-                      <td class="text-dark small">
-                        <%= tier.notes.presence || "-" %>
-                      </td>
+                      <td class="text-dark"><%= tier.invoice_recipient.presence || "-" %></td>
+                      <td class="text-dark small"><%= tier.notes.presence || "-" %></td>
 
                       <td>
-                        <%= button_to pricing_tier_path(tier),
-                            method: :delete,
-                            class: "btn btn-danger d-inline-flex align-items-center justify-content-center p-0 shadow-sm",
-                            style: "width: 32px; height: 32px; border-radius: 4px;",
-                            title: "Delete",
-                            data: {
-                              confirm: "Are you sure you want to delete the #{curr} pricing tier? This cannot be undone.",
-                              turbo_confirm: "Are you sure you want to delete the #{curr} pricing tier? This cannot be undone.",
-                              bs_toggle: "tooltip"
-                            } do %>
-                          <i class="fas fa-trash"></i>
+                        <div class="d-flex justify-content-center gap-2">
 
-                        <% end %>
+                          <button type="button"
+                                  class="btn btn-primary d-inline-flex align-items-center justify-content-center p-0 shadow-sm"
+                                  style="width: 32px; height: 32px; border-radius: 4px;"
+                                  onclick="openEditModal(this)"
+                                  data-id="<%= tier.id %>"
+                                  data-curriculum="<%= curr %>"
+                                  data-currency="<%= tier.currency_symbol %>"
+                                  data-admission="<%= tier.admission_fee %>"
+                                  data-monthly="<%= tier.monthly_fee %>"
+                                  data-renewal="<%= tier.renewal_fee %>"
+                                  data-invoice="<%= tier.invoice_recipient %>"
+                                  data-notes="<%= tier.notes %>"
+                                  title="Edit"
+                                  data-bs-toggle="tooltip">
+                            <i class="fas fa-pen" style="font-size: 0.8rem;"></i>
+                          </button>
+
+                          <%= button_to pricing_tier_path(tier),
+                              method: :delete,
+                              class: "btn btn-danger d-inline-flex align-items-center justify-content-center p-0 shadow-sm",
+                              style: "width: 32px; height: 32px; border-radius: 4px;",
+                              title: "Delete",
+                              data: { turbo_confirm: "Are you sure? This cannot be undone.", bs_toggle: "tooltip" } do %>
+                            <i class="fas fa-trash" style="font-size: 0.8rem;"></i>
+                          <% end %>
+
+                        </div>
                       </td>
                     </tr>
                   <% end %>
@@ -120,16 +116,106 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
 
+<div class="modal fade" id="sharedEditModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="sharedModalLabel">Edit Pricing</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <%= form_with(model: @shared_tier, url: "#", method: :patch, id: "sharedEditForm", local: true) do |f| %>
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Admission Fee</label>
+              <div class="input-group">
+                <span class="input-group-text currency-symbol">$</span>
+                <%= f.number_field :admission_fee, step: "0.01", class: "form-control", id: "inputAdmission" %>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Monthly Fee</label>
+              <div class="input-group">
+                <span class="input-group-text currency-symbol">$</span>
+                <%= f.number_field :monthly_fee, step: "0.01", class: "form-control", id: "inputMonthly" %>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Renewal Fee</label>
+              <div class="input-group">
+                <span class="input-group-text currency-symbol">$</span>
+                <%= f.number_field :renewal_fee, step: "0.01", class: "form-control", id: "inputRenewal" %>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Invoice To</label>
+              <%= f.text_field :invoice_recipient, class: "form-control", id: "inputInvoice" %>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small text-muted fw-bold">Notes</label>
+              <%= f.text_area :notes, rows: 2, class: "form-control", id: "inputNotes" %>
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <%= f.submit "Save Changes", class: "btn btn-primary" %>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>
 
 <script>
+  // Tooltip Initialization
   document.addEventListener("DOMContentLoaded", function(){
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl)
     })
   });
+
+  // Shared Modal Logic
+  function openEditModal(button) {
+    // Get Data from Button
+    const id = button.getAttribute('data-id');
+    const curr = button.getAttribute('data-curriculum');
+    const symbol = button.getAttribute('data-currency');
+    const admission = button.getAttribute('data-admission');
+    const monthly = button.getAttribute('data-monthly');
+    const renewal = button.getAttribute('data-renewal');
+    const invoice = button.getAttribute('data-invoice');
+    const notes = button.getAttribute('data-notes');
+
+    // Update Modal Title & Currency Symbols
+    document.getElementById('sharedModalLabel').textContent = 'Edit ' + curr + ' Pricing';
+    document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = symbol);
+
+    // Populate Inputs (Handle empty strings)
+    document.getElementById('inputAdmission').value = admission;
+    document.getElementById('inputMonthly').value = monthly;
+    document.getElementById('inputRenewal').value = renewal;
+    document.getElementById('inputInvoice').value = invoice;
+    document.getElementById('inputNotes').value = notes;
+
+    // Update Form Action URL
+    const form = document.getElementById('sharedEditForm');
+    form.action = '/pricing_tiers/' + id;
+
+    // Show Modal
+    const modalEl = document.getElementById('sharedEditModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
 </script>
