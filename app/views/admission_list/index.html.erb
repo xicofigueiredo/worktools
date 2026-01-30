@@ -1,97 +1,59 @@
 <style>
-  .muted {
-    color: #777;
-    opacity: 1;
-  }
-
-  .muted a {
-    color: inherit !important;
-    text-decoration: none;
-  }
-
-  .muted .view-button {
-    opacity: 0.6;
-    pointer-events: auto;
-  }
+  .muted { color: #777; opacity: 1; }
+  .muted a { color: inherit !important; text-decoration: none; }
+  .muted .view-button { opacity: 0.6; pointer-events: auto; }
 
   /* Debt styling */
-  tr.has-debt {
-    background-color: #fff3e0 !important;
-  }
+  tr.has-debt { background-color: #fff3e0 !important; }
+  tr.has-debt td { border-left: 3px solid #ff9800; }
+  tr.has-debt td:first-child { border-left: 4px solid #ff9800; }
 
-  tr.has-debt td {
-    border-left: 3px solid #ff9800;
-  }
+  .hidden { display: none !important; }
 
-  tr.has-debt td:first-child {
-    border-left: 4px solid #ff9800;
-  }
-
-  .hidden {
-    display: none !important;
-  }
-
-  .age-slider-group {
-    position: relative;
-    width: 200px;
-    height: 40px;
-  }
-
-  /* Base track styling */
+  /* Age Slider */
+  .age-slider-group { position: relative; width: 200px; height: 40px; }
   .age-slider-group input[type="range"] {
-    position: absolute;
-    pointer-events: none;
-    appearance: none;
-    width: 100%;
-    background: none;
-    outline: none;
-    margin: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    position: absolute; pointer-events: none; appearance: none; width: 100%;
+    background: none; outline: none; margin: 0; top: 50%; transform: translateY(-50%);
   }
-
-  /* Slider thumb styling (the handles) */
   .age-slider-group input[type="range"]::-webkit-slider-thumb {
-    pointer-events: all;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    background-color: #0d6efd;
-    border: 2px solid #fff;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    pointer-events: all; appearance: none; width: 16px; height: 16px;
+    background-color: #0d6efd; border: 2px solid #fff; border-radius: 50%;
+    cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .slider-track {
+    width: 100%; height: 5px; position: absolute; top: 50%; transform: translateY(-50%);
+    background-color: #e2e8f0; border-radius: 5px; z-index: 0;
   }
 
-  /* The actual bar behind the handles */
-  .slider-track {
-    width: 100%;
-    height: 5px;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: #e2e8f0;
-    border-radius: 5px;
-    z-index: 0;
+  /* Dropdown Search */
+  .dropdown-search-input {
+    width: 100%; padding: 8px; border: none; border-bottom: 1px solid #eee;
+    outline: none; font-size: 0.9rem; box-sizing: border-box; background: #fafafa;
   }
 </style>
 
-<div style="padding: 0 24px;">
+<div data-controller="admission-search" style="padding: 0 24px;">
   <h1>Admissions List</h1>
 
   <div style="margin-bottom: 12px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+
     <%= form_with url: admissions_path,
                   method: :get,
                   local: true,
-                  data: { controller: "admission-search", turbo_frame: "learner_infos" },
+                  data: {
+                    turbo_frame: "learner_infos",
+                    admission_search_target: "form"
+                  },
                   html: { style: "display:flex; gap:8px; align-items:center; flex-wrap:wrap;" } do |f| %>
-    <%= hidden_field_tag :filter_applied, '1' %>
+
+      <%= hidden_field_tag :filter_applied, '1' %>
 
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Search</label>
         <%= f.text_field :search,
               value: params[:search],
-              placeholder: "Search learner/parent name or email...",
+              placeholder: "Search learner/parent...",
               data: {
                 admission_search_target: "searchInput",
                 action: "input->admission-search#searchInput"
@@ -111,46 +73,34 @@
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Status</label>
         <div data-controller="multi-select"
-            data-multi-select-name-value="status"
-            data-multi-select-placeholder-value="All"
-            style="position: relative;">
+             data-multi-select-name-value="status"
+             data-multi-select-placeholder-value="All"
+             style="position: relative;">
 
           <button type="button"
                   data-multi-select-target="button"
+                  data-admission-search-target="statusSelect"
                   data-action="click->multi-select#toggle"
                   style="min-width:160px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
             <span class="button-text" style="color:#6b7280;">All</span>
-            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </button>
 
-          <div data-multi-select-target="dropdown"
-              class="hidden"
-              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:200px; max-height:300px; overflow-y:auto; z-index:1000;">
+          <button type="button" data-admission-search-target="statusClear" data-action="click->admission-search#clearStatus" style="display:none;"></button>
+
+          <div data-multi-select-target="dropdown" class="hidden" style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:200px; max-height:300px; overflow-y:auto; z-index:1000;">
+            <input type="text" class="dropdown-search-input" placeholder="Filter statuses..." data-action="keyup->admission-search#filterDropdown">
 
             <div style="padding:8px; border-bottom:1px solid #eee;">
-              <button type="button"
-                      data-action="click->multi-select#clearAll"
-                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
-                Clear All
-              </button>
+              <button type="button" data-action="click->multi-select#clearAll" style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">Clear All</button>
             </div>
-
             <% @statuses.each do |status| %>
-              <label style="display:flex; align-items:center; padding:8px 12px; cursor:pointer; hover:background:#f9fafb;">
-                <input type="checkbox"
-                      value="<%= status %>"
-                      data-multi-select-target="checkbox"
-                      data-label="<%= status %>"
-                      data-action="change->multi-select#checkboxChanged"
-                      <%= 'checked' if Array(params[:status]).include?(status) %>
-                      style="margin-right:8px; cursor:pointer;">
+              <label class="dropdown-item" style="display:flex; align-items:center; padding:8px 12px; cursor:pointer;">
+                <input type="checkbox" value="<%= status %>" data-multi-select-target="checkbox" data-label="<%= status %>" data-action="change->multi-select#checkboxChanged" <%= 'checked' if Array(params[:status]).include?(status) %> style="margin-right:8px; cursor:pointer;">
                 <span style="font-size:0.9rem;"><%= status %></span>
               </label>
             <% end %>
           </div>
-
           <div data-multi-select-target="hiddenContainer"></div>
         </div>
       </div>
@@ -158,53 +108,46 @@
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Hub</label>
         <div data-controller="multi-select"
-            data-multi-select-name-value="hub"
-            data-multi-select-placeholder-value="All"
-            style="position: relative;">
+             data-multi-select-name-value="hub"
+             data-multi-select-placeholder-value="All"
+             style="position: relative;">
 
           <button type="button"
                   data-multi-select-target="button"
+                  data-admission-search-target="hubSelect"
                   data-action="click->multi-select#toggle"
                   style="min-width:200px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
             <span class="button-text" style="color:#6b7280;">All</span>
-            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </button>
 
-          <div data-multi-select-target="dropdown"
-              class="hidden"
-              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:250px; max-height:300px; overflow-y:auto; z-index:1000;">
+          <button type="button" data-admission-search-target="hubClear" data-action="click->admission-search#clearHub" style="display:none;"></button>
+
+          <div data-multi-select-target="dropdown" class="hidden" style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:250px; max-height:300px; overflow-y:auto; z-index:1000;">
+            <input type="text" class="dropdown-search-input" placeholder="Filter hubs..." data-action="keyup->admission-search#filterDropdown">
 
             <div style="padding:8px; border-bottom:1px solid #eee;">
-              <button type="button"
-                      data-action="click->multi-select#clearAll"
-                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
-                Clear All
-              </button>
+              <button type="button" data-action="click->multi-select#clearAll" style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">Clear All</button>
             </div>
 
             <% @hubs_grouped.each do |country, hubs| %>
-              <div style="padding-top:8px;">
-                <div style="padding:4px 12px; font-size:0.8rem; font-weight:600; color:#6b7280; text-transform:uppercase;">
-                  <%= country %>
+              <div class="dropdown-group" style="padding-top:8px;">
+                <div style="padding:4px 12px; font-size:0.8rem; font-weight:600; color:#6b7280; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center;">
+                  <span><%= country %></span>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:0.7rem; color:#0d6efd; cursor:pointer; font-weight:normal; text-transform:none;">
+                    <input type="checkbox" data-action="change->admission-search#toggleCountryGroup">
+                    Select All
+                  </label>
                 </div>
                 <% hubs.each do |hub_name, hub_value| %>
-                  <label style="display:flex; align-items:center; padding:6px 12px 6px 24px; cursor:pointer; hover:background:#f9fafb;">
-                    <input type="checkbox"
-                          value="<%= hub_value %>"
-                          data-multi-select-target="checkbox"
-                          data-label="<%= hub_name %>"
-                          data-action="change->multi-select#checkboxChanged"
-                          <%= 'checked' if Array(params[:hub]).include?(hub_value) %>
-                          style="margin-right:8px; cursor:pointer;">
+                  <label class="dropdown-item" style="display:flex; align-items:center; padding:6px 12px 6px 24px; cursor:pointer;">
+                    <input type="checkbox" value="<%= hub_value %>" data-multi-select-target="checkbox" data-label="<%= hub_name %>" data-action="change->multi-select#checkboxChanged" <%= 'checked' if Array(params[:hub]).include?(hub_value) %> style="margin-right:8px; cursor:pointer;">
                     <span style="font-size:0.9rem;"><%= hub_name %></span>
                   </label>
                 <% end %>
               </div>
             <% end %>
           </div>
-
           <div data-multi-select-target="hiddenContainer"></div>
         </div>
       </div>
@@ -212,46 +155,30 @@
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Programme</label>
         <div data-controller="multi-select"
-            data-multi-select-name-value="programme"
-            data-multi-select-placeholder-value="All"
-            style="position: relative;">
+             data-multi-select-name-value="programme"
+             data-multi-select-placeholder-value="All"
+             style="position: relative;">
 
-          <button type="button"
-                  data-multi-select-target="button"
-                  data-action="click->multi-select#toggle"
-                  style="min-width:200px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
+          <button type="button" data-multi-select-target="button" data-admission-search-target="programmeSelect" data-action="click->multi-select#toggle" style="min-width:200px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
             <span class="button-text" style="color:#6b7280;">All</span>
-            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </button>
 
-          <div data-multi-select-target="dropdown"
-              class="hidden"
-              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:220px; max-height:300px; overflow-y:auto; z-index:1000;">
+          <button type="button" data-admission-search-target="programmeClear" data-action="click->admission-search#clearProgramme" style="display:none;"></button>
+
+          <div data-multi-select-target="dropdown" class="hidden" style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:220px; max-height:300px; overflow-y:auto; z-index:1000;">
+            <input type="text" class="dropdown-search-input" placeholder="Filter..." data-action="keyup->admission-search#filterDropdown">
 
             <div style="padding:8px; border-bottom:1px solid #eee;">
-              <button type="button"
-                      data-action="click->multi-select#clearAll"
-                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
-                Clear All
-              </button>
+              <button type="button" data-action="click->multi-select#clearAll" style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">Clear All</button>
             </div>
-
             <% @programmes.each do |programme| %>
-              <label style="display:flex; align-items:center; padding:8px 12px; cursor:pointer; hover:background:#f9fafb;">
-                <input type="checkbox"
-                      value="<%= programme %>"
-                      data-multi-select-target="checkbox"
-                      data-label="<%= programme %>"
-                      data-action="change->multi-select#checkboxChanged"
-                      <%= 'checked' if Array(params[:programme]).include?(programme) %>
-                      style="margin-right:8px; cursor:pointer;">
+              <label class="dropdown-item" style="display:flex; align-items:center; padding:8px 12px; cursor:pointer;">
+                <input type="checkbox" value="<%= programme %>" data-multi-select-target="checkbox" data-label="<%= programme %>" data-action="change->multi-select#checkboxChanged" <%= 'checked' if Array(params[:programme]).include?(programme) %> style="margin-right:8px; cursor:pointer;">
                 <span style="font-size:0.9rem;"><%= programme %></span>
               </label>
             <% end %>
           </div>
-
           <div data-multi-select-target="hiddenContainer"></div>
         </div>
       </div>
@@ -259,46 +186,30 @@
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Curriculum</label>
         <div data-controller="multi-select"
-            data-multi-select-name-value="curriculum"
-            data-multi-select-placeholder-value="All"
-            style="position: relative;">
+             data-multi-select-name-value="curriculum"
+             data-multi-select-placeholder-value="All"
+             style="position: relative;">
 
-          <button type="button"
-                  data-multi-select-target="button"
-                  data-action="click->multi-select#toggle"
-                  style="min-width:220px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
+          <button type="button" data-multi-select-target="button" data-admission-search-target="curriculumSelect" data-action="click->multi-select#toggle" style="min-width:220px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
             <span class="button-text" style="color:#6b7280;">All</span>
-            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </button>
 
-          <div data-multi-select-target="dropdown"
-              class="hidden"
-              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:250px; max-height:300px; overflow-y:auto; z-index:1000;">
+          <button type="button" data-admission-search-target="curriculumClear" data-action="click->admission-search#clearCurriculum" style="display:none;"></button>
+
+          <div data-multi-select-target="dropdown" class="hidden" style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:250px; max-height:300px; overflow-y:auto; z-index:1000;">
+            <input type="text" class="dropdown-search-input" placeholder="Filter..." data-action="keyup->admission-search#filterDropdown">
 
             <div style="padding:8px; border-bottom:1px solid #eee;">
-              <button type="button"
-                      data-action="click->multi-select#clearAll"
-                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
-                Clear All
-              </button>
+              <button type="button" data-action="click->multi-select#clearAll" style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">Clear All</button>
             </div>
-
             <% @curricula.each do |curriculum| %>
-              <label style="display:flex; align-items:center; padding:8px 12px; cursor:pointer; hover:background:#f9fafb;">
-                <input type="checkbox"
-                      value="<%= curriculum %>"
-                      data-multi-select-target="checkbox"
-                      data-label="<%= curriculum %>"
-                      data-action="change->multi-select#checkboxChanged"
-                      <%= 'checked' if Array(params[:curriculum]).include?(curriculum) %>
-                      style="margin-right:8px; cursor:pointer;">
+              <label class="dropdown-item" style="display:flex; align-items:center; padding:8px 12px; cursor:pointer;">
+                <input type="checkbox" value="<%= curriculum %>" data-multi-select-target="checkbox" data-label="<%= curriculum %>" data-action="change->multi-select#checkboxChanged" <%= 'checked' if Array(params[:curriculum]).include?(curriculum) %> style="margin-right:8px; cursor:pointer;">
                 <span style="font-size:0.9rem;"><%= curriculum %></span>
               </label>
             <% end %>
           </div>
-
           <div data-multi-select-target="hiddenContainer"></div>
         </div>
       </div>
@@ -306,71 +217,48 @@
       <div style="position: relative;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">Grade / Year</label>
         <div data-controller="multi-select"
-            data-multi-select-name-value="grade_year"
-            data-multi-select-placeholder-value="All"
-            style="position: relative;">
+             data-multi-select-name-value="grade_year"
+             data-multi-select-placeholder-value="All"
+             style="position: relative;">
 
-          <button type="button"
-                  data-multi-select-target="button"
-                  data-action="click->multi-select#toggle"
-                  style="min-width:140px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
+          <button type="button" data-multi-select-target="button" data-admission-search-target="gradeSelect" data-action="click->multi-select#toggle" style="min-width:140px; padding:6px 30px 6px 10px; border-radius:6px; border:1px solid #ccc; background:white; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; height:38px;">
             <span class="button-text" style="color:#6b7280;">All</span>
-            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
+            <svg style="width:16px; height:16px; color:#6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </button>
 
-          <div data-multi-select-target="dropdown"
-              class="hidden"
-              style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:160px; max-height:300px; overflow-y:auto; z-index:1000;">
+          <button type="button" data-admission-search-target="gradeClear" data-action="click->admission-search#clearGrade" style="display:none;"></button>
+
+          <div data-multi-select-target="dropdown" class="hidden" style="position:absolute; top:100%; left:0; margin-top:4px; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1); min-width:160px; max-height:300px; overflow-y:auto; z-index:1000;">
+            <input type="text" class="dropdown-search-input" placeholder="Filter..." data-action="keyup->admission-search#filterDropdown">
 
             <div style="padding:8px; border-bottom:1px solid #eee;">
-              <button type="button"
-                      data-action="click->multi-select#clearAll"
-                      style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">
-                Clear All
-              </button>
+              <button type="button" data-action="click->multi-select#clearAll" style="font-size:0.85rem; color:#6b7280; background:none; border:none; cursor:pointer; padding:4px 8px;">Clear All</button>
             </div>
-
             <% @grades.each do |grade| %>
-              <label style="display:flex; align-items:center; padding:8px 12px; cursor:pointer; hover:background:#f9fafb;">
-                <input type="checkbox"
-                      value="<%= grade %>"
-                      data-multi-select-target="checkbox"
-                      data-label="<%= grade %>"
-                      data-action="change->multi-select#checkboxChanged"
-                      <%= 'checked' if Array(params[:grade_year]).include?(grade) %>
-                      style="margin-right:8px; cursor:pointer;">
+              <label class="dropdown-item" style="display:flex; align-items:center; padding:8px 12px; cursor:pointer;">
+                <input type="checkbox" value="<%= grade %>" data-multi-select-target="checkbox" data-label="<%= grade %>" data-action="change->multi-select#checkboxChanged" <%= 'checked' if Array(params[:grade_year]).include?(grade) %> style="margin-right:8px; cursor:pointer;">
                 <span style="font-size:0.9rem;"><%= grade %></span>
               </label>
             <% end %>
           </div>
-
           <div data-multi-select-target="hiddenContainer"></div>
         </div>
       </div>
 
       <div style="position: relative; min-width: 210px;">
         <label style="font-size:0.9rem; color:#555; display:block; margin-bottom:4px;">
-          Age: <strong id="age-display"><%= @current_min_age %> - <%= @current_max_age %></strong>
+          Age: <strong data-admission-search-target="ageDisplay"><%= @current_min_age %> - <%= @current_max_age %></strong>
         </label>
 
         <div class="age-slider-group">
           <div class="slider-track"></div>
-
           <%= range_field_tag :age_min, @current_min_age,
-                min: @db_min_age,
-                max: @db_max_age,
-                id: "age_min",
-                data: { action: "input->admission-search#searchInput" },
-                oninput: "updateAgeDisplay()" %>
+                min: @db_min_age, max: @db_max_age, id: "age_min",
+                data: { admission_search_target: "ageMin", action: "input->admission-search#updateAgeDisplay" } %>
 
           <%= range_field_tag :age_max, @current_max_age,
-                min: @db_min_age,
-                max: @db_max_age,
-                id: "age_max",
-                data: { action: "input->admission-search#searchInput" },
-                oninput: "updateAgeDisplay()" %>
+                min: @db_min_age, max: @db_max_age, id: "age_max",
+                data: { admission_search_target: "ageMax", action: "input->admission-search#updateAgeDisplay" } %>
         </div>
       </div>
 
@@ -379,19 +267,23 @@
             style: "padding:7px 12px; border-radius:6px; background:#f0f0f0; color:#333; text-decoration:none; border:1px solid #ddd;" %>
 
         <button type="button"
-                onclick="openExportModal()"
+                data-action="click->admission-search#openExport"
                 style="padding:7px 12px; border-radius:6px; background:#28a745; color:white; border:1px solid #28a745; display:flex; align-items:center; gap:6px; cursor:pointer;">
-          <i class="fa fa-download" aria-hidden="true"></i>
-          Export CSV
+          <i class="fa fa-download" aria-hidden="true"></i> Export CSV
+        </button>
+
+        <button type="button"
+                data-action="click->admission-search#openBulkEmail"
+                style="padding:7px 12px; border-radius:6px; background:#17a2b8; color:white; border:1px solid #17a2b8; display:flex; align-items:center; gap:6px; cursor:pointer;">
+          <i class="fa fa-envelope" aria-hidden="true"></i> Bulk Email
         </button>
 
         <% if current_user.admin? || current_user.admissions? %>
-          <button id="fetchHubspotBtn"
-                  type="button"
-                  onclick="fetchFromHubspot()"
+          <button type="button"
+                  data-admission-search-target="fetchHubspotBtn"
+                  data-action="click->admission-search#fetchFromHubspot"
                   style="padding:7px 12px; border-radius:6px; background:#6f42c1; color:white; border:1px solid #6f42c1; display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <i class="fa fa-sync" aria-hidden="true" style="font-size:14px;"></i>
-            Sync HubSpot
+            <i class="fa fa-sync" aria-hidden="true" style="font-size:14px;"></i> Sync HubSpot
           </button>
 
           <%= link_to "Manage Pricing Tiers", pricing_tiers_path, data: { turbo: false },
@@ -409,8 +301,6 @@
   </div>
 
   <%= turbo_frame_tag "learner_infos" do %>
-    <% chip_style = "display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; color:inherit; font-size:0.9rem; margin-top:12px;" %>
-
     <div style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
       <div style="font-size:0.95rem; color:#333;">
         Showing <strong><%= @filtered_count %></strong> learner<%= "s" if @filtered_count != 1 %>
@@ -418,8 +308,8 @@
           <span style="color:#666; margin-left:8px;">(filtered from <%= @total_count %>)</span>
         <% end %>
       </div>
-
     </div>
+
     <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: auto;">
       <table style="width:100%; border-collapse:collapse; min-width:800px;">
         <thead>
@@ -439,10 +329,7 @@
               <% has_debt = row.try(:has_debt) %>
               <tr class="<%= 'muted' unless active %> <%= 'has-debt' if has_debt %>">
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
-                  <%= link_to admission_path(row),
-                              title: "View #{row.full_name}",
-                              data: { turbo_frame: "_top" },
-                              style: "color: inherit; text-decoration: none;" do %>
+                  <%= link_to admission_path(row), title: "View #{row.full_name}", data: { turbo_frame: "_top" }, style: "color: inherit; text-decoration: none;" do %>
                     <%= (
                       name = row.full_name.to_s.strip.gsub(/\s+/, ' ');
                       parts = name.split(' ');
@@ -460,25 +347,17 @@
                     No hub assigned
                   <% end %>
                 </td>
-
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
                   <%= row.programme.presence || '-' %>
                 </td>
-
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
                   <%= row.curriculum_course_option.presence || '-' %>
                 </td>
-
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
                   <%= row.grade_year.presence || '-' %>
                 </td>
-
                 <td style="padding:10px 16px; border-bottom:1px solid #f6f6f6; vertical-align: middle;">
-                  <%= link_to admission_path(row),
-                              title: "View #{row.full_name}",
-                              data: { turbo_frame: "_top" },
-                              class: "view-button",
-                              style: "display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; background:#0d6efd; color:white; text-decoration:none; border:none;" do %>
+                  <%= link_to admission_path(row), title: "View #{row.full_name}", data: { turbo_frame: "_top" }, class: "view-button", style: "display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; background:#0d6efd; color:white; text-decoration:none; border:none;" do %>
                     <i class="fa fa-eye" aria-hidden="true" style="font-size:14px;"></i>
                   <% end %>
                 </td>
@@ -494,237 +373,43 @@
     </div>
   <% end %>
 
-</div>
+  <div data-admission-search-target="hubspotMessageModal"
+       style="display:none; position: fixed; left: 50%; top: 18%; transform: translateX(-50%); z-index: 10000; background: white; border-radius: 8px; padding: 18px 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); min-width: 250px;">
+    <button data-action="click->admission-search#closeHubspotMessage"
+            style="position: absolute; top: 8px; right: 12px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #aaa;" aria-label="Close message">
+      &times;
+    </button>
+    <div data-admission-search-target="hubspotMessageText" style="font-size: 1rem; color: #222; margin-right: 25px;">...</div>
+  </div>
 
-<div id="hubspotMessageModal"
-  style="display:none; position: fixed; left: 50%; top: 18%; transform: translateX(-50%); z-index: 10000; background: white; border-radius: 8px; padding: 18px 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); position: relative; min-width: 250px;">
-  <button onclick="closeHubspotMessage()"
-    style="position: absolute; top: 8px; right: 12px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #aaa;"
-    aria-label="Close message">
-    &times;
-  </button>
-  <div id="hubspotMessageText" style="font-size: 1rem; color: #222; margin-right: 25px;">...</div>
-</div>
-
-<div id="exportModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; overflow: auto;">
-  <div style="position: relative; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
-    <div id="exportModalContent" style="background: white; border-radius: 12px; max-width: 1200px; width: 100%; max-height: 90vh; overflow: auto; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-      <div style="padding: 40px; text-align: center;">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
+  <div data-admission-search-target="exportModal"
+       style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; overflow: auto;">
+    <div style="position: relative; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <div data-admission-search-target="exportModalContent"
+           style="background: white; border-radius: 12px; max-width: 1200px; width: 100%; max-height: 90vh; overflow: auto; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+        <div style="padding: 40px; text-align: center;">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p style="margin-top: 16px; color: #666;">Loading export options...</p>
         </div>
-        <p style="margin-top: 16px; color: #666;">Loading export options...</p>
       </div>
     </div>
   </div>
+
+  <div data-admission-search-target="bulkEmailModal"
+       style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; overflow: auto;">
+    <div style="position: relative; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <div style="background: white; border-radius: 12px; max-width: 600px; width: 100%; overflow: auto; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+        <button data-action="click->admission-search#closeBulkEmail"
+                style="position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #aaa; z-index:10;">
+          &times;
+        </button>
+
+        <%= render partial: 'bulk_email_form' %>
+
+      </div>
+    </div>
+  </div>
+
 </div>
-
-<script>
-  function selectAllFields() {
-    document.querySelectorAll('.field-checkbox').forEach(cb => cb.checked = true);
-  }
-
-  function deselectAllFields() {
-    document.querySelectorAll('.field-checkbox').forEach(cb => cb.checked = false);
-  }
-
-  function selectCategory(categoryId) {
-    document.querySelectorAll(`.field-checkbox[data-category="${categoryId}"]`)
-      .forEach(cb => cb.checked = true);
-  }
-
-  function deselectCategory(categoryId) {
-    document.querySelectorAll(`.field-checkbox[data-category="${categoryId}"]`)
-      .forEach(cb => cb.checked = false);
-  }
-
-  function submitExport() {
-    const form = document.getElementById('exportForm');
-    const checkedBoxes = document.querySelectorAll('.field-checkbox:checked');
-
-    if (checkedBoxes.length === 0) {
-      alert('Please select at least one field to export');
-      return;
-    }
-
-    form.submit();
-
-    setTimeout(() => {
-      closeExportModal();
-    }, 500);
-  }
-
-  function openExportModal() {
-    const modal = document.getElementById('exportModal');
-    const content = document.getElementById('exportModalContent');
-
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-
-    const params = new URLSearchParams(window.location.search);
-    const exportUrl = '<%= export_admissions_path %>?' + params.toString();
-
-    fetch(exportUrl, {
-      headers: {
-        'Accept': 'text/html',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-    .then(response => response.text())
-    .then(html => {
-      content.innerHTML = html;
-    })
-    .catch(error => {
-      content.innerHTML = '<div style="padding: 40px; text-align: center;"><p style="color: #dc3545;">Error loading export form. Please try again.</p></div>';
-      console.error('Error:', error);
-    });
-  }
-
-  function closeExportModal() {
-    const modal = document.getElementById('exportModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = '';
-  }
-
-  document.addEventListener('click', function(event) {
-    const modal = document.getElementById('exportModal');
-    if (event.target === modal) {
-      closeExportModal();
-    }
-  });
-
-  document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-      const modal = document.getElementById('exportModal');
-      if (modal.style.display === 'block') {
-        closeExportModal();
-      }
-    }
-  });
-
-  function toggleFilterCategory(category) {
-    const checkboxes = document.querySelectorAll(`input[data-filter-category="${category}"]`);
-    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-
-    checkboxes.forEach(cb => {
-      cb.checked = !allChecked;
-    });
-  }
-
-  function getCsrfToken() {
-    var el = document.querySelector('meta[name="csrf-token"]');
-    return el ? el.content : '';
-  }
-
-  let hubspotMessageTimeout;
-
-  function showHubspotMessage(text) {
-    clearTimeout(hubspotMessageTimeout);
-
-    var modal = document.getElementById('hubspotMessageModal');
-    var textEl = document.getElementById('hubspotMessageText');
-
-    textEl.textContent = text;
-    modal.style.display = 'block';
-
-    hubspotMessageTimeout = setTimeout(() => {
-      closeHubspotMessage();
-    }, 5000);
-  }
-
-  function closeHubspotMessage() {
-    clearTimeout(hubspotMessageTimeout);
-
-    var modal = document.getElementById('hubspotMessageModal');
-    if (modal) {
-      modal.style.display = 'none';
-    }
-  }
-
-  function disableFetchBtn(disabled) {
-    var btn = document.getElementById('fetchHubspotBtn');
-    if (!btn) return;
-    btn.disabled = disabled;
-    btn.style.opacity = disabled ? 0.6 : 1;
-    btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
-  }
-
-  function fetchFromHubspot() {
-    const url = '<%= fetch_from_hubspot_admissions_path %>';
-    disableFetchBtn(true);
-
-    var originalHtml = document.getElementById('fetchHubspotBtn').innerHTML;
-    document.getElementById('fetchHubspotBtn').innerHTML = '<span class="spinner-border" role="status" aria-hidden="true" style="width:16px;height:16px;display:inline-block;border-radius:50%;border:2px solid rgba(255,255,255,0.3);border-top-color:white;margin-right:8px;"></span> Syncing...';
-
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-Token': getCsrfToken()
-      },
-      body: JSON.stringify({})
-    })
-    .then(response => response.json().then(body => ({ status: response.status, body: body })))
-    .then(({ status, body }) => {
-      if (status >= 200 && status < 300 && body && body.success) {
-        const message = body.message || 'Sync completed.';
-        showHubspotMessage(message);
-        refreshLearnerInfosFrame();
-      } else {
-        const err = (body && (body.error || body.message)) ? (body.error || body.message) : 'Unknown error';
-        showHubspotMessage('Error: ' + err);
-      }
-    })
-    .catch(err => {
-      console.error('fetchFromHubspot error', err);
-      showHubspotMessage('Error communicating with server.');
-    })
-    .finally(() => {
-      disableFetchBtn(false);
-      document.getElementById('fetchHubspotBtn').innerHTML = originalHtml;
-    });
-  }
-
-  function refreshLearnerInfosFrame() {
-    try {
-      const url = window.location.pathname + window.location.search;
-      fetch(url, { headers: { 'Accept': 'text/html' } })
-        .then(r => {
-          if (!r.ok) throw new Error('Failed to fetch page');
-          return r.text();
-        })
-        .then(html => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-          const newFrame = doc.querySelector('turbo-frame#learner_infos');
-          const currentFrame = document.querySelector('turbo-frame#learner_infos');
-          if (newFrame && currentFrame) {
-            currentFrame.innerHTML = newFrame.innerHTML;
-          } else {
-            window.location.reload();
-          }
-        })
-        .catch(() => {
-          window.location.reload();
-        });
-    } catch (e) {
-      window.location.reload();
-    }
-  }
-
-  function updateAgeDisplay() {
-    const min = document.getElementById('age_min');
-    const max = document.getElementById('age_max');
-    const display = document.getElementById('age-display');
-
-    // Ensure handles don't cross each other
-    if (parseInt(min.value) > parseInt(max.value)) {
-      let temp = min.value;
-      min.value = max.value;
-      max.value = temp;
-    }
-
-    display.innerText = min.value + " - " + max.value;
-  }
-</script>

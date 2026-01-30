@@ -40,87 +40,22 @@
 %>
 
 <style>
-  .li-section {
-    border: 1px solid #dee2e6;
-    border-radius: 12px;
-    padding: 16px;
-    background: #fff;
-  }
-
-  .li-section h4 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-weight: 600;
-  }
-
-  .modal-header-custom {
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 10;
-    border-bottom: 1px solid #dee2e6;
-    padding: 20px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 12px 12px 0 0;
-  }
-
-  .modal-body-custom {
-    padding: 24px;
-  }
-
-  .modal-footer-custom {
-    position: sticky;
-    bottom: 0;
-    background: white;
-    z-index: 10;
-    border-top: 1px solid #dee2e6;
-    padding: 16px 24px;
-    border-radius: 0 0 12px 12px;
-  }
-
-  .filter-select-box {
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    padding: 8px;
-    max-height: 150px;
-    overflow-y: auto;
-    background: white;
-  }
-
-  .filter-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .filter-option:hover {
-    background: #f8f9fa;
-  }
-
-  .filter-option input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-  }
-
-  .filter-option label {
-    cursor: pointer;
-    margin: 0;
-    font-size: 0.9rem;
-    flex: 1;
-  }
+  .li-section { border: 1px solid #dee2e6; border-radius: 12px; padding: 16px; background: #fff; }
+  .li-section h4 { margin-top: 0; margin-bottom: 12px; font-weight: 600; }
+  .modal-header-custom { position: sticky; top: 0; background: white; z-index: 10; border-bottom: 1px solid #dee2e6; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0; }
+  .modal-body-custom { padding: 24px; }
+  .modal-footer-custom { position: sticky; bottom: 0; background: white; z-index: 10; border-top: 1px solid #dee2e6; padding: 16px 24px; border-radius: 0 0 12px 12px; }
+  .filter-select-box { border: 1px solid #ced4da; border-radius: 6px; padding: 8px; max-height: 150px; overflow-y: auto; background: white; }
+  .filter-option { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+  .filter-option:hover { background: #f8f9fa; }
+  .filter-option input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+  .filter-option label { cursor: pointer; margin: 0; font-size: 0.9rem; flex: 1; }
 </style>
 
 <div class="modal-header-custom">
   <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Export Learners to CSV</h2>
   <button type="button"
-          onclick="closeExportModal()"
+          data-action="click->admission-search#closeExport"
           style="background: none; border: none; font-size: 28px; color: #666; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px;"
           onmouseover="this.style.background='#f0f0f0'"
           onmouseout="this.style.background='none'"
@@ -132,7 +67,6 @@
 <div class="modal-body-custom">
   <%= form_with url: export_admissions_path, method: :post, id: 'exportForm', data: { turbo: false } do |f| %>
 
-    <!-- Filters Section -->
     <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
       <h3 style="margin-top: 0; font-size: 1.1rem; margin-bottom: 16px;">Filter Learners to Export</h3>
       <p style="color: #666; font-size: 0.9rem; margin-bottom: 16px;">
@@ -141,12 +75,12 @@
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
 
-        <!-- Status Filter -->
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <label style="font-weight: 600; font-size: 0.95rem;">Status</label>
             <button type="button"
-                    onclick="toggleFilterCategory('status')"
+                    data-action="click->admission-search#toggleExportFilterCategory"
+                    data-category="status"
                     style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
               Select All
             </button>
@@ -161,12 +95,12 @@
           </div>
         </div>
 
-        <!-- Hub Filter -->
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <label style="font-weight: 600; font-size: 0.95rem;">Hub</label>
             <button type="button"
-                    onclick="toggleFilterCategory('hub')"
+                    data-action="click->admission-search#toggleExportFilterCategory"
+                    data-category="hub"
                     style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
               Select All
             </button>
@@ -181,12 +115,12 @@
           </div>
         </div>
 
-        <!-- Programme Filter -->
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <label style="font-weight: 600; font-size: 0.95rem;">Programme</label>
             <button type="button"
-                    onclick="toggleFilterCategory('programme')"
+                    data-action="click->admission-search#toggleExportFilterCategory"
+                    data-category="programme"
                     style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
               Select All
             </button>
@@ -201,12 +135,12 @@
           </div>
         </div>
 
-        <!-- Curriculum Filter -->
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <label style="font-weight: 600; font-size: 0.95rem;">Curriculum</label>
             <button type="button"
-                    onclick="toggleFilterCategory('curriculum')"
+                    data-action="click->admission-search#toggleExportFilterCategory"
+                    data-category="curriculum"
                     style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
               Select All
             </button>
@@ -221,12 +155,12 @@
           </div>
         </div>
 
-        <!-- Grade/Year Filter -->
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <label style="font-weight: 600; font-size: 0.95rem;">Grade / Year</label>
             <button type="button"
-                    onclick="toggleFilterCategory('grade_year')"
+                    data-action="click->admission-search#toggleExportFilterCategory"
+                    data-category="grade_year"
                     style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer;">
               Select All
             </button>
@@ -241,7 +175,6 @@
           </div>
         </div>
 
-        <!-- Age Filter -->
         <div style="grid-column: span 2;">
           <label style="font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 8px;">Export Age Range</label>
           <div style="display: flex; align-items: center; gap: 12px; background: white; padding: 10px; border-radius: 6px; border: 1px solid #ced4da;">
@@ -261,22 +194,20 @@
       </div>
     </div>
 
-    <!-- Global select/deselect buttons for fields -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h3 style="margin: 0; font-size: 1.1rem;">Select Fields to Export</h3>
       <div style="display: flex; gap: 8px;">
-        <button type="button" onclick="selectAllFields()"
+        <button type="button" data-action="click->admission-search#exportSelectAllFields"
                 style="padding: 8px 16px; border-radius: 6px; background: #0d6efd; color: white; border: none; cursor: pointer; font-weight: 500;">
           Select All Fields
         </button>
-        <button type="button" onclick="deselectAllFields()"
+        <button type="button" data-action="click->admission-search#exportDeselectAllFields"
                 style="padding: 8px 16px; border-radius: 6px; background: #6c757d; color: white; border: none; cursor: pointer; font-weight: 500;">
           Deselect All Fields
         </button>
       </div>
     </div>
 
-    <!-- Field selection by category -->
     <div style="display: flex; flex-direction: column; gap: 16px;">
       <% visible_categories.each do |category_name, fields| %>
         <% category_id = category_name.parameterize.underscore %>
@@ -286,12 +217,14 @@
             <h4 style="margin: 0; font-weight: 600;"><%= category_name %></h4>
             <div style="display: flex; gap: 8px;">
               <button type="button"
-                      onclick="selectCategory('<%= category_id %>')"
+                      data-action="click->admission-search#exportSelectCategory"
+                      data-category="<%= category_id %>"
                       style="padding: 5px 12px; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer; font-size: 0.875rem;">
                 Select All
               </button>
               <button type="button"
-                      onclick="deselectCategory('<%= category_id %>')"
+                      data-action="click->admission-search#exportDeselectCategory"
+                      data-category="<%= category_id %>"
                       style="padding: 5px 12px; border-radius: 4px; background: #e9ecef; border: 1px solid #ced4da; cursor: pointer; font-size: 0.875rem;">
                 Deselect All
               </button>
@@ -325,12 +258,12 @@
     </div>
     <div style="display: flex; gap: 12px;">
       <button type="button"
-              onclick="closeExportModal()"
+              data-action="click->admission-search#closeExport"
               style="padding: 10px 24px; border-radius: 6px; background: #6c757d; color: white; border: none; cursor: pointer; font-weight: 500;">
         Cancel
       </button>
       <button type="button"
-              onclick="submitExport()"
+              data-action="click->admission-search#submitExport"
               style="padding: 10px 24px; border-radius: 6px; background: #28a745; color: white; border: none; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px;">
         <i class="fa fa-download" aria-hidden="true"></i>
         Download CSV

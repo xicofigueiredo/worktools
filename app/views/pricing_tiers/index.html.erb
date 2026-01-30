@@ -1,494 +1,410 @@
-<style>
-  .pricing-tier-row:hover {
-    background-color: #f8f9fa;
-  }
+<div class="container-fluid">
+  <div class="row min-vh-100">
 
-  .edit-field-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+    <div class="col-md-2 border-end py-4">
+      <h6 class="px-3 text-uppercase text-muted small fw-bold mb-3">Countries</h6>
+      <div class="list-group list-group-flush">
+        <% @sidebar_countries.each do |country| %>
+          <%= link_to country,
+              pricing_tiers_path(year: @selected_year, country: country),
+              class: "list-group-item list-group-item-action border-0 px-3 py-2 rounded #{'active fw-bold' if country == @selected_country}" %>
+        <% end %>
+      </div>
+    </div>
 
-  .edit-field-container .field-value {
-    flex: 1;
-  }
+    <div class="col-md-10 py-4 px-md-5">
 
-  .edit-btn-small {
-    padding: 6px 8px;
-    background: #0d6efd;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    white-space: nowrap;
-    position: relative;
-    transition: background-color 0.2s;
-    min-width: 32px;
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-dark m-0">Pricing Tiers</h4>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createModal">
+          <i class="fas fa-plus me-2"></i> Create New
+        </button>
+      </div>
 
-  .edit-btn-small:hover {
-    background: #0b5ed7;
-  }
+      <div class="mb-4">
+        <ul class="nav nav-pills justify-content-center">
+          <% @years.each do |year| %>
+            <li class="nav-item mx-1">
+              <%= link_to year,
+                  pricing_tiers_path(year: year, country: @selected_country, hub_id: @selected_hub_id, hub_type: @selected_hub_type),
+                  class: "nav-link px-4 #{'active shadow-sm' if year == @selected_year}" %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
 
-  .save-btn-small {
-    padding: 6px 8px;
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    position: relative;
-    transition: background-color 0.2s;
-    min-width: 32px;
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
+      <% if @available_hubs.any? %>
+        <ul class="nav nav-tabs border-bottom-0 ms-1">
+          <% @available_hubs.each do |hub| %>
+            <% is_active = (hub[:hub_id].to_s == @selected_hub_id.to_s && hub[:type] == @selected_hub_type) %>
+            <li class="nav-item">
+              <%= link_to hub[:name],
+                  pricing_tiers_path(year: @selected_year, country: @selected_country, hub_id: hub[:hub_id], hub_type: hub[:type]),
+                  class: "nav-link #{'active fw-bold' if is_active} #{'text-muted' unless is_active}" %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
 
-  .save-btn-small:hover {
-    background: #218838;
-  }
+      <div class="card shadow-sm border-0 mb-5">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-center">
+              <thead class="bg-light">
+                <tr>
+                  <th class="text-start ps-4 py-3 text-secondary text-uppercase small" style="width: 25%;">Curriculum</th>
+                  <th class="py-3 text-secondary text-uppercase small">Admission</th>
+                  <th class="py-3 text-secondary text-uppercase small">Monthly</th>
+                  <th class="py-3 text-secondary text-uppercase small">Renewal</th>
+                  <th class="py-3 text-secondary text-uppercase small">Invoice To</th>
+                  <th class="py-3 text-secondary text-uppercase small">Notes</th>
+                  <th class="py-3 text-secondary text-uppercase small">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if @curriculums.empty? %>
+                  <tr>
+                    <td colspan="7" class="py-5 text-muted">No pricing data found for this selection.</td>
+                  </tr>
+                <% else %>
+                  <% @curriculums.each do |curr| %>
+                    <% tier = @matrix_tiers[curr] %>
+                    <tr>
+                      <td class="text-start ps-4 fw-bold text-dark"><%= curr %></td>
+                      <td class="text-dark">
+                        <%= tier.admission_fee.to_f.positive? ? "#{tier.currency_symbol}#{number_with_precision(tier.admission_fee, precision: 2)}" : "-" %>
+                      </td>
+                      <td class="text-dark">
+                        <%= tier.monthly_fee.to_f.positive? ? "#{tier.currency_symbol}#{number_with_precision(tier.monthly_fee, precision: 2)}" : "-" %>
+                      </td>
+                      <td class="text-dark">
+                        <%= tier.renewal_fee.to_f.positive? ? "#{tier.currency_symbol}#{number_with_precision(tier.renewal_fee, precision: 2)}" : "-" %>
+                      </td>
+                      <td class="text-dark"><%= tier.invoice_recipient.presence || "-" %></td>
+                      <td class="text-dark small"><%= tier.notes.presence || "-" %></td>
+                      <td>
+                        <div class="d-flex justify-content-center gap-2">
+                          <button type="button"
+                                  class="btn btn-primary d-inline-flex align-items-center justify-content-center p-0 shadow-sm"
+                                  style="width: 32px; height: 32px; border-radius: 4px;"
+                                  onclick="openEditModal(this)"
+                                  data-id="<%= tier.id %>"
+                                  data-curriculum="<%= curr %>"
+                                  data-currency="<%= tier.currency_symbol %>"
+                                  data-admission="<%= tier.admission_fee %>"
+                                  data-monthly="<%= tier.monthly_fee %>"
+                                  data-renewal="<%= tier.renewal_fee %>"
+                                  data-invoice="<%= tier.invoice_recipient %>"
+                                  data-notes="<%= tier.notes %>"
+                                  title="Edit"
+                                  data-bs-toggle="tooltip">
+                            <i class="fas fa-pen" style="font-size: 0.8rem;"></i>
+                          </button>
 
-  .cancel-btn-small {
-    padding: 6px 8px;
-    background: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    position: relative;
-    transition: background-color 0.2s;
-    min-width: 32px;
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .cancel-btn-small:hover {
-    background: #5a6268;
-  }
-
-  /* Tooltip styles */
-  .edit-btn-small::after,
-  .save-btn-small::after,
-  .cancel-btn-small::after {
-    content: attr(title);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-    margin-bottom: 5px;
-    z-index: 1000;
-  }
-
-  .edit-btn-small:hover::after,
-  .save-btn-small:hover::after,
-  .cancel-btn-small:hover::after {
-    opacity: 1;
-  }
-
-  .edit-input {
-    width: 100%;
-    padding: 4px 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-
-  .edit-textarea {
-    width: 100%;
-    padding: 4px 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 14px;
-    resize: vertical;
-  }
-</style>
-
-<div style="padding: 0 24px;">
-  <h1>Pricing Tiers</h1>
-  <!-- Filters Section -->
-  <div style="margin-bottom: 20px;">
-    <%= form_with url: pricing_tiers_path, method: :get, local: true do |f| %>
-      <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; padding: 20px;">
-        <h2 style="font-size: 1.1rem; margin-bottom: 16px; color: #333;">Filters</h2>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
-          <div>
-            <%= f.label :model, "Model", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :model,
-                options_for_select([["All Models", ""]] + @models.map { |m| [m, m] }, params[:model]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
+                          <%= button_to pricing_tier_path(tier),
+                              method: :delete,
+                              class: "btn btn-danger d-inline-flex align-items-center justify-content-center p-0 shadow-sm",
+                              style: "width: 32px; height: 32px; border-radius: 4px;",
+                              title: "Delete",
+                              data: { turbo_confirm: "Are you sure? This cannot be undone.", bs_toggle: "tooltip" } do %>
+                            <i class="fas fa-trash" style="font-size: 0.8rem;"></i>
+                          <% end %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
           </div>
-
-          <div>
-            <%= f.label :country, "Country", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :country,
-                options_for_select([["All Countries", ""]] + @countries.map { |c| [c, c] }, params[:country]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
-          </div>
-
-          <div>
-            <%= f.label :hub_type, "Hub Type", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :hub_type,
-                options_for_select([["All Hub Types", ""]] + @hub_types.map { |h| [h, h] }, params[:hub_type]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
-          </div>
-
-          <div>
-            <%= f.label :specific_hub, "Specific Hub", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :specific_hub,
-                options_for_select([["All Specific Hubs", ""]] + @specific_hubs.map { |s| [s, s] }, params[:specific_hub]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
-          </div>
-
-          <div>
-            <%= f.label :curriculum, "Curriculum", style: "font-size: 0.9rem; color: #555; display: block; margin-bottom: 4px;" %>
-            <%= f.select :curriculum,
-                options_for_select([["All Curriculums", ""]] + @curriculums.map { |c| [c, c] }, params[:curriculum]),
-                {},
-                style: "width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc;" %>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 8px;">
-          <%= f.submit "Apply Filters", style: "padding: 7px 12px; border-radius: 6px; background: #0d6efd; color: white; border: 1px solid #0d6efd; cursor: pointer;" %>
-          <%= link_to "Clear All", pricing_tiers_path, style: "padding: 7px 12px; border-radius: 6px; background: #f0f0f0; color: #333; text-decoration: none; border: 1px solid #ddd;" %>
         </div>
       </div>
-    <% end %>
+    </div>
   </div>
+</div>
 
-  <!-- Results Count -->
-  <div style="margin-bottom: 12px; font-size: 0.95rem; color: #333;">
-    Showing <strong><%= @pricing_tiers.count %></strong> pricing tier<%= "s" if @pricing_tiers.count != 1 %>
+<div class="modal fade" id="sharedEditModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="sharedModalLabel">Edit Pricing</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with(model: @shared_tier, url: "#", method: :patch, id: "sharedEditForm", local: true) do |f| %>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Admission Fee</label>
+              <div class="input-group">
+                <span class="input-group-text currency-symbol">$</span>
+                <%= f.number_field :admission_fee, step: "0.01", class: "form-control", id: "inputAdmission" %>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Monthly Fee</label>
+              <div class="input-group">
+                <span class="input-group-text currency-symbol">$</span>
+                <%= f.number_field :monthly_fee, step: "0.01", class: "form-control", id: "inputMonthly" %>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Renewal Fee</label>
+              <div class="input-group">
+                <span class="input-group-text currency-symbol">$</span>
+                <%= f.number_field :renewal_fee, step: "0.01", class: "form-control", id: "inputRenewal" %>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Invoice To</label>
+              <%= f.text_field :invoice_recipient, class: "form-control", id: "inputInvoice" %>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-muted fw-bold">Notes</label>
+              <%= f.text_area :notes, rows: 2, class: "form-control", id: "inputNotes" %>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <%= f.submit "Save Changes", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
   </div>
+</div>
 
-  <!-- Pricing Tiers Table -->
-  <div style="background: #fff; border: 1px solid #eee; border-radius: 6px; overflow: auto;">
-    <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
-      <thead>
-        <tr>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Model</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Country</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Currency</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Hub Type</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Specific Hub</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Curriculum</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Admission Fee</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Monthly Fee</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Renewal Fee</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Invoice To</th>
-          <th style="text-align: left; padding: 12px 16px; border-bottom: 1px solid #eee; font-weight: 600;">Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if @pricing_tiers.any? %>
-          <% @pricing_tiers.each do |tier| %>
-            <tr class="pricing-tier-row" id="tier-<%= tier.id %>">
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.model %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.country %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.currency %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.hub_type %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.specific_hub %>
-              </td>
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <%= tier.curriculum %>
-              </td>
+<div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Create New Pricing Tier</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
 
-              <!-- Admission Fee -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="admission_fee">
-                    <%= number_to_currency(tier.admission_fee || 0, unit: "") %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <input type="number" class="edit-input" data-field="admission_fee" value="<%= tier.admission_fee %>" step="1">
+      <%= form_with(model: @new_tier, url: pricing_tiers_path, method: :post, local: true) do |f| %>
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Year</label>
+              <%= f.select :year, ((Date.today.year - 1)..(Date.today.year + 2)).to_a.reverse, {}, { class: "form-select", required: true } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Country</label>
+              <%= f.select :country, @create_countries, { prompt: "Select Country..." }, { class: "form-select", id: "create_country_select", required: true } %>
+            </div>
+
+            <div class="col-md-12">
+              <div class="card bg-light border-0 p-3">
+                <label class="form-label fw-bold small text-uppercase mb-2">Pricing Scope</label>
+
+                <% initial_scope = @new_tier.hub_id.present? ? 'specific' : 'generic' %>
+
+                <div class="d-flex gap-4 mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="pricing_scope" id="scope_generic" value="generic"
+                           <%= 'checked' if initial_scope == 'generic' %> onchange="toggleHubSelect()">
+                    <label class="form-check-label" for="scope_generic">Generic / Hub Type</label>
                   </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="admission_fee" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="admission_fee" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="admission_fee" title="Cancel">
-                      ✕
-                    </button>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="pricing_scope" id="scope_specific" value="specific"
+                           <%= 'checked' if initial_scope == 'specific' %> onchange="toggleHubSelect()">
+                    <label class="form-check-label" for="scope_specific">Specific Hub</label>
                   </div>
                 </div>
-              </td>
 
-              <!-- Monthly Fee -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="monthly_fee">
-                    <%= number_to_currency(tier.monthly_fee || 0, unit: "") %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <input type="number" class="edit-input" data-field="monthly_fee" value="<%= tier.monthly_fee %>" step="1">
-                  </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="monthly_fee" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="monthly_fee" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="monthly_fee" title="Cancel">
-                      ✕
-                    </button>
-                  </div>
+                <div id="generic_options" style="<%= 'display: none;' if initial_scope == 'specific' %>">
+                  <label class="small text-muted mb-1">Hub Type</label>
+                  <% current_types = @hub_types_by_country[@selected_country] || [] %>
+                  <%= f.select :hub_type, current_types, { prompt: "Select Type..." }, { class: "form-select", id: "create_hub_type_select" } %>
                 </div>
-              </td>
 
-              <!-- Renewal Fee -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="renewal_fee">
-                    <%= number_to_currency(tier.renewal_fee || 0, unit: "") %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <input type="number" class="edit-input" data-field="renewal_fee" value="<%= tier.renewal_fee %>" step="1">
-                  </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="renewal_fee" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="renewal_fee" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="renewal_fee" title="Cancel">
-                      ✕
-                    </button>
-                  </div>
+                <div id="specific_options" style="<%= 'display: none;' if initial_scope == 'generic' %>">
+                  <label class="small text-muted mb-1">Select Hub</label>
+                  <% current_hubs = @hubs_by_country[@selected_country] || [] %>
+                  <%= f.select :hub_id, current_hubs, { prompt: "Select Hub..." }, { class: "form-select", id: "create_hub_select" } %>
                 </div>
-              </td>
+              </div>
+            </div>
 
-              <!-- Invoice Recipient -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="invoice_recipient">
-                    <%= tier.invoice_recipient %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <input type="text" class="edit-input" data-field="invoice_recipient" value="<%= tier.invoice_recipient %>">
-                  </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="invoice_recipient" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="invoice_recipient" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="invoice_recipient" title="Cancel">
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              </td>
+            <div class="col-md-12">
+              <label class="form-label fw-bold small text-uppercase">Curriculum</label>
+              <%= f.select :curriculum, @curriculum_list, { prompt: "Select Curriculum..." }, { class: "form-select", required: true } %>
+            </div>
 
-              <!-- Notes -->
-              <td style="padding: 10px 16px; border-bottom: 1px solid #f6f6f6; vertical-align: middle; max-width: 300px;">
-                <div class="edit-field-container">
-                  <span class="field-value view-mode" data-field="notes" style="display: block; word-wrap: break-word;">
-                    <%= tier.notes %>
-                  </span>
-                  <div class="edit-mode" style="display: none; width: 100%;">
-                    <textarea class="edit-textarea" data-field="notes" rows="3"><%= tier.notes %></textarea>
-                  </div>
-                  <button class="edit-btn-small edit-trigger" data-tier-id="<%= tier.id %>" data-field="notes" title="Edit">
-                    <i class="fa-solid fa-pencil" title="Edit" style="font-size: 15px; color: white;"></i>
-                  </button>
-                  <div class="edit-actions" style="display: none;">
-                    <button class="save-btn-small save-trigger" data-tier-id="<%= tier.id %>" data-field="notes" title="Save">
-                      ✓
-                    </button>
-                    <button class="cancel-btn-small cancel-trigger" data-tier-id="<%= tier.id %>" data-field="notes" title="Cancel">
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          <% end %>
-        <% else %>
-          <tr>
-            <td colspan="11" style="padding: 16px; text-align: center; color: #888;">
-              No pricing tiers found matching your filters.
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">Admission Fee</label>
+              <div class="input-group">
+                <span class="input-group-text create-currency-symbol">-</span>
+                <%= f.number_field :admission_fee, step: "0.01", class: "form-control" %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">Monthly Fee</label>
+              <div class="input-group">
+                <span class="input-group-text create-currency-symbol">-</span>
+                <%= f.number_field :monthly_fee, step: "0.01", class: "form-control" %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">Renewal Fee</label>
+              <div class="input-group">
+                <span class="input-group-text create-currency-symbol">-</span>
+                <%= f.number_field :renewal_fee, step: "0.01", class: "form-control" %>
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label small text-muted">Invoice To</label>
+              <%= f.text_field :invoice_recipient, class: "form-control" %>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small text-muted">Notes</label>
+              <%= f.text_area :notes, rows: 2, class: "form-control" %>
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <%= f.submit "Create Pricing Tier", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
   </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const csrfToken = document.querySelector('[name="csrf-token"]').content;
+  // This prevents the "Identifier has already been declared" error when Turbo reloads the page.
+  var hubsByCountry = <%= @hubs_by_country.to_json.html_safe %>;
+  var hubTypesByCountry = <%= @hub_types_by_country.to_json.html_safe %>;
+  var currencyMapping = <%= @currency_mapping.to_json.html_safe %>;
 
-  // Store original values
-  const originalValues = {};
+  // Toggle Generic vs Specific
+  function toggleHubSelect() {
+    const isSpecific = document.getElementById('scope_specific').checked;
+    const genericDiv = document.getElementById('generic_options');
+    const specificDiv = document.getElementById('specific_options');
 
-  document.querySelectorAll('.edit-field-container').forEach(container => {
-    const field = container.querySelector('[data-field]').dataset.field;
-    const tierId = container.querySelector('.edit-trigger').dataset.tierId;
-    const key = `${tierId}-${field}`;
-    const viewValue = container.querySelector('.view-mode').textContent.trim();
-    originalValues[key] = viewValue;
-  });
+    const genericInput = document.getElementById('create_hub_type_select');
+    const specificInput = document.getElementById('create_hub_select');
 
-  // Edit button click handlers
-  document.querySelectorAll('.edit-trigger').forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      const tierId = this.dataset.tierId;
-      const field = this.dataset.field;
-      const container = this.closest('.edit-field-container');
-      const key = `${tierId}-${field}`;
+    if (isSpecific) {
+      genericDiv.style.display = 'none';
+      specificDiv.style.display = 'block';
 
-      // Reset input to original database value
-      const input = container.querySelector('.edit-mode [data-field]');
-      const originalValue = originalValues[key];
+      specificInput.setAttribute('required', 'required');
+      genericInput.removeAttribute('required');
+      genericInput.value = "";
+    } else {
+      genericDiv.style.display = 'block';
+      specificDiv.style.display = 'none';
 
-      if (input.tagName === 'TEXTAREA') {
-        input.value = originalValue;
-      } else if (input.type === 'number') {
-        // Remove formatting for number inputs
-        input.value = originalValue.replace(/,/g, '');
-      } else {
-        input.value = originalValue;
-      }
+      genericInput.setAttribute('required', 'required');
+      specificInput.removeAttribute('required');
+      specificInput.value = "";
+    }
+  }
 
-      // Hide view mode and show edit mode
-      container.querySelector('.view-mode').style.display = 'none';
-      container.querySelector('.edit-mode').style.display = 'block';
+  // This ensures the code runs every time you navigate or submit a form.
+  document.addEventListener("turbo:load", function() {
 
-      // Hide edit button, show save/cancel buttons
-      this.style.display = 'none';
-      container.querySelector('.edit-actions').style.display = 'flex';
-      container.querySelector('.edit-actions').style.gap = '4px';
-    });
-  });
+    // Initialize Toggle State if modal exists
+    if(document.getElementById('scope_specific')) {
+      toggleHubSelect();
+    }
 
-  // Cancel button click handlers
-  document.querySelectorAll('.cancel-trigger').forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      const container = this.closest('.edit-field-container');
+    // Initialize Tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
 
-      // Show view mode and hide edit mode
-      container.querySelector('.view-mode').style.display = 'block';
-      container.querySelector('.edit-mode').style.display = 'none';
+    // Setup Dropdown Listeners
+    const countrySelect = document.getElementById('create_country_select');
+    const hubSelect = document.getElementById('create_hub_select');
+    const typeSelect = document.getElementById('create_hub_type_select');
 
-      // Show edit button, hide save/cancel buttons
-      container.querySelector('.edit-trigger').style.display = 'inline-block';
-      container.querySelector('.edit-actions').style.display = 'none';
+    if(countrySelect) {
+      // Remove old listeners to avoid duplicates (optional safety)
+      const newCountrySelect = countrySelect.cloneNode(true);
+      countrySelect.parentNode.replaceChild(newCountrySelect, countrySelect);
 
-      // Reset input value to original
-      const input = container.querySelector('[data-field]');
-      const originalValue = container.querySelector('.view-mode').textContent.trim();
-      if (input.tagName === 'TEXTAREA') {
-        input.value = originalValue;
-      } else if (input.type === 'number') {
-        // Parse the number from the formatted display
-        input.value = originalValue.replace(/,/g, '');
-      } else {
-        input.value = originalValue;
-      }
-    });
-  });
+      newCountrySelect.addEventListener('change', function() {
+        const country = this.value;
 
-  // Save button click handlers
-  document.querySelectorAll('.save-trigger').forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault();
-      const tierId = this.dataset.tierId;
-      const field = this.dataset.field;
-      const container = this.closest('.edit-field-container');
-      const input = container.querySelector('.edit-mode [data-field]');
-      const newValue = input.value;
+        // 1. Data Lookup
+        const hubs = hubsByCountry[country] || [];
+        const types = hubTypesByCountry[country] || [];
+        const currency = currencyMapping[country] || '-';
 
-      const data = {
-        pricing_tier: {
-          [field]: newValue
+        // 2. Update Specific Hubs
+        if(hubSelect) {
+          hubSelect.innerHTML = '<option value="">Select Hub...</option>';
+          hubs.forEach(function(hub) {
+            const option = document.createElement('option');
+            option.text = hub[0];
+            option.value = hub[1];
+            hubSelect.add(option);
+          });
         }
-      };
 
-      fetch(`/pricing_tiers/${tierId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          // Update the display value
-          const viewSpan = container.querySelector('.view-mode');
-          if (field === 'admission_fee' || field === 'monthly_fee' || field === 'renewal_fee') {
-            // Format as currency
-            const formatted = parseFloat(newValue || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            viewSpan.textContent = formatted;
-          } else {
-            viewSpan.textContent = newValue;
+        // 3. Update Generic Hub Types
+        if(typeSelect) {
+          typeSelect.innerHTML = '<option value="">Select Type...</option>';
+          types.forEach(function(t) {
+            const option = document.createElement('option');
+            option.text = t;
+            option.value = t;
+            typeSelect.add(option);
+          });
+
+          if(types.length === 0) {
+             const defaultTypes = ["Independent", "Powered by BGA", "Online", "Hybrid"];
+             defaultTypes.forEach(function(t) {
+                const option = document.createElement('option');
+                option.text = t + " (Default)";
+                option.value = t;
+                typeSelect.add(option);
+             });
           }
-
-          // Switch back to view mode
-          viewSpan.style.display = 'block';
-          container.querySelector('.edit-mode').style.display = 'none';
-          container.querySelector('.edit-trigger').style.display = 'inline-block';
-          container.querySelector('.edit-actions').style.display = 'none';
-
-          // Show success message
-          const successMsg = document.createElement('div');
-          successMsg.textContent = '✓ Saved';
-          successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 12px 20px; border-radius: 6px; z-index: 10000; box-shadow: 0 2px 8px rgba(0,0,0,0.2);';
-          document.body.appendChild(successMsg);
-          setTimeout(() => successMsg.remove(), 2000);
-        } else {
-          alert('Error updating pricing tier: ' + (result.errors ? result.errors.join(', ') : 'Unknown error'));
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating the pricing tier.');
+
+        // 4. Update Currency Symbol
+        document.querySelectorAll('.create-currency-symbol').forEach(function(span) {
+          span.textContent = currency;
+        });
       });
-    });
+    }
   });
-});
+
+  // Open Edit Modal Logic
+  window.openEditModal = function(button) {
+    const id = button.getAttribute('data-id');
+    const curr = button.getAttribute('data-curriculum');
+    const symbol = button.getAttribute('data-currency');
+    const admission = button.getAttribute('data-admission');
+    const monthly = button.getAttribute('data-monthly');
+    const renewal = button.getAttribute('data-renewal');
+    const invoice = button.getAttribute('data-invoice');
+    const notes = button.getAttribute('data-notes');
+
+    document.getElementById('sharedModalLabel').textContent = 'Edit ' + curr + ' Pricing';
+    document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = symbol);
+
+    document.getElementById('inputAdmission').value = admission;
+    document.getElementById('inputMonthly').value = monthly;
+    document.getElementById('inputRenewal').value = renewal;
+    document.getElementById('inputInvoice').value = invoice;
+    document.getElementById('inputNotes').value = notes;
+
+    const form = document.getElementById('sharedEditForm');
+    form.action = '/pricing_tiers/' + id;
+
+    const modalEl = document.getElementById('sharedEditModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
 </script>

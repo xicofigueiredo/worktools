@@ -86,6 +86,7 @@ Rails.application.routes.draw do
         get 'export', action: :export_form
         post 'export', action: :export_csv
         post 'fetch_from_hubspot', action: :fetch_from_hubspot
+        post 'generate_bulk_emails', action: :generate_bulk_emails
       end
       member do
         get 'documents', action: :documents
@@ -110,7 +111,7 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :pricing_tiers, only: [:index, :update]
+    resources :pricing_tiers, only: [:index, :create, :update, :destroy]
 
     resources :service_requests, only: [:index, :create] do
       collection do

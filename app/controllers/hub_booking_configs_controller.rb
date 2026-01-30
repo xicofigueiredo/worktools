@@ -6,7 +6,11 @@ class HubBookingConfigsController < ApplicationController
     @config = @hub.booking_config || @hub.build_booking_config
 
     # Extract and clean raw slots from params
-    raw_slots = params.require(:hub_booking_config).permit(visit_slots: {})[:visit_slots]
+    raw_slots = if params[:hub_booking_config].present?
+                  params.require(:hub_booking_config).permit(visit_slots: {})[:visit_slots]
+                else
+                  {} # Default to empty if no data sent
+                end
     clean_slots = {}
     if raw_slots.present?
       raw_slots.each do |day, times|

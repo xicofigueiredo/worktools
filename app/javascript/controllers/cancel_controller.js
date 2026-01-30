@@ -25,8 +25,20 @@ export default class extends Controller {
 
     const now = new Date()
     const currentDay = now.getDate()
-    if (currentDay >= 15) {
-      alert("Cancellations are not allowed on or after the 15th of the month.")
+
+    // 1. Parse the start date early to check the month
+    let isCurrentMonthLeave = false
+    if (startDateStr) {
+      const start = new Date(startDateStr + "T00:00:00")
+      // Check if the leave is in the same year AND same month as today
+      if (start.getFullYear() === now.getFullYear() && start.getMonth() === now.getMonth()) {
+        isCurrentMonthLeave = true
+      }
+    }
+
+    // 2. Modified Check: Only block if it is >= 15th AND the leave is in the current month
+    if (currentDay >= 15 && isCurrentMonthLeave) {
+      alert("Cancellations are not allowed on or after the 15th for leaves occurring in the current month.")
       return
     }
 

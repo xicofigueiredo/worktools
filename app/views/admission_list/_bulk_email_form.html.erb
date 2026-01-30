@@ -1,0 +1,85 @@
+<div style="padding: 24px;">
+  <h3 style="margin-top:0; color:#333;">Generate Bulk Emails</h3>
+
+  <div style="background:#f8f9fa; padding:12px; border-radius:6px; margin-bottom:20px; border:1px solid #e9ecef;">
+    <strong style="color:#555; font-size:0.9rem;">Filters active for this list:</strong>
+    <p id="bulkEmailFilterSummary"
+       data-admission-search-target="filterSummary"
+       style="margin:4px 0 0 0; color:#666; font-size:0.85rem; line-height:1.4;">
+      Loading filters...
+    </p>
+  </div>
+
+  <p style="color:#666; font-size:0.9rem; margin-bottom:12px;">
+    Select which email addresses to include:
+  </p>
+
+  <form data-admission-search-target="bulkEmailForm" data-action="submit->admission-search#generateBulkEmails">
+
+    <div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #eee;">
+      <label style="display:flex; align-items:center; cursor:pointer; font-weight:600; color:#0d6efd;">
+        <input type="checkbox"
+               data-admission-search-target="bulkEmailSelectAll"
+               data-action="change->admission-search#toggleBulkEmailAll"
+               style="margin-right:8px;">
+        Select All
+      </label>
+    </div>
+
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+      <label style="display:flex; align-items:center; cursor:pointer;">
+        <input type="checkbox" name="include_personal_email" value="true" checked class="bulk-email-checkbox"
+               data-action="change->admission-search#checkBulkEmailSelectAll" style="margin-right:8px;">
+        Student Personal
+      </label>
+
+      <label style="display:flex; align-items:center; cursor:pointer;">
+        <input type="checkbox" name="include_institutional_email" value="true" checked class="bulk-email-checkbox"
+               data-action="change->admission-search#checkBulkEmailSelectAll" style="margin-right:8px;">
+        Student Institutional
+      </label>
+
+      <label style="display:flex; align-items:center; cursor:pointer;">
+        <input type="checkbox" name="include_parent1" value="true" checked class="bulk-email-checkbox"
+               data-action="change->admission-search#checkBulkEmailSelectAll" style="margin-right:8px;">
+        Parent 1
+      </label>
+
+      <label style="display:flex; align-items:center; cursor:pointer;">
+        <input type="checkbox" name="include_parent2" value="true" class="bulk-email-checkbox"
+               data-action="change->admission-search#checkBulkEmailSelectAll" style="margin-right:8px;">
+        Parent 2
+      </label>
+
+      <label style="display:flex; align-items:center; cursor:pointer;">
+        <input type="checkbox" name="include_finance" value="true" class="bulk-email-checkbox"
+               data-action="change->admission-search#checkBulkEmailSelectAll" style="margin-right:8px;">
+        Financial
+      </label>
+    </div>
+
+    <button type="submit"
+            id="generateEmailsBtn"
+            data-admission-search-target="generateEmailsBtn"
+            style="background:#0d6efd; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:500;">
+      Generate List
+    </button>
+  </form>
+
+  <div data-admission-search-target="emailResultContainer" style="display:none; margin-top:20px; border-top:1px solid #eee; padding-top:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <span style="font-weight:600; font-size:0.9rem; color:#333;">
+        Result (<span data-admission-search-target="emailCount">0</span> unique emails)
+      </span>
+      <button data-action="click->admission-search#copyToClipboard"
+              data-admission-search-target="copyBtn"
+              style="background:#f8f9fa; border:1px solid #ddd; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:6px;">
+        <i class="fa fa-copy"></i> Copy to Clipboard
+      </button>
+    </div>
+
+    <textarea data-admission-search-target="emailListTextarea"
+              readonly
+              style="width:100%; height:150px; padding:10px; border:1px solid #ddd; border-radius:6px; font-family:monospace; font-size:0.9rem; resize:vertical;"></textarea>
+  </div>
+</div>
