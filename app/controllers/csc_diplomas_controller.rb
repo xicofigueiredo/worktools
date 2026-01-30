@@ -2,7 +2,7 @@ class CscDiplomasController < ApplicationController
   before_action :authenticate_user!
 
   def show
-    @csc_diploma = current_user.csc_diplomas.where(issued: false).first || current_user.create_csc_diploma
+    @csc_diploma = current_user.csc_diploma || current_user.create_csc_diploma
     @csc_activities = @csc_diploma.csc_activities.where(hidden: false)
                                   .includes(activitable: { sprint_goal: :sprint }).order(created_at: :desc)
     @hidden_activities = @csc_diploma.csc_activities.where(hidden: true)
@@ -10,7 +10,7 @@ class CscDiplomasController < ApplicationController
   end
 
   def fetch_activities
-    @csc_diploma = current_user.csc_diplomas.where(issued: false).first || current_user.create_csc_diploma
+    @csc_diploma = current_user.csc_diploma || current_user.create_csc_diploma
 
     # Find the last sprint goal for the user (only from past sprints)
     last_sprint_goal = current_user.sprint_goals

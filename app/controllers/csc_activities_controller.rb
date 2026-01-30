@@ -8,18 +8,18 @@ class CscActivitiesController < ApplicationController
   def update
     params_hash = csc_activity_params.to_h
 
-    # Calculate base credits from hours: hours / 8, max 1.5
+    # Calculate base credits from hours: hours / 8, max 3.5
     base_credits = nil
     if params_hash['hours'].present?
       hours = params_hash['hours'].to_f
-      base_credits = [hours / 8, 1.5].min
+      base_credits = [hours / 8, 3.5].min
     end
 
-    # Calculate final credits: base_credits × (weight / 100)
-    # The credits field stores the final calculated value (base credits × weight)
-    if base_credits.present? && params_hash['weight'].present?
-      weight = params_hash['weight'].to_f
-      final_credits = base_credits * (weight / 100.0)
+    # Calculate final credits: base_credits + extra
+    # The credits field stores the final calculated value (base credits + extra)
+    if base_credits.present? && params_hash['extra'].present?
+      extra = params_hash['extra'].to_f
+      final_credits = base_credits + extra
       params_hash['credits'] = final_credits.round(2)
     elsif params_hash['credits'].present?
       # If credits is already calculated (from JS), use it
@@ -53,12 +53,12 @@ class CscActivitiesController < ApplicationController
   private
 
   def set_csc_activity
-    @csc_activity = current_user.csc_diplomas.where(issued: false).first.csc_activities.find(params[:id])
+    @csc_activity = current_user.csc_diploma.csc_activities.find(params[:id])
   end
 
   def csc_activity_params
     params.require(:csc_activity).permit(
-      :hours, :weight, :credits, :validated,
+      :hours, :extra, :credits, :validated,
       :full_name, :date_of_submission, :expected_hours,
       :activity_name, :activity_type, :start_date, :end_date,
       :partner, :partner_person, :partner_contact, :confirmation_participation,

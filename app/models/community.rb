@@ -64,11 +64,11 @@ class Community < ApplicationRecord
   end
 
   def create_csc_activity
-    CscActivity.create(activitable: self, csc_diploma: self.sprint_goal.user.csc_diplomas.where(issued: false).first)
+    CscActivity.create(activitable: self, csc_diploma: self.sprint_goal.user.csc_diploma)
   end
 
   def update_csc_activity
-    return unless self.sprint_goal.user.csc_diplomas.where(issued: false).first.csc_activities.where(activitable: self).present?
-    self.sprint_goal.user.csc_diplomas.where(issued: false).first.csc_activities.where(activitable: self).first.update(activitable: self)
+    return unless self.sprint_goal.user.csc_diploma.csc_activities.where(activitable: self).present?
+    self.sprint_goal.user.csc_diploma.csc_activities.where(activitable: self).first.update(activitable: self)
   end
 end

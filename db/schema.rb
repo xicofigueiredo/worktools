@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_01_28_155648) do
+ActiveRecord::Schema[7.0].define(version: 2026_01_30_095856) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -270,7 +270,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_28_155648) do
     t.string "activitable_type", null: false
     t.bigint "activitable_id", null: false
     t.integer "hours"
-    t.integer "weight"
+    t.decimal "extra", precision: 3, scale: 1
     t.decimal "credits", precision: 3, scale: 2
     t.string "rubric_score"
     t.boolean "validated", default: false, null: false

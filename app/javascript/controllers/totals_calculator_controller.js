@@ -4,18 +4,20 @@ export default class extends Controller {
   static targets = ["totalHours", "totalCredits", "weightWarning"]
 
   connect() {
+    // Store bound function references for proper cleanup
+    this.boundRecalculate = this.recalculate.bind(this)
+
     // Listen for custom event from activity row controllers
-    document.addEventListener('activity:saved', this.recalculate.bind(this))
-    // Also listen for input changes to update warnings in real-time
-    document.addEventListener('activity:weightChanged', this.checkWeights.bind(this))
+    document.addEventListener('activity:saved', this.boundRecalculate)
+    // Also listen for input changes to update totals and warnings in real-time
+    document.addEventListener('activity:weightChanged', this.boundRecalculate)
     // Initial check
     this.recalculate()
-    this.checkWeights()
   }
 
   disconnect() {
-    document.removeEventListener('activity:saved', this.recalculate.bind(this))
-    document.removeEventListener('activity:weightChanged', this.checkWeights.bind(this))
+    document.removeEventListener('activity:saved', this.boundRecalculate)
+    document.removeEventListener('activity:weightChanged', this.boundRecalculate)
   }
 
   recalculate() {
@@ -44,46 +46,42 @@ export default class extends Controller {
       this.totalCreditsTarget.textContent = totalCredits.toFixed(2)
     }
 
-    this.checkWeights()
+    this.checkBaseCredits()
   }
 
-  checkWeights() {
+  checkBaseCredits() {
     // Find all visible activity rows (not hidden)
     const visibleRows = document.querySelectorAll('tr[data-controller="activity-row-calculator"]:not([data-hidden="true"])')
 
-    // Group weights by activity type
-    const weightsByType = {}
-    const typeCount = new Set()
+    // Group base credits by activity type
+    const baseCreditsByType = {}
+    const maxBaseCreditsPerCategory = 3.5
 
     visibleRows.forEach(row => {
       const activityType = row.dataset.activityType
       if (!activityType) return
 
-      typeCount.add(activityType)
+      const hoursInput = row.querySelector('[data-activity-row-calculator-target="hours"]')
+      const hours = parseFloat(hoursInput?.value) || 0
 
-      const weightInput = row.querySelector('[data-activity-row-calculator-target="weight"]')
-      const weight = parseFloat(weightInput?.value) || 0
+      // Calculate base credits: hours / 8, max 3.5
+      const baseCredits = hours > 0 ? Math.min(hours / 8, 3.5) : 0
 
-      if (!weightsByType[activityType]) {
-        weightsByType[activityType] = 0
+      if (!baseCreditsByType[activityType]) {
+        baseCreditsByType[activityType] = 0
       }
-      weightsByType[activityType] += weight
+      baseCreditsByType[activityType] += baseCredits
     })
-
-    // Determine expected total: 100 per category, or 200 if only one category
-    const categories = Object.keys(weightsByType)
-    const isSingleCategory = categories.length === 1
-    const expectedTotal = isSingleCategory ? 200 : 100
 
     // Check each category and build warnings
     const warnings = []
+    const categories = Object.keys(baseCreditsByType)
 
     categories.forEach(type => {
-      const total = weightsByType[type]
-      if (total !== expectedTotal) {
-        const diff = expectedTotal - total
-        const status = diff > 0 ? `${diff}% short` : `${Math.abs(diff)}% over`
-        warnings.push(`<strong>${type}</strong>: ${total}% (should be ${expectedTotal}%, ${status})`)
+      const total = baseCreditsByType[type]
+      if (total > maxBaseCreditsPerCategory) {
+        const excess = (total - maxBaseCreditsPerCategory).toFixed(2)
+        warnings.push(`<strong>${type}</strong>: ${total.toFixed(2)} base credits (max ${maxBaseCreditsPerCategory}, ${excess} over)`)
       }
     })
 
@@ -93,8 +91,7 @@ export default class extends Controller {
         this.weightWarningTarget.innerHTML = `
           <div class="alert alert-warning mb-0 py-2">
             <i class="fa-solid fa-triangle-exclamation me-2"></i>
-            <strong>Weight Warning:</strong> ${warnings.join(' | ')}
-            ${isSingleCategory ? '<br><small class="text-muted">Note: Single category detected - total should be 200%</small>' : ''}
+            <strong>Base Credits Warning:</strong> ${warnings.join(' | ')}
           </div>
         `
         this.weightWarningTarget.style.display = 'block'

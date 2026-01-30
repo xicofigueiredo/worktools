@@ -1,33 +1,33 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["hours", "weight", "baseCredits", "finalCredits", "creditsHidden", "form"]
+  static targets = ["hours", "extra", "baseCredits", "finalCredits", "creditsHidden", "form"]
   static values = {
-    maxCredits: { type: Number, default: 1.5 },
+    maxCredits: { type: Number, default: 3.5 },
     divisor: { type: Number, default: 8 }
   }
 
   connect() {
     this.calculate()
     this.initialHours = this.hoursTarget.value
-    this.initialWeight = this.weightTarget.value
+    this.initialExtra = this.extraTarget.value
     this.saving = false
   }
 
   calculate() {
     const hours = parseFloat(this.hoursTarget.value) || 0
-    const weight = parseFloat(this.weightTarget.value) || 0
+    const extra = parseFloat(this.extraTarget.value) || 0
 
-    // Calculate base credits: hours / 8, max 1.5
+    // Calculate base credits: hours / 8, max 3.5
     let baseCredits = 0
     if (hours > 0) {
       baseCredits = Math.min(hours / this.divisorValue, this.maxCreditsValue)
     }
 
-    // Calculate final credits: base credits × (weight / 100)
+    // Calculate final credits: base credits + extra
     let finalCredits = 0
-    if (baseCredits > 0 && weight > 0) {
-      finalCredits = baseCredits * (weight / 100)
+    if (baseCredits > 0 || extra > 0) {
+      finalCredits = baseCredits + extra
     }
 
     // Update displays
@@ -39,18 +39,18 @@ export default class extends Controller {
       this.creditsHiddenTarget.value = finalCredits > 0 ? finalCredits.toFixed(2) : ''
     }
 
-    // Dispatch event to update weight warnings in real-time
+    // Dispatch event to update warnings in real-time
     document.dispatchEvent(new CustomEvent('activity:weightChanged'))
   }
 
   async save(event) {
     // Only save if value has changed and not already saving
     const currentHours = this.hoursTarget.value
-    const currentWeight = this.weightTarget.value
+    const currentExtra = this.extraTarget.value
 
     if (this.saving) return
 
-    if (currentHours !== this.initialHours || currentWeight !== this.initialWeight) {
+    if (currentHours !== this.initialHours || currentExtra !== this.initialExtra) {
       this.saving = true
 
       const form = this.hasFormTarget ? this.formTarget : this.element.querySelector('form')
@@ -69,7 +69,7 @@ export default class extends Controller {
           if (response.ok) {
             // Update initial values after successful save
             this.initialHours = currentHours
-            this.initialWeight = currentWeight
+            this.initialExtra = currentExtra
 
             // Brief visual feedback
             form.classList.add('bg-success-subtle')

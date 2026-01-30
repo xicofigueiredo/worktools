@@ -30,11 +30,12 @@
     </div>
   </div>
 
-  <div data-controller="totals-calculator" class="d-flex justify-content-center" >
-    <div data-totals-calculator-target="weightWarning" style="display: none;"></div>
-  </div>
+  <div data-controller="totals-calculator">
+    <div class="d-flex justify-content-center">
+      <div data-totals-calculator-target="weightWarning" style="display: none;"></div>
+    </div>
 
-  <div class="card">
+    <div class="card">
     <div class="card-header">
       <h5 class="mb-0">Activities</h5>
     </div>
@@ -48,9 +49,9 @@
                 <th>Type</th>
                 <th>Sprint</th>
                 <th>Hours</th>
-                <th>Base <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Hours ÷ 8 (max 1.5)"></i></th>
-                <th>Weight <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Percentage (e.g., 50 = 50%)"></i></th>
-                <th>Credits <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Base × Weight"></i></th>
+                <th>Base <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Hours ÷ 8 (max 3.5)"></i></th>
+                <th>Extra <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Additional credits"></i></th>
+                <th>Credits <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Base + Extra"></i></th>
                 <th>Rubric</th>
                 <th></th>
               </tr>
@@ -85,13 +86,13 @@
                       <%
                         base_credits = '-'
                         if activity.hours.present? && activity.hours > 0
-                          base_credits = [activity.hours / 8.0, 1.5].min.round(2)
+                          base_credits = [activity.hours / 8.0, 3.5].min.round(2)
                         end
                       %>
                       <span data-activity-row-calculator-target="baseCredits"><%= base_credits %></span>
                     </td>
                     <td>
-                      <input type="number" name="csc_activity[weight]" value="<%= activity.weight %>" class="form-control form-control-sm mx-auto" style="width: 70px;" min="0" max="200" step="10" data-activity-row-calculator-target="weight" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                      <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 70px;" min="0" max="3.5" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
                       <input type="hidden" name="csc_activity[credits]" value="<%= activity.credits %>" data-activity-row-calculator-target="creditsHidden">
                     </td>
                     <td>
@@ -149,15 +150,15 @@
                       </td>
                       <td>
                         <%
-                          base_credits = '-'
-                          if activity.hours.present? && activity.hours > 0
-                            base_credits = [activity.hours / 8.0, 1.5].min.round(2)
-                          end
+                        base_credits = '-'
+                        if activity.hours.present? && activity.hours > 0
+                          base_credits = [activity.hours / 8.0, 3.5].min.round(2)
+                        end
                         %>
                         <span data-activity-row-calculator-target="baseCredits"><%= base_credits %></span>
                       </td>
                       <td>
-                        <input type="number" name="csc_activity[weight]" value="<%= activity.weight %>" class="form-control form-control-sm mx-auto" style="width: 70px;" min="0" step="0.1" data-activity-row-calculator-target="weight" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                        <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 70px;" min="0" max="3.5" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
                         <input type="hidden" name="csc_activity[credits]" value="<%= activity.credits %>" data-activity-row-calculator-target="creditsHidden">
                       </td>
                       <td>
@@ -205,6 +206,7 @@
         </div>
       <% end %>
     </div>
+  </div>
   </div>
 </div>
 
