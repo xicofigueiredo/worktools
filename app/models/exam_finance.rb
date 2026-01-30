@@ -28,12 +28,10 @@ class ExamFinance < ApplicationRecord
   end
 
   def set_currency
-
     hub = user.main_hub
     return unless hub # Skip if user has no main hub
 
-    pricing_tier = PricingTier.find_by(country: hub.country)
-    self.currency = pricing_tier&.currency
+    self.currency = PricingTier::CURRENCY_MAPPING[hub.country] || '€'
   end
 
   private
