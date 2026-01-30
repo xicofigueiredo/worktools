@@ -19,7 +19,7 @@ class PricingTierMatcher
     search_curriculum = resolve_curriculum_alias(target_curriculum)
 
     # 3. Log the search criteria (Helpful for debugging)
-    Rails.logger.info "Pricing Search: Hub=#{target_hub.name} (#{target_hub.country}), Model=#{target_model}, Curr=#{search_curriculum}, Year=#{academic_year}"
+    Rails.logger.info "Pricing Search: Hub=#{target_hub.name} (#{target_hub.country}), Model=#{target_model}, Curr=#{search_curriculum}, Year=#{year}"
 
     # --- SEARCH LEVEL 1: Specific Hub ID Match ---
     tier = PricingTier.find_by(
@@ -43,7 +43,7 @@ class PricingTierMatcher
 
     return tier if tier
 
-    Rails.logger.warn("✗ No PricingTier found for #{target_hub.name} / #{search_curriculum} / #{academic_year}")
+    Rails.logger.warn("✗ No PricingTier found for #{target_hub.name} / #{search_curriculum} / #{year}")
     nil
   end
 

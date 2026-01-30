@@ -1,7 +1,9 @@
 class HubspotService
   HUBSPOT_ACCESS_TOKEN = ENV['HUBSPOT_ACCESS_TOKEN']
-  FORM_GUID = '472b7df8-5290-4908-8408-1dcee6e15512'
-  API_URL = "https://api.hubapi.com/form-integrations/v1/submissions/forms/#{FORM_GUID}"
+  FORM_GUIDS = [
+    '472b7df8-5290-4908-8408-1dcee6e15512',
+    '16f15775-fbb4-413d-84e1-3eb24f405d64'
+  ]
 
   def self.fetch_new_submissions
     headers = {
@@ -9,18 +11,24 @@ class HubspotService
       'Content-Type'  => 'application/json'
     }
 
-    response = HTTParty.get(API_URL, query: { limit: 50 }, headers: headers)
+    overall_success = true
 
-    unless response.success?
-      Rails.logger.error "HubSpot API Error: #{response.code} - #{response.body}"
-      return false
+    FORM_GUIDS.each do |guid|
+      api_url = "https://api.hubapi.com/form-integrations/v1/submissions/forms/#{guid}"
+
+      response = HTTParty.get(api_url, query: { limit: 50 }, headers: headers)
+
+      if response.success?
+        data = JSON.parse(response.body)
+        data['results'].each { |submission| process_submission(submission) }
+        Rails.logger.info "Successfully processed #{data['results'].count} new submissions from form #{guid}."
+      else
+        Rails.logger.error "HubSpot API Error for form #{guid}: #{response.code} - #{response.body}"
+        overall_success = false
+      end
     end
 
-    data = JSON.parse(response.body)
-    data['results'].each { |submission| process_submission(submission) }
-
-    Rails.logger.info "Successfully processed #{data['results'].count} new submissions."
-    true
+    overall_success
   end
 
   def self.process_submission(submission_data)
@@ -71,7 +79,7 @@ class HubspotService
       Rails.logger.error("Error associating hub for LearnerInfo ID=#{learner_info.id}: #{e.message}")
     end
 
-    # New logic: Set status based on hub capacity after association
+    # Set status based on hub capacity after association
     if learner_info.hub_id.present?
       hub = learner_info.hub
 
@@ -149,6 +157,7 @@ class HubspotService
 
   def self.associate_hub(learner_info, fields)
     hubspot_key = fields[:hub_interest_portugal]
+    school_name = fields[:school_s_name]
 
     if hubspot_key.present?
       hub = Hub.find_by(hubspot_key: hubspot_key)
@@ -159,8 +168,19 @@ class HubspotService
         Rails.logger.warn("No hub found for hubspot_key: #{hubspot_key} - LearnerInfo ID: #{learner_info.id} remains without hub association.")
       end
       return
+    elsif school_name.present?
+      # Match exact school_name value to hub.name (no parsing/stripping)
+      hub = Hub.find_by(name: school_name)
+      if hub
+        learner_info.update!(hub_id: hub.id)
+        Rails.logger.info("Associated hub '#{hub.name}' (ID: #{hub.id}) with LearnerInfo ID: #{learner_info.id} from school_s_name")
+      else
+        Rails.logger.warn("No hub found for exact school_name: #{school_name} - LearnerInfo ID: #{learner_info.id} remains without hub association.")
+      end
+      return
     end
 
+    # Fallback for online/remote learners (unchanged)
     form_email = fields[:email]
     remote_region = fetch_contact_remote_region(form_email)
     region_display = remote_region || '(not defined)'
@@ -171,8 +191,9 @@ class HubspotService
         'Undetermined'
       else
         m = remote_region.to_s.strip.match(/region\s*([1-3])\b/i)
-        "Remote #{m[1].to_i}"
+        "Remote #{m[1].to_i}" if m
       end
+    target_hub_name ||= 'Undetermined'
     target_hub = Hub.find_by(name: target_hub_name)
 
     if target_hub
@@ -187,9 +208,11 @@ class HubspotService
     learner_info_mapping = {
       :learning_model                    => :programme,
       :curriculum_option__2_             => :curriculum_course_option,
+      :curriculum_option_pwb             => :curriculum_course_option,
       :current_school_grade_year         => :previous_school_grade_year,
       :previous_school_status            => :previous_school_status,
       :previous_school_s_name            => :previous_school_name,
+      :school_s_name                     => :previous_school_name,
       :previous_school_s_email           => :previous_school_email,
       :studentname                       => :full_name,
       :learner_s_personal_email_address  => :personal_email,
@@ -260,7 +283,7 @@ class HubspotService
       attrs[:home_address] = address_keys.map { |k| fields[k] }.compact.join(', ')
     end
 
-    # Map programme to Online or Hybrid (after special handling)
+    # Map programme to Online or Hybrid (after special handling), default to 'Hybrid' if not present
     if raw_programme.present?
       downcased = raw_programme.downcase
       if downcased.include?('remote') || downcased.include?('online')
@@ -268,6 +291,8 @@ class HubspotService
       else
         attrs[:programme] = 'Hybrid'
       end
+    else
+      attrs[:programme] = 'Hybrid'
     end
 
     # Store conversion_id if provided
@@ -286,61 +311,66 @@ class HubspotService
   end
 
   def self.create_learner_finances(learner_info, fields)
-  payment_plan = fields[:payment_plan]
-  financial_responsibility = fields[:financial_responsibility]
+    payment_plan = fields[:payment_plan]
+    financial_responsibility = fields[:financial_responsibility]
 
-  finance_attrs = {
-    payment_plan: payment_plan,
-    financial_responsibility: financial_responsibility,
-    discount_mf: 0,
-    scholarship: 0,
-    discount_af: 0,
-    discount_rf: 0
-  }
+    finance_attrs = {
+      payment_plan: payment_plan,
+      financial_responsibility: financial_responsibility,
+      discount_mf: 0,
+      scholarship: 0,
+      discount_af: 0,
+      discount_rf: 0
+    }
 
-  # Fetch pricing tier if hub is associated
-  if learner_info.hub
-    tier = PricingTierMatcher.for_learner(
-      learner_info,
-      learner_info.curriculum_course_option,
-      learner_info.hub,
-      Date.today.year
-    )
+    year = Date.today.year
 
-    if tier
-      finance_attrs[:monthly_fee] = tier.monthly_fee
-      finance_attrs[:admission_fee] = tier.admission_fee
-      finance_attrs[:renewal_fee] = tier.renewal_fee
-      Rails.logger.info("Applied pricing tier for LearnerInfo ID: #{learner_info.id} - Tier ID: #{tier.id} (Year: #{academic_year})")
+    # Fetch pricing tier using the matcher if hub is associated
+    if learner_info.hub
+      tier = PricingTierMatcher.for_learner(
+        learner_info,
+        learner_info.curriculum_course_option,
+        learner_info.hub,
+        year
+      )
+
+      if tier
+        finance_attrs[:monthly_fee] = tier.monthly_fee
+        finance_attrs[:admission_fee] = tier.admission_fee
+        finance_attrs[:renewal_fee] = tier.renewal_fee
+        Rails.logger.info("Applied pricing tier for LearnerInfo ID: #{learner_info.id} - Tier ID: #{tier.id} (Year: #{year})")
+      else
+        Rails.logger.warn("No matching pricing tier found for LearnerInfo ID: #{learner_info.id} (Hub: #{learner_info.hub.name}, Curriculum: #{learner_info.curriculum_course_option}, Year: #{year})")
+      end
     else
-      Rails.logger.warn("No matching pricing tier found for LearnerInfo ID: #{learner_info.id} (Hub: #{learner_info.hub.name}, Curriculum: #{learner_info.curriculum_course_option}, Year: #{year})")
+      Rails.logger.warn("No hub associated for LearnerInfo ID: #{learner_info.id} - Skipping pricing tier lookup")
     end
-  else
-    Rails.logger.warn("No hub associated for LearnerInfo ID: #{learner_info.id} - Skipping pricing tier lookup")
+
+    finance_record = learner_info.build_learner_finance(finance_attrs)
+
+    if finance_record.save
+      Rails.logger.info("Successfully created LearnerFinances for LearnerInfo ID: #{learner_info.id}")
+    else
+      Rails.logger.error("Failed to save LearnerFinances for #{learner_info.full_name}: #{finance_record.errors.full_messages.join(', ')}")
+    end
+
+    finance_record
   end
-
-  finance_record = learner_info.build_learner_finance(finance_attrs)
-
-  if finance_record.save
-    Rails.logger.info("Successfully created LearnerFinances for LearnerInfo ID: #{learner_info.id}")
-  else
-    Rails.logger.error("Failed to save LearnerFinances for #{learner_info.full_name}: #{finance_record.errors.full_messages.join(', ')}")
-  end
-
-  finance_record
-end
 
   def self.attach_files_for_learner(learner_info, fields)
     file_field_mapping = {
       previous_school_transcripts:   'last_term_report',
       current_academic_qualifications__up_: 'last_term_report',
+      last_term_report:              'last_term_report',
       special_education_form:        'special_needs',
       learner_s_id_document_picture: 'learner_id',
       letter_of_interest:            'letter_of_interest',
       picture:                       'picture',
       medical_form:                  'medical_form',
       parent_1_id_document_picture:  'parent_id',
-      parent_2_id_document_photo:    'parent_id'
+      parent_2_id_document_photo:    'parent_id',
+      parent_1_id_file:              'parent_id',
+      parent_2___id_file:            'parent_id'
     }
 
     file_field_mapping.each do |hub_key, doc_type|
@@ -492,5 +522,41 @@ end
       raw = $1.strip
     end
     raw.downcase
+  end
+
+  def self.inspect_form_fields(form_guid)
+    headers = {
+      'Authorization' => "Bearer #{HUBSPOT_ACCESS_TOKEN}",
+      'Content-Type'  => 'application/json'
+    }
+
+    response = HTTParty.get("https://api.hubapi.com/forms/v2/forms/#{form_guid}", headers: headers)
+
+    unless response.success?
+      puts "Error: #{response.code} - #{response.body}"
+      return
+    end
+
+    form_definition = JSON.parse(response.body)
+
+    fields_summary = form_definition['formFieldGroups'].flat_map { |g| g['fields'] }.map do |f|
+      {
+        name: f['name'],
+        label: f['label'],
+        type: f['fieldType'],
+        options: f['options']&.map { |o| o['value'] }
+      }
+    end
+
+    puts "--- Form Fields for GUID: #{form_guid} ---"
+    fields_summary.each do |f|
+      puts "Field: #{f[:name]}"
+      puts "Label: #{f[:label]}"
+      puts "Type:  #{f[:type]}"
+      puts "Options: #{f[:options].join(', ')}" if f[:options].present?
+      puts "-" * 30
+    end
+
+    fields_summary
   end
 end
