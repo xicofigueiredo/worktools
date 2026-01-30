@@ -10,7 +10,7 @@ class ApplicationController < ActionController::Base
 
   # Method to switch roles (only for admins)
   def switch_role
-    if current_user.role == 'admin' && params[:role].in?(['admin', 'learner', 'lc', 'cm', 'exams', 'parent', 'staff'])
+    if current_user.role == 'admin' && params[:role].in?(['admin', 'learner', 'lc', 'rm', 'cm', 'exams', 'parent', 'staff'])
       session[:viewing_role] = params[:role]
       redirect_back(fallback_location: root_path)
     else
@@ -92,6 +92,8 @@ class ApplicationController < ActionController::Base
       'parent'
     when 'lc'
       'lc'
+    when 'rm'
+      'rm'
     when 'cm'
       'cm'
     when 'exams'
