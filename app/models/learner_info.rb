@@ -69,7 +69,7 @@ class LearnerInfo < ApplicationRecord
 
     attributes_to_update = { status: new_status }
 
-    if new_status == "Onboarded" && student_number.blank?
+    if new_status == "In progress - ok" && student_number.blank?
       gen_number = generate_student_number
       self.student_number = gen_number
       changes['student_number'] = [nil, gen_number]
