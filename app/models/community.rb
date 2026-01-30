@@ -64,7 +64,19 @@ class Community < ApplicationRecord
   end
 
   def create_csc_activity
-    CscActivity.create(activitable: self, full_name: self.sprint_goal.user.full_name, date_of_submission: self.sprint_goal.created_at, activity_name: self.involved, activity_type: "community", start_date: self.sprint_goal.sprint.start_date, end_date: self.sprint_goal.sprint.end_date)
+    csc_diploma = self.sprint_goal.user.csc_diploma
+    return unless csc_diploma.present?
+
+    CscActivity.create(
+      csc_diploma: csc_diploma,
+      activitable: self,
+      full_name: self.sprint_goal.user.full_name,
+      date_of_submission: self.sprint_goal.created_at,
+      activity_name: self.involved,
+      activity_type: "community",
+      start_date: self.sprint_goal.sprint.start_date,
+      end_date: self.sprint_goal.sprint.end_date
+    )
   end
 
   def update_csc_activity
