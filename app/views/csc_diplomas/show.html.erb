@@ -64,12 +64,30 @@
                       <%= activity.activity_name || activity.activitable.extracurricular %>
                     <% elsif activity.activitable.is_a?(Community) %>
                       <%= activity.activity_name || activity.activitable.involved %>
+                    <% elsif activity.activity_type == "build_week" %>
+                      Build Week
+                    <% elsif activity.activity_type == "hub_activities" %>
+                      Hub Activities
                     <% end %>
                   </td>
                   <td>
-                    <span class="badge <%= activity.activitable_type == 'Skill' ? 'bg-info' : 'bg-primary' %>">
-                      <%= activity.activitable_type %>
-                    </span>
+                    <% if activity.activity_type == "build_week" %>
+                      <span class="badge bg-success">
+                        Build Week
+                      </span>
+                    <% elsif activity.activity_type == "hub_activities" %>
+                      <span class="badge bg-secondary">
+                        Hub Activities
+                      </span>
+                    <% elsif activity.activity_type == "skill" %>
+                      <span class="badge bg-info">
+                        Skill
+                      </span>
+                    <% elsif activity.activity_type == "community" %>
+                      <span class="badge bg-primary">
+                        Community
+                      </span>
+                    <% end %>
                   </td>
                   <td>
                     <% if activity.activitable.respond_to?(:sprint_goal) && activity.activitable.sprint_goal&.sprint %>

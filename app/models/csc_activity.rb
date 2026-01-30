@@ -5,7 +5,7 @@ class CscActivity < ApplicationRecord
   has_many_attached :files
   before_save :calculate_rubric_score
 
-  validates :activitable_id, uniqueness: { scope: :activitable_type }
+  validates :activitable_id, uniqueness: { scope: [:activitable_type, :activity_type] }
 
   TAG_OPTIONS = [
     'Environment',

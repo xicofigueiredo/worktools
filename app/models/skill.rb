@@ -84,4 +84,7 @@ class Skill < ApplicationRecord
     return unless self.sprint_goal.user.csc_diploma.csc_activities.where(activitable: self).present?
     self.sprint_goal.user.csc_diploma.csc_activities.where(activitable: self).first.update(activitable: self)
   end
+
+  def check_build_week_hub_activities
+  end
 end
