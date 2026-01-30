@@ -51,6 +51,38 @@ class PricingTiersController < ApplicationController
     @curriculums = @matrix_tiers.keys.sort
   end
 
+  def destroy
+    @pricing_tier = PricingTier.find(params[:id])
+
+    # Capture context before deleting
+    year = @pricing_tier.year
+    country = @pricing_tier.country
+    hub_type = @pricing_tier.hub_type
+    hub_id = @pricing_tier.hub_id
+
+    # Destroy the record
+    if @pricing_tier.destroy
+      flash[:notice] = "Pricing tier for #{@pricing_tier.curriculum} deleted successfully."
+    else
+      flash[:alert] = "Failed to delete pricing tier."
+    end
+
+    # Check if data still exists for the current selection, otherwise bubble up.
+    if PricingTier.where(year: year, country: country, hub_type: hub_type, hub_id: hub_id).exists?
+      # The Hub still has other items. Stay exactly where we are.
+      redirect_to pricing_tiers_path(year: year, country: country, hub_type: hub_type, hub_id: hub_id)
+    elsif PricingTier.where(year: year, country: country).exists?
+      # The Hub is empty, but the Country still has data. Redirect to the Country.
+      redirect_to pricing_tiers_path(year: year, country: country)
+    elsif PricingTier.where(year: year).exists?
+      # The Country is entirely empty. Redirect to the Year.
+      redirect_to pricing_tiers_path(year: year)
+    else
+      # The entire Year is empty. Just go home.
+      redirect_to pricing_tiers_path
+    end
+  end
+
   def update
     @pricing_tier = PricingTier.find(params[:id])
 

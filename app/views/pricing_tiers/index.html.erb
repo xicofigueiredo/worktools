@@ -51,6 +51,7 @@
                   <th class="py-3 text-secondary text-uppercase small">Renewal</th>
                   <th class="py-3 text-secondary text-uppercase small">Invoice To</th>
                   <th class="py-3 text-secondary text-uppercase small">Notes</th>
+                  <th class="py-3 text-secondary text-uppercase small">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,6 +96,22 @@
                       <td class="text-dark small">
                         <%= tier.notes.presence || "-" %>
                       </td>
+
+                      <td>
+                        <%= button_to pricing_tier_path(tier),
+                            method: :delete,
+                            class: "btn btn-danger d-inline-flex align-items-center justify-content-center p-0 shadow-sm",
+                            style: "width: 32px; height: 32px; border-radius: 4px;",
+                            title: "Delete",
+                            data: {
+                              confirm: "Are you sure you want to delete the #{curr} pricing tier? This cannot be undone.",
+                              turbo_confirm: "Are you sure you want to delete the #{curr} pricing tier? This cannot be undone.",
+                              bs_toggle: "tooltip"
+                            } do %>
+                          <i class="fas fa-trash"></i>
+
+                        <% end %>
+                      </td>
                     </tr>
                   <% end %>
                 <% end %>
@@ -107,3 +124,12 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function(){
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+  });
+</script>

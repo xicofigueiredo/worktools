@@ -111,7 +111,7 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :pricing_tiers, only: [:index, :update]
+    resources :pricing_tiers, only: [:index, :update, :destroy]
 
     resources :service_requests, only: [:index, :create] do
       collection do
