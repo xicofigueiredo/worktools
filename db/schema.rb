@@ -10,7 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
+<<<<<<< HEAD
 ActiveRecord::Schema[7.0].define(version: 2026_01_27_200423) do
+=======
+ActiveRecord::Schema[7.0].define(version: 2026_01_30_095856) do
+>>>>>>> 7a6b617f974ebc54083ea06507c250cd34d34581
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -256,13 +260,38 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_27_200423) do
     t.string "activitable_type", null: false
     t.bigint "activitable_id", null: false
     t.integer "hours"
-    t.integer "weight"
-    t.integer "credits"
+    t.decimal "extra", precision: 3, scale: 1
+    t.decimal "credits", precision: 3, scale: 2
     t.string "rubric_score"
     t.boolean "validated", default: false, null: false
     t.boolean "hidden", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "full_name"
+    t.date "date_of_submission"
+    t.integer "expected_hours"
+    t.text "tags", default: [], array: true
+    t.string "partner"
+    t.text "activity_description"
+    t.text "reflection"
+    t.boolean "unpaid", default: false
+    t.boolean "not_academic", default: false
+    t.boolean "time_investment", default: false
+    t.boolean "evidence", default: false
+    t.date "review_date"
+    t.string "reviewed_by"
+    t.text "notes"
+    t.integer "planing"
+    t.integer "effort"
+    t.integer "skill"
+    t.integer "community"
+    t.string "partner_person"
+    t.string "partner_contact"
+    t.string "confirmation_participation"
+    t.string "activity_name"
+    t.string "activity_type"
+    t.date "start_date"
+    t.date "end_date"
     t.index ["activitable_type", "activitable_id"], name: "index_csc_activities_on_activitable"
     t.index ["activitable_type", "activitable_id"], name: "index_csc_activities_on_activitable_unique", unique: true
     t.index ["csc_diploma_id"], name: "index_csc_activities_on_csc_diploma_id"

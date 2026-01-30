@@ -31,10 +31,10 @@ module ProgressCalculations
             h[:balance] -= 1
           end
 
-          # Sum progress if topic is done
-          h[:progress] += ut.percentage if ut.done
+          # Sum progress if topic is done (guard against NaN/nil percentages)
+          h[:progress] += ut.percentage if ut.done && ut.percentage.to_f.finite?
           # Sum expected progress if deadline has passed
-          h[:expected] += ut.percentage if ut.deadline && ut.deadline < Date.today
+          h[:expected] += ut.percentage if ut.deadline && ut.deadline < Date.today && ut.percentage.to_f.finite?
         end
 
         balance = result[:balance]
@@ -49,14 +49,17 @@ module ProgressCalculations
         actual = topics.count { |topic| user_topics_by_topic[topic.id]&.done }
         balance = actual - expected
 
-        # Sum percentages for done topics in one pass
-        progress = topics.sum { |topic| user_topics_by_topic[topic.id]&.done ? user_topics_by_topic[topic.id].percentage : 0.0 }
+        # Sum percentages for done topics in one pass (guard against NaN/nil percentages)
+        progress = topics.sum do |topic|
+          ut = user_topics_by_topic[topic.id]
+          (ut&.done && ut.percentage.to_f.finite?) ? ut.percentage : 0.0
+        end
         expected_progress = total_topics.positive? ? (expected.to_f / total_topics) : 0.0
       end
 
-      # Convert progress values into whole percentages
-      progress_percentage = (progress * 100).round
-      expected_progress_percentage = (expected_progress * 100).round
+      # Convert progress values into whole percentages (default to 0 if NaN)
+      progress_percentage = progress.to_f.finite? ? (progress * 100).round : 0
+      expected_progress_percentage = expected_progress.to_f.finite? ? (expected_progress * 100).round : 0
 
       # Update the timeline record (this is a DB update per timeline)
       timeline.update(
@@ -84,18 +87,18 @@ module ProgressCalculations
         elsif !topic.done && topic.deadline && topic.deadline < Date.today && (topic.time.positive? || timeline.subject.category == 0 || timeline.subject.category == 1 || timeline.subject.category == 2)
           balance -= 1
         end
-        percentage = topic.time / total_time if topic.time.positive? && total_time.positive?
+        percentage = (topic.time.positive? && total_time.positive?) ? (topic.time / total_time) : nil
 
-        # Sum progress if topic is done
-        progress += percentage if topic.done && !percentage.nil?
+        # Sum progress if topic is done (guard against NaN/nil percentages)
+        progress += percentage if topic.done && percentage && percentage.to_f.finite?
         # Sum expected progress if deadline has passed
-        expected_progress += percentage if topic.deadline && topic.deadline < Date.today && !percentage.nil?
+        expected_progress += percentage if topic.deadline && topic.deadline < Date.today && percentage && percentage.to_f.finite?
       end
 
 
-      # Convert progress values into whole percentages
-      progress_percentage = (progress * 100).round
-      expected_progress_percentage = (expected_progress * 100).round
+      # Convert progress values into whole percentages (default to 0 if NaN)
+      progress_percentage = progress.to_f.finite? ? (progress * 100).round : 0
+      expected_progress_percentage = expected_progress.to_f.finite? ? (expected_progress * 100).round : 0
 
       # Update the timeline record (this is a DB update per timeline)
       timeline.update(
@@ -160,6 +163,8 @@ module ProgressCalculations
   end
 
   def calc_array_average(array)
+    return 0.0 if array.empty?
+
     array.sum.to_f / array.size
   end
 end

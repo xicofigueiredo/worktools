@@ -14,12 +14,13 @@ module ExamEnrollsHelper
        'extension_cm_comment']
     when 'lc'
       if current_user.hubs.count > 5 || current_user.id == 247 || current_user.id == 99
-      ['pre_registration_exception_dc_approval',
-       'pre_registration_exception_dc_comment',
-       'failed_mock_exception_dc_approval',
-       'failed_mock_exception_dc_comment',
-       'extension_dc_approval',
-       'extension_dc_comment']
+        [:lc_access,
+         'pre_registration_exception_dc_approval',
+         'pre_registration_exception_dc_comment',
+         'failed_mock_exception_dc_approval',
+         'failed_mock_exception_dc_comment',
+         'extension_dc_approval',
+         'extension_dc_comment']
       else
         :lc_access
       end
@@ -39,8 +40,16 @@ module ExamEnrollsHelper
     permitted_fields = get_permitted_fields(user)
     return false if permitted_fields == :all
 
-    if permitted_fields == :lc_access
-      # For LCs: disable approval/comment fields
+    # Check if :lc_access is the value or is included in the array
+    has_lc_access = permitted_fields == :lc_access || (permitted_fields.is_a?(Array) && permitted_fields.include?(:lc_access))
+
+    if has_lc_access
+      # For LCs with DC access: allow DC fields if they're in the permitted list
+      if permitted_fields.is_a?(Array) && permitted_fields.include?(field_name.to_s)
+        return false
+      end
+
+      # For LCs: disable approval/comment fields (cm, dc, edu)
       return true if field_name.to_s.match?(/(cm|dc|edu)_(approval|comment)/)
 
       # ALWAYS disable subject_name for LCs

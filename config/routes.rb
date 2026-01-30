@@ -234,6 +234,7 @@ Rails.application.routes.draw do
     resources :csc_activities, only: [:edit, :update] do
       member do
         patch :toggle_hidden
+        delete :purge_attachment
       end
     end
 
