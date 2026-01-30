@@ -1,7 +1,7 @@
 class UpdatePricingTiersStructure < ActiveRecord::Migration[7.0]
   def up
     add_reference :pricing_tiers, :hub, foreign_key: true, null: true
-    add_column :pricing_tiers, :academic_year, :integer, default: "2025"
+    add_column :pricing_tiers, :academic_year, :integer, default: "2026"
 
     change_column :pricing_tiers, :monthly_fee, :decimal, precision: 10, scale: 2, default: 0.0
     change_column :pricing_tiers, :admission_fee, :decimal, precision: 10, scale: 2, default: 0.0
