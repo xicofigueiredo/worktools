@@ -176,11 +176,19 @@
             <%= f.label :reviewed_by, "Reviewed by (Name)", class: "form-label" %>
             <%= f.text_field :reviewed_by, class: "form-control" %>
           </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :status, "Status", class: "form-label" %>
+            <%= f.select :status, CscActivity::STATUS_OPTIONS, {}, class: "form-select" %>
+          </div>
+          <div class="col-md-6 mb-3">
+            <%= f.label :notes, "Comments / Notes", class: "form-label" %>
+            <%= f.text_area :notes, class: "form-control", rows: 3 %>
+          </div>
         </div>
 
         <hr class="my-4">
 
-        <h5 class="mb-3 text-primary"><i class="fa-solid fa-star me-2"></i>Rubric Scoring</h5>
+        <h5 class="mb-3 text-primary"><i class="fa-solid fa-star me-2"></i>Section 8 – Rubric Scoring</h5>
         <div class="table-responsive mb-4">
           <table class="table table-bordered">
             <thead class="table-light">
@@ -313,19 +321,6 @@
             background-color: #d6f10f;
           }
         </style>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <div class="form-check">
-              <%= f.check_box :validated, class: "form-check-input", id: "validated" %>
-              <%= f.label :validated, "Validated", class: "form-check-label" %>
-            </div>
-          </div>
-          <div class="col-md-6 mb-3">
-            <%= f.label :notes, "Comments / Notes", class: "form-label" %>
-            <%= f.text_area :notes, class: "form-control", rows: 4 %>
-          </div>
-        </div>
 
         <div class="d-flex justify-content-between mt-4 pt-3 border-top">
           <%= link_to csc_diploma_path, class: "btn btn-outline-secondary" do %>

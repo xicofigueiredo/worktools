@@ -58,7 +58,7 @@ class CscActivitiesController < ApplicationController
 
   def csc_activity_params
     params.require(:csc_activity).permit(
-      :hours, :extra, :credits, :validated,
+      :hours, :extra, :credits, :status,
       :full_name, :date_of_submission, :expected_hours,
       :activity_name, :activity_type, :start_date, :end_date,
       :partner, :partner_person, :partner_contact, :confirmation_participation,

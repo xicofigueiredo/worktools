@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_01_30_120154) do
+ActiveRecord::Schema[7.0].define(version: 2026_01_30_120500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -273,7 +273,6 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_30_120154) do
     t.decimal "extra", precision: 3, scale: 1
     t.decimal "credits", precision: 3, scale: 2
     t.string "rubric_score"
-    t.boolean "validated", default: false, null: false
     t.boolean "hidden", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -302,6 +301,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_30_120154) do
     t.string "activity_type"
     t.date "start_date"
     t.date "end_date"
+    t.string "status", default: "needs_revision", null: false
     t.index ["activitable_type", "activitable_id", "activity_type"], name: "index_csc_activities_on_activitable_unique", unique: true
     t.index ["activitable_type", "activitable_id"], name: "index_csc_activities_on_activitable"
     t.index ["csc_diploma_id"], name: "index_csc_activities_on_csc_diploma_id"

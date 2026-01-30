@@ -21,6 +21,40 @@ class CscActivity < ApplicationRecord
     'Other'
   ].freeze
 
+  STATUS_OPTIONS = [
+    ['Needs Revision', 'needs_revision'],
+    ['Approved', 'approved'],
+    ['Rejected', 'rejected']
+  ].freeze
+
+  def approved?
+    status == 'approved'
+  end
+
+  def needs_revision?
+    status == 'needs_revision'
+  end
+
+  def rejected?
+    status == 'rejected'
+  end
+
+  def status_badge_class
+    case status
+    when 'approved' then 'bg-success'
+    when 'rejected' then 'bg-danger'
+    else 'bg-warning text-dark'
+    end
+  end
+
+  def status_display
+    case status
+    when 'approved' then 'Approved'
+    when 'rejected' then 'Rejected'
+    else 'Needs Revision'
+    end
+  end
+
   def calculate_rubric_score
     return if self.planing.blank? || self.effort.blank? || self.skill.blank? || self.community.blank?
     avg = (self.planing + self.effort + self.skill + self.community).to_f / 4

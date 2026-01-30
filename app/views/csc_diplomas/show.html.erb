@@ -53,6 +53,7 @@
                 <th>Extra <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Additional credits"></i></th>
                 <th>Credits <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Base + Extra"></i></th>
                 <th>Rubric</th>
+                <th>Status</th>
                 <th></th>
               </tr>
             </thead>
@@ -90,8 +91,13 @@
                     <% end %>
                   </td>
                   <td>
-                    <% if activity.activitable.respond_to?(:sprint_goal) && activity.activitable.sprint_goal&.sprint %>
-                      <%= activity.activitable.sprint_goal.sprint.name %> <%= activity.activitable.sprint_goal.sprint.start_date&.year %>
+                    <% sprint = if activity.activitable.is_a?(SprintGoal)
+                                  activity.activitable.sprint
+                                elsif activity.activitable.respond_to?(:sprint_goal)
+                                  activity.activitable.sprint_goal&.sprint
+                                end %>
+                    <% if sprint %>
+                      <%= sprint.name %> <%= sprint.start_date&.year %>
                     <% else %>
                       <span class="text-muted">-</span>
                     <% end %>
@@ -121,6 +127,9 @@
                     </td>
                   <% end %>
                   <td>
+                    <span class="badge <%= activity.status_badge_class %>"><%= activity.status_display %></span>
+                  </td>
+                  <td>
                     <div class="d-flex gap-1 justify-content-center">
                       <%= link_to edit_csc_activity_path(activity), class: "btn btn-sm btn-outline-primary", title: "Edit all fields" do %>
                         <i class="fa-solid fa-pen"></i>
@@ -135,7 +144,7 @@
 
               <% if @hidden_activities.any? %>
                 <tr>
-                  <td colspan="9" class="text-center py-2">
+                  <td colspan="10" class="text-center py-2">
                     <hr class="my-1">
                     <small class="text-muted">Hidden Activities</small>
                     <hr class="my-1">
@@ -156,8 +165,13 @@
                       </span>
                     </td>
                     <td>
-                      <% if activity.activitable.respond_to?(:sprint_goal) && activity.activitable.sprint_goal&.sprint %>
-                        <%= activity.activitable.sprint_goal.sprint.name %> <%= activity.activitable.sprint_goal.sprint.start_date&.year %>
+                      <% sprint = if activity.activitable.is_a?(SprintGoal)
+                                    activity.activitable.sprint
+                                  elsif activity.activitable.respond_to?(:sprint_goal)
+                                    activity.activitable.sprint_goal&.sprint
+                                  end %>
+                      <% if sprint %>
+                        <%= sprint.name %> <%= sprint.start_date&.year %>
                       <% else %>
                         <span class="text-muted">-</span>
                       <% end %>
@@ -187,6 +201,9 @@
                       </td>
                     <% end %>
                     <td>
+                      <span class="badge <%= activity.status_badge_class %>"><%= activity.status_display %></span>
+                    </td>
+                    <td>
                       <div class="d-flex gap-1 justify-content-center">
                         <%= link_to edit_csc_activity_path(activity), class: "btn btn-sm btn-outline-secondary", title: "Edit all fields" do %>
                           <i class="fa-solid fa-pen"></i>
@@ -212,7 +229,7 @@
               <strong>Total Credits:</strong> <span data-totals-calculator-target="totalCredits"><%= @csc_activities.sum { |a| a.credits.to_f }.round(2) %></span>
             </div>
             <div class="col-md-4">
-              <strong>Valid Activities:</strong> <%= @csc_activities.count { |a| a.validated } %> / <%= @csc_activities.count %>
+              <strong>Approved Activities:</strong> <%= @csc_activities.count { |a| a.approved? } %> / <%= @csc_activities.count %>
             </div>
           </div>
         </div>
