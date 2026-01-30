@@ -4,7 +4,7 @@
     <div class="col-md-2 border-end py-4">
       <h6 class="px-3 text-uppercase text-muted small fw-bold mb-3">Countries</h6>
       <div class="list-group list-group-flush">
-        <% @countries.each do |country| %>
+        <% @sidebar_countries.each do |country| %>
           <%= link_to country,
               pricing_tiers_path(year: @selected_year, country: country),
               class: "list-group-item list-group-item-action border-0 px-3 py-2 rounded #{'active fw-bold' if country == @selected_country}" %>
@@ -13,6 +13,13 @@
     </div>
 
     <div class="col-md-10 py-4 px-md-5">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-dark m-0">Pricing Tiers</h4>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createModal">
+          <i class="fas fa-plus me-2"></i> Create New
+        </button>
+      </div>
 
       <div class="mb-4">
         <ul class="nav nav-pills justify-content-center">
@@ -64,7 +71,6 @@
                     <% tier = @matrix_tiers[curr] %>
                     <tr>
                       <td class="text-start ps-4 fw-bold text-dark"><%= curr %></td>
-
                       <td class="text-dark">
                         <%= tier.admission_fee.to_f.positive? ? "#{tier.currency_symbol}#{number_with_precision(tier.admission_fee, precision: 2)}" : "-" %>
                       </td>
@@ -76,10 +82,8 @@
                       </td>
                       <td class="text-dark"><%= tier.invoice_recipient.presence || "-" %></td>
                       <td class="text-dark small"><%= tier.notes.presence || "-" %></td>
-
                       <td>
                         <div class="d-flex justify-content-center gap-2">
-
                           <button type="button"
                                   class="btn btn-primary d-inline-flex align-items-center justify-content-center p-0 shadow-sm"
                                   style="width: 32px; height: 32px; border-radius: 4px;"
@@ -105,7 +109,6 @@
                               data: { turbo_confirm: "Are you sure? This cannot be undone.", bs_toggle: "tooltip" } do %>
                             <i class="fas fa-trash" style="font-size: 0.8rem;"></i>
                           <% end %>
-
                         </div>
                       </td>
                     </tr>
@@ -127,11 +130,9 @@
         <h5 class="modal-title fw-bold" id="sharedModalLabel">Edit Pricing</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-
       <%= form_with(model: @shared_tier, url: "#", method: :patch, id: "sharedEditForm", local: true) do |f| %>
         <div class="modal-body">
           <div class="row g-3">
-
             <div class="col-md-6">
               <label class="form-label small text-muted fw-bold">Admission Fee</label>
               <div class="input-group">
@@ -139,7 +140,6 @@
                 <%= f.number_field :admission_fee, step: "0.01", class: "form-control", id: "inputAdmission" %>
               </div>
             </div>
-
             <div class="col-md-6">
               <label class="form-label small text-muted fw-bold">Monthly Fee</label>
               <div class="input-group">
@@ -147,7 +147,6 @@
                 <%= f.number_field :monthly_fee, step: "0.01", class: "form-control", id: "inputMonthly" %>
               </div>
             </div>
-
             <div class="col-md-6">
               <label class="form-label small text-muted fw-bold">Renewal Fee</label>
               <div class="input-group">
@@ -155,17 +154,14 @@
                 <%= f.number_field :renewal_fee, step: "0.01", class: "form-control", id: "inputRenewal" %>
               </div>
             </div>
-
             <div class="col-md-6">
               <label class="form-label small text-muted fw-bold">Invoice To</label>
               <%= f.text_field :invoice_recipient, class: "form-control", id: "inputInvoice" %>
             </div>
-
             <div class="col-12">
               <label class="form-label small text-muted fw-bold">Notes</label>
               <%= f.text_area :notes, rows: 2, class: "form-control", id: "inputNotes" %>
             </div>
-
           </div>
         </div>
         <div class="modal-footer">
@@ -177,18 +173,215 @@
   </div>
 </div>
 
+<div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Create New Pricing Tier</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <%= form_with(model: @new_tier, url: pricing_tiers_path, method: :post, local: true) do |f| %>
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Year</label>
+              <%= f.select :year, ((Date.today.year - 1)..(Date.today.year + 2)).to_a.reverse, {}, { class: "form-select", required: true } %>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-uppercase">Country</label>
+              <%= f.select :country, @create_countries, { prompt: "Select Country..." }, { class: "form-select", id: "create_country_select", required: true } %>
+            </div>
+
+            <div class="col-md-12">
+              <div class="card bg-light border-0 p-3">
+                <label class="form-label fw-bold small text-uppercase mb-2">Pricing Scope</label>
+
+                <% initial_scope = @new_tier.hub_id.present? ? 'specific' : 'generic' %>
+
+                <div class="d-flex gap-4 mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="pricing_scope" id="scope_generic" value="generic"
+                           <%= 'checked' if initial_scope == 'generic' %> onchange="toggleHubSelect()">
+                    <label class="form-check-label" for="scope_generic">Generic / Hub Type</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="pricing_scope" id="scope_specific" value="specific"
+                           <%= 'checked' if initial_scope == 'specific' %> onchange="toggleHubSelect()">
+                    <label class="form-check-label" for="scope_specific">Specific Hub</label>
+                  </div>
+                </div>
+
+                <div id="generic_options" style="<%= 'display: none;' if initial_scope == 'specific' %>">
+                  <label class="small text-muted mb-1">Hub Type</label>
+                  <% current_types = @hub_types_by_country[@selected_country] || [] %>
+                  <%= f.select :hub_type, current_types, { prompt: "Select Type..." }, { class: "form-select", id: "create_hub_type_select" } %>
+                </div>
+
+                <div id="specific_options" style="<%= 'display: none;' if initial_scope == 'generic' %>">
+                  <label class="small text-muted mb-1">Select Hub</label>
+                  <% current_hubs = @hubs_by_country[@selected_country] || [] %>
+                  <%= f.select :hub_id, current_hubs, { prompt: "Select Hub..." }, { class: "form-select", id: "create_hub_select" } %>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label fw-bold small text-uppercase">Curriculum</label>
+              <%= f.select :curriculum, @curriculum_list, { prompt: "Select Curriculum..." }, { class: "form-select", required: true } %>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small text-muted">Admission Fee</label>
+              <div class="input-group">
+                <span class="input-group-text create-currency-symbol">-</span>
+                <%= f.number_field :admission_fee, step: "0.01", class: "form-control" %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">Monthly Fee</label>
+              <div class="input-group">
+                <span class="input-group-text create-currency-symbol">-</span>
+                <%= f.number_field :monthly_fee, step: "0.01", class: "form-control" %>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small text-muted">Renewal Fee</label>
+              <div class="input-group">
+                <span class="input-group-text create-currency-symbol">-</span>
+                <%= f.number_field :renewal_fee, step: "0.01", class: "form-control" %>
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label small text-muted">Invoice To</label>
+              <%= f.text_field :invoice_recipient, class: "form-control" %>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small text-muted">Notes</label>
+              <%= f.text_area :notes, rows: 2, class: "form-control" %>
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <%= f.submit "Create Pricing Tier", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
 <script>
-  // Tooltip Initialization
-  document.addEventListener("DOMContentLoaded", function(){
+  // This prevents the "Identifier has already been declared" error when Turbo reloads the page.
+  var hubsByCountry = <%= @hubs_by_country.to_json.html_safe %>;
+  var hubTypesByCountry = <%= @hub_types_by_country.to_json.html_safe %>;
+  var currencyMapping = <%= @currency_mapping.to_json.html_safe %>;
+
+  // Toggle Generic vs Specific
+  function toggleHubSelect() {
+    const isSpecific = document.getElementById('scope_specific').checked;
+    const genericDiv = document.getElementById('generic_options');
+    const specificDiv = document.getElementById('specific_options');
+
+    const genericInput = document.getElementById('create_hub_type_select');
+    const specificInput = document.getElementById('create_hub_select');
+
+    if (isSpecific) {
+      genericDiv.style.display = 'none';
+      specificDiv.style.display = 'block';
+
+      specificInput.setAttribute('required', 'required');
+      genericInput.removeAttribute('required');
+      genericInput.value = "";
+    } else {
+      genericDiv.style.display = 'block';
+      specificDiv.style.display = 'none';
+
+      genericInput.setAttribute('required', 'required');
+      specificInput.removeAttribute('required');
+      specificInput.value = "";
+    }
+  }
+
+  // This ensures the code runs every time you navigate or submit a form.
+  document.addEventListener("turbo:load", function() {
+
+    // Initialize Toggle State if modal exists
+    if(document.getElementById('scope_specific')) {
+      toggleHubSelect();
+    }
+
+    // Initialize Tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl)
     })
+
+    // Setup Dropdown Listeners
+    const countrySelect = document.getElementById('create_country_select');
+    const hubSelect = document.getElementById('create_hub_select');
+    const typeSelect = document.getElementById('create_hub_type_select');
+
+    if(countrySelect) {
+      // Remove old listeners to avoid duplicates (optional safety)
+      const newCountrySelect = countrySelect.cloneNode(true);
+      countrySelect.parentNode.replaceChild(newCountrySelect, countrySelect);
+
+      newCountrySelect.addEventListener('change', function() {
+        const country = this.value;
+
+        // 1. Data Lookup
+        const hubs = hubsByCountry[country] || [];
+        const types = hubTypesByCountry[country] || [];
+        const currency = currencyMapping[country] || '-';
+
+        // 2. Update Specific Hubs
+        if(hubSelect) {
+          hubSelect.innerHTML = '<option value="">Select Hub...</option>';
+          hubs.forEach(function(hub) {
+            const option = document.createElement('option');
+            option.text = hub[0];
+            option.value = hub[1];
+            hubSelect.add(option);
+          });
+        }
+
+        // 3. Update Generic Hub Types
+        if(typeSelect) {
+          typeSelect.innerHTML = '<option value="">Select Type...</option>';
+          types.forEach(function(t) {
+            const option = document.createElement('option');
+            option.text = t;
+            option.value = t;
+            typeSelect.add(option);
+          });
+
+          if(types.length === 0) {
+             const defaultTypes = ["Independent", "Powered by BGA", "Online", "Hybrid"];
+             defaultTypes.forEach(function(t) {
+                const option = document.createElement('option');
+                option.text = t + " (Default)";
+                option.value = t;
+                typeSelect.add(option);
+             });
+          }
+        }
+
+        // 4. Update Currency Symbol
+        document.querySelectorAll('.create-currency-symbol').forEach(function(span) {
+          span.textContent = currency;
+        });
+      });
+    }
   });
 
-  // Shared Modal Logic
-  function openEditModal(button) {
-    // Get Data from Button
+  // Open Edit Modal Logic
+  window.openEditModal = function(button) {
     const id = button.getAttribute('data-id');
     const curr = button.getAttribute('data-curriculum');
     const symbol = button.getAttribute('data-currency');
@@ -198,22 +391,18 @@
     const invoice = button.getAttribute('data-invoice');
     const notes = button.getAttribute('data-notes');
 
-    // Update Modal Title & Currency Symbols
     document.getElementById('sharedModalLabel').textContent = 'Edit ' + curr + ' Pricing';
     document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = symbol);
 
-    // Populate Inputs (Handle empty strings)
     document.getElementById('inputAdmission').value = admission;
     document.getElementById('inputMonthly').value = monthly;
     document.getElementById('inputRenewal').value = renewal;
     document.getElementById('inputInvoice').value = invoice;
     document.getElementById('inputNotes').value = notes;
 
-    // Update Form Action URL
     const form = document.getElementById('sharedEditForm');
     form.action = '/pricing_tiers/' + id;
 
-    // Show Modal
     const modalEl = document.getElementById('sharedEditModal');
     const modal = new bootstrap.Modal(modalEl);
     modal.show();

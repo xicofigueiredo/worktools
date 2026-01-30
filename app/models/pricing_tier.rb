@@ -4,6 +4,10 @@ class PricingTier < ApplicationRecord
   # Validations
   validates :model, :country, :hub_type, :curriculum, :year, presence: true
   validates :monthly_fee, :admission_fee, :renewal_fee, numericality: { greater_than_or_equal_to: 0, allow_nil: true }
+  validates :curriculum, uniqueness: {
+    scope: [:year, :country, :hub_type, :hub_id],
+    message: "pricing for this context already exists"
+  }
 
   # Constants
   CURRENCY_MAPPING = {
