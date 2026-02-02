@@ -4,6 +4,7 @@ class CscActivity < ApplicationRecord
 
   has_many_attached :files
   before_save :calculate_rubric_score
+  before_save :set_default_extra_justification
 
   validates :activitable_id, uniqueness: { scope: [:activitable_type, :activity_type] }
 
@@ -66,6 +67,18 @@ class CscActivity < ApplicationRecord
       self.rubric_score = "2 - Approaches Expectations"
     else
       self.rubric_score = "1 - Below Expectations"
+    end
+  end
+
+  def set_default_extra_justification
+    return unless extra.present? && extra > 0
+    return if extra_justification.present?
+
+    # Set default justification for build_week and hub_activities
+    if activity_type == 'build_week'
+      self.extra_justification = activity_name.presence || 'Build Week'
+    elsif activity_type == 'hub_activities'
+      self.extra_justification = activity_name.presence || 'Hub Activities'
     end
   end
 end

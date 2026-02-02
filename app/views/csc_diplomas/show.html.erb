@@ -107,9 +107,8 @@
                   <th>Type</th>
                   <th>Sprint</th>
                   <th>Hours</th>
-                  <th>Base <i class="fa-solid fa-circle-info text-secondary small" data-bs-toggle="tooltip" title="Hours ÷ 8 (max 3.5)"></i></th>
-                  <th>Extra <i class="fa-solid fa-circle-info text-secondary small" data-bs-toggle="tooltip" title="Additional credits"></i></th>
-                  <th>Credits</th>
+                  <th>Extra Credits<i class="fa-solid fa-circle-info text-secondary small" data-bs-toggle="tooltip" title="Additional credits (requires justification)"></i></th>
+                  <th>Credits <i class="fa-solid fa-circle-info text-secondary small" data-bs-toggle="tooltip" title="Hours ÷ 8 (max 3.5) + Extra"></i></th>
                   <th>Rubric</th>
                   <th>Status</th>
                   <th></th>
@@ -117,7 +116,8 @@
               </thead>
               <tbody>
                 <% @csc_activities.each do |activity| %>
-                  <tr data-controller="activity-row-calculator" data-activity-type="<%= activity.activitable_type %>" class="text-center align-middle">
+                  <% is_special_activity = activity.activity_type.in?(%w[build_week hub_activities]) %>
+                  <tr data-controller="activity-row-calculator" data-activity-type="<%= activity.activitable_type %>" data-activity-row-calculator-activity-type-value="<%= activity.activity_type %>" data-activity-row-calculator-activity-name-value="<%= activity.activity_name || (activity.activity_type == 'build_week' ? 'Build Week' : 'Hub Activities') %>" class="text-center align-middle">
                     <td class="text-start">
                       <% if activity.activitable.is_a?(Skill) %>
                         <%= activity.activity_name || activity.activitable.extracurricular %>
@@ -157,16 +157,9 @@
                         <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
                       </td>
                       <td>
-                        <%
-                          base_credits = '-'
-                          if activity.hours.present? && activity.hours > 0
-                            base_credits = [activity.hours / 8.0, 3.5].min.round(2)
-                          end
-                        %>
-                        <span data-activity-row-calculator-target="baseCredits"><%= base_credits %></span>
-                      </td>
-                      <td>
-                        <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" max="3.5" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save" <%= 'disabled' if current_user.role == 'learner' %>>
+                        <% extra_tooltip = activity.extra_justification.present? ? activity.extra_justification : nil %>
+                        <% extra_max = is_special_activity ? 1 : 3.5 %>
+                        <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" max="<%= extra_max %>" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save" <%= 'disabled' if current_user.role == 'learner' %> <%= "data-bs-toggle=tooltip title=\"#{extra_tooltip}\"" if extra_tooltip %>>
                         <input type="hidden" name="csc_activity[credits]" value="<%= activity.credits %>" data-activity-row-calculator-target="creditsHidden">
                       </td>
                       <td>
@@ -196,12 +189,13 @@
 
                 <% if @hidden_activities.any? && current_user.role != 'learner' %>
                   <tr>
-                    <td colspan="10" class="text-center py-2 bg-light">
+                    <td colspan="9" class="text-center py-2 bg-light">
                       <small class="text-muted"><i class="fa-solid fa-eye-slash me-1"></i>Hidden Activities (<%= @hidden_activities.count %>)</small>
                     </td>
                   </tr>
                   <% @hidden_activities.each do |activity| %>
-                    <tr class="table-secondary text-center align-middle" style="opacity: 0.6;" data-controller="activity-row-calculator" data-activity-type="<%= activity.activitable_type %>" data-hidden="true">
+                    <% is_special_activity_hidden = activity.activity_type.in?(%w[build_week hub_activities]) %>
+                    <tr class="table-secondary text-center align-middle" style="opacity: 0.6;" data-controller="activity-row-calculator" data-activity-type="<%= activity.activitable_type %>" data-activity-row-calculator-activity-type-value="<%= activity.activity_type %>" data-activity-row-calculator-activity-name-value="<%= activity.activity_name || (activity.activity_type == 'build_week' ? 'Build Week' : 'Hub Activities') %>" data-hidden="true">
                       <td class="text-start">
                         <% if activity.activitable.is_a?(Skill) %>
                           <%= activity.activitable.extracurricular %>
@@ -229,16 +223,9 @@
                           <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
                         </td>
                         <td>
-                          <%
-                          base_credits = '-'
-                          if activity.hours.present? && activity.hours > 0
-                            base_credits = [activity.hours / 8.0, 3.5].min.round(2)
-                          end
-                          %>
-                          <span data-activity-row-calculator-target="baseCredits"><%= base_credits %></span>
-                        </td>
-                        <td>
-                          <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" max="3.5" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                          <% extra_tooltip = activity.extra_justification.present? ? activity.extra_justification : nil %>
+                          <% extra_max_hidden = is_special_activity_hidden ? 1 : 3.5 %>
+                          <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" max="<%= extra_max_hidden %>" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save" <%= "data-bs-toggle=tooltip title=\"#{extra_tooltip}\"" if extra_tooltip %>>
                           <input type="hidden" name="csc_activity[credits]" value="<%= activity.credits %>" data-activity-row-calculator-target="creditsHidden">
                         </td>
                         <td>
@@ -295,6 +282,30 @@
             <% end %>
           </div>
         <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Extra Credits Justification Modal -->
+<div class="modal fade" id="extraJustificationModal" tabindex="-1" aria-labelledby="extraJustificationModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="extraJustificationModalLabel">Extra Credits Justification</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">You are adding <strong id="extraCreditsAmount"></strong> extra credits. Please provide a justification:</p>
+        <div class="mb-3">
+          <label for="extraJustificationInput" class="form-label">Justification <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="extraJustificationInput" placeholder="e.g., The learner compensated in the next sprint." required>
+          <div class="invalid-feedback">Please provide a justification for extra credits.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelExtraCredits">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveExtraCredits">Save</button>
       </div>
     </div>
   </div>

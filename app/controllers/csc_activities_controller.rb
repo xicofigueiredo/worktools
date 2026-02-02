@@ -29,7 +29,7 @@ class CscActivitiesController < ApplicationController
     if @csc_activity.update(params_hash)
       respond_to do |format|
         format.turbo_stream { head :ok }
-        format.html { redirect_to csc_diploma_path, notice: "Activity updated successfully." }
+        format.html { redirect_to csc_diploma_path(learner_id: @csc_activity.csc_diploma.user_id), notice: "Activity updated successfully." }
       end
     else
       respond_to do |format|
@@ -41,24 +41,28 @@ class CscActivitiesController < ApplicationController
 
   def toggle_hidden
     @csc_activity.update(hidden: !@csc_activity.hidden)
-    redirect_to csc_diploma_path
+    redirect_to csc_diploma_path(learner_id: @csc_activity.csc_diploma.user_id)
   end
 
   def purge_attachment
     attachment = @csc_activity.files.find(params[:attachment_id])
     attachment.purge
-    redirect_to edit_csc_activity_path(@csc_activity), notice: "File removed successfully."
+    redirect_to edit_csc_activity_path(@csc_activity, learner_id: @csc_activity.csc_diploma.user_id), notice: "File removed successfully."
   end
 
   private
 
   def set_csc_activity
-    @csc_activity = current_user.csc_diploma.csc_activities.find(params[:id])
+    if current_user.role == 'lc' || current_user.role == 'admin'
+      @csc_activity = CscActivity.find(params[:id])
+    else
+      @csc_activity = current_user.csc_diploma.csc_activities.find(params[:id])
+    end
   end
 
   def csc_activity_params
     params.require(:csc_activity).permit(
-      :hours, :extra, :credits, :status,
+      :hours, :extra, :extra_justification, :credits, :status,
       :full_name, :date_of_submission, :expected_hours,
       :activity_name, :activity_type, :start_date, :end_date,
       :partner, :partner_person, :partner_contact, :confirmation_participation,

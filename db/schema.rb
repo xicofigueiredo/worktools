@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_01_30_120500) do
+ActiveRecord::Schema[7.0].define(version: 2026_02_02_171242) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -302,6 +302,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_01_30_120500) do
     t.date "start_date"
     t.date "end_date"
     t.string "status", default: "needs_revision", null: false
+    t.string "extra_justification"
     t.index ["activitable_type", "activitable_id", "activity_type"], name: "index_csc_activities_on_activitable_unique", unique: true
     t.index ["activitable_type", "activitable_id"], name: "index_csc_activities_on_activitable"
     t.index ["csc_diploma_id"], name: "index_csc_activities_on_csc_diploma_id"
