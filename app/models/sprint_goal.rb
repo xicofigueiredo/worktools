@@ -55,10 +55,13 @@ class SprintGoal < ApplicationRecord
   end
 
   def check_build_week_hub_activities
-    c = self.user.csc_diploma.csc_activities.where(activitable: self).count
-    if c < 3
-      self.create_build_week_activity
-      self.create_hub_activities_activity
+    csc_diploma = user.csc_diploma
+    return unless csc_diploma.present?
+
+    activity_count = csc_diploma.csc_activities.where(activitable: self).count
+    if activity_count < 2
+      create_build_week_activity unless csc_diploma.csc_activities.exists?(activitable: self, activity_type: "build_week")
+      create_hub_activities_activity unless csc_diploma.csc_activities.exists?(activitable: self, activity_type: "hub_activities")
     end
   end
 end

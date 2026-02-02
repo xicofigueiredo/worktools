@@ -111,47 +111,60 @@ class SprintGoalsController < ApplicationController
 
   # PATCH/PUT /sprint_goals/1
   def update
-    clean_params = sprint_goal_params
+    clean_params = sprint_goal_params.to_h.deep_symbolize_keys
 
-    # filtrar communities vazias (only filter out existing records with no content)
-    clean_params[:communities_attributes]&.each do |key, attributes|
-      has_id = attributes[:id].present?
-      has_content = attributes[:involved].present? || attributes[:smartgoals].present? || attributes[:difficulties].present? || attributes[:plan].present? || (attributes[:categories].present? && attributes[:categories].reject(&:blank?).any?)
+    # Helper to check if categories array has content
+    has_categories = ->(cats) { cats.is_a?(Array) && cats.reject(&:blank?).any? }
 
-      # Only filter out records that have an ID but no content (existing empty records)
-      # Keep new records (no ID) even if partially empty, let the model handle validation
-      if has_id && !has_content
-        clean_params[:communities_attributes].delete(key)
-      end
+    # Filter communities - collect keys to delete first, then delete
+    if clean_params[:communities_attributes].present?
+      keys_to_delete = clean_params[:communities_attributes].select do |_key, attributes|
+        has_id = attributes[:id].present?
+        has_content = attributes[:involved].present? ||
+                      attributes[:smartgoals].present? ||
+                      attributes[:difficulties].present? ||
+                      attributes[:plan].present? ||
+                      has_categories.call(attributes[:categories])
+        has_id && !has_content
+      end.keys
+      keys_to_delete.each { |key| clean_params[:communities_attributes].delete(key) }
     end
 
-    # filtrar skills vazias (only filter out existing records with no content)
-    clean_params[:skills_attributes]&.each do |key, attributes|
-      has_id = attributes[:id].present?
-      has_content = attributes[:extracurricular].present? || attributes[:smartgoals].present? || attributes[:difficulties].present? || attributes[:plan].present? || (attributes[:categories].present? && attributes[:categories].reject(&:blank?).any?)
-
-      # Only filter out records that have an ID but no content (existing empty records)
-      if has_id && !has_content
-        clean_params[:skills_attributes].delete(key)
-      end
+    # Filter skills - collect keys to delete first, then delete
+    if clean_params[:skills_attributes].present?
+      keys_to_delete = clean_params[:skills_attributes].select do |_key, attributes|
+        has_id = attributes[:id].present?
+        has_content = attributes[:extracurricular].present? ||
+                      attributes[:smartgoals].present? ||
+                      attributes[:difficulties].present? ||
+                      attributes[:plan].present? ||
+                      has_categories.call(attributes[:categories])
+        has_id && !has_content
+      end.keys
+      keys_to_delete.each { |key| clean_params[:skills_attributes].delete(key) }
     end
 
-    # filtrar knowledges vazias (only filter out existing records with no content)
-    clean_params[:knowledges_attributes]&.each do |key, attributes|
-      has_id = attributes[:id].present?
-      has_content = attributes[:subject_name].present? || attributes[:difficulties].present? || attributes[:plan].present?
-
-      # Only filter out records that have an ID but no content (existing empty records)
-      if has_id && !has_content
-        clean_params[:knowledges_attributes].delete(key)
-      end
+    # Filter knowledges - collect keys to delete first, then delete
+    if clean_params[:knowledges_attributes].present?
+      keys_to_delete = clean_params[:knowledges_attributes].select do |_key, attributes|
+        has_id = attributes[:id].present?
+        has_content = attributes[:subject_name].present? ||
+                      attributes[:difficulties].present? ||
+                      attributes[:plan].present?
+        has_id && !has_content
+      end.keys
+      keys_to_delete.each { |key| clean_params[:knowledges_attributes].delete(key) }
     end
 
     if @sprint_goal.update(clean_params)
       render json: { status: "success", message: "Sprint Goal updated successfully" }
     else
-      render :edit, status: :unprocessable_entity
+      Rails.logger.error "SprintGoal update failed: #{@sprint_goal.errors.full_messages}"
+      render json: { status: "error", errors: @sprint_goal.errors.full_messages }, status: :unprocessable_entity
     end
+  rescue StandardError => e
+    Rails.logger.error "SprintGoal update exception: #{e.message}\n#{e.backtrace.first(10).join("\n")}"
+    render json: { status: "error", message: e.message }, status: :internal_server_error
   end
 
   # DELETE /sprint_goals/1
