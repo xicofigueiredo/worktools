@@ -233,16 +233,31 @@ export default class extends Controller {
 
     const form = this.hasFormTarget ? this.formTarget : this.element.querySelector('form')
     if (form) {
-      const formData = new FormData(form)
+      // Manually build form data to handle invalid HTML structure after Turbo navigation
+      const formData = new FormData()
+
+      // Add CSRF token
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+      if (csrfToken) {
+        formData.append('authenticity_token', csrfToken)
+      }
+
+      // Collect all inputs from the row (not just the form, since HTML structure may be invalid)
+      const inputs = this.element.querySelectorAll('input[name^="csc_activity"]')
+      inputs.forEach(input => {
+        if (!input.disabled) {
+          formData.append(input.name, input.value)
+        }
+      })
 
       try {
         const response = await fetch(form.action, {
           method: 'PATCH',
           body: formData,
           headers: {
-            'Accept': 'text/vnd.turbo-stream.html, text/html, application/xhtml+xml',
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-          }
+            'Accept': 'text/vnd.turbo-stream.html, text/html, application/xhtml+xml'
+          },
+          credentials: 'same-origin'
         })
 
         if (response.ok) {

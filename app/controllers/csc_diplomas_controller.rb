@@ -11,7 +11,7 @@ class CscDiplomasController < ApplicationController
 
     if @sprint
       calc_nav_dates(@sprint)
-      @has_prev_sprint = Sprint.exists?(['end_date < ?', @sprint.start_date])
+      @has_prev_sprint = Sprint.exists?(['end_date < ?', @sprint.start_date]) && @sprint.id >= 14
       @has_next_sprint = Sprint.exists?(['start_date > ?', @sprint.end_date])
     end
 

@@ -36,6 +36,7 @@
 
         <div class="d-flex align-items-center justify-content-center gap-2">
           <span class="text-muted">CSC Diploma</span>
+
           <% if @csc_diploma.issued? %>
             <span class="badge bg-success"><i class="fa-solid fa-check-circle me-1"></i>Issued</span>
           <% else %>
@@ -57,23 +58,17 @@
                   class: "btn btn-outline-secondary btn-sm #{'disabled' unless @has_next_sprint}" %>
             <% end %>
           </div>
-          <% if @sprint %>
-            <small class="text-muted">
-              <%= @sprint.name %> <%= @sprint.start_date.year %>
-              (<%= @sprint.start_date.strftime("%d %b") %> - <%= @sprint.end_date.strftime("%d %b") %>)
-            </small>
-          <% end %>
         </div>
 
         <%# Actions - Right %>
         <div class="d-flex gap-2 align-items-center">
           <% if @show_all_sprints %>
             <%= link_to csc_diploma_path(date: @sprint&.start_date, learner_id: @learner&.id), class: "btn btn-outline-secondary btn-sm", title: "Show only current sprint" do %>
-              <i class="fa-solid fa-filter"></i>
+              See Current Sprint
             <% end %>
           <% else %>
             <%= link_to csc_diploma_path(date: @sprint&.start_date, learner_id: @learner&.id, filter_sprint: 'all'), class: "btn btn-outline-secondary btn-sm", title: "Show all sprints" do %>
-              <i class="fa-solid fa-list"></i>
+              See All Sprints
             <% end %>
           <% end %>
 
