@@ -57,6 +57,13 @@ export default class extends Controller {
 
     if (this.saving) return
 
+    // Check if extra credits went back to 0 - clear justification
+    if (previousExtra > 0 && newExtra === 0 && event?.target === this.extraTarget) {
+      this.clearJustificationFromForm()
+      await this.performSave()
+      return
+    }
+
     // Check if extra credits were added (was 0, now > 0)
     if (previousExtra === 0 && newExtra > 0 && event?.target === this.extraTarget) {
       // For build_week and hub_activities, auto-set justification (no modal needed)
@@ -100,59 +107,78 @@ export default class extends Controller {
       inputEl.classList.remove('is-invalid')
     }
 
-    // Store reference to this controller for the modal handlers
-    this.pendingJustification = {
-      extraAmount,
-      inputEl,
-      saveBtn,
-      cancelBtn
-    }
+    // Track if we've already handled this modal
+    this.modalHandled = false
 
     // Set up event handlers
-    const handleSave = () => {
+    const handleSave = async (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (this.modalHandled) return
+
       const justification = inputEl.value.trim()
       if (!justification) {
         inputEl.classList.add('is-invalid')
+        inputEl.focus()
         return
       }
       inputEl.classList.remove('is-invalid')
 
+      this.modalHandled = true
+
       // Add justification to form
       this.addJustificationToForm(justification)
 
-      // Close modal and save
+      // Close modal first
       const bsModal = bootstrap.Modal.getInstance(modal)
-      bsModal.hide()
-      this.performSave()
+      if (bsModal) bsModal.hide()
 
-      // Clean up
-      saveBtn.removeEventListener('click', handleSave)
+      // Then save
+      await this.performSave()
     }
 
-    const handleCancel = () => {
+    const handleCancel = (e) => {
+      if (this.modalHandled) return
+      this.modalHandled = true
+
       // Revert extra to initial value
       this.extraTarget.value = this.initialExtra
       this.calculate()
-
-      // Clean up
-      saveBtn.removeEventListener('click', handleSave)
     }
 
-    // Remove old handlers and add new ones
-    saveBtn.onclick = handleSave
-    cancelBtn.onclick = handleCancel
+    const handleHidden = () => {
+      // Clean up event listeners
+      saveBtn.removeEventListener('click', handleSave)
+      cancelBtn.removeEventListener('click', handleCancel)
+      modal.removeEventListener('hidden.bs.modal', handleHidden)
 
-    // Also handle modal dismiss (X button or clicking outside)
-    modal.addEventListener('hidden.bs.modal', () => {
-      if (this.extraTarget.value !== this.initialExtra && !this.saving) {
+      // If modal was dismissed without saving, revert
+      if (!this.modalHandled) {
         this.extraTarget.value = this.initialExtra
         this.calculate()
       }
-    }, { once: true })
+    }
+
+    // Remove any existing listeners and add new ones
+    const newSaveBtn = saveBtn.cloneNode(true)
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn)
+    newSaveBtn.addEventListener('click', handleSave)
+
+    const newCancelBtn = cancelBtn.cloneNode(true)
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn)
+    newCancelBtn.addEventListener('click', handleCancel)
+
+    modal.addEventListener('hidden.bs.modal', handleHidden, { once: true })
 
     // Show the modal
     const bsModal = new bootstrap.Modal(modal)
     bsModal.show()
+
+    // Focus the input
+    modal.addEventListener('shown.bs.modal', () => {
+      inputEl.focus()
+    }, { once: true })
   }
 
   addJustificationToForm(justification) {
@@ -173,6 +199,32 @@ export default class extends Controller {
     }
   }
 
+  clearJustificationFromForm() {
+    const form = this.hasFormTarget ? this.formTarget : this.element.querySelector('form')
+    if (!form) return
+
+    // Set justification to empty string
+    const existingInput = form.querySelector('input[name="csc_activity[extra_justification]"]')
+    if (existingInput) {
+      existingInput.value = ''
+    } else {
+      // Create a hidden input with empty value
+      const input = document.createElement('input')
+      input.type = 'hidden'
+      input.name = 'csc_activity[extra_justification]'
+      input.value = ''
+      form.appendChild(input)
+    }
+
+    // Remove tooltip from extra field
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+      const existingTooltip = bootstrap.Tooltip.getInstance(this.extraTarget)
+      if (existingTooltip) existingTooltip.dispose()
+    }
+    this.extraTarget.removeAttribute('data-bs-toggle')
+    this.extraTarget.removeAttribute('title')
+  }
+
   async performSave() {
     const currentHours = this.hoursTarget.value
     const currentExtra = this.extraTarget.value
@@ -188,7 +240,8 @@ export default class extends Controller {
           method: 'PATCH',
           body: formData,
           headers: {
-            'Accept': 'text/vnd.turbo-stream.html, text/html, application/xhtml+xml'
+            'Accept': 'text/vnd.turbo-stream.html, text/html, application/xhtml+xml',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
           }
         })
 
@@ -197,9 +250,9 @@ export default class extends Controller {
           this.initialHours = currentHours
           this.initialExtra = currentExtra
 
-          // Brief visual feedback
-          form.classList.add('bg-success-subtle')
-          setTimeout(() => form.classList.remove('bg-success-subtle'), 500)
+          // Brief visual feedback on the row
+          this.element.classList.add('table-success')
+          setTimeout(() => this.element.classList.remove('table-success'), 1000)
 
           // Update tooltip if justification was added
           const justificationInput = form.querySelector('input[name="csc_activity[extra_justification]"]')
@@ -216,9 +269,17 @@ export default class extends Controller {
 
           // Dispatch event to update totals
           document.dispatchEvent(new CustomEvent('activity:saved'))
+        } else {
+          console.error('Save failed with status:', response.status)
+          // Show error feedback
+          this.element.classList.add('table-danger')
+          setTimeout(() => this.element.classList.remove('table-danger'), 1500)
         }
       } catch (error) {
         console.error('Save failed:', error)
+        // Show error feedback
+        this.element.classList.add('table-danger')
+        setTimeout(() => this.element.classList.remove('table-danger'), 1500)
       } finally {
         this.saving = false
       }
