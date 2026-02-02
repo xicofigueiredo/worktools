@@ -12,157 +12,133 @@
     </div>
   <% end %>
 
-  <div class="d-flex justify-content-between align-items-center mb-4" >
-    <h1>CSC Diploma</h1>
-    <div class="d-flex align-items-center gap-3">
-      <%= button_to fetch_activities_csc_diploma_path, method: :post, class: "btn btn-primary", data: { turbo_confirm: "This will fetch activities from your last sprint goal. Continue?" } do %>
-        <i class="fa-solid fa-download me-1"></i> Fetch Activities
+  <%# Learner Selection Dropdown for LC/Admin %>
+  <% if (current_user.role == 'lc' || current_user.role == 'admin') && @grouped_learners.present? %>
+    <div class="d-flex justify-content-center mb-3">
+      <%= form_with url: csc_diploma_path, method: :get, local: true, data: { controller: "auto-submit" } do %>
+        <%= select_tag :learner_id,
+              grouped_options_for_select(@grouped_learners.transform_values { |learners| learners.map { |learner| [learner.full_name, learner.id] } }, @learner&.id),
+              class: "form-select", style: "min-width: 280px;", prompt: "Select a learner", data: { action: "change->auto-submit#submit" } %>
+        <% if @sprint %>
+          <%= hidden_field_tag :date, @sprint.start_date %>
+        <% end %>
+        <% if @show_all_sprints %>
+          <%= hidden_field_tag :filter_sprint, 'all' %>
+        <% end %>
       <% end %>
-      <% if @csc_diploma.issued? %>
-        <span class="badge bg-success fs-6">
-          <i class="fa-solid fa-check-circle me-1"></i> Issued
-        </span>
-      <% else %>
-        <span class="badge bg-secondary fs-6">
-          <i class="fa-solid fa-clock me-1"></i> In Progress
-        </span>
-      <% end %>
+    </div>
+  <% end %>
+
+  <%# Header Card %>
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center">
+
+        <div class="d-flex align-items-center justify-content-center gap-2">
+          <span class="text-muted">CSC Diploma</span>
+          <% if @csc_diploma.issued? %>
+            <span class="badge bg-success"><i class="fa-solid fa-check-circle me-1"></i>Issued</span>
+          <% else %>
+            <span class="badge bg-secondary"><i class="fa-solid fa-clock me-1"></i>In Progress</span>
+          <% end %>
+        </div>
+
+        <div class="text-center">
+          <div class="d-flex gap-2 align-items-center">
+            <% if @sprint %>
+              <%= link_to '<i class="fa-solid fa-chevron-left"></i>'.html_safe,
+                  csc_diploma_path(date: @prev_date, learner_id: @learner&.id, filter_sprint: @show_all_sprints ? 'all' : nil),
+                  class: "btn btn-outline-secondary btn-sm #{'disabled' unless @has_prev_sprint}" %>
+              <%= link_to 'This Sprint',
+                  csc_diploma_path(Date.today, learner_id: @learner&.id, filter_sprint: @show_all_sprints ? 'all' : nil),
+                  class: "btn btn-outline-secondary btn-sm" %>
+              <%= link_to '<i class="fa-solid fa-chevron-right"></i>'.html_safe,
+                  csc_diploma_path(date: @next_date, learner_id: @learner&.id, filter_sprint: @show_all_sprints ? 'all' : nil),
+                  class: "btn btn-outline-secondary btn-sm #{'disabled' unless @has_next_sprint}" %>
+            <% end %>
+          </div>
+          <% if @sprint %>
+            <small class="text-muted">
+              <%= @sprint.name %> <%= @sprint.start_date.year %>
+              (<%= @sprint.start_date.strftime("%d %b") %> - <%= @sprint.end_date.strftime("%d %b") %>)
+            </small>
+          <% end %>
+        </div>
+
+        <%# Actions - Right %>
+        <div class="d-flex gap-2 align-items-center">
+          <% if @show_all_sprints %>
+            <%= link_to csc_diploma_path(date: @sprint&.start_date, learner_id: @learner&.id), class: "btn btn-outline-secondary btn-sm", title: "Show only current sprint" do %>
+              <i class="fa-solid fa-filter"></i>
+            <% end %>
+          <% else %>
+            <%= link_to csc_diploma_path(date: @sprint&.start_date, learner_id: @learner&.id, filter_sprint: 'all'), class: "btn btn-outline-secondary btn-sm", title: "Show all sprints" do %>
+              <i class="fa-solid fa-list"></i>
+            <% end %>
+          <% end %>
+
+          <%= button_to fetch_activities_csc_diploma_path(learner_id: @learner&.id), method: :post, class: "btn btn-primary btn-sm", data: { turbo_confirm: "This will fetch activities from the current sprint goal. Continue?" } do %>
+            <i class="fa-solid fa-download me-1"></i> Fetch
+          <% end %>
+        </div>
+      </div>
     </div>
   </div>
 
   <div data-controller="totals-calculator">
-    <div class="d-flex justify-content-center">
+    <div class="d-flex justify-content-center mb-3">
       <div data-totals-calculator-target="weightWarning" style="display: none;"></div>
     </div>
 
     <div class="card">
-    <div class="card-header">
-      <h5 class="mb-0">Activities</h5>
-    </div>
-    <div class="card-body">
-      <% if @csc_activities.any? || @hidden_activities.any? %>
-        <div class="table-responsive">
-          <table class="table table-striped table-hover">
-            <thead>
-              <tr class="text-center">
-                <th class="text-start">Activity</th>
-                <th>Type</th>
-                <th>Sprint</th>
-                <th>Hours</th>
-                <th>Base <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Hours ÷ 8 (max 3.5)"></i></th>
-                <th>Extra <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Additional credits"></i></th>
-                <th>Credits <i class="fa-solid fa-circle-info text-secondary" data-bs-toggle="tooltip" title="Base + Extra"></i></th>
-                <th>Rubric</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @csc_activities.each do |activity| %>
-                <tr data-controller="activity-row-calculator" data-activity-type="<%= activity.activitable_type %>" class="text-center">
-                  <td class="text-start">
-                    <% if activity.activitable.is_a?(Skill) %>
-                      <%= activity.activity_name || activity.activitable.extracurricular %>
-                    <% elsif activity.activitable.is_a?(Community) %>
-                      <%= activity.activity_name || activity.activitable.involved %>
-                    <% elsif activity.activity_type == "build_week" %>
-                      Build Week
-                    <% elsif activity.activity_type == "hub_activities" %>
-                      Hub Activities
-                    <% end %>
-                  </td>
-                  <td>
-                    <% if activity.activity_type == "build_week" %>
-                      <span class="badge bg-success">
-                        Build Week
-                      </span>
-                    <% elsif activity.activity_type == "hub_activities" %>
-                      <span class="badge bg-secondary">
-                        Hub Activities
-                      </span>
-                    <% elsif activity.activity_type == "skill" %>
-                      <span class="badge bg-info">
-                        Skill
-                      </span>
-                    <% elsif activity.activity_type == "community" %>
-                      <span class="badge bg-primary">
-                        Community
-                      </span>
-                    <% end %>
-                  </td>
-                  <td>
-                    <% sprint = if activity.activitable.is_a?(SprintGoal)
-                                  activity.activitable.sprint
-                                elsif activity.activitable.respond_to?(:sprint_goal)
-                                  activity.activitable.sprint_goal&.sprint
-                                end %>
-                    <% if sprint %>
-                      <%= sprint.name %> <%= sprint.start_date&.year %>
-                    <% else %>
-                      <span class="text-muted">-</span>
-                    <% end %>
-                  </td>
-                  <%= form_with model: activity, url: csc_activity_path(activity), method: :patch, data: { activity_row_calculator_target: "form" } do |f| %>
-                    <td>
-                      <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 70px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
-                    </td>
-                    <td>
-                      <%
-                        base_credits = '-'
-                        if activity.hours.present? && activity.hours > 0
-                          base_credits = [activity.hours / 8.0, 3.5].min.round(2)
-                        end
-                      %>
-                      <span data-activity-row-calculator-target="baseCredits"><%= base_credits %></span>
-                    </td>
-                    <td>
-                      <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 70px;" min="0" max="3.5" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
-                      <input type="hidden" name="csc_activity[credits]" value="<%= activity.credits %>" data-activity-row-calculator-target="creditsHidden">
-                    </td>
-                    <td>
-                      <span data-activity-row-calculator-target="finalCredits"><%= activity.credits || '-' %></span>
-                    </td>
-                    <td>
-                      <span><%= activity.rubric_score || '-' %></span>
-                    </td>
-                  <% end %>
-                  <td>
-                    <span class="badge <%= activity.status_badge_class %>"><%= activity.status_display %></span>
-                  </td>
-                  <td>
-                    <div class="d-flex gap-1 justify-content-center">
-                      <%= link_to edit_csc_activity_path(activity), class: "btn btn-sm btn-outline-primary", title: "Edit all fields" do %>
-                        <i class="fa-solid fa-pen"></i>
-                      <% end %>
-                      <%= button_to toggle_hidden_csc_activity_path(activity), method: :patch, class: "btn btn-sm btn-outline-secondary", title: "Hide activity", form: { style: "display: inline;" } do %>
-                        <i class="fa-solid fa-eye-slash"></i>
-                      <% end %>
-                    </div>
-                  </td>
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Activities</h5>
+        <% if @show_all_sprints %>
+          <span class="badge bg-info">All Sprints</span>
+        <% end %>
+      </div>
+      <div class="card-body">
+        <% if @csc_activities.any? || @hidden_activities.any? %>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+              <thead>
+                <tr class="text-center">
+                  <th class="text-start">Activity</th>
+                  <th>Type</th>
+                  <th>Sprint</th>
+                  <th>Hours</th>
+                  <th>Base <i class="fa-solid fa-circle-info text-secondary small" data-bs-toggle="tooltip" title="Hours ÷ 8 (max 3.5)"></i></th>
+                  <th>Extra <i class="fa-solid fa-circle-info text-secondary small" data-bs-toggle="tooltip" title="Additional credits"></i></th>
+                  <th>Credits</th>
+                  <th>Rubric</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
-              <% end %>
-
-              <% if @hidden_activities.any? %>
-                <tr>
-                  <td colspan="10" class="text-center py-2">
-                    <hr class="my-1">
-                    <small class="text-muted">Hidden Activities</small>
-                    <hr class="my-1">
-                  </td>
-                </tr>
-                <% @hidden_activities.each do |activity| %>
-                  <tr class="table-secondary text-muted text-center" style="opacity: 0.6;" data-controller="activity-row-calculator" data-activity-type="<%= activity.activitable_type %>" data-hidden="true">
+              </thead>
+              <tbody>
+                <% @csc_activities.each do |activity| %>
+                  <tr data-controller="activity-row-calculator" data-activity-type="<%= activity.activitable_type %>" class="text-center align-middle">
                     <td class="text-start">
                       <% if activity.activitable.is_a?(Skill) %>
-                        <%= activity.activitable.extracurricular %>
+                        <%= activity.activity_name || activity.activitable.extracurricular %>
                       <% elsif activity.activitable.is_a?(Community) %>
-                        <%= activity.activitable.involved %>
+                        <%= activity.activity_name || activity.activitable.involved %>
+                      <% elsif activity.activity_type == "build_week" %>
+                        Build Week
+                      <% elsif activity.activity_type == "hub_activities" %>
+                        Hub Activities
                       <% end %>
                     </td>
                     <td>
-                      <span class="badge bg-secondary">
-                        <%= activity.activitable_type %>
-                      </span>
+                      <% if activity.activity_type == "build_week" %>
+                        <span class="badge bg-success">Build Week</span>
+                      <% elsif activity.activity_type == "hub_activities" %>
+                        <span class="badge bg-secondary">Hub</span>
+                      <% elsif activity.activity_type == "skill" %>
+                        <span class="badge bg-info">Skill</span>
+                      <% elsif activity.activity_type == "community" %>
+                        <span class="badge bg-primary">Community</span>
+                      <% end %>
                     </td>
                     <td>
                       <% sprint = if activity.activitable.is_a?(SprintGoal)
@@ -171,33 +147,33 @@
                                     activity.activitable.sprint_goal&.sprint
                                   end %>
                       <% if sprint %>
-                        <%= sprint.name %> <%= sprint.start_date&.year %>
+                        <small><%= sprint.name %> <%= sprint.start_date&.year %></small>
                       <% else %>
                         <span class="text-muted">-</span>
                       <% end %>
                     </td>
                     <%= form_with model: activity, url: csc_activity_path(activity), method: :patch, data: { activity_row_calculator_target: "form" } do |f| %>
                       <td>
-                        <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 70px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                        <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
                       </td>
                       <td>
                         <%
-                        base_credits = '-'
-                        if activity.hours.present? && activity.hours > 0
-                          base_credits = [activity.hours / 8.0, 3.5].min.round(2)
-                        end
+                          base_credits = '-'
+                          if activity.hours.present? && activity.hours > 0
+                            base_credits = [activity.hours / 8.0, 3.5].min.round(2)
+                          end
                         %>
                         <span data-activity-row-calculator-target="baseCredits"><%= base_credits %></span>
                       </td>
                       <td>
-                        <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 70px;" min="0" max="3.5" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                        <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" max="3.5" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save" <%= 'disabled' if current_user.role == 'learner' %>>
                         <input type="hidden" name="csc_activity[credits]" value="<%= activity.credits %>" data-activity-row-calculator-target="creditsHidden">
                       </td>
                       <td>
-                        <span data-activity-row-calculator-target="finalCredits"><%= activity.credits || '-' %></span>
+                        <strong data-activity-row-calculator-target="finalCredits"><%= activity.credits || '-' %></strong>
                       </td>
                       <td>
-                        <span><%= activity.rubric_score || '-' %></span>
+                        <%= activity.rubric_score || '-' %>
                       </td>
                     <% end %>
                     <td>
@@ -205,43 +181,122 @@
                     </td>
                     <td>
                       <div class="d-flex gap-1 justify-content-center">
-                        <%= link_to edit_csc_activity_path(activity), class: "btn btn-sm btn-outline-secondary", title: "Edit all fields" do %>
+                        <%= link_to edit_csc_activity_path(activity), class: "btn btn-sm btn-outline-primary", title: "Edit" do %>
                           <i class="fa-solid fa-pen"></i>
                         <% end %>
-                        <%= button_to toggle_hidden_csc_activity_path(activity), method: :patch, class: "btn btn-sm btn-outline-success", title: "Show activity", form: { style: "display: inline;" } do %>
-                          <i class="fa-solid fa-eye"></i>
+                        <% if current_user.role != 'learner' %>
+                          <%= button_to toggle_hidden_csc_activity_path(activity), method: :patch, class: "btn btn-sm btn-outline-secondary", title: "Hide", form: { style: "display: inline;" } do %>
+                            <i class="fa-solid fa-eye-slash"></i>
+                          <% end %>
                         <% end %>
                       </div>
                     </td>
                   </tr>
                 <% end %>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
 
-        <div class="mt-3 p-3 bg-light rounded">
-          <div class="row">
-            <div class="col-md-4">
-              <strong>Total Hours:</strong> <span data-totals-calculator-target="totalHours"><%= @csc_activities.sum { |a| a.hours.to_i } %></span>
-            </div>
-            <div class="col-md-4">
-              <strong>Total Credits:</strong> <span data-totals-calculator-target="totalCredits"><%= @csc_activities.sum { |a| a.credits.to_f }.round(2) %></span>
-            </div>
-            <div class="col-md-4">
-              <strong>Approved Activities:</strong> <%= @csc_activities.count { |a| a.approved? } %> / <%= @csc_activities.count %>
+                <% if @hidden_activities.any? && current_user.role != 'learner' %>
+                  <tr>
+                    <td colspan="10" class="text-center py-2 bg-light">
+                      <small class="text-muted"><i class="fa-solid fa-eye-slash me-1"></i>Hidden Activities (<%= @hidden_activities.count %>)</small>
+                    </td>
+                  </tr>
+                  <% @hidden_activities.each do |activity| %>
+                    <tr class="table-secondary text-center align-middle" style="opacity: 0.6;" data-controller="activity-row-calculator" data-activity-type="<%= activity.activitable_type %>" data-hidden="true">
+                      <td class="text-start">
+                        <% if activity.activitable.is_a?(Skill) %>
+                          <%= activity.activitable.extracurricular %>
+                        <% elsif activity.activitable.is_a?(Community) %>
+                          <%= activity.activitable.involved %>
+                        <% end %>
+                      </td>
+                      <td>
+                        <span class="badge bg-secondary"><%= activity.activitable_type %></span>
+                      </td>
+                      <td>
+                        <% sprint = if activity.activitable.is_a?(SprintGoal)
+                                      activity.activitable.sprint
+                                    elsif activity.activitable.respond_to?(:sprint_goal)
+                                      activity.activitable.sprint_goal&.sprint
+                                    end %>
+                        <% if sprint %>
+                          <small><%= sprint.name %> <%= sprint.start_date&.year %></small>
+                        <% else %>
+                          <span class="text-muted">-</span>
+                        <% end %>
+                      </td>
+                      <%= form_with model: activity, url: csc_activity_path(activity), method: :patch, data: { activity_row_calculator_target: "form" } do |f| %>
+                        <td>
+                          <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                        </td>
+                        <td>
+                          <%
+                          base_credits = '-'
+                          if activity.hours.present? && activity.hours > 0
+                            base_credits = [activity.hours / 8.0, 3.5].min.round(2)
+                          end
+                          %>
+                          <span data-activity-row-calculator-target="baseCredits"><%= base_credits %></span>
+                        </td>
+                        <td>
+                          <input type="number" name="csc_activity[extra]" value="<%= activity.extra %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" max="3.5" step="0.5" data-activity-row-calculator-target="extra" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                          <input type="hidden" name="csc_activity[credits]" value="<%= activity.credits %>" data-activity-row-calculator-target="creditsHidden">
+                        </td>
+                        <td>
+                          <strong data-activity-row-calculator-target="finalCredits"><%= activity.credits || '-' %></strong>
+                        </td>
+                        <td>
+                          <%= activity.rubric_score || '-' %>
+                        </td>
+                      <% end %>
+                      <td>
+                        <span class="badge <%= activity.status_badge_class %>"><%= activity.status_display %></span>
+                      </td>
+                      <td>
+                        <div class="d-flex gap-1 justify-content-center">
+                          <%= link_to edit_csc_activity_path(activity), class: "btn btn-sm btn-outline-secondary", title: "Edit" do %>
+                            <i class="fa-solid fa-pen"></i>
+                          <% end %>
+                          <%= button_to toggle_hidden_csc_activity_path(activity), method: :patch, class: "btn btn-sm btn-outline-success", title: "Show", form: { style: "display: inline;" } do %>
+                            <i class="fa-solid fa-eye"></i>
+                          <% end %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <%# Totals Summary %>
+          <div class="border-top pt-3 mt-3">
+            <div class="row text-center">
+              <div class="col-md-4">
+                <div class="text-muted small">Total Hours</div>
+                <strong class="fs-5" data-totals-calculator-target="totalHours"><%= @csc_activities.sum { |a| a.hours.to_i } %></strong>
+              </div>
+              <div class="col-md-4">
+                <div class="text-muted small">Total Credits</div>
+                <strong class="fs-5" data-totals-calculator-target="totalCredits"><%= @csc_activities.sum { |a| a.credits.to_f }.round(2) %></strong>
+              </div>
+              <div class="col-md-4">
+                <div class="text-muted small">Approved</div>
+                <strong class="fs-5"><%= @csc_activities.count { |a| a.approved? } %> / <%= @csc_activities.count %></strong>
+              </div>
             </div>
           </div>
-        </div>
-      <% else %>
-        <div class="text-center py-5">
-          <i class="fa-solid fa-graduation-cap fa-3x text-muted mb-3"></i>
-          <h5 class="text-muted">No activities yet</h5>
-          <p class="text-muted">Your CSC Diploma activities will appear here once they are added.</p>
-        </div>
-      <% end %>
+        <% else %>
+          <div class="text-center py-5">
+            <i class="fa-solid fa-graduation-cap fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No activities yet</h5>
+            <p class="text-muted mb-3">Activities will appear here once they are added.</p>
+            <%= button_to fetch_activities_csc_diploma_path(learner_id: @learner&.id), method: :post, class: "btn btn-primary", data: { turbo_confirm: "This will fetch activities from the current sprint goal. Continue?" } do %>
+              <i class="fa-solid fa-download me-1"></i> Fetch Activities
+            <% end %>
+          </div>
+        <% end %>
+      </div>
     </div>
-  </div>
   </div>
 </div>
 

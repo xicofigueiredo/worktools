@@ -164,25 +164,26 @@
           </div>
         </div>
 
+        <% is_learner = current_user.role == 'learner' %>
         <hr class="my-4">
 
         <h5 class="mb-3 text-primary"><i class="fa-solid fa-user-check me-2"></i>Section 7 – Staff Validation (Learning Coach / Reviewer)</h5>
         <div class="row">
           <div class="col-md-6 mb-3">
             <%= f.label :review_date, "Review Date", class: "form-label" %>
-            <%= f.date_field :review_date, class: "form-control" %>
+            <%= f.date_field :review_date, class: "form-control", disabled: is_learner %>
           </div>
           <div class="col-md-6 mb-3">
             <%= f.label :reviewed_by, "Reviewed by (Name)", class: "form-label" %>
-            <%= f.text_field :reviewed_by, class: "form-control" %>
+            <%= f.text_field :reviewed_by, class: "form-control", disabled: is_learner %>
           </div>
           <div class="col-md-6 mb-3">
             <%= f.label :status, "Status", class: "form-label" %>
-            <%= f.select :status, CscActivity::STATUS_OPTIONS, {}, class: "form-select" %>
+            <%= f.select :status, CscActivity::STATUS_OPTIONS, {}, class: "form-select", disabled: is_learner %>
           </div>
           <div class="col-md-6 mb-3">
             <%= f.label :notes, "Comments / Notes", class: "form-label" %>
-            <%= f.text_area :notes, class: "form-control", rows: 3 %>
+            <%= f.text_area :notes, class: "form-control", rows: 3, disabled: is_learner %>
           </div>
         </div>
 
@@ -204,26 +205,26 @@
               <tr>
                 <td><strong>Planning</strong></td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="planing_4">
-                    <%= f.radio_button :planing, 4, class: "d-none", id: "planing_4" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="planing_4">
+                    <%= f.radio_button :planing, 4, class: "d-none", id: "planing_4", disabled: is_learner %>
                     <small class="text-muted">Demonstrates exceptional dedication (>100 hours/year); consistent engagement.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="planing_3">
-                    <%= f.radio_button :planing, 3, class: "d-none", id: "planing_3" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="planing_3">
+                    <%= f.radio_button :planing, 3, class: "d-none", id: "planing_3", disabled: is_learner %>
                     <small class="text-muted">Meets expected time commitment; regular participation.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="planing_2">
-                    <%= f.radio_button :planing, 2, class: "d-none", id: "planing_2" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="planing_2">
+                    <%= f.radio_button :planing, 2, class: "d-none", id: "planing_2", disabled: is_learner %>
                     <small class="text-muted">Inconsistent participation; below expected hours.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="planing_1">
-                    <%= f.radio_button :planing, 1, class: "d-none", id: "planing_1" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="planing_1">
+                    <%= f.radio_button :planing, 1, class: "d-none", id: "planing_1", disabled: is_learner %>
                     <small class="text-muted">Minimal or no participation.</small>
                   </label>
                 </td>
@@ -231,26 +232,26 @@
               <tr>
                 <td><strong>Effort</strong></td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="effort_4">
-                    <%= f.radio_button :effort, 4, class: "d-none", id: "effort_4" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="effort_4">
+                    <%= f.radio_button :effort, 4, class: "d-none", id: "effort_4", disabled: is_learner %>
                     <small class="text-muted">Exceptional effort and commitment; goes above and beyond expectations.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="effort_3">
-                    <%= f.radio_button :effort, 3, class: "d-none", id: "effort_3" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="effort_3">
+                    <%= f.radio_button :effort, 3, class: "d-none", id: "effort_3", disabled: is_learner %>
                     <small class="text-muted">Consistent effort; meets expectations.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="effort_2">
-                    <%= f.radio_button :effort, 2, class: "d-none", id: "effort_2" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="effort_2">
+                    <%= f.radio_button :effort, 2, class: "d-none", id: "effort_2", disabled: is_learner %>
                     <small class="text-muted">Variable effort; sometimes meets expectations.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="effort_1">
-                    <%= f.radio_button :effort, 1, class: "d-none", id: "effort_1" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="effort_1">
+                    <%= f.radio_button :effort, 1, class: "d-none", id: "effort_1", disabled: is_learner %>
                     <small class="text-muted">Minimal effort; does not meet expectations.</small>
                   </label>
                 </td>
@@ -258,26 +259,26 @@
               <tr>
                 <td><strong>Skill</strong></td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="skill_4">
-                    <%= f.radio_button :skill, 4, class: "d-none", id: "skill_4" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="skill_4">
+                    <%= f.radio_button :skill, 4, class: "d-none", id: "skill_4", disabled: is_learner %>
                     <small class="text-muted">Demonstrates advanced skills; shows leadership and innovation.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="skill_3">
-                    <%= f.radio_button :skill, 3, class: "d-none", id: "skill_3" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="skill_3">
+                    <%= f.radio_button :skill, 3, class: "d-none", id: "skill_3", disabled: is_learner %>
                     <small class="text-muted">Demonstrates competent skills; applies knowledge effectively.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="skill_2">
-                    <%= f.radio_button :skill, 2, class: "d-none", id: "skill_2" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="skill_2">
+                    <%= f.radio_button :skill, 2, class: "d-none", id: "skill_2", disabled: is_learner %>
                     <small class="text-muted">Basic skills demonstrated; needs development.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="skill_1">
-                    <%= f.radio_button :skill, 1, class: "d-none", id: "skill_1" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="skill_1">
+                    <%= f.radio_button :skill, 1, class: "d-none", id: "skill_1", disabled: is_learner %>
                     <small class="text-muted">Limited or no skill demonstration.</small>
                   </label>
                 </td>
@@ -285,26 +286,26 @@
               <tr>
                 <td><strong>Community</strong></td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="community_4">
-                    <%= f.radio_button :community, 4, class: "d-none", id: "community_4" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="community_4">
+                    <%= f.radio_button :community, 4, class: "d-none", id: "community_4", disabled: is_learner %>
                     <small class="text-muted">Significant positive impact on community; demonstrates leadership and initiative.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="community_3">
-                    <%= f.radio_button :community, 3, class: "d-none", id: "community_3" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="community_3">
+                    <%= f.radio_button :community, 3, class: "d-none", id: "community_3", disabled: is_learner %>
                     <small class="text-muted">Positive contribution to community; active engagement.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="community_2">
-                    <%= f.radio_button :community, 2, class: "d-none", id: "community_2" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="community_2">
+                    <%= f.radio_button :community, 2, class: "d-none", id: "community_2", disabled: is_learner %>
                     <small class="text-muted">Limited community engagement; minimal impact.</small>
                   </label>
                 </td>
                 <td>
-                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: pointer;" for="community_1">
-                    <%= f.radio_button :community, 1, class: "d-none", id: "community_1" %>
+                  <label class="d-block h-100 m-0 p-2 rounded" style="cursor: <%= is_learner ? 'default' : 'pointer' %>;" for="community_1">
+                    <%= f.radio_button :community, 1, class: "d-none", id: "community_1", disabled: is_learner %>
                     <small class="text-muted">No evidence of community engagement or impact.</small>
                   </label>
                 </td>
@@ -317,9 +318,11 @@
           .table tbody td:has(input[type="radio"]:checked) {
             background-color: #d1e7dd;
           }
+          <% unless is_learner %>
           .table tbody td label:hover {
             background-color: #d6f10f;
           }
+          <% end %>
         </style>
 
         <div class="d-flex justify-content-between mt-4 pt-3 border-top">
