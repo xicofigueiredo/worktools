@@ -154,7 +154,7 @@
                     </td>
                     <%= form_with model: activity, url: csc_activity_path(activity), method: :patch, data: { activity_row_calculator_target: "form" } do |f| %>
                       <td>
-                        <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                        <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save" <%= 'disabled' if is_special_activity %>>
                       </td>
                       <td>
                         <% extra_tooltip = activity.extra_justification.present? ? activity.extra_justification : nil %>
@@ -220,7 +220,7 @@
                       </td>
                       <%= form_with model: activity, url: csc_activity_path(activity), method: :patch, data: { activity_row_calculator_target: "form" } do |f| %>
                         <td>
-                          <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save">
+                          <input type="number" name="csc_activity[hours]" value="<%= activity.hours %>" class="form-control form-control-sm mx-auto" style="width: 65px;" min="0" step="1" data-activity-row-calculator-target="hours" data-action="input->activity-row-calculator#calculate blur->activity-row-calculator#save" <%= 'disabled' if is_special_activity_hidden %>>
                         </td>
                         <td>
                           <% extra_tooltip = activity.extra_justification.present? ? activity.extra_justification : nil %>
