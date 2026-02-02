@@ -164,7 +164,7 @@ class PagesController < ApplicationController
     return redirect_to new_user_session_path unless user_signed_in?
 
     kids = current_user.kids.map { |kid| User.find_by(id: kid) }
-    if current_user.role == "learner" || current_user.role == "admin"
+    if current_user.role == "learner" #|| current_user.role == "admin"
       @learner = current_user
       @learner_flag = @learner.learner_flag
       @timelines = @learner.timelines.where(hidden: false)
@@ -191,10 +191,7 @@ class PagesController < ApplicationController
       @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
       @skills = @sprint_goals&.skills
       @communities = @sprint_goals&.communities
-      @hub_lcs = []
-      @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3 || lc.deactivate
-      end
+      @hub_lcs = @learner.learner_info.learning_coaches || []
 
       @sprint_presence = calc_sprint_presence(@learner, @current_sprint)
 
@@ -561,7 +558,7 @@ class PagesController < ApplicationController
 
     main_hub_id = UsersHub.where(user_id: @learner.id, main: true).pluck(:hub_id).first
     @main_hub = Hub.find_by(id: main_hub_id)
-    @hub_lcs = fetch_hub_lcs(@main_hub)
+    @hub_lcs = @main_hub.learning_coaches
 
 
 
