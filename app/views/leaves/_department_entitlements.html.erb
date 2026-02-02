@@ -106,7 +106,21 @@
                   <% end %>
                 </td>
 
-                <td><%= r[:holidays_left] %></td>
+                <td>
+                  <%= r[:holidays_left] %>
+
+                  <%
+                    usage = r[:booked_holiday] + r[:pending_holiday]
+                    true_balance = r[:total_display] - usage
+                  %>
+
+                  <% if true_balance < 0 %>
+                    <%# Display the deficit in red next to the official value %>
+                    <span class="text-danger fw-bold ms-1" title="Actual balance including overbooking">
+                      (<%= true_balance %>)
+                    </span>
+                  <% end %>
+                </td>
 
                 <% if show_actions %>
                   <td class="text-center">

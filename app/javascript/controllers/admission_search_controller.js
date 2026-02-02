@@ -457,7 +457,11 @@ export default class extends Controller {
   }
 
   _requestSubmit() {
-    typeof this.element.requestSubmit === "function" ? this.element.requestSubmit() : this.element.submit();
+    if (this.hasFormTarget) {
+      this.formTarget.requestSubmit();
+    } else {
+      console.error("Form target not found in AdmissionSearchController");
+    }
   }
 
   _updateClearForAll() {
