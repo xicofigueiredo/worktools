@@ -16,12 +16,14 @@ class MicrosoftGraphService
 
     tz = visit.hub_timezone
 
+    event_body_content = build_event_body_content(visit)
+
     # Map the visit details to Microsoft's Event structure
     body = {
-      subject: "#{visit.visit_type.titleize}: #{visit.learner_name}",
+      subject: "#{visit.visit_type.titleize} - #{visit.hub.name} Hub - Parent: #{visit.first_name}, Learner: #{visit.learner_name}",
       body: {
         contentType: "HTML",
-        content: "<strong>Parent:</strong> #{visit.full_name}<br><strong>Notes:</strong> #{visit.special_requests}"
+        content: event_body_content
       },
       start: {
         dateTime: visit.start_time.in_time_zone(tz).iso8601,
@@ -79,5 +81,46 @@ class MicrosoftGraphService
     )
 
     response.success? ? response.parsed_response['access_token'] : nil
+  end
+
+  def build_event_body_content(visit)
+    # Define internal notes text (Constant text from your request)
+    internal_notes = <<~NOTES
+      Test user UK Curriculum platform: URL: https://learn.bravegenerationacademy.com/login/ (11) LWS 7: guest.year7 Password: Guest@y7 (12 - 13) LWS 8: guest.year8 Password: Guest@y8 (13 - 14) LWS 9: guest.year9 Password: Guest@y9 (14 -16) IGCSE: guest.igcse Password: Guest@igcse1 (16-18) A-Levels: guest.alevel Password: Guest@alevel1 -- Test user US Curriculum (FIA): URL: https://usuniversitypathways.schoolsplp.com/login Guest access info: https://edubgabravegeneration-my.sharepoint.com/:b:/g/personal/contact_bravegenerationacademy_com/EUICvLjvt8JJpiLOMqUikaQBmHFZDfiniBZ-DyolsdT4UQ?e=4ofZlS -- Test user UP Programme platform: URL: https://learn.genexinstitute.com/login/bga user: demo@bga.com password: password
+    NOTES
+
+    # Construct HTML
+    <<~HTML
+      <h3>Customer Info</h3>
+      --------------------<br>
+      <strong>Name:</strong> #{visit.full_name}<br>
+      <strong>Email:</strong> #{visit.email}<br>
+      <strong>Phone Number:</strong> #{visit.phone}<br>
+      <strong>Time Zone:</strong> #{visit.hub_timezone}<br>
+      <strong>Notes:</strong> #{visit.special_requests.presence || 'N/A'}<br>
+      <br>
+
+      <h3>Booking Info</h3>
+      --------------------<br>
+      <strong>Service name:</strong> #{visit.visit_type.titleize}<br>
+      <strong>Location:</strong> #{visit.hub.address} (#{visit.hub.google_map_link})<br>
+      <br>
+
+      <h3>Custom Fields</h3>
+      --------------------<br>
+      <strong>Question - What is(are) the Learner(s)'s name(s)?</strong><br>
+      Answer - #{visit.learner_name}<br>
+      <br>
+      <strong>Question - What is(are) the Learner(s)'s age(s)?</strong><br>
+      Answer - #{visit.learner_age}<br>
+      <br>
+      <strong>Question - Select the Learner(s)'s academic level</strong><br>
+      Answer - #{visit.learner_academic_level}<br>
+      <br>
+
+      <h3>Internal Notes</h3>
+      --------------------<br>
+      #{internal_notes}
+    HTML
   end
 end
