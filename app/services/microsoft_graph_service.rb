@@ -35,7 +35,7 @@ class MicrosoftGraphService
     }
 
     target_emails = [visit.hub.hub_email, 'contact@bravegenerationacademy.com']
-    primary_response = nil
+    hub_response_object = nil
 
     target_emails.each do |email|
       response = self.class.post(
@@ -46,10 +46,21 @@ class MicrosoftGraphService
         },
         body: body.to_json
       )
-      primary_response = response.parsed_response if email == visit.hub.hub_email
+      if email == visit.hub.hub_email
+        hub_response_object = response
+      end
+
+      unless response.success?
+        Rails.logger.error("MS Graph Error for #{email}: #{response.code} - #{response.body}")
+      end
     end
 
-    primary_response.success? ? response.parsed_response : nil
+    if hub_response_object && hub_response_object.success?
+      hub_response_object.parsed_response
+    else
+      Rails.logger.error("Failed to create primary Outlook event for Hub: #{visit.hub.name}")
+      nil
+    end
   end
 
   private
