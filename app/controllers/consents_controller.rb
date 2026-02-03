@@ -568,7 +568,7 @@ class ConsentsController < ApplicationController
   end
 
   def ensure_lc_or_admin
-    unless current_user.role == 'lc' || current_user.role == 'admin'
+    unless current_user.role == 'lc' || current_user.role == 'admin' || current_user.role == 'rm'
       redirect_to root_path, alert: "You are not authorized to access this page."
     end
   end

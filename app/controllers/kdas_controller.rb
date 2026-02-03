@@ -48,12 +48,7 @@ class KdasController < ApplicationController
 
     if @kda.save
       main_hub = current_user.users_hubs.find_by(main: true)&.hub
-      hub_lcs = main_hub&.users
-                      .where(role: 'lc')
-                      .includes(:hubs)
-                      .reject do |lc|
-                        lc.hubs.count >= 3 || lc.deactivate
-                      end
+      hub_lcs = main_hub&.learning_coaches || []
       hub_lcs.each do |lc|
         Notification.create!(
           user: lc,
@@ -72,12 +67,7 @@ class KdasController < ApplicationController
     if @kda.update(kda_params)
       if current_user.role == 'learner'
         main_hub = current_user.users_hubs.find_by(main: true)&.hub
-        hub_lcs = main_hub&.users
-                        .where(role: 'lc')
-                        .includes(:hubs)
-                        .reject do |lc|
-                          lc.hubs.count >= 3 || lc.deactivate
-                        end
+        hub_lcs = main_hub&.learning_coaches || []
         hub_lcs.each do |lc|
           notification = Notification.find_or_create_by!(
             user: lc,

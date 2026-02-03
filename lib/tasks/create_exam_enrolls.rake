@@ -24,9 +24,7 @@ namespace :exam_enrolls do
         next
       end
 
-      lcs = hub.users.where(role: 'lc', deactivate: false).reject do |lc|
-        lc.hubs.count >= 3
-      end
+      lcs = hub.learning_coaches || []
 
       lc_ids = lcs.present? ? lcs.map(&:id) : []
 

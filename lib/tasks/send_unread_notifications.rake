@@ -12,10 +12,7 @@ namespace :notifications do
       next if unread_notifications.empty? # Skip users with no unread notifications
 
       # Fetch Learning Coaches' emails for CC (if applicable)
-      lcs_emails = user.users_hubs.find_by(main: true)&.hub&.users
-                           &.where(role: 'lc')
-                           &.select { |lc| lc.hubs.count < 3 }
-                           &.pluck(:email) || []
+      lcs_emails = user.learner_info.learning_coaches || []
 
       # Send email
       UserMailer.notifications_summary(user, unread_notifications, lcs_emails).deliver_now

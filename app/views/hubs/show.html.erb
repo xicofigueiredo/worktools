@@ -481,7 +481,7 @@
           <h4 style="margin: 0 0 12px 0; font-size: 1rem; font-weight: 600;">Learning Coaches</h4>
 
           <% if @lcs.present? %>
-            <% @lcs.limit(3).each do |lc| %>
+            <% @lcs.each do |lc| %>
               <div class="lc-item">
                 <strong><%= h(lc.full_name.presence || lc.email) %></strong>
                 <div class="muted"><%= h(lc.email) %></div>
