@@ -184,7 +184,7 @@ class LearnerInfo < ApplicationRecord
     when 'online'
       [learning_coach].compact
     when 'hybrid'
-      hub ? hub.learning_coaches_with_capacity.to_a : []
+      hub ? hub.learning_coaches.to_a : []
     else
       []
     end

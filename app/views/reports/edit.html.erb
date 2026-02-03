@@ -1,5 +1,5 @@
 <div class="container mt-3">
-  <% if current_user.role != 'lc' && current_user.role != 'admin' %>
+  <% if current_user.role != 'lc' && current_user.role != 'admin' && current_user.role != 'rm' %>
     <%= render 'form', report: @report %>
   <% else %>
     <%= render 'lc_form', report: @report %>

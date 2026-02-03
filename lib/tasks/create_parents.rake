@@ -33,7 +33,7 @@ namespace :db do
           puts "✅ Created parent account for #{email}"
 
           # Find LCs with less than 3 hubs linked to the kid's hub (only non-deactivated LCs)
-          lcs = hub&.users&.where(role: 'lc', deactivate: false)&.select { |lc| lc.hubs.count < 3 } || []
+          lcs = hub&.learning_coaches || []
 
           # Send welcome email
           begin

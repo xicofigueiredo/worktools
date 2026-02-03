@@ -41,7 +41,7 @@ class Hub < ApplicationRecord
 
   # Get learning coaches for this hub
   def learning_coaches
-    users.where(role: 'lc', deactivate: [false, nil])
+    users.where(role: 'lc', deactivate: [false, nil], users_hubs: { main: true }).distinct
   end
 
   # Get learning coaches with fewer than max_hubs hubs

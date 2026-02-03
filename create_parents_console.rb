@@ -16,7 +16,7 @@ if kid.deactivate?
 end
 
 # Find LCs with less than 3 hubs linked to the kid's hub (only non-deactivated LCs)
-lcs = kid.users_hubs.find_by(main: true)&.hub&.users&.where(role: 'lc', deactivate: false)&.select { |lc| lc.hubs.count < 3 } || []
+lcs = kid.learner_info.learning_coaches || []
 
 # Parent 1: Renee Brennan
 parent1_name = 'Renee Brennan'

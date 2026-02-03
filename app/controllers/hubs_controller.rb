@@ -31,7 +31,7 @@ class HubsController < ApplicationController
     @curriculum_data = @curriculum_distribution.map { |k, v| [k.presence || 'Unknown', v] }
 
     # Use hub model method for LCs
-    @lcs = @hub.learning_coaches_with_capacity(3)
+    @lcs = @hub.learning_coaches
 
     @regional_manager = @hub.respond_to?(:regional_manager) ? @hub.regional_manager : nil
 

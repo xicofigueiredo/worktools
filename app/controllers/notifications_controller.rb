@@ -6,9 +6,7 @@ class NotificationsController < ApplicationController
     @notifications_unread = @notifications.where(read: false)
     hub_lcs = []
     if current_user.role == 'admin' || current_user.role == 'lc' || current_user.role == 'learner'
-      hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3 || lc.deactivate
-      end
+      hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.learning_coaches || []
       @lcs_emails = hub_lcs.map(&:email)
     end
     @notifications_by_month = @notifications.group_by { |n| n.created_at.strftime('%B %Y') }

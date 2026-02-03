@@ -43,6 +43,7 @@ class Admin::UsersController < ApplicationController
     @is_cm = @user.role == 'cm'
     @is_admin = @user.role == 'admin'
     @is_lc = @user.role == 'lc'
+    @is_rm = @user.role == 'rm'
     @is_learner = @user.role == 'learner'
     @is_guardian = @user.role == 'guardian'
     @subjects = Subject.where.not(id: 666).order(:name)

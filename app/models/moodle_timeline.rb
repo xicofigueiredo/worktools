@@ -39,9 +39,7 @@ class MoodleTimeline < ApplicationRecord
     if exam_enroll.present?
     else
       hub = self.user.users_hubs.find_by(main: true).hub.name
-      lcs = self.user.users_hubs.includes(:hub).find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3
-      end
+      lcs = self.user.learner_info.learning_coaches || []
       lc_ids = lcs.present? ? lcs.map(&:id) : []
       native_language_english = self.user.native_language == 'English' ? true : false
 
@@ -715,9 +713,7 @@ class MoodleTimeline < ApplicationRecord
     hub = learner.users_hubs.find_by(main: true)&.hub
     return unless hub
 
-    hub_lcs = hub.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3 || lc.deactivate
-    end
+    hub_lcs = hub.learning_coaches || []
 
     return if hub_lcs.blank?
 

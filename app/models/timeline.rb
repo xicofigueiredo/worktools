@@ -36,9 +36,7 @@ class Timeline < ApplicationRecord
     if exam_enroll.nil?
       if self.exam_date.present?
         hub = self.user.users_hubs.find_by(main: true).hub.name
-        lcs = self.user.users_hubs.includes(:hub).find_by(main: true)&.hub.users.where(role: 'lc', deactivate: false).reject do |lc|
-          lc.hubs.count >= 3
-        end
+        lcs = self.user.learner_info.learning_coaches || []
         lc_ids = lcs.present? ? lcs.map(&:id) : []
         user = self.user
         exam_enroll = ExamEnroll.create!(
@@ -142,9 +140,7 @@ class Timeline < ApplicationRecord
     hub = learner.users_hubs.find_by(main: true)&.hub
     return unless hub
 
-    hub_lcs = hub.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3 || lc.deactivate
-    end
+    hub_lcs = hub.users.learner_info.learning_coaches || []
 
     return if hub_lcs.blank?
 

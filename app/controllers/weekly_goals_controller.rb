@@ -78,9 +78,7 @@ class WeeklyGoalsController < ApplicationController
     if @weekly_goal.save
       save_weekly_slots
       @weekly_goal.calculate_expected_hours
-      hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3 || lc.deactivate
-      end
+      hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.learning_coaches || []
       hub_lcs.each do |lc|
         Notification.create!(
           user: lc,
@@ -100,9 +98,7 @@ class WeeklyGoalsController < ApplicationController
       save_weekly_slots
       @weekly_goal.calculate_expected_hours
       if current_user.role == 'learner'
-        hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-          lc.hubs.count >= 3 || lc.deactivate
-        end
+        hub_lcs = current_user.users_hubs.find_by(main: true)&.hub.learning_coaches || []
         hub_lcs.each do |lc|
           notification = Notification.find_or_create_by!(
             user: lc,

@@ -124,9 +124,11 @@ class ExamEnrollsController < ApplicationController
         )
         .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
 
-    elsif current_user.role == 'lc'  #dc logic
+    elsif current_user.role == 'rm' || current_user.role == 'lc'   #dc logic
       # Get all hub IDs where the DC is assigned
-      dc_hub_ids = current_user.users_hubs.pluck(:hub_id)
+      dc_hubs = current_user.hubs
+      dc_hub_ids = dc_hubs.pluck(:hub_id)
+      @available_hubs = dc_hubs.pluck(:name)
 
       # Get users who belong to any of the DC's hubs (with main = true)
       dc_hub_user_ids = User.joins(:users_hubs)
@@ -216,8 +218,7 @@ class ExamEnrollsController < ApplicationController
 
       # Set learning coach IDs based on the learner's main hub
       if timeline.user.main_hub
-        lcs = timeline.user.main_hub.users.where(role: 'lc', deactivate: false)
-                      .reject { |lc| lc.hubs.count >= 3 }
+        lcs = timeline.user.learner_info.learning_coaches || []
         @exam_enroll.learning_coach_ids = lcs.map(&:id)
       end
     end

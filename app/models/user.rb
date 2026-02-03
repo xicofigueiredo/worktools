@@ -201,7 +201,7 @@ class User < ApplicationRecord
   end
 
   def can_access_learner?(learner)
-    self == learner || (self.role.in?(['Admin', 'Learning Coach']) && (self.hubs & learner.hubs).present?)
+    self == learner || (self.role.in?(['Admin', 'Learning Coach', 'Regional Manager']) && (self.hubs & learner.hubs).present?)
   end
 
   def ensure_deactivated_if_graduated

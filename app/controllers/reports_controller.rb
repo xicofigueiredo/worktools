@@ -4,7 +4,7 @@ class ReportsController < ApplicationController
   before_action :set_report, only: %i[edit update toggle_hide update_knowledges update_activities download_pdf destroy_report_knowledge reset_knowledges_from_sprint_goal]
 
   def lc_view
-    redirect_to root_path if current_user.role != 'lc' && current_user.role != 'admin'
+    redirect_to root_path if current_user.role != 'lc' && current_user.role != 'admin' && current_user.role != 'rm'
 
     @learners = User.joins(:users_hubs)
     .joins("INNER JOIN hubs ON hubs.id = users_hubs.hub_id")
@@ -243,7 +243,7 @@ class ReportsController < ApplicationController
     if current_user.role == 'learner' && @learner == current_user
       # The learner can edit their report
       @role = 'learner'
-    elsif current_user.role == 'lc' && ((current_user.hubs & @learner.hubs).any? || @learner.main_hub&.name&.include?("Remote"))
+    elsif (current_user.role == 'lc' || current_user.role == 'rm') && ((current_user.hubs & @learner.hubs).any? || @learner.main_hub&.name&.include?("Remote"))
       # The LC can edit the report related to them
       @role = 'lc'
     elsif current_user.role == 'admin'
@@ -271,9 +271,7 @@ class ReportsController < ApplicationController
 
 
   def toggle_hide
-    lcs = @report.user.users_hubs.includes(:hub).find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-      lc.hubs.count >= 3
-    end
+    lcs = @report.user.learner_info.learning_coaches || []
 
     lc_ids = lcs.present? ? lcs.map(&:id) : []
 

@@ -164,7 +164,7 @@ class PagesController < ApplicationController
     return redirect_to new_user_session_path unless user_signed_in?
 
     kids = current_user.kids.map { |kid| User.find_by(id: kid) }
-    if current_user.role == "learner" || current_user.role == "admin"
+    if current_user.role == "learner"
       @learner = current_user
       @learner_flag = @learner.learner_flag
       @timelines = @learner.timelines.where(hidden: false)
@@ -191,10 +191,7 @@ class PagesController < ApplicationController
       @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
       @skills = @sprint_goals&.skills
       @communities = @sprint_goals&.communities
-      @hub_lcs = []
-      @hub_lcs = @learner.users_hubs.find_by(main: true)&.hub.users.where(role: 'lc').reject do |lc|
-        lc.hubs.count >= 3 || lc.deactivate
-      end
+      @hub_lcs = @learner.learner_info.learning_coaches || []
 
       @sprint_presence = calc_sprint_presence(@learner, @current_sprint)
 
@@ -220,12 +217,14 @@ class PagesController < ApplicationController
 
       get_kda_averages(@learner.kdas, @current_sprint)
       redirect_to some_fallback_path, alert: "Learner not found." unless @learner
-    elsif current_user.role == "lc"
+    elsif current_user.role == "lc" || current_user.role == "rm"
       redirect_to dashboard_lc_path
     elsif current_user.role == "guardian" && kids.count.positive?
       redirect_to learner_profile_path(kids.first)
     elsif current_user.role == "cm"
       redirect_to dashboard_cm_path
+    elsif current_user.role == "admin"
+      redirect_to admissions_path
     else
       redirect_to about_path
     end
@@ -441,7 +440,7 @@ class PagesController < ApplicationController
   end
 
   def check_lc_role
-    return if current_user.role == "lc" || current_user.role == "admin"
+    return if current_user.role == "lc" || current_user.role == "admin" || current_user.role == "rm"
 
     redirect_to root_path, alert: "You are not authorized to access this page."
   end
@@ -508,7 +507,7 @@ class PagesController < ApplicationController
   end
 
   def authorize_user
-    allowed_roles = %w(admin lc cm exams)
+    allowed_roles = %w(admin lc cm exams rm)
     unless current_user.kids.include?(@learner.id) || allowed_roles.include?(current_user.role)
       redirect_to root_path and return
     end
@@ -561,9 +560,7 @@ class PagesController < ApplicationController
 
     main_hub_id = UsersHub.where(user_id: @learner.id, main: true).pluck(:hub_id).first
     @main_hub = Hub.find_by(id: main_hub_id)
-    @hub_lcs = fetch_hub_lcs(@main_hub)
-
-
+    @hub_lcs = @main_hub.learning_coaches
 
     @holidays = @learner.holidays
     @sprint_presence = calc_sprint_presence(@learner, @current_sprint)

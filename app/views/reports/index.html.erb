@@ -1,4 +1,4 @@
-<% if current_user.role == 'lc' || current_user.role == "admin" %>
+<% if current_user.role == 'lc' || current_user.role == "admin" || current_user.role == "rm" %>
   <div style="padding-top: 20px; padding-bottom: 20px;">
     <%= form_with url: reports_path, method: :get, local: true, class: "d-flex align-items-center justify-content-center gap-2 ", data: { controller: "auto-submit" } do %>
       <%= select_tag :learner_id,
@@ -17,7 +17,7 @@
 <div class="report-container mt-3">
   <div class="d-flex justify-content-between mb-3 align-items-center position-relative">
     <div>
-      <% if @report && current_user.role != 'lc' && current_user.role != 'admin'%>
+      <% if @report && current_user.role != 'lc' && current_user.role != 'admin' && current_user.role != 'rm'%>
         <h1 class="text-center">Report</h1>
       <% else %>
         <% if @report.hide %>
@@ -105,7 +105,7 @@ Holidays - <%=@h%>"></i></div>
       </div>
       </div>
 
-    <% if @hide != true || current_user.role == 'lc' %>
+    <% if @hide != true || current_user.role == 'lc' || current_user.role == 'rm' %>
       <div class="section">
         <div class="section-title">General comment</div>
         <div style="border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin: 10px 0;">
@@ -172,7 +172,7 @@ If your child is pursuing the UP curriculum or the American curriculum, they wil
           </table>
         </div>
       </div>
-      <% if @hide != true || current_user.role == 'lc' %>
+      <% if @hide != true || current_user.role == 'lc' || current_user.role == 'rm'%>
         <div class="flex-container">
             <div class="flex-item">
               <div class="section-title">Learning Coach Comment</div>
@@ -277,7 +277,7 @@ These KDAs represent critical growth areas unique to each learner, helping them 
 
     <br>
 
-    <% if @hide != true || current_user.role == 'lc' || current_user.role == 'admin' %>
+    <% if @hide != true || current_user.role == 'lc' || current_user.role == 'admin' || current_user.role == 'rm' %>
       <div class="rubric-section">
         <div class="section-title">Learning Coach's Rubric</div>
         <table class="rubric-table">
