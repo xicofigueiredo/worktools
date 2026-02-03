@@ -83,6 +83,16 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable, :confirmable
 
+  # Prevent deactivated users from logging in
+  def active_for_authentication?
+    super && !deactivate
+  end
+
+  # Custom message for deactivated users
+  def inactive_message
+    deactivate ? :deactivated : super
+  end
+
   scope :with_country, ->(country) {
     joins(userhubs: :hub).where(hubs: { country: country })
   }
