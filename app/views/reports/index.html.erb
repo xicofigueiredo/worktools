@@ -3,7 +3,9 @@
     <%= form_with url: reports_path, method: :get, local: true, class: "d-flex align-items-center justify-content-center gap-2 ", data: { controller: "auto-submit" } do %>
       <%= select_tag :learner_id,
             grouped_options_for_select(@grouped_learners.transform_values { |learners| learners.map { |learner| [learner.full_name, learner.id] } }, params[:learner_id]),
-            class: "form-select form-select-lg w-25", prompt: "Select a learner" %>
+            class: "form-select form-select-lg w-25",
+            include_blank: "Select a learner",
+            data: { action: "change->auto-submit#submit" } %>
     <% end %>
   </div>
 <% end %>

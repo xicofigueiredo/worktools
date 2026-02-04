@@ -31,7 +31,7 @@ class ExamEnrollsController < ApplicationController
     exam_centre_filter = params[:exam_centre] || 'all'
 
     # Apply role-based default filters
-    if current_user.role == 'lc' && (current_user.hubs.count > 5 || current_user.id == 247 || current_user.id == 99) && params[:status].blank?
+    if (current_user.role == 'rm' || current_user.id == 247 || current_user.id == 99) && params[:status].blank?
       status_filter = "RM Approval Pending"
     elsif current_user.role == 'exams' && params[:status].blank?
       status_filter = "Registered"
@@ -267,14 +267,14 @@ class ExamEnrollsController < ApplicationController
       return
     end
 
-    # Get timelines for the selected learner that DON'T have exam dates
-    # and DON'T already have an exam enroll
-    existing_exam_enroll_timeline_ids = ExamEnroll.where.not(timeline_id: nil).pluck(:timeline_id)
-
-    @timelines = @learner.timelines.includes(:subject)
-                        .where(exam_date_id: nil)  # No exam date set
+    # Get timelines for the selected learner that DON'T already have an exam enroll.
+    # We allow timelines with an exam date set, because deleting an exam enroll should
+    # not force the user to "touch" the timeline just to recreate the enrollment.
+    @timelines = @learner.timelines
+                        .includes(:subject, :exam_date)
+                        .left_outer_joins(:exam_enroll)
+                        .where(exam_enrolls: { id: nil })
                         .where(hidden: false)
-                        .where.not(id: existing_exam_enroll_timeline_ids)  # No existing exam enroll
                         .order(:start_date)
   end
 

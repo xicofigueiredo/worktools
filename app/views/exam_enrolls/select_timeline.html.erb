@@ -18,12 +18,22 @@
                           <strong>Progress:</strong> <%= timeline.progress %>%<br>
                           <strong>Start Date:</strong> <%= timeline.start_date.strftime("%B %d, %Y") %><br>
                           <strong>End Date:</strong> <%= timeline.end_date.strftime("%B %d, %Y") %><br>
-                          <span class="badge bg-info">No exam date set</span>
+                          <% if timeline.exam_date.present? %>
+                            <span class="badge bg-success">Exam date set: <%= timeline.exam_date.date.strftime("%B %Y") %></span>
+                          <% else %>
+                            <span class="badge bg-info">No exam date set</span>
+                          <% end %>
                         </small>
                       </p>
-                      <%= link_to "Select Timeline",
-                          select_exam_date_exam_enrolls_path(timeline_id: timeline.id),
-                          class: "btn btn-primary btn-sm" %>
+                      <% if timeline.exam_date.present? %>
+                        <%= link_to "Continue to Exam Registration",
+                            new_exam_enroll_path(timeline_id: timeline.id),
+                            class: "btn btn-primary btn-sm" %>
+                      <% else %>
+                        <%= link_to "Select Exam Date",
+                            select_exam_date_exam_enrolls_path(timeline_id: timeline.id),
+                            class: "btn btn-primary btn-sm" %>
+                      <% end %>
                     </div>
                   </div>
                 </div>
@@ -32,7 +42,7 @@
           <% else %>
             <div class="text-center py-4">
               <p class="text-muted">No available timelines found for <%= @learner.full_name %>.</p>
-              <p class="text-muted"><small>Timelines must not have an exam date set and not already have an exam enrollment.</small></p>
+              <p class="text-muted"><small>Timelines must not already have an exam enrollment.</small></p>
               <%= link_to "Back to Learner Selection", select_learner_exam_enrolls_path, class: "btn btn-secondary" %>
             </div>
           <% end %>
