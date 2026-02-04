@@ -560,7 +560,7 @@ class PagesController < ApplicationController
 
     main_hub_id = UsersHub.where(user_id: @learner.id, main: true).pluck(:hub_id).first
     @main_hub = Hub.find_by(id: main_hub_id)
-    @hub_lcs = @main_hub.learning_coaches
+    @lcs = @learner.learner_info.learning_coaches
 
     @holidays = @learner.holidays
     @sprint_presence = calc_sprint_presence(@learner, @current_sprint)
