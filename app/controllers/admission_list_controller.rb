@@ -37,7 +37,7 @@ class AdmissionListController < ApplicationController
 
     # Determine hubs scope
     hubs_scope = Hub.all
-    if current_user.lc?
+    if current_user.lc? || current_user.rm?
       lc_hub_ids = current_user.users_hubs.pluck(:hub_id)
       hubs_scope = hubs_scope.where(id: lc_hub_ids) if lc_hub_ids.any?
     end
@@ -537,8 +537,8 @@ class AdmissionListController < ApplicationController
   private
 
   def apply_filters(scope)
-    # LC Permission Scope
-    if current_user.lc?
+    # LC & RM Permission Scope
+    if current_user.lc? || current_user.rm?
       lc_hub_ids = current_user.users_hubs.pluck(:hub_id)
       if lc_hub_ids.any?
         scope = scope.where(
