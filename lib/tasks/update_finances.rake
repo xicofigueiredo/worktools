@@ -37,18 +37,6 @@ namespace :finance do
 
     puts "Detected separator: '#{separator}'"
 
-    # HACK: Handle duplicate "Discount" headers by renaming them based on position.
-    # We assume the order: Monthly Fee, Discount, Scholarship... Renewal Fee, Discount...
-    # We replace the first occurrence of "Discount" with "Discount MF" and the second with "Discount RF"
-    if header_line.scan(/Discount/i).count > 1
-      # Replace first "Discount"
-      header_line = header_line.sub(/Discount/i, 'Discount MF')
-      # Replace next "Discount"
-      header_line = header_line.sub(/Discount/i, 'Discount RF')
-      lines[0] = header_line
-      puts "Duplicate 'Discount' headers detected. Renamed to 'Discount MF' and 'Discount RF' for parsing."
-    end
-
     # Reassemble CSV text
     processed_csv_text = lines.join
 
