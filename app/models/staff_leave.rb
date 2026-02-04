@@ -8,7 +8,7 @@ class StaffLeave < ApplicationRecord
 
   ADVANCE_DAYS = 30
   STATUSES = %w[pending approved rejected cancelled].freeze
-  LEAVE_TYPES = ['holiday', 'sick leave', 'paid leave', 'marriage leave', 'parental leave', 'birthday', 'other'].freeze
+  LEAVE_TYPES = ['holiday', 'sick leave', 'unpaid leave', 'marriage leave', 'parental leave', 'birthday', 'other'].freeze
 
   validates :status, inclusion: { in: STATUSES }
   validates :leave_type, presence: true, inclusion: { in: LEAVE_TYPES }
@@ -22,7 +22,7 @@ class StaffLeave < ApplicationRecord
   validate  :exception_reason_if_requested
   validates :days_from_previous_year, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validate  :previous_year_days_allowed, on: :create
-  validate  :paid_leave_minimum_days, on: :create
+  validate  :unpaid_leave_minimum_days, on: :create
   validate  :marriage_leave_max_days, on: :create
   validate :notes_required_for_other, on: :create
   validate :birthday_rules, on: :create, if: -> { leave_type == 'birthday' }
@@ -65,7 +65,7 @@ class StaffLeave < ApplicationRecord
     return 0 if year_start > year_end
 
     # Sick leave: consecutive days count (don't skip weekends/holidays)
-    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
+    if ['sick leave', 'unpaid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
       count = 0
       (year_start..year_end).each do |d|
         next unless d.year == target_year
@@ -124,7 +124,7 @@ class StaffLeave < ApplicationRecord
     end
 
     # Other leaves count consecutive calendar days (include weekends & public holidays)
-    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
+    if ['sick leave', 'unpaid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
       self.total_days = (end_date - start_date).to_i + 1
       return
     end
@@ -152,7 +152,7 @@ class StaffLeave < ApplicationRecord
     return 0 if year_start > year_end || start_date.year > target_year || end_date.year < target_year
 
     # Sick/Paid/etc: Consecutive days
-    if ['sick leave', 'paid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
+    if ['sick leave', 'unpaid leave', 'marriage leave', 'parental leave', 'other'].include?(leave_type)
       return (year_end - year_start).to_i + 1
     end
 
@@ -215,14 +215,14 @@ class StaffLeave < ApplicationRecord
     end
   end
 
-  def paid_leave_minimum_days
-    return unless leave_type == 'paid leave'
+  def unpaid_leave_minimum_days
+    return unless leave_type == 'unpaid leave'
     return if start_date.blank? || end_date.blank?
 
     # consecutive days inclusive
     consecutive_days = (end_date - start_date).to_i + 1
     if consecutive_days < 30
-      errors.add(:base, "Paid leave must be at least 30 consecutive days")
+      errors.add(:base, "Unpaid leave must be at least 30 consecutive days")
     end
   end
 

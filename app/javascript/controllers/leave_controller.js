@@ -141,7 +141,7 @@ export default class extends Controller {
     const daysCount = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1
 
     if (type.includes('paid') && daysCount < 30) {
-      this.hardErrors.push(`Paid leave must be at least 30 consecutive days.`)
+      this.hardErrors.push(`Unpaid leave must be at least 30 consecutive days.`)
     }
 
     if (type.includes('marriage') && daysCount > 15) {
