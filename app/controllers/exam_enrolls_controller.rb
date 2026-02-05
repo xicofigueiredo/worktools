@@ -201,6 +201,7 @@ class ExamEnrollsController < ApplicationController
       @exam_enrolls = lc_exam_enrolls
       @exam_enrolls += learning_coach_exam_enrolls if learning_coach_exam_enrolls.present?
       @exam_enrolls += cm_exam_enrolls if cm_exam_enrolls.present?
+      @exam_enrolls = @exam_enrolls.uniq
     elsif current_user.role == 'cm'
       @exam_enrolls = @exam_enrolls
         .where('users.deactivate IS NULL OR users.deactivate = ? OR users.id IS NULL', false)
