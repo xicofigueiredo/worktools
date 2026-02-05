@@ -142,6 +142,32 @@ class ExamEnrollsController < ApplicationController
       # Get hub names for filtering exam enrolls
       dc_hub_names = Hub.where(id: dc_hub_ids).pluck(:name)
 
+      # Get learner user IDs where current_user is in their learning_coaches
+      # For 'online' programme: learning_coach_id = current_user.id
+      # For 'hybrid' programme: current_user is a learning coach in the learner's hub
+      # Get hubs where current_user is a learning coach (main=true)
+      lc_hub_ids = current_user.role == 'lc' ? current_user.users_hubs.where(main: true).pluck(:hub_id) : []
+
+      # Build query for learners where current_user is in their learning_coaches
+      learning_coach_query = User.joins(:learner_info)
+        .where("users.deactivate IS NULL OR users.deactivate = ?", false)
+
+      if lc_hub_ids.present?
+        learning_coach_query = learning_coach_query.where(
+          "(LOWER(learner_infos.programme) = 'online' AND learner_infos.learning_coach_id = ?) OR " \
+          "(LOWER(learner_infos.programme) = 'hybrid' AND learner_infos.hub_id IN (?))",
+          current_user.id,
+          lc_hub_ids
+        )
+      else
+        learning_coach_query = learning_coach_query.where(
+          "LOWER(learner_infos.programme) = 'online' AND learner_infos.learning_coach_id = ?",
+          current_user.id
+        )
+      end
+
+      learning_coach_learner_user_ids = learning_coach_query.pluck(:id)
+
       lc_exam_enrolls = @exam_enrolls
       .where('users.deactivate IS NULL OR users.deactivate = ? OR users.id IS NULL', false)
       .where('exam_enrolls.hub IN (?)', dc_hub_names)
@@ -151,6 +177,16 @@ class ExamEnrollsController < ApplicationController
         dc_hub_names
       )
       .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
+
+      # Also include exam enrolls where current_user is in the learner's learning_coaches
+      learning_coach_exam_enrolls = if learning_coach_learner_user_ids.present?
+        @exam_enrolls
+          .where('users.deactivate IS NULL OR users.deactivate = ? OR users.id IS NULL', false)
+          .where('timelines.user_id IN (?)', learning_coach_learner_user_ids)
+          .order(Arel.sql('COALESCE(users.full_name, exam_enrolls.learner_name) ASC'))
+      else
+        @exam_enrolls.none
+      end
 
       if current_user.subjects.count > 0
         cm_exam_enrolls = @exam_enrolls
@@ -163,6 +199,7 @@ class ExamEnrollsController < ApplicationController
       end
 
       @exam_enrolls = lc_exam_enrolls
+      @exam_enrolls += learning_coach_exam_enrolls if learning_coach_exam_enrolls.present?
       @exam_enrolls += cm_exam_enrolls if cm_exam_enrolls.present?
     elsif current_user.role == 'cm'
       @exam_enrolls = @exam_enrolls
