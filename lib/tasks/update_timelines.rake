@@ -9,10 +9,10 @@ namespace :timelines do
   desc "update moodle timelines"
   task update_timelines: :environment do
     puts "Enter the subject id: "
-    id = gets.chomp.to_i
+    id = STDIN.gets.chomp.to_i
     puts "You entered: #{id}"
     puts "Are you sure you want to update timelines for subject id #{id}? (y/n)"
-    confirm = gets.chomp
+    confirm = STDIN.gets.chomp
     if confirm == "y"
       puts "Updating timelines for subject id #{id}..."
     end
