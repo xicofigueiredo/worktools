@@ -191,7 +191,7 @@ class PagesController < ApplicationController
       @sprint_goals = @learner.sprint_goals.find_by(sprint: @current_sprint)
       @skills = @sprint_goals&.skills
       @communities = @sprint_goals&.communities
-      @hub_lcs = @learner.learner_info.learning_coaches || []
+      @lcs = @learner.learner_info.learning_coaches || []
 
       @sprint_presence = calc_sprint_presence(@learner, @current_sprint)
 

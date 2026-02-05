@@ -4,8 +4,8 @@
           <h2><%= @learner.full_name %></h2>
           <p>Hub: <%= @learner.hubs.any? ? @learner.users_hubs.find_by(main: true)&.hub.name : ''  %></p>
           <p>Email: <%= @learner.email %></p>
-          <% if @hub_lcs.any? %>
-            <% @hub_lcs.each do |lc| %>
+          <% if @lcs.any? %>
+            <% @lcs.each do |lc| %>
               <p>LC: <%= lc.full_name %> <br> <i class="fa-regular fa-envelope"></i> <a href="mailto:<%= lc.email %>"><%= lc.email %></a></p>
             <% end %>
           <% end %>
