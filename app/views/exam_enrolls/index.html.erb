@@ -125,7 +125,7 @@
                   </td>
                   <td>
                     <div class="d-flex justify-content-center">
-                      <% if current_user.role == "admin" || current_user.role == "lc" %>
+                      <% if current_user.role == "admin" || current_user.role == "lc" || current_user.role == "rm"%>
                         <%= button_to exam_enroll_path(enrollment),
                             method: :delete,
                             form: {
