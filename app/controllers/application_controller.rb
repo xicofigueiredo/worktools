@@ -105,7 +105,7 @@ class ApplicationController < ActionController::Base
     when 'edu'
       'staff'
     when 'finance'
-      'staff'
+      'finance'
     when 'ops'
       'staff'
     when 'it'
