@@ -178,16 +178,16 @@
     "Other"
   ]},
   invoice_email: { type: :email, col: '6' },
-  monthly_fee: { type: :number, col: '3', step: 1, label: "Monthly Fee (#{@currency_symbol})" },
+  monthly_fee: { type: :number, col: '3', step: 0.01, label: "Monthly Fee (#{@currency_symbol})" },
   discount_mf: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   scholarship: { type: :number, col: '3', step: 0.01, min: 0, max: 100, label: "Scholarship (%)" },
-  billable_mf: { type: :number, col: '3', step: 1, readonly: true, label: "Billable Monthly Fee (#{@currency_symbol})" },
+  billable_mf: { type: :number, col: '3', step: 0.01, readonly: true, label: "Billable Monthly Fee (#{@currency_symbol})" },
   admission_fee: { type: :number, col: '4', step: 1, label: "Admission Fee (#{@currency_symbol})" },
   discount_af: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
   billable_af: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Admission Fee (#{@currency_symbol})" },
-  renewal_fee: { type: :number, col: '4', step: 1, label: "Renewal Fee (#{@currency_symbol})" },
+  renewal_fee: { type: :number, col: '4', step: 0.01, label: "Renewal Fee (#{@currency_symbol})" },
   discount_rf: { type: :number, col: '4', step: 0.01, min: 0, max: 100, label: "Discount (%)" },
-  billable_rf: { type: :number, col: '4', step: 1, readonly: true, label: "Billable Renewal Fee (#{@currency_symbol})" },
+  billable_rf: { type: :number, col: '4', step: 0.01, readonly: true, label: "Billable Renewal Fee (#{@currency_symbol})" },
   notes: { type: :text_area, rows: 4, col: '12' }
 }) %>
 
