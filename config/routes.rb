@@ -282,6 +282,8 @@ Rails.application.routes.draw do
       end
     end
 
+    resource :setup_exam_season, only: [:edit, :update]
+
     resources :exam_finances do
       member do
         get :generate_statement

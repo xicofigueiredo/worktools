@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_02_10_110407) do
+ActiveRecord::Schema[7.0].define(version: 2026_02_11_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -1065,6 +1065,24 @@ ActiveRecord::Schema[7.0].define(version: 2026_02_10_110407) do
     t.index ["status"], name: "index_service_requests_on_status"
     t.index ["target_hub_id"], name: "index_service_requests_on_target_hub_id"
     t.index ["type"], name: "index_service_requests_on_type"
+  end
+
+  create_table "setup_exam_seasons", force: :cascade do |t|
+    t.string "season_name", null: false
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.date "pearson_refund"
+    t.date "triple_late_fees"
+    t.date "bga_refund"
+    t.date "mock_submission_with_extension"
+    t.date "mock_submission_deadline"
+    t.date "extension_request_deadline"
+    t.date "late_registration"
+    t.date "registration_deadline"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["season_name"], name: "index_setup_exam_seasons_on_season_name"
+    t.index ["start_date", "end_date"], name: "index_setup_exam_seasons_on_start_date_and_end_date"
   end
 
   create_table "skills", force: :cascade do |t|

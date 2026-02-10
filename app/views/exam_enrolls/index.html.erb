@@ -28,7 +28,7 @@
       <% end %>
     </div>
 
-    <!-- Right side: Filters -->
+    <!-- Right side: Filters + Season settings -->
     <div class="d-flex align-items-end gap-2 justify-content-end" style="flex: 1;">
       <%= form_with url: exam_enrolls_path, method: :get, local: true, class: "d-flex align-items-end gap-2", id: "filter-form" do |form| %>
 
@@ -84,6 +84,14 @@
 
         <!-- Preserve date parameter -->
         <%= form.hidden_field :date, value: params[:date] if params[:date].present? %>
+      <% end %>
+
+      <% if current_user.role == 'admin' || current_user.role == 'exams' %>
+        <%= link_to edit_setup_exam_season_path(date: @season[:start_date]),
+                    class: "btn btn-outline-secondary d-flex align-items-center",
+                    title: "Exam season settings" do %>
+          <i class="fa-solid fa-gear"></i>
+        <% end %>
       <% end %>
     </div>
   </div>

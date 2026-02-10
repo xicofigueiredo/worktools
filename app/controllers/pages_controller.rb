@@ -162,13 +162,14 @@ class PagesController < ApplicationController
 
   def profile
     return redirect_to new_user_session_path unless user_signed_in?
+    today = Date.today
 
     kids = current_user.kids.map { |kid| User.find_by(id: kid) }
     if current_user.role == "learner"
       @learner = current_user
       @learner_flag = @learner.learner_flag
       @timelines = @learner.timelines.where(hidden: false)
-      @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+      @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
       @current_sprint_weeks = @current_sprint.weeks.includes(:weekly_goals).order(:start_date)
 
       # Precompute time spent and expected hours for each week
@@ -200,16 +201,15 @@ class PagesController < ApplicationController
 
       @has_exam_date = @timelines.any? { |timeline| timeline.exam_date.present? }
 
-      @current_week = Week.find_by("start_date <= ? AND end_date >= ?", Date.today, Date.today)
+      @current_week = Week.find_by("start_date <= ? AND end_date >= ?", today, today)
 
       @has_mock50 = @timelines.any? { |timeline| timeline.mock50.present? }
 
       @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
 
-      current_date = Date.today
 
       # First, try to find a build week that contains the current date
-      @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", Date.today, "%Build%").order(:start_date).first
+      @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", today, "%Build%").order(:start_date).first
       @activities = ConsentActivity.where(week_id: @nearest_build_week&.id, hub_id: @learner.main_hub&.id).order(:day)
 
       @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
@@ -251,9 +251,6 @@ class PagesController < ApplicationController
       @report = @learner.reports.order(updated_at: :asc).where(parent: true).last
       @last_report_sprint = @report&.sprint&.name || ""
     end
-
-    current_date = Date.today
-    user = @learner
 
     @holidays_taken = Attendance.where(user_id: @learner.id, attendance_date: "1/1/2026"..."31/12/2026", absence: 'Holiday').count
 

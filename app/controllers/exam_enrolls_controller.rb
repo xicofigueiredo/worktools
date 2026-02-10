@@ -134,8 +134,7 @@ class ExamEnrollsController < ApplicationController
       dc_hub_user_ids = User.joins(:users_hubs)
       .where("users.deactivate IS NULL OR users.deactivate = ?", false)
       .where(users_hubs: {
-        hub_id: dc_hub_ids,
-        main: true
+        hub_id: dc_hub_ids
       })
       .pluck(:id)
 

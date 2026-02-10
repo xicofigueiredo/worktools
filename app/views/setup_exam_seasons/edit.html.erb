@@ -1,0 +1,78 @@
+<div class="container mt-4">
+  <div id="flash">
+    <%= render "shared/flash" %>
+  </div>
+
+  <h4 class="mb-3">
+    Exam Season Settings -
+    <span class="text-muted"><%= @season[:name] %></span>
+  </h4>
+
+  <p class="text-muted">
+    These settings apply only to the current exam season shown above (the same season you are viewing on Exam Registrations).
+  </p>
+
+  <div class="card">
+    <div class="card-body">
+      <%= form_with model: @setup_exam_season,
+                    url: setup_exam_season_path(date: @season[:start_date]),
+                    method: :patch,
+                    local: true do |f| %>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <%= f.label :pearson_refund, "Pearson refund deadline", class: "form-label" %>
+            <%= f.date_field :pearson_refund, class: "form-control" %>
+          </div>
+
+          <div class="col-md-4">
+            <%= f.label :triple_late_fees, "Triple late fees start", class: "form-label" %>
+            <%= f.date_field :triple_late_fees, class: "form-control" %>
+          </div>
+
+          <div class="col-md-4">
+            <%= f.label :bga_refund, "BGA refund deadline", class: "form-label" %>
+            <%= f.date_field :bga_refund, class: "form-control" %>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+          <div class="col-md-4">
+            <%= f.label :mock_submission_with_extension, "Mock submission (with extension)", class: "form-label" %>
+            <%= f.date_field :mock_submission_with_extension, class: "form-control" %>
+          </div>
+
+          <div class="col-md-4">
+            <%= f.label :mock_submission_deadline, "Mock submission deadline", class: "form-label" %>
+            <%= f.date_field :mock_submission_deadline, class: "form-control" %>
+          </div>
+
+          <div class="col-md-4">
+            <%= f.label :extension_request_deadline, "Extension request deadline", class: "form-label" %>
+            <%= f.date_field :extension_request_deadline, class: "form-control" %>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+          <div class="col-md-4">
+            <%= f.label :late_registration, "Late registration deadline", class: "form-label" %>
+            <%= f.date_field :late_registration, class: "form-control" %>
+          </div>
+
+          <div class="col-md-4">
+            <%= f.label :registration_deadline, "Registration deadline", class: "form-label" %>
+            <%= f.date_field :registration_deadline, class: "form-control" %>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between">
+          <%= link_to "Back to Exam Registrations",
+                      exam_enrolls_path(date: @season[:start_date]),
+                      class: "btn btn-outline-secondary" %>
+
+          <%= f.submit "Save Settings", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
