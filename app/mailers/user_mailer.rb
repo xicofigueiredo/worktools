@@ -91,174 +91,49 @@ class UserMailer < Devise::Mailer
     mail(to: to, from: 'worktools@bravegenerationacademy.com', subject: "Renewal Fee")
   end
 
-  def onboarding_email(learner_info)
-    @learner = learner_info
-    @parent_emails = [@learner.parent1_email, @learner.parent2_email].compact
-    @learner_email = @learner.personal_email.presence || @learner.institutional_email
+  def onboarding_email(learner:, hub:, to:, cc:, template_name:, attachments_list:, mentor_details: {})
+    @learner = learner
+    @hub = hub || @learner.hub
+    @learning_coaches = @learner.learning_coaches || []
+    @regional_manager = @hub&.regional_manager
+    @parent_names = [@learner.parent1_full_name, @learner.parent2_full_name].compact.join(' & ')
+    @platform_details = [
+      "Username: #{@learner.platform_username}",
+      "Password: #{@learner.platform_password}"
+    ].join("<br>").html_safe
 
-    return if @parent_emails.blank? && @learner_email.blank?
+    # Set instance variables for the view
+    @mentor_name = mentor_details[:name]
+    @mentor_email = mentor_details[:email]
 
-    @parent_names       = [@learner.parent1_full_name, @learner.parent2_full_name].compact.join(' & ')
-    @learning_coaches   = @learner.learning_coaches || []
-    @hub                = @learner.hub
-    @regional_manager   = @hub.regional_manager
-
-    curriculum_raw = @learner.curriculum_course_option.to_s.downcase
-    hub_type_raw   = @hub.hub_type.to_s.downcase
-
-    # --- Detect UP program ---
-    is_up = curriculum_raw.include?('up')
-    up_program = if curriculum_raw.include?('business')
-                   'business'
-                 elsif curriculum_raw.include?('computing')
-                   'computing'
-                 elsif curriculum_raw.include?('sports')
-                   'sports'
-                 end
-
-    # --- Standardize variables for template naming ---
-    hub_type   = hub_type_raw.gsub(' ', '_')
-
-    # --- Build template name ---
-    if is_up && up_program
-      # UP programs now use the standard hub_type in the name (e.g., onboarded_up_business_online)
-      template = "onboarded_up_#{up_program}_#{hub_type}"
-    else
-      # Standard curriculum naming (e.g., onboarded_portuguese_independent_hybrid)
-      curriculum = curriculum_raw.gsub(' ', '_')
-      template   = "onboarded_#{curriculum}_#{hub_type}"
+    # Process attachments
+    attachments_list.each do |file|
+      if file[:blob]
+        attachments[file[:name]] = { mime_type: file[:blob].content_type, content: file[:blob].download }
+      elsif file[:path] && File.exist?(Rails.root.join(file[:path]))
+        attachments[file[:name]] = File.read(Rails.root.join(file[:path]))
+      elsif file[:generator]
+        # Generate on the fly
+        generator = WelcomeLetterGenerator.new(@learner.full_name.split.first)
+        attachments[file[:name]] = generator.generate
+      end
     end
 
-    # --- Full path to template file ---
-    template_path = "onboarding/#{template}"
-    full_path     = Rails.root.join("app/views/user_mailer/#{template_path}.html.erb")
-
-    unless File.exist?(full_path)
-      Rails.logger.warn("Onboarding template not found: #{template_path} (curriculum: #{curriculum_raw}, hub_type: #{hub_type_raw})")
+    # Check if template exists to avoid 500 error
+    unless template_exists?("user_mailer/onboarding/#{template_name}")
+      Rails.logger.error "Template missing: #{template_name}"
       return
     end
 
-    @platform_details = [
-        "Username: #{@learner.platform_username}",
-        "Password: #{@learner.platform_password}"
-      ].join("<br>").html_safe
+    subject = template_name.include?('up') ? "Welcome to the UP Program!" : "Onboarding Day - #{@learner.full_name}"
 
-    # --- Recipient & subject ---
-    real_to = []
-    real_to << @learner_email if @learner_email.present?
-
-    # Only add parents if NOT UP program
-    unless is_up
-      real_to.concat(@parent_emails)
-    end
-
-    real_to.map!(&:to_s)
-    real_to.uniq!
-
-    learning_coach_emails = @learning_coaches.map { |u| u&.email }.compact
-    regional_manager_email = @regional_manager&.email
-    real_cc = (learning_coach_emails + [regional_manager_email]).compact.uniq
-
-    if is_up
-      real_cc << "esther@bravegenerationacademy.com"
-    end
-
-    real_cc.uniq!
-
-    subject = is_up ? "Welcome to the UP Program!" : "Onboarding Day - #{@learner.full_name}"
-
-    # --- Attachments for everyone ---
-    attachments['MicrosoftAuthenticator.pdf'] = File.read(Rails.root.join('public', 'documents', 'microsoft_authenticator.pdf'))
-    credentials = @learner.learner_documents.find_by(document_type: 'credentials')
-    if credentials&.file&.attached?
-      blob = credentials.file.blob
-      extension = File.extname(blob.filename.to_s).presence || ".pdf"
-
-      # 2. Construct the filename with the correct extension
-      attachment_name = "Credentials_Document#{extension}"
-
-      attachments[attachment_name] = {
-        mime_type: blob.content_type,
-        content: blob.download
-      }
-    end
-
-    # --- Hub type attachments ---
-    unless hub_type_raw == "powered by bga"
-      calendar_filename = if ['portugal', 'spain'].include?(@hub.country&.downcase)
-                            'calendar_2026_europe.pdf'
-                          else
-                            'calendar_2026_africa.pdf'
-                          end
-
-      attachments['Calendar.pdf'] = File.read(Rails.root.join('public', 'documents', calendar_filename))
-    end
-
-    # --- Curriculum-specific attachments ---
-    handbook_curricula = %w(portuguese british own american)
-    welcome_letter_curricula = %w(british american own)
-    billing_guide_curricula = %w(portuguese)
-
-    unless is_up
-      if handbook_curricula.any? { |k| curriculum_raw.include?(k) }
-        attachments['Handbook.pdf'] = File.read(Rails.root.join('public', 'documents', 'handbook.pdf'))
-      end
-
-      if billing_guide_curricula.any? { |k| curriculum_raw.include?(k) }
-        attachments['Billing_Guide.pdf'] = File.read(Rails.root.join('public', 'documents', 'billing_guide.pdf'))
-      end
-
-      if welcome_letter_curricula.any? { |k| curriculum_raw.include?(k) }
-        begin
-          generator = WelcomeLetterGenerator.new(@learner.full_name.split.first)
-          attachments['Welcome_Letter.pdf'] = generator.generate
-        rescue => e
-          Rails.logger.error("Failed to generate welcome letter for #{@learner.full_name}: #{e.message}")
-        end
-      end
-    end
-
-    if template.start_with?('onboarded_up_')
-      # --- Assign mentors based on program and level ---
-      case up_program
-      when 'business'
-        # Business mentors differ by level
-        if @learner.grade_year == 'Level 4'
-          @mentor_name = "Rafael Escobar"
-          @mentor_email = "rafael.escobar@edubga.com"
-        else
-          @mentor_name = "Vanessa Gomes"
-          @mentor_email = "vanessa.gomes@edubga.com"
-        end
-      when 'computing'
-        @mentor_name = "Cameron Dorning"
-        @mentor_email = "cameron.dorning@genexinstitute.com"
-      when 'sports'
-        @mentor_name = "Aubrey Stout"
-        @mentor_email = "aubrey.stout@etacollege.com"
-      end
-    end
-
-    Rails.logger.info("Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}")
-    puts "Onboarding email prepared. REAL_TO: #{real_to.inspect} REAL_CC: #{real_cc.inspect} SUBJECT: #{subject}"
-
-    #--- Send email --- Prod
     mail(
-      to: real_to,
-      cc: real_cc,
-      from:          ApplicationMailer::FROM_CONTACT,
-      subject:       subject,
-      template_name: template_path
+      to: "guilherme@bravegenerationacademy.com",# to,
+      #cc: cc,
+      from: ApplicationMailer::FROM_CONTACT,
+      subject: subject,
+      template_name: "onboarding/#{template_name}"
     )
-
-    #--- Send email --- Dev
-    # mail(
-    #   to: real_to,
-    #   cc: real_cc,
-    #   from:          ApplicationMailer::FROM_CONTACT,
-    #   subject:       subject,
-    #   template_name: template_path
-    # )
   end
 
   def hub_visit_confirmation(visit)

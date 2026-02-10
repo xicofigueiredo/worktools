@@ -1,7 +1,7 @@
 require 'csv'
 
 class AdmissionListController < ApplicationController
-  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document, :update_document, :check_pricing_impact]
+  before_action :set_learner_info, only: [:show, :update, :documents, :create_document, :destroy_document, :update_document, :check_pricing_impact, :check_onboarding_status, :send_onboarding_email]
   before_action :set_learning_coaches, only: [:show]
   before_action :require_staff
   before_action :require_admin_or_admissions, only: [:fetch_from_hubspot]
@@ -531,6 +531,29 @@ class AdmissionListController < ApplicationController
     rescue => e
       Rails.logger.error "[fetch_from_hubspot] Error fetching from HubSpot: #{e.class}: #{e.message}\n#{e.backtrace.first(10).join("\n")}"
       render json: { success: false, error: "Failed to fetch from HubSpot: #{e.message}" }, status: :internal_server_error
+    end
+  end
+
+  def check_onboarding_status
+    # Ensure user has permission to view/update this learner
+    head :forbidden and return unless @permission.show?
+
+    service = OnboardingEmailService.new(@learner_info)
+    render json: service.check_readiness
+  end
+
+  def send_onboarding_email
+    # Ensure user has permission
+    head :forbidden and return unless @permission.update?
+
+    service = OnboardingEmailService.new(@learner_info)
+
+    begin
+      service.perform_delivery!
+      redirect_to admission_path(@learner_info), notice: 'Onboarding email sent successfully.'
+    rescue StandardError => e
+      Rails.logger.error "Onboarding Email Error: #{e.message}"
+      redirect_to admission_path(@learner_info), alert: "Failed to send email: #{e.message}"
     end
   end
 

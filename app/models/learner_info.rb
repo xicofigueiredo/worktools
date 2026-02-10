@@ -544,11 +544,16 @@ class LearnerInfo < ApplicationRecord
 
     count = 0
     candidates.find_each do |learner|
-      learner.ensure_worktools_accounts!
-      UserMailer.onboarding_email(learner).deliver_now
-      learner.update(onboarding_email_sent: true)
-      count += 1
+      begin
+        learner.ensure_worktools_accounts!
+        service = OnboardingEmailService.new(learner)
+        service.perform_delivery!
+        count += 1
+      rescue => e
+        Rails.logger.error "[DailyMaintenance] Failed to send onboarding email to Learner ##{learner.id} (#{learner.full_name}): #{e.message}"
+      end
     end
+
     Rails.logger.info "[DailyMaintenance] Onboarding emails sent: #{count}"
   end
 
