@@ -128,8 +128,8 @@ class UserMailer < Devise::Mailer
     subject = template_name.include?('up') ? "Welcome to the UP Program!" : "Onboarding Day - #{@learner.full_name}"
 
     mail(
-      to: "guilherme@bravegenerationacademy.com",# to,
-      #cc: cc,
+      to: to,
+      cc: cc,
       from: ApplicationMailer::FROM_CONTACT,
       subject: subject,
       template_name: "onboarding/#{template_name}"
