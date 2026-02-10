@@ -23,6 +23,11 @@ class PricingTiersController < ApplicationController
   def create
     @pricing_tier = PricingTier.new(pricing_tier_params)
 
+    if @pricing_tier.hub_id.present?
+      hub = Hub.find_by(id: @pricing_tier.hub_id)
+      @pricing_tier.hub_type = hub.hub_type if hub
+    end
+
     @pricing_tier.model ||= "Hybrid"
 
     if params[:pricing_scope] == "generic"
