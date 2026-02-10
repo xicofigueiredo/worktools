@@ -94,6 +94,8 @@ Rails.application.routes.draw do
         patch 'documents/:document_id', action: :update_document
         delete 'documents/:document_id', action: :destroy_document, as: 'document'
         get 'check_pricing_impact', action: :check_pricing_impact
+        get :check_onboarding_status
+        post :send_onboarding_email
       end
     end
 

@@ -368,6 +368,16 @@
     <div class="d-flex gap-2">
       <% if perm.update? %>
         <%= link_to 'Edit', admission_path(@learner_info, edit: '1'), class: 'btn btn-primary' %>
+        <% if %w[admissions admin].include?(current_user.role) %>
+          <button type="button"
+              class="btn btn-info text-white"
+              data-controller="onboarding-email"
+              data-action="click->onboarding-email#checkStatus"
+              data-onboarding-email-url-value="<%= check_onboarding_status_admission_path(@learner_info) %>"
+              data-onboarding-email-send-url-value="<%= send_onboarding_email_admission_path(@learner_info) %>">
+            <i class="bi bi-envelope"></i> Send Onboarding Email
+          </button>
+        <% end %>
       <% end %>
       <%= link_to 'Back to list', admissions_path, class: 'btn btn-secondary' %>
     </div>
@@ -963,13 +973,185 @@
   </div>
 <% end %>
 
+<div class="modal fade" id="onboardingEmailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-dark">Send Onboarding Email</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body pt-2">
+        <div id="onboarding-loading" class="text-center py-4 d-none">
+          <div class="spinner-border text-primary mb-2" role="status"></div>
+          <p class="text-muted small mb-0">Checking readiness...</p>
+        </div>
+
+        <div id="onboarding-content">
+          <div id="onboarding-warning-sent" class="alert alert-warning d-flex align-items-center d-none mx-3 mt-3" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>
+              <strong>Email already sent.</strong> Do you want to send it again?
+            </div>
+          </div>
+
+          <div id="onboarding-error-missing" class="alert alert-danger d-none mx-3 mt-3" role="alert">
+            <div class="d-flex align-items-center mb-1">
+              <i class="fas fa-times-circle me-2"></i>
+              <strong>Cannot Send: Missing Information</strong>
+            </div>
+            <ul id="onboarding-missing-list" class="mb-0 small ps-4"></ul>
+          </div>
+
+          <div class="card bg-light border-0 p-3 mb-3">
+            <div class="row g-2">
+              <div class="col-12">
+                <label class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Template</label>
+                <div class="d-flex align-items-center text-dark">
+                  <i class="far fa-file-alt me-2 text-secondary"></i>
+                  <span id="onboarding-template-name" class="fw-medium">-</span>
+                </div>
+              </div>
+
+              <div class="col-12 mt-3">
+                <label class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Recipients (To)</label>
+                <div class="d-flex align-items-start text-dark">
+                  <i class="far fa-envelope me-2 text-secondary mt-1"></i>
+                  <span id="onboarding-to-list" class="small">-</span>
+                </div>
+              </div>
+
+              <div class="col-12 mt-2">
+                <label class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">CC</label>
+                <div class="d-flex align-items-start text-muted">
+                  <i class="far fa-copy me-2 text-secondary mt-1"></i>
+                  <span id="onboarding-cc-list" class="small">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="small text-muted mb-0">
+            This will trigger the automated email with credentials and attachments.
+          </p>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light text-muted" data-bs-dismiss="modal">Cancel</button>
+
+        <%= form_with url: send_onboarding_email_admission_path(@learner_info), method: :post, id: "onboarding-submit-form", local: true do %>
+           <button type="submit" class="btn btn-primary px-4" id="onboarding-confirm-btn">
+             <i class="fas fa-paper-plane me-2"></i> Confirm & Send
+           </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+  // ==========================================
+  // 1. HELPER FUNCTIONS
+  // ==========================================
+
   function isWeekend(dateString) {
     if (!dateString) return false;
     const date = new Date(dateString);
     const day = date.getUTCDay(); // 0 = Sunday, 6 = Saturday
     return day === 0 || day === 6;
   }
+
+  // ==========================================
+  // 2. ONBOARDING EMAIL LOGIC
+  // ==========================================
+
+  function handleOnboardingCheck(btn) {
+    const checkUrl = btn.dataset.onboardingEmailUrlValue;
+    const modalEl = document.getElementById('onboardingEmailModal');
+    if (!window.bootstrap) { console.error("Bootstrap is not loaded"); return; }
+
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show(); // Show immediately so user sees loading state
+
+    // UI Elements
+    const sentWarning = document.getElementById('onboarding-warning-sent');
+    const missingError = document.getElementById('onboarding-error-missing');
+    const missingList = document.getElementById('onboarding-missing-list');
+    const toList = document.getElementById('onboarding-to-list');
+    const ccList = document.getElementById('onboarding-cc-list');
+    const templateName = document.getElementById('onboarding-template-name');
+    const confirmBtn = document.getElementById('onboarding-confirm-btn');
+    const loadingDiv = document.getElementById('onboarding-loading');
+    const contentDiv = document.getElementById('onboarding-content');
+
+    // Reset UI to Loading State
+    loadingDiv.classList.remove('d-none');
+    contentDiv.classList.add('d-none');
+    confirmBtn.disabled = true;
+    sentWarning.classList.add('d-none');
+    missingError.classList.add('d-none');
+
+    // Fetch Status
+    fetch(checkUrl, {
+      headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Hide Loading, Show Content
+      loadingDiv.classList.add('d-none');
+      contentDiv.classList.remove('d-none');
+
+      // 1. Populate Data
+      toList.textContent = (data.recipients && data.recipients.length) ? data.recipients.join(', ') : 'None';
+      ccList.textContent = (data.cc_emails && data.cc_emails.length) ? data.cc_emails.join(', ') : 'None';
+      templateName.textContent = data.template || 'Unknown';
+
+      // 2. Handle Warnings
+      if (data.already_sent) {
+        sentWarning.classList.remove('d-none');
+        confirmBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Send Again';
+        confirmBtn.classList.remove('btn-primary');
+        confirmBtn.classList.add('btn-warning');
+      } else {
+        confirmBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Confirm & Send';
+        confirmBtn.classList.add('btn-primary');
+        confirmBtn.classList.remove('btn-warning');
+      }
+
+      // 3. Handle Errors (Blocking)
+      if (data.missing_fields && data.missing_fields.length > 0) {
+        missingError.classList.remove('d-none');
+        missingList.innerHTML = data.missing_fields.map(field => `<li>${field}</li>`).join('');
+        confirmBtn.disabled = true; // Block submission
+      } else {
+        confirmBtn.disabled = false; // Enable submission
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert("Failed to check email status. Please try again.");
+      modal.hide();
+    });
+  }
+
+  function setupOnboardingEmailHandler() {
+    const buttons = document.querySelectorAll('[data-controller="onboarding-email"]');
+    buttons.forEach(btn => {
+      if (btn.dataset.listenerAttached === "true") return;
+      btn.addEventListener('click', function(e) {
+        if (this.dataset.action && this.dataset.action.includes('checkStatus')) {
+          e.preventDefault();
+          handleOnboardingCheck(this);
+        }
+      });
+      btn.dataset.listenerAttached = "true";
+    });
+  }
+
+  // ==========================================
+  // 3. FORM SETUP FUNCTIONS
+  // ==========================================
 
   function setupStartDateWeekendValidation() {
     const startDateInput = document.getElementById('learner_info_start_date');
@@ -1262,7 +1444,7 @@
 
     // Check if invoice_email is in the editable list (has editable-input class initially)
     const isInvoiceEmailEditable = invoiceEmailInput.classList.contains('editable-input') ||
-                                    !invoiceEmailInput.hasAttribute('disabled');
+                                   !invoiceEmailInput.hasAttribute('disabled');
 
     function getEmailValues() {
       return {
@@ -1545,6 +1727,10 @@
     }
   }
 
+  // ==========================================
+  // 4. INITIALIZATION
+  // ==========================================
+
   // Run on page load
   document.addEventListener('DOMContentLoaded', function() {
     setupFinanceCalculations();
@@ -1555,8 +1741,9 @@
     setupInvoiceEmailHandler();
     setupFormChecks();
     setupStartDateWeekendValidation();
+    setupOnboardingEmailHandler();
   });
-  // Run on Turbo page loads (if using Turbo)
+  // Run on Turbo page loads
   document.addEventListener('turbo:load', function() {
     setupFinanceCalculations();
     setupPaymentPlanHandler();
@@ -1566,6 +1753,7 @@
     setupInvoiceEmailHandler();
     setupFormChecks();
     setupStartDateWeekendValidation();
+    setupOnboardingEmailHandler();
   });
   // Run immediately if DOM is already loaded
   if (document.readyState === 'loading') {
@@ -1577,7 +1765,8 @@
     setupGradeYearHandler();
     setupProgrammeHubHandler();
     setupInvoiceEmailHandler();
-    setupFormChecks()
+    setupFormChecks();
     setupStartDateWeekendValidation();
+    setupOnboardingEmailHandler();
   }
 </script>
