@@ -36,7 +36,10 @@ class Timeline < ApplicationRecord
     if exam_enroll.nil?
       if self.exam_date.present?
         hub = self.user.users_hubs.find_by(main: true).hub.name
-        lcs = self.user.learner_info.learning_coaches || []
+        lcs = []
+        if self.user.learner_info.present?
+          lcs = self.user.learner_info.learning_coaches || []
+        end
         lc_ids = lcs.present? ? lcs.map(&:id) : []
         user = self.user
         exam_enroll = ExamEnroll.create!(
