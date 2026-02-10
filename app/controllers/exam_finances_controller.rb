@@ -57,7 +57,7 @@ class ExamFinancesController < ApplicationController
     @exam_enrolls_by_finance = {}
     @exam_finances.each do |finance|
       @exam_enrolls_by_finance[finance.id] = ExamEnroll.joins(:timeline)
-                                                       .where(timelines: { user_id: finance.user_id, hidden: false })
+                                                       .where(timelines: { user_id: finance.user_id })
                                                        .select { |enroll| enroll.display_exam_date == finance.exam_season }
                                                        .sort_by { |enroll| enroll.subject_name.to_s.downcase }
     end
@@ -76,7 +76,7 @@ class ExamFinancesController < ApplicationController
   def show
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
-                             .where(timelines: { user_id: @exam_finance.user_id, hidden: false })
+                             .where(timelines: { user_id: @exam_finance.user_id })
                              .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
                              .sort_by { |enroll| enroll.subject_name.to_s.downcase }
 
@@ -139,7 +139,7 @@ class ExamFinancesController < ApplicationController
   def preview_statement
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
-                             .where(timelines: { user_id: @exam_finance.user_id, hidden: false })
+                             .where(timelines: { user_id: @exam_finance.user_id })
                              .select { |enroll| enroll.display_exam_date == @exam_finance.exam_season }
                              .sort_by { |enroll| enroll.subject_name.to_s.downcase }
   end
@@ -154,7 +154,7 @@ class ExamFinancesController < ApplicationController
 
     @exam_enrolls = ExamEnroll.joins(:timeline)
                              .includes(:timeline)
-                             .where(timelines: { user_id: @exam_finance.user_id, hidden: false })
+                             .where(timelines: { user_id: @exam_finance.user_id })
                              .where(id: selected_ids)
                              .order(:subject_name)
 
