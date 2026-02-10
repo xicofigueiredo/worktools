@@ -34,16 +34,43 @@
       </div>
 
       <% if @available_hubs.any? %>
-        <ul class="nav nav-tabs border-bottom-0 ms-1">
-          <% @available_hubs.each do |hub| %>
-            <% is_active = (hub[:hub_id].to_s == @selected_hub_id.to_s && hub[:type] == @selected_hub_type) %>
+        <%# 1. Extract unique Hub Types for the top-level tabs %>
+        <% unique_types = @available_hubs.map { |h| h[:type] }.uniq.sort %>
+
+        <ul class="nav nav-tabs border-bottom-0 ms-1 mb-3">
+          <% unique_types.each do |type| %>
+            <% is_type_active = (@selected_hub_type == type) %>
             <li class="nav-item">
-              <%= link_to hub[:name],
-                  pricing_tiers_path(year: @selected_year, country: @selected_country, hub_id: hub[:hub_id], hub_type: hub[:type]),
-                  class: "nav-link #{'active fw-bold' if is_active} #{'text-muted' unless is_active}" %>
+              <%# Clicking the Type tab clears the hub_id to show Generic/Default pricing for that type %>
+              <%= link_to type,
+                  pricing_tiers_path(year: @selected_year, country: @selected_country, hub_type: type, hub_id: nil),
+                  class: "nav-link #{'active fw-bold' if is_type_active} #{'text-muted' unless is_type_active}" %>
             </li>
           <% end %>
         </ul>
+
+        <% if @selected_hub_type.present? %>
+          <%# Filter hubs that belong to the selected type AND have a specific ID %>
+          <% specific_hubs = @available_hubs.select { |h| h[:type] == @selected_hub_type && h[:hub_id].present? } %>
+
+          <% if specific_hubs.any? %>
+            <div class="ms-2 mb-4 p-2 bg-light rounded">
+              <span class="small text-uppercase text-muted fw-bold d-block mb-2 ms-1" style="font-size: 0.7rem;">
+                Specific <%= @selected_hub_type %> Hubs in <%= @selected_country %>:
+              </span>
+              <ul class="nav nav-pills small">
+                <% specific_hubs.each do |hub| %>
+                  <% is_hub_active = (hub[:hub_id].to_s == @selected_hub_id.to_s) %>
+                  <li class="nav-item me-1">
+                    <%= link_to hub[:name],
+                        pricing_tiers_path(year: @selected_year, country: @selected_country, hub_type: hub[:type], hub_id: hub[:hub_id]),
+                        class: "nav-link py-1 px-3 border #{'active' if is_hub_active} #{'bg-white text-secondary' unless is_hub_active}" %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        <% end %>
       <% end %>
 
       <div class="card shadow-sm border-0 mb-5">
