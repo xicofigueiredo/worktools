@@ -105,6 +105,21 @@ class LearnerInfoPermission
       use_of_image_authorisation emergency_protocol_choice
       onboarding_meeting_notes notes
     ],
+    'rm' => %i[
+      full_name preferred_name student_number status birthdate programme
+      learning_coach_id hub_id curriculum_course_option grade_year
+      personal_email institutional_email phone_number
+      nationality gender native_language english_proficiency
+      parent1_full_name parent1_email parent1_phone_number
+      parent2_full_name parent2_email parent2_phone_number
+      parent2_info_not_to_be_contacted registering_school_pt_plus
+      previous_schooling previous_school_status previous_school_name
+      previous_school_email previous_school_grade_year
+      start_date transfer_of_programme_date end_date
+      end_day_communication platform_username platform_password
+      use_of_image_authorisation emergency_protocol_choice
+      onboarding_meeting_notes notes
+    ],
     'exams' => %i[
       full_name preferred_name student_number status birthdate programme
       learning_coach_id hub_id curriculum_course_option grade_year
@@ -130,6 +145,7 @@ class LearnerInfoPermission
     'ops' => [],
     'it' => %i[preferred_name institutional_email platform_username platform_password],
     'lc' => %i[preferred_name learning_coach_id personal_email phone_number parent1_phone_number parent2_phone_number],
+    'rm' => %i[preferred_name learning_coach_id personal_email phone_number parent1_phone_number parent2_phone_number],
     'exams' => []
   }.freeze
 
@@ -168,6 +184,7 @@ class LearnerInfoPermission
     'ops' => [],
     'it' => [],
     'lc' => [],
+    'rm' => [],
     'exams' => []
   }.freeze
 
@@ -221,6 +238,6 @@ class LearnerInfoPermission
   def finance? = @role == 'finance'
   def ops? = @role == 'ops'
   def it? = @role == 'it'
-  def lc? = @role == 'lc'
+  def lc? = @role == 'lc' || @role == 'rm'
   def exams? = role == 'exams'
 end

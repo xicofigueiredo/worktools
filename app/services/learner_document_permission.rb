@@ -9,6 +9,7 @@ class LearnerDocumentPermission
     'ops' => %w[contract special_needs last_term_report proof_of_payment learner_id parent_id medical_form letter_of_interest picture credentials exam_certificates transfer],
     'it' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates transfer],
     'lc' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates transfer],
+    'rm' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates transfer],
     'exams' => %w[special_needs last_term_report medical_form letter_of_interest picture credentials exam_certificates transfer]
   }.freeze
 
@@ -20,6 +21,7 @@ class LearnerDocumentPermission
     'ops' => [],
     'it' => %w[credentials],
     'lc' => %w[last_term_report exam_certificates picture],
+    'rm' => %w[last_term_report exam_certificates picture],
     'exams' => %w[exam_certificates]
   }.freeze
 
