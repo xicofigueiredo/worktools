@@ -641,9 +641,9 @@ class AdmissionListController < ApplicationController
   end
 
   def set_learning_coaches
-    # Get all LCs who can teach remote
+    # Get all LCs and RMs who can teach remote
     @remote_lcs = User.joins(:collaborator_info)
-                            .where(role: 'lc', deactivate: false)
+                            .where(role: ['lc', 'rm'], deactivate: false)
                             .where(collaborator_infos: { can_teach_remote: true })
                             .includes(:users_hubs)
 
@@ -673,7 +673,7 @@ class AdmissionListController < ApplicationController
     end.compact
 
     @remote_lcs.sort_by! { |data| data[:ratio] }
-    @all_lcs = User.where(role: 'lc', deactivate: false).includes(:collaborator_info)
+    @all_lcs = User.where(role: ['lc', 'rm'], deactivate: false).includes(:collaborator_info)
   end
 
   # Use permission-defined attributes for strong params
