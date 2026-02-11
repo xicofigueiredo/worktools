@@ -17,8 +17,8 @@ class ExamFinancesController < ApplicationController
     # Get the exam_season values that match this season (e.g., ["May 2026", "June 2026"] for May/June)
     season_matches = Sprint.exam_season_matches(@season)
 
-    # Get all unique statuses for the filter dropdown
-    @available_statuses = ExamFinance.distinct.pluck(:status).compact.sort
+    # Get all unique finance_statuses from exam enrollments for the filter dropdown
+    @available_statuses = ExamEnroll.distinct.pluck(:finance_status).compact.sort
 
     # Get filter parameters with role-based defaults
     status_filter = params[:status]
@@ -41,13 +41,8 @@ class ExamFinancesController < ApplicationController
                               .where(exam_season: season_matches)
                               .order('users.full_name ASC')
 
-    # Apply status filter directly on ExamFinance
-    if status_filter != 'all'
-      exam_finances = exam_finances.where(status: status_filter)
-    end
-
     # Filter to only those with matching exam enrollments in the selected season
-    @exam_finances = exam_finances.select do |finance|
+    exam_finances_with_enrolls = exam_finances.select do |finance|
       ExamEnroll.joins(:timeline)
                 .where(timelines: { user_id: finance.user_id })
                 .any? { |enroll| enroll.display_exam_date == finance.exam_season }
@@ -55,11 +50,22 @@ class ExamFinancesController < ApplicationController
 
     # Preload exam enrolls for each finance to avoid N+1 queries
     @exam_enrolls_by_finance = {}
-    @exam_finances.each do |finance|
-      @exam_enrolls_by_finance[finance.id] = ExamEnroll.joins(:timeline)
-                                                       .where(timelines: { user_id: finance.user_id })
-                                                       .select { |enroll| enroll.display_exam_date == finance.exam_season }
-                                                       .sort_by { |enroll| enroll.subject_name.to_s.downcase }
+    exam_finances_with_enrolls.each do |finance|
+      enrolls = ExamEnroll.joins(:timeline)
+                         .where(timelines: { user_id: finance.user_id })
+                         .select { |enroll| enroll.display_exam_date == finance.exam_season }
+                         .sort_by { |enroll| enroll.subject_name.to_s.downcase }
+      @exam_enrolls_by_finance[finance.id] = enrolls
+    end
+
+    # Apply status filter based on exam_enroll.finance_status
+    if status_filter != 'all'
+      @exam_finances = exam_finances_with_enrolls.select do |finance|
+        enrolls = @exam_enrolls_by_finance[finance.id] || []
+        enrolls.any? { |enroll| enroll.respond_to?(:finance_status) && enroll.finance_status == status_filter }
+      end
+    else
+      @exam_finances = exam_finances_with_enrolls
     end
 
     # If default filter was applied but no results found, fall back to 'all'

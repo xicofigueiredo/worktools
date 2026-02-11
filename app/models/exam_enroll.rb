@@ -20,8 +20,12 @@ class ExamEnroll < ApplicationRecord
   # validates :dc_approval_justification, presence: true, if: :dc_approval_present?
   # validates :dc_approval_comment, presence: true, if: :dc_approval_present?
 
+  attr_accessor :changed_by_user_email
+
+  after_create :log_initial_finance_status, if: -> { self.class.column_names.include?('finance_status') }
   before_save :set_status
   before_save :update_exam_finance_status
+  before_save :log_finance_status_change, if: -> { self.class.column_names.include?('finance_status') && respond_to?(:finance_status_changed?) && finance_status_changed? }
 
   def update_exam_finance_status
     if self.display_exam_date.present?
@@ -187,5 +191,55 @@ class ExamEnroll < ApplicationRecord
       self.status = "Left BGA"
     end
 
+  end
+
+  def log_finance_status_change
+    return unless timeline.present?
+    return unless self.class.column_names.include?('finance_status')
+
+    old_status = finance_status_was || 'No Status'
+    new_status = finance_status || 'No Status'
+
+    return if old_status == new_status
+
+    exam_date = display_exam_date.presence || ""
+    exam_finance = ExamFinance.find_by(user_id: timeline.user_id, exam_season: exam_date)
+
+    return unless exam_finance.present?
+
+    changes = exam_finance.status_changes || []
+    changes << {
+      'from' => old_status,
+      'to' => new_status,
+      'changed_at' => Time.current.iso8601,
+      'changed_by' => changed_by_user_email || 'System',
+      'subject' => subject_name || 'Unknown Subject',
+      'enrollment_id' => id
+    }
+
+    exam_finance.update_column(:status_changes, changes)
+  end
+
+  def log_initial_finance_status
+    return unless timeline.present?
+    return unless self.class.column_names.include?('finance_status')
+    return unless finance_status.present?
+
+    exam_date = display_exam_date.presence || ""
+    exam_finance = ExamFinance.find_by(user_id: timeline.user_id, exam_season: exam_date)
+
+    return unless exam_finance.present?
+
+    changes = exam_finance.status_changes || []
+    changes << {
+      'from' => 'Created',
+      'to' => finance_status || 'No Status',
+      'changed_at' => created_at.iso8601,
+      'changed_by' => changed_by_user_email || 'System',
+      'subject' => subject_name || 'Unknown Subject',
+      'enrollment_id' => id
+    }
+
+    exam_finance.update_column(:status_changes, changes)
   end
 end

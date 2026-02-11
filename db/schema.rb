@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_02_11_120000) do
+ActiveRecord::Schema[7.0].define(version: 2026_02_12_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -403,6 +403,7 @@ ActiveRecord::Schema[7.0].define(version: 2026_02_11_120000) do
     t.float "paper4_cost"
     t.float "paper5_cost"
     t.jsonb "status_changes", default: []
+    t.string "finance_status", default: "No Status", null: false
     t.index ["moodle_timeline_id"], name: "index_exam_enrolls_on_moodle_timeline_id"
     t.index ["timeline_id"], name: "index_exam_enrolls_on_timeline_id"
   end

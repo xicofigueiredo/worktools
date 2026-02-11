@@ -23,50 +23,12 @@
           </div>
 
           <div class="row mb-3">
-            <div class="col-md-4 fw-bold">Finance Status:</div>
-            <div class="col-md-8">
-              <div class="d-flex gap-2 align-items-center flex-wrap">
-                <%= form_with(model: @exam_finance, local: false, class: 'd-flex gap-2 align-items-center') do |f| %>
-                  <%= f.select :status,
-                      options_for_select([
-                        ['No Status', 'No Status'],
-                        ['Sent to Finance', 'Sent to Finance'],
-                        ['Invoiced', 'Invoiced'],
-                        ['Paid', 'Paid'],
-                        ['Deleted', 'Deleted'],
-                      ], @exam_finance.status),
-                      {},
-                      { class: 'form-select', style: 'width: auto', onchange: 'this.form.requestSubmit()' }
-                  %>
-                  <div id="status-update-message" class="text-success" style="display: none;">
-                    Status updated successfully!
-                  </div>
-                <% end %>
-              </div>
-
-              <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                  const form = document.querySelector('form');
-                  const message = document.getElementById('status-update-message');
-
-                  form.addEventListener('ajax:success', function(event) {
-                    message.style.display = 'block';
-                    setTimeout(() => {
-                      message.style.display = 'none';
-                      // Reload page to update the badge color
-                      window.location.reload();
-                    }, 1000);
-                  });
-
-                  // Initialize Bootstrap tooltips
-                  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                  });
-                });
-              </script>
-            </div>
+            <div class="col-md-4 fw-bold">Previous Status:</div>
+            <div class="col-md-8"><%= @exam_finance.status %></div>
           </div>
+
+
+
         </div>
 
         <!-- Right Column: Status Change Log -->
@@ -77,6 +39,9 @@
                 <% changed_time = Time.parse(change['changed_at']) %>
                 <div class="mb-2">
                   <div class="d-flex align-items-center gap-2">
+                    <% if change['subject'].present? %>
+                      <span class="fw-bold" style="font-size: 0.85em; min-width: 120px;"><%= change['subject'] %>:</span>
+                    <% end %>
                     <span class="badge <%= finance_status_badge_class(change['from']) %>" style="font-size: 0.85em; padding: 0.35em 0.6em;">
                       <%= change['from'] %>
                     </span>
@@ -113,7 +78,6 @@
     </div>
     <div class="card-footer d-flex gap-2">
       <%= link_to 'Preview Statement', preview_statement_exam_finance_path(@exam_finance), class: 'btn btn-primary' %>
-      <%= link_to 'Edit', edit_exam_finance_path(@exam_finance), class: 'btn btn-warning' %>
       <%= link_to 'Back to List', exam_finances_path, class: 'btn btn-secondary' %>
     </div>
   </div>
@@ -125,6 +89,25 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5><%= exam_enroll.subject_name %></h5>
         <%= link_to 'View Exam Enroll', exam_enroll_path(exam_enroll), class: 'btn btn-info btn-sm' %>
+        <% if exam_enroll.respond_to?(:finance_status) %>
+          <div class="d-flex align-items-center justify-content-center gap-2">
+            <strong>Finance Status:</strong>
+            <%= form_with(model: exam_enroll, url: exam_enroll_path(exam_enroll), local: true, class: 'd-inline') do |f| %>
+              <%= hidden_field_tag :return_to_exam_finance_id, @exam_finance.id %>
+              <%= f.select :finance_status,
+                  options_for_select([
+                    ['No Status', 'No Status'],
+                    ['Sent to Finance', 'Sent to Finance'],
+                    ['Invoiced', 'Invoiced'],
+                    ['Paid', 'Paid'],
+                    ['Deleted', 'Deleted'],
+                  ], exam_enroll.finance_status),
+                  {},
+                  { class: 'form-select form-select-sm', style: 'width: auto; display: inline-block;', onchange: 'this.form.requestSubmit()' }
+            %>
+          <% end %>
+        </div>
+        <% end %>
       </div>
       <div class="card-body">
         <div class="row mb-3">

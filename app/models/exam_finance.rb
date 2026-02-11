@@ -22,7 +22,9 @@ class ExamFinance < ApplicationRecord
         'from' => change['from'] || change[:from],
         'to' => change['to'] || change[:to],
         'changed_at' => change['changed_at'] || change[:changed_at],
-        'changed_by' => change['changed_by'] || change[:changed_by]
+        'changed_by' => change['changed_by'] || change[:changed_by],
+        'subject' => change['subject'] || change[:subject],
+        'enrollment_id' => change['enrollment_id'] || change[:enrollment_id]
       }
     end
   end

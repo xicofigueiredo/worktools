@@ -342,6 +342,9 @@ class ExamEnrollsController < ApplicationController
   def create
     @exam_enroll = ExamEnroll.new(exam_enroll_params)
 
+    # Set changed_by_user_email for finance_status tracking
+    @exam_enroll.changed_by_user_email = current_user.email if current_user
+
     # Add current LC to learning_coach_ids if not already present
     if current_user.role == 'lc' && !@exam_enroll.learning_coach_ids.include?(current_user.id)
       @exam_enroll.learning_coach_ids = (@exam_enroll.learning_coach_ids + [current_user.id]).uniq
@@ -391,6 +394,9 @@ class ExamEnrollsController < ApplicationController
     # Check for progress cut-off warning BEFORE updating
     show_warning = current_user.role == 'admin' && (exam_enroll_params[:progress_cut_off] == '0' || exam_enroll_params[:mock_results] == 'U' || exam_enroll_params[:mock_results] == '0')
 
+    # Set changed_by_user_email for finance_status tracking
+    @exam_enroll.changed_by_user_email = current_user.email if current_user
+
     respond_to do |format|
       if @exam_enroll.update(exam_enroll_params)
         # Handle document uploads
@@ -431,7 +437,13 @@ class ExamEnrollsController < ApplicationController
           end
         end
 
-        format.html { redirect_to @exam_enroll }
+        format.html {
+          if params[:return_to_exam_finance_id].present?
+            redirect_to exam_finance_path(params[:return_to_exam_finance_id]), notice: 'Finance status was successfully updated.'
+          else
+            redirect_to @exam_enroll
+          end
+        }
         format.json { render :show, status: :ok, location: @exam_enroll }
       else
         @moodle_timelines = current_user.moodle_timelines.all.map { |mt| [mt.subject.name, mt.id] }
@@ -616,6 +628,7 @@ class ExamEnrollsController < ApplicationController
       :failed_mock_exception_edu_comment,
       :repeating,
       :graduating,
+      :finance_status,
       learning_coach_ids: [],
       paper_details: []
     )

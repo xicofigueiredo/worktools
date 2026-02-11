@@ -86,9 +86,20 @@
                   </td>
                   <td><%= exam_finance.total_cost %> <%= exam_finance.currency %></td>
                   <td>
-                    <span class="badge <%= finance_status_badge_class(exam_finance.status) %>">
-                      <%= exam_finance.status %>
-                    </span>
+                    <% enrolls = @exam_enrolls_by_finance[exam_finance.id] || [] %>
+                    <% if enrolls.any? && enrolls.first.respond_to?(:finance_status) %>
+                      <div style="font-size: 0.9em;">
+                        <% enrolls.each do |enroll| %>
+                          <div class="mb-1">
+                            <span class="badge <%= finance_status_badge_class(enroll.finance_status) %>">
+                              <%= enroll.finance_status %>
+                            </span>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% else %>
+                      <span class="text-muted"><%= enrolls.any? ? 'No status' : 'N/A' %></span>
+                    <% end %>
                   </td>
                 </tr>
               <% end %>
