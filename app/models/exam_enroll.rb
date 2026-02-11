@@ -218,6 +218,22 @@ class ExamEnroll < ApplicationRecord
     }
 
     exam_finance.update_column(:status_changes, changes)
+
+    # Send notification to all finance users when status changes to 'Sent to Finance'
+    if new_status == 'Sent to Finance'
+      learner_name = timeline.user&.full_name || learner_name || 'Unknown Learner'
+      message = "#{subject_name} (#{learner_name}) - Exam enrollment has been sent to finance for #{exam_date}"
+      link = Rails.application.routes.url_helpers.exam_finance_path(exam_finance)
+
+      User.where(role: 'finance', deactivate: [false, nil]).find_each do |finance_user|
+        Notification.create!(
+          user: finance_user,
+          message: message,
+          link: link,
+          read: false
+        )
+      end
+    end
   end
 
   def log_initial_finance_status
@@ -241,5 +257,21 @@ class ExamEnroll < ApplicationRecord
     }
 
     exam_finance.update_column(:status_changes, changes)
+
+    # Send notification to all finance users if initial status is 'Sent to Finance'
+    if finance_status == 'Sent to Finance'
+      learner_name = timeline.user&.full_name || learner_name || 'Unknown Learner'
+      message = "#{subject_name} (#{learner_name}) - Exam enrollment has been sent to finance for #{exam_date}"
+      link = Rails.application.routes.url_helpers.exam_finance_path(exam_finance)
+
+      User.where(role: 'finance', deactivate: [false, nil]).find_each do |finance_user|
+        Notification.create!(
+          user: finance_user,
+          message: message,
+          link: link,
+          read: false
+        )
+      end
+    end
   end
 end

@@ -35,27 +35,45 @@ class ExamFinancesController < ApplicationController
       end
     end
 
-    # Load exam finances for the selected season
-    exam_finances = ExamFinance.includes(user: [:main_hub, { users_hubs: :hub }])
+    # Load exam finances for the selected season with eager loading
+    exam_finances = ExamFinance.includes(user: [:main_hub, :users_hubs])
                               .joins(:user)
                               .where(exam_season: season_matches)
                               .order('users.full_name ASC')
 
-    # Filter to only those with matching exam enrollments in the selected season
-    exam_finances_with_enrolls = exam_finances.select do |finance|
-      ExamEnroll.joins(:timeline)
-                .where(timelines: { user_id: finance.user_id })
-                .any? { |enroll| enroll.display_exam_date == finance.exam_season }
+    # Get all user_ids for the exam finances
+    user_ids = exam_finances.pluck(:user_id).uniq
+
+    # Load ALL exam enrolls for these users in ONE query with proper eager loading
+    all_enrolls = ExamEnroll.left_joins(timeline: :exam_date)
+                          .includes(timeline: [:exam_date, :user])
+                          .where(timelines: { user_id: user_ids })
+                          .to_a # Load into memory once
+
+    # Group enrolls by user_id and exam_season for fast lookup
+    enrolls_by_user_and_season = {}
+    all_enrolls.each do |enroll|
+      exam_season = enroll.display_exam_date
+      next if exam_season.blank? || exam_season == "No exam date set"
+
+      user_id = enroll.timeline&.user_id
+      next unless user_id
+
+      key = [user_id, exam_season]
+      enrolls_by_user_and_season[key] ||= []
+      enrolls_by_user_and_season[key] << enroll
     end
 
-    # Preload exam enrolls for each finance to avoid N+1 queries
+    # Filter finances to only those with matching enrollments
+    exam_finances_with_enrolls = exam_finances.select do |finance|
+      enrolls_by_user_and_season[[finance.user_id, finance.exam_season]].present?
+    end
+
+    # Preload exam enrolls for each finance
     @exam_enrolls_by_finance = {}
     exam_finances_with_enrolls.each do |finance|
-      enrolls = ExamEnroll.joins(:timeline)
-                         .where(timelines: { user_id: finance.user_id })
-                         .select { |enroll| enroll.display_exam_date == finance.exam_season }
-                         .sort_by { |enroll| enroll.subject_name.to_s.downcase }
-      @exam_enrolls_by_finance[finance.id] = enrolls
+      enrolls = enrolls_by_user_and_season[[finance.user_id, finance.exam_season]] || []
+      @exam_enrolls_by_finance[finance.id] = enrolls.sort_by { |enroll| enroll.subject_name.to_s.downcase }
     end
 
     # Apply status filter based on exam_enroll.finance_status
