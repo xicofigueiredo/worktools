@@ -47,7 +47,7 @@ class PagesController < ApplicationController
 
   def dashboard_lc
     redirect_to dashboard_dc_path if (@online_learners_count >= 1 || current_user.hubs.count > 1) && params[:hub_id].nil?
-
+    today = Date.today
     if params[:hub_id].nil?
       @selected_hub = current_user.users_hubs.find_by(main: true)&.hub
     else
@@ -55,7 +55,7 @@ class PagesController < ApplicationController
     end
 
     @users = @selected_hub&.name == "Remote" ? @online_learners : @selected_hub.users.where(role: 'learner', deactivate: [false, nil])
-    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
     @total_balance = {}
     @forms_completed = {} # Hash to store the number of forms completed by each learner
 
@@ -112,6 +112,7 @@ class PagesController < ApplicationController
       return
     end
 
+    today = Date.today
     @selected_subject = if params[:subject_id].present?
                           Subject.find(params[:subject_id])
                         elsif current_user.subjects.any?
@@ -130,7 +131,7 @@ class PagesController < ApplicationController
       .where(timelines: { subject_id: @selected_subject.id, hidden: false })
       .where(deactivate: false)
 
-    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", Date.today, Date.today).first
+    @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
 
     # dropdown por nome
     # ordenar por topicos apenas pela disciplina do cm
@@ -246,6 +247,7 @@ class PagesController < ApplicationController
   end
 
   def learner_profile
+    today = Date.today
     # Only add logic here that is specific to the current user role.
     if current_user.role == 'guardian'
       @report = @learner.reports.order(updated_at: :asc).where(parent: true).last
@@ -255,7 +257,7 @@ class PagesController < ApplicationController
     @holidays_taken = Attendance.where(user_id: @learner.id, attendance_date: "1/1/2026"..."31/12/2026", absence: 'Holiday').count
 
 
-    @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", current_date, "%Build%").order(:start_date).first
+    @nearest_build_week = Week.where("end_date >= ? AND name ILIKE ?", today, "%Build%").order(:start_date).first
 
 
     @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
@@ -450,8 +452,9 @@ class PagesController < ApplicationController
 
   def check_sprint_goal(user)
     result = false
-    user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', Date.today,
-                                                     Date.today)).knowledges.each do |knowledge|
+    today = Date.today
+    user.sprint_goals.find_by(sprint: Sprint.find_by('start_date <= ? AND end_date >= ?', today,
+                                                     today)).knowledges.each do |knowledge|
       if !knowledge.difficulties.nil? && !knowledge.plan.nil?
         result = true
       else
@@ -483,8 +486,6 @@ class PagesController < ApplicationController
   end
 
   def calc_sprint_presence(user, sprint)
-    current_date = Date.today
-
     attendance_counts = Attendance.where(user_id: user.id, attendance_date: sprint.start_date..sprint.end_date)
                                   .group(:absence).count
 
