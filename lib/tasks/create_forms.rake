@@ -97,7 +97,7 @@ namespace :forms do
 
     # Create notifications for all active learners
     learners = User.where(role: 'learner', deactivate: [false, nil])
-    lcs = User.where(role: 'lc', deactivate: [false, nil])
+    lcs = User.where(role: ['lc', 'rm'], deactivate: [false, nil])
     form_link = Rails.application.routes.url_helpers.new_form_response_path(form)
 
     notifications_count = 0
