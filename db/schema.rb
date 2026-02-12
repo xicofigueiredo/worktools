@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_02_12_000000) do
+ActiveRecord::Schema[7.0].define(version: 2026_02_13_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -545,6 +545,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_02_12_000000) do
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "question_type"
+    t.text "options"
   end
 
   create_table "kdas", force: :cascade do |t|

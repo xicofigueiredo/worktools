@@ -11,8 +11,25 @@ class ResponsesController < ApplicationController
 
   def create
     if params[:responses].present?
+      first_question_id = @form.form_interrogation_joins.first&.id
+      first_answer = params[:responses][first_question_id.to_s]
+
+      # If first answer is "No", clear responses to subsequent questions
+      if first_answer == "No" && first_question_id
+        subsequent_question_ids = @form.form_interrogation_joins.where.not(id: first_question_id).pluck(:id)
+        Response.where(
+          user_id: current_user.id,
+          form_interrogation_join_id: subsequent_question_ids
+        ).destroy_all
+      end
+
       params[:responses].each do |join_id, content|
         next if content.blank?
+
+        # Handle "Other" option - check if there's a corresponding _other field
+        if content == "Other" && params[:responses]["#{join_id}_other"].present?
+          content = params[:responses]["#{join_id}_other"]
+        end
 
         response = Response.find_or_initialize_by(
           form_interrogation_join_id: join_id,
@@ -36,8 +53,25 @@ class ResponsesController < ApplicationController
 
   def update
     if params[:responses].present?
+      first_question_id = @form.form_interrogation_joins.first&.id
+      first_answer = params[:responses][first_question_id.to_s]
+
+      # If first answer is "No", clear responses to subsequent questions
+      if first_answer == "No" && first_question_id
+        subsequent_question_ids = @form.form_interrogation_joins.where.not(id: first_question_id).pluck(:id)
+        Response.where(
+          user_id: current_user.id,
+          form_interrogation_join_id: subsequent_question_ids
+        ).destroy_all
+      end
+
       params[:responses].each do |join_id, content|
         next if content.blank?
+
+        # Handle "Other" option - check if there's a corresponding _other field
+        if content == "Other" && params[:responses]["#{join_id}_other"].present?
+          content = params[:responses]["#{join_id}_other"]
+        end
 
         response = Response.find_or_initialize_by(
           form_interrogation_join_id: join_id,

@@ -1,12 +1,66 @@
 <!-- app/views/responses/_form.html.erb -->
 <%= form_with url: form_responses_path(@form), method: :post do |f| %>
-  <% @form_interrogations.each do |join| %>
-    <div class="question-card">
-      <h3><%= join.interrogation.content %></h3>
+  <% first_question_id = @form_interrogations.first&.id %>
+  <% first_response = @existing_responses[first_question_id]&.content %>
+  <% is_first_no = first_response == "No" %>
 
-      <% existing_response = @existing_responses[join.id] %>
+  <% @form_interrogations.each_with_index do |join, index| %>
+    <% interrogation = join.interrogation %>
+    <% existing_response = @existing_responses[join.id] %>
+    <% response_value = existing_response&.content %>
+    <% is_first_question = index == 0 %>
+    <% is_optional = is_first_no && !is_first_question %>
 
-      <%= text_area_tag "responses[#{join.id}]", existing_response&.content, class: "form-control", rows: 4, required: true %>
+    <div class="question-card" id="question_<%= join.id %>">
+      <h3><%= interrogation.content %></h3>
+
+      <% if interrogation.yes_no? %>
+        <div class="form-check-group">
+          <% if is_first_question %>
+            <%= radio_button_tag "responses[#{join.id}]", "Yes", response_value == "Yes", class: "form-check-input", required: true, id: "response_#{join.id}_yes", onclick: "document.querySelectorAll('.question-card:not(:first-child) input, .question-card:not(:first-child) select, .question-card:not(:first-child) textarea').forEach(i => i.required = true);" %>
+            <%= label_tag "response_#{join.id}_yes", "Yes", class: "form-check-label" %>
+
+            <%= radio_button_tag "responses[#{join.id}]", "No", response_value == "No", class: "form-check-input", required: true, id: "response_#{join.id}_no", onclick: "document.querySelectorAll('.question-card:not(:first-child) input, .question-card:not(:first-child) select, .question-card:not(:first-child) textarea').forEach(i => { i.required = false; i.removeAttribute('required'); });" %>
+            <%= label_tag "response_#{join.id}_no", "No", class: "form-check-label" %>
+          <% else %>
+            <%= radio_button_tag "responses[#{join.id}]", "Yes", response_value == "Yes", class: "form-check-input", required: !is_optional, id: "response_#{join.id}_yes" %>
+            <%= label_tag "response_#{join.id}_yes", "Yes", class: "form-check-label" %>
+
+            <%= radio_button_tag "responses[#{join.id}]", "No", response_value == "No", class: "form-check-input", required: !is_optional, id: "response_#{join.id}_no" %>
+            <%= label_tag "response_#{join.id}_no", "No", class: "form-check-label" %>
+          <% end %>
+        </div>
+      <% elsif interrogation.dropdown? %>
+        <% options = interrogation.options_array %>
+        <% has_other = options.include?("Other") %>
+        <%
+          # Check if response_value is in the options list
+          # If not, it's likely an "Other" value
+          selected_option = options.include?(response_value) ? response_value : nil
+          is_other_value = response_value.present? && !selected_option && has_other
+          other_text_value = is_other_value ? response_value : ""
+        %>
+
+        <%= select_tag "responses[#{join.id}]",
+            options_for_select([["Select an option...", ""]] + options.map { |opt| [opt, opt] }, is_other_value ? "Other" : selected_option),
+            { class: "form-control form-select", required: !is_optional, id: "response_#{join.id}_select",
+              onchange: has_other ? "toggleOtherField(#{join.id}, this.value)" : nil } %>
+
+        <% if has_other %>
+          <div id="other_field_<%= join.id %>" class="mt-3" style="<%= 'display: none;' unless is_other_value || selected_option == 'Other' %>">
+            <%= text_field_tag "responses[#{join.id}_other]",
+                other_text_value,
+                class: "form-control",
+                placeholder: "Please specify",
+                id: "response_#{join.id}_other_input",
+                required: (is_other_value || selected_option == 'Other') && !is_optional %>
+          </div>
+        <% end %>
+      <% elsif interrogation.text? %>
+        <%= text_field_tag "responses[#{join.id}]", response_value, class: "form-control", required: !is_optional %>
+      <% else %>
+        <%= text_area_tag "responses[#{join.id}]", response_value, class: "form-control", rows: 4, required: !is_optional %>
+      <% end %>
     </div>
   <% end %>
 
@@ -15,6 +69,24 @@
     <%= link_to "Back", forms_path, class: "btn btn-secondary" %>
   </div>
 <% end %>
+
+<script>
+  function toggleOtherField(joinId, value) {
+    const otherField = document.getElementById('other_field_' + joinId);
+    const otherInput = document.getElementById('response_' + joinId + '_other_input');
+
+    if (value === 'Other') {
+      if (otherField) otherField.style.display = 'block';
+      if (otherInput) otherInput.required = true;
+    } else {
+      if (otherField) otherField.style.display = 'none';
+      if (otherInput) {
+        otherInput.required = false;
+        if (!otherInput.value) otherInput.value = '';
+      }
+    }
+  }
+</script>
 
 <style>
   /* app/assets/stylesheets/application.css */
@@ -39,11 +111,25 @@
     margin-bottom: 1.5rem;
   }
 
-  .form-control {
+  .form-control, .form-select {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid #ced4da;
     border-radius: 4px;
+  }
+
+  .form-check-group {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .form-check-input {
+    margin-right: 0.5rem;
+  }
+
+  .form-check-label {
+    cursor: pointer;
   }
 
   .btn-primary {
