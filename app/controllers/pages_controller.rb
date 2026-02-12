@@ -68,10 +68,8 @@ class PagesController < ApplicationController
       user.save
 
       # Count the number of forms completed by the learner
-      @forms_completed[user.id] = Response.joins(form_interrogation_join: :form)
-                                          .where(user_id: user.id)
-                                          .count
-      @forms_completed[user.id] = @forms_completed[user.id] / 4
+      # A form is considered completed when the user has answered all questions
+      @forms_completed[user.id] = Form.current.count { |form| form.completed_by?(user) }
     end
 
     @users = @users.order(topics_balance: :asc)

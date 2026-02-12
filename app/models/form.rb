@@ -16,6 +16,21 @@ class Form < ApplicationRecord
   end
 
   def completed_by?(user)
-    interrogations.count == responses_for_user(user).count
+    user_responses = responses_for_user(user)
+    total_questions = interrogations.count
+
+    # Special case: Sports form - if first answer is "No", only 1 response is needed
+    if title&.include?("Sports Information Form")
+      first_question = form_interrogation_joins.order(:id).first
+      first_response = user_responses.find { |r| r.form_interrogation_join_id == first_question.id }
+
+      # If first answer is "No", form is completed with just that answer
+      if first_response&.content == "No"
+        return true
+      end
+    end
+
+    # Otherwise, all questions must be answered
+    total_questions == user_responses.count
   end
 end
