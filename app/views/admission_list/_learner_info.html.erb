@@ -973,82 +973,84 @@
   </div>
 <% end %>
 
-<div class="modal fade" id="onboardingEmailModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold text-dark">Send Onboarding Email</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body pt-2">
-        <div id="onboarding-loading" class="text-center py-4 d-none">
-          <div class="spinner-border text-primary mb-2" role="status"></div>
-          <p class="text-muted small mb-0">Checking readiness...</p>
+<% unless @learner_info.new_record? %>
+  <div class="modal fade" id="onboardingEmailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-dark">Send Onboarding Email</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
-        <div id="onboarding-content">
-          <div id="onboarding-warning-sent" class="alert alert-warning d-flex align-items-center d-none mx-3 mt-3" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <div>
-              <strong>Email already sent.</strong> Do you want to send it again?
-            </div>
+        <div class="modal-body pt-2">
+          <div id="onboarding-loading" class="text-center py-4 d-none">
+            <div class="spinner-border text-primary mb-2" role="status"></div>
+            <p class="text-muted small mb-0">Checking readiness...</p>
           </div>
 
-          <div id="onboarding-error-missing" class="alert alert-danger d-none mx-3 mt-3" role="alert">
-            <div class="d-flex align-items-center mb-1">
-              <i class="fas fa-times-circle me-2"></i>
-              <strong>Cannot Send: Missing Information</strong>
-            </div>
-            <ul id="onboarding-missing-list" class="mb-0 small ps-4"></ul>
-          </div>
-
-          <div class="card bg-light border-0 p-3 mb-3">
-            <div class="row g-2">
-              <div class="col-12">
-                <label class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Template</label>
-                <div class="d-flex align-items-center text-dark">
-                  <i class="far fa-file-alt me-2 text-secondary"></i>
-                  <span id="onboarding-template-name" class="fw-medium">-</span>
-                </div>
-              </div>
-
-              <div class="col-12 mt-3">
-                <label class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Recipients (To)</label>
-                <div class="d-flex align-items-start text-dark">
-                  <i class="far fa-envelope me-2 text-secondary mt-1"></i>
-                  <span id="onboarding-to-list" class="small">-</span>
-                </div>
-              </div>
-
-              <div class="col-12 mt-2">
-                <label class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">CC</label>
-                <div class="d-flex align-items-start text-muted">
-                  <i class="far fa-copy me-2 text-secondary mt-1"></i>
-                  <span id="onboarding-cc-list" class="small">-</span>
-                </div>
+          <div id="onboarding-content">
+            <div id="onboarding-warning-sent" class="alert alert-warning d-flex align-items-center d-none mx-3 mt-3" role="alert">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              <div>
+                <strong>Email already sent.</strong> Do you want to send it again?
               </div>
             </div>
-          </div>
 
-          <p class="small text-muted mb-0">
-            This will trigger the automated email with credentials and attachments.
-          </p>
+            <div id="onboarding-error-missing" class="alert alert-danger d-none mx-3 mt-3" role="alert">
+              <div class="d-flex align-items-center mb-1">
+                <i class="fas fa-times-circle me-2"></i>
+                <strong>Cannot Send: Missing Information</strong>
+              </div>
+              <ul id="onboarding-missing-list" class="mb-0 small ps-4"></ul>
+            </div>
+
+            <div class="card bg-light border-0 p-3 mb-3">
+              <div class="row g-2">
+                <div class="col-12">
+                  <label class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Template</label>
+                  <div class="d-flex align-items-center text-dark">
+                    <i class="far fa-file-alt me-2 text-secondary"></i>
+                    <span id="onboarding-template-name" class="fw-medium">-</span>
+                  </div>
+                </div>
+
+                <div class="col-12 mt-3">
+                  <label class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Recipients (To)</label>
+                  <div class="d-flex align-items-start text-dark">
+                    <i class="far fa-envelope me-2 text-secondary mt-1"></i>
+                    <span id="onboarding-to-list" class="small">-</span>
+                  </div>
+                </div>
+
+                <div class="col-12 mt-2">
+                  <label class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">CC</label>
+                  <div class="d-flex align-items-start text-muted">
+                    <i class="far fa-copy me-2 text-secondary mt-1"></i>
+                    <span id="onboarding-cc-list" class="small">-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="small text-muted mb-0">
+              This will trigger the automated email with credentials and attachments.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div class="modal-footer border-0 pt-0">
-        <button type="button" class="btn btn-light text-muted" data-bs-dismiss="modal">Cancel</button>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light text-muted" data-bs-dismiss="modal">Cancel</button>
 
-        <%= form_with url: send_onboarding_email_admission_path(@learner_info), method: :post, id: "onboarding-submit-form", local: true do %>
-           <button type="submit" class="btn btn-primary px-4" id="onboarding-confirm-btn">
-             <i class="fas fa-paper-plane me-2"></i> Confirm & Send
-           </button>
-        <% end %>
+          <%= form_with url: send_onboarding_email_admission_path(@learner_info), method: :post, id: "onboarding-submit-form", local: true do %>
+            <button type="submit" class="btn btn-primary px-4" id="onboarding-confirm-btn">
+              <i class="fas fa-paper-plane me-2"></i> Confirm & Send
+            </button>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
-</div>
+ <% end %>
 
 <script>
   // ==========================================
