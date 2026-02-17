@@ -133,7 +133,12 @@ class User < ApplicationRecord
   end
 
   def moodle_timelines_sorted_by_balance
-    moodle_timelines.order(balance: :asc, start_date: :asc)
+    moodle_timelines.joins(:subject).order(
+      Arel.sql("CASE WHEN subjects.category IN (0, 1, 2) THEN 0 ELSE 1 END ASC"),
+      Arel.sql("CASE WHEN subjects.category IN (0, 1, 2) THEN subjects.name ELSE NULL END ASC"),
+      balance: :asc,
+      start_date: :asc
+    )
   end
 
   def subject_records
