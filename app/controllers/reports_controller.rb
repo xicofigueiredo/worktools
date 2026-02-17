@@ -99,9 +99,9 @@ class ReportsController < ApplicationController
       end
     end
 
-    @timelines = @learner.timelines.where(hidden: false).order(difference: :asc)
+    @timelines = @learner.timelines.includes(:subject, :exam_date).where(hidden: false).order(difference: :asc)
     calc_nav_dates(@sprint)
-    @report = @learner.reports.find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
+    @report = @learner.reports.includes(:report_activities, :report_knowledges).find_or_initialize_by(sprint: @sprint, last_update_check: Date.today)
 
     if @report.new_record?
       @report.last_update_check = Date.today
@@ -125,7 +125,7 @@ class ReportsController < ApplicationController
     @has_next_sprint = Sprint.exists?(['start_date > ?', @sprint.end_date])
 
     # Fetch reports where parent: true for the learner
-    @reports_parents = @learner.reports.where(parent: true)
+    @reports_parents = @learner.reports.includes(:sprint).where(parent: true)
 
     # Check if the next report belongs to @reports_parents for guardians
     if current_user.role == 'guardian'
@@ -148,7 +148,7 @@ class ReportsController < ApplicationController
       @hide = @report.hide
     end
 
-    @report_activities = @report.report_activities
+    @report_activities = @report.report_activities.load # Ensure activities are loaded
 
     # Optionally, if you want to ensure the main report is saved
     @report.save
@@ -186,11 +186,9 @@ class ReportsController < ApplicationController
     .where('subjects.name IN (:sprint_knowledges) OR timelines.personalized_name IN (:sprint_knowledges)',
            sprint_knowledges: sprint_goal_knowledges)
 
-    @lcs = []
-    @report.lc_ids.each do |lc_id|
-      lc = User.find_by(id: lc_id)
-      @lcs << lc if lc
-    end
+    # Eager load LCs to avoid N+1 queries
+    lc_ids = @report.lc_ids
+    @lcs = User.where(id: lc_ids).to_a
 
     if sprint_goal && sprint_goal.sprint.end_date + 3.weeks >= Date.today
 
@@ -243,7 +241,7 @@ class ReportsController < ApplicationController
     if current_user.role == 'learner' && @learner == current_user
       # The learner can edit their report
       @role = 'learner'
-    elsif (current_user.role == 'lc' || current_user.role == 'rm') && ((current_user.hubs & @learner.hubs).any? || @learner.main_hub&.name&.include?("Remote"))
+    elsif (current_user.role == 'lc' || current_user.role == 'rm') && ((current_user.hubs.ids & @learner.hubs.ids).present? || @learner.main_hub&.name&.include?("Remote"))
       # The LC can edit the report related to them
       @role = 'lc'
     elsif current_user.role == 'admin'
@@ -388,11 +386,9 @@ class ReportsController < ApplicationController
     end
     @attendance = calc_sprint_presence(@learner, @report.sprint) if @report&.sprint
     @report_activities = @report.report_activities
-    @lcs = []
-    @report.lc_ids.each do |lc_id|
-      lc = User.find_by(id: lc_id)
-      @lcs << lc if lc
-    end
+    # Eager load LCs to avoid N+1 queries
+    lc_ids = @report.lc_ids
+    @lcs = User.where(id: lc_ids).to_a
 
 
     pdf = Prawn::Document.new

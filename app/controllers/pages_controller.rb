@@ -55,9 +55,20 @@ class PagesController < ApplicationController
     end
 
     @users = @selected_hub&.name == "Remote" ? @online_learners : @selected_hub.users.where(role: 'learner', deactivate: [false, nil])
+    @users = @users.includes(:timelines) # Eager load timelines to avoid N+1 queries
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
     @total_balance = {}
     @forms_completed = {} # Hash to store the number of forms completed by each learner
+
+    # Preload current forms once instead of calling Form.current in the loop
+    current_forms = Form.current.includes(:form_interrogation_joins, :interrogations).to_a
+    user_ids = @users.map(&:id)
+
+    # Preload all responses for these users and forms in one query
+    all_responses = Response.joins(:form_interrogation_join)
+                           .where(user_id: user_ids)
+                           .where(form_interrogation_joins: { form_id: current_forms.map(&:id) })
+                           .group_by(&:user_id)
 
     @users.each do |user|
       total_balance_for_user = 0
@@ -67,9 +78,23 @@ class PagesController < ApplicationController
       user.topics_balance = total_balance_for_user
       user.save
 
-      # Count the number of forms completed by the learner
-      # A form is considered completed when the user has answered all questions
-      @forms_completed[user.id] = Form.current.count { |form| form.completed_by?(user) }
+      # Count completed forms using preloaded data
+      user_responses = all_responses[user.id] || []
+      completed_count = current_forms.count do |form|
+        form_interrogation_ids = form.form_interrogation_joins.map(&:id)
+        user_form_responses = user_responses.select { |r| form_interrogation_ids.include?(r.form_interrogation_join_id) }
+
+        # Special case: Sports form
+        if form.title&.include?("Sports Information Form")
+          first_question = form.form_interrogation_joins.first
+          first_response = user_form_responses.find { |r| r.form_interrogation_join_id == first_question&.id }
+          next true if first_response&.content == "No"
+        end
+
+        # Otherwise, all questions must be answered
+        form.interrogations.count == user_form_responses.count
+      end
+      @forms_completed[user.id] = completed_count
     end
 
     @users = @users.order(topics_balance: :asc)
@@ -128,6 +153,7 @@ class PagesController < ApplicationController
     @users = User.joins(:timelines)
       .where(timelines: { subject_id: @selected_subject.id, hidden: false })
       .where(deactivate: false)
+      .includes(:timelines) # Eager load timelines to avoid N+1 queries
 
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
 
@@ -167,7 +193,7 @@ class PagesController < ApplicationController
     if current_user.role == "learner"
       @learner = current_user
       @learner_flag = @learner.learner_flag
-      @timelines = @learner.timelines.where(hidden: false)
+      @timelines = @learner.timelines.includes(:subject, :exam_date).where(hidden: false)
       @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
       @current_sprint_weeks = @current_sprint.weeks.includes(:weekly_goals).order(:start_date)
 
@@ -214,7 +240,9 @@ class PagesController < ApplicationController
       @sprint_consent = Consent.find_by(user_id: @learner.id, sprint_id: @current_sprint&.id)
       @bw_consent = Consent.where(user_id: @learner.id, sprint_id: nil).order(created_at: :desc).first
 
-      get_kda_averages(@learner.kdas, @current_sprint)
+      # Eager load KDAs with week and rating associations to avoid N+1 in get_kda_averages
+      kdas = @learner.kdas.includes(week: :sprint, sdl: :item, ini: :item, mot: :item, p2p: :item, hubp: :item)
+      get_kda_averages(kdas, @current_sprint)
       redirect_to some_fallback_path, alert: "Learner not found." unless @learner
     elsif current_user.role == "lc" || current_user.role == "rm"
       redirect_to dashboard_lc_path
@@ -518,8 +546,8 @@ class PagesController < ApplicationController
             else
               @learner.notes.where(category: "knowledge").where("date >= ?", date_threshold).order(created_at: :desc)
             end
-    @timelines = @learner.timelines.where(hidden: false)
-    @moodle_timelines = @learner.moodle_timelines.where(hidden: false)
+    @timelines = @learner.timelines.includes(:subject, :exam_date).where(hidden: false)
+    @moodle_timelines = @learner.moodle_timelines.includes(:subject).where(hidden: false)
 
     @current_sprint = Sprint.where("start_date <= ? AND end_date >= ?", today, today).first
     @current_sprint_weeks = @current_sprint.weeks.includes(:weekly_goals).order(:start_date) if @current_sprint
@@ -551,20 +579,22 @@ class PagesController < ApplicationController
     end
 
     # Use a single query for sprint goal based on today's date
-    @sprint_goal = @learner.sprint_goals.joins(:sprint)
+    @sprint_goal = @learner.sprint_goals.includes(:knowledges, :skills, :communities)
+                           .joins(:sprint)
                            .find_by("sprints.start_date <= ? AND sprints.end_date >= ?", today, today)
 
     main_hub_id = UsersHub.where(user_id: @learner.id, main: true).pluck(:hub_id).first
     @main_hub = Hub.find_by(id: main_hub_id)
-    @lcs = @learner.learner_info.learning_coaches
+    @lcs = @learner.learner_info&.learning_coaches || []
 
     @holidays = @learner.holidays
     @sprint_presence = calc_sprint_presence(@learner, @current_sprint)
     @weekly_goals_percentage = @current_sprint.count_weekly_goals_total(@learner)
     @kdas_percentage = @current_sprint.count_kdas_total(@learner)
-    @has_exam_date = @timelines.any? { |timeline| timeline.exam_date.present? }
-    @has_mock50 = @timelines.any? { |timeline| timeline.mock50.present? }
-    @has_mock100 = @timelines.any? { |timeline| timeline.mock50.present? }
+    # Use loaded associations instead of triggering new queries
+    @has_exam_date = @timelines.load.any? { |timeline| timeline.exam_date.present? }
+    @has_mock50 = @timelines.load.any? { |timeline| timeline.mock50.present? }
+    @has_mock100 = @timelines.load.any? { |timeline| timeline.mock50.present? }
 
     @current_weekly_goal_date = adjust_weekly_goal_date(today)
     @current_week = find_current_week(@current_weekly_goal_date)
@@ -586,7 +616,9 @@ class PagesController < ApplicationController
     @kda = @learner.kdas.joins(:week)
                           .find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
 
-    get_kda_averages(@learner.kdas, @current_sprint)
+    # Eager load KDAs with week and rating associations to avoid N+1 in get_kda_averages
+    kdas = @learner.kdas.includes(week: :sprint, sdl: :item, ini: :item, mot: :item, p2p: :item, hubp: :item)
+    get_kda_averages(kdas, @current_sprint)
 
     @yearly_presence = calc_yearly_presence(@learner)
   end
