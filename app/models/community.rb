@@ -80,7 +80,9 @@ class Community < ApplicationRecord
   end
 
   def update_csc_activity
-    return unless self.sprint_goal.user.csc_diploma.csc_activities.where(activitable: self).present?
-    self.sprint_goal.user.csc_diploma.csc_activities.where(activitable: self).first.update(activitable: self)
+    csc_diploma = self.sprint_goal.user.csc_diploma
+    return unless csc_diploma.present?
+    return unless csc_diploma.csc_activities.where(activitable: self).present?
+    csc_diploma.csc_activities.where(activitable: self).first.update(activitable: self)
   end
 end
