@@ -39,32 +39,15 @@ class HubspotService
     Rails.logger.info("All submission fields: #{fields.inspect}")
     Rails.logger.info("Processing submission for email: #{email} (conversionId: #{conversion_id}) at #{Time.zone.at(submission_data['submittedAt']/1000.0)}")
 
-    # Normalize email
-    normalized_email = normalize_email(email)
+    if conversion_id.present?
+      existing = LearnerInfo.find_by(hubspot_conversion_id: conversion_id)
 
-    # Parse full_name and birthdate for fallback check
-    full_name = fields[:studentname].to_s.strip if fields[:studentname].present?
-    birthdate = nil
-    if fields[:learner_s_date_of_birth].present?
-      begin
-        timestamp_seconds = fields[:learner_s_date_of_birth].to_i / 1000
-        birthdate = Time.at(timestamp_seconds).to_date
-      rescue
-        Rails.logger.warn("Failed to parse birthdate for duplicate check in submission #{conversion_id}")
+      if existing
+        Rails.logger.warn("Skipping submission #{conversion_id}: Matching LearnerInfo (ID: #{existing.id}) already exists.")
+        return
       end
-    end
-
-    # Check for existing using combination: conversionId OR email OR (full_name + birthdate)
-    query = LearnerInfo.where(hubspot_conversion_id: conversion_id) if conversion_id.present?
-    query = query.or(LearnerInfo.where(personal_email: normalized_email)) if normalized_email.present?
-    if full_name.present? && birthdate.present?
-      query = query.or(LearnerInfo.where(full_name: full_name, birthdate: birthdate))
-    end
-    existing = query.first if query
-
-    if existing
-      Rails.logger.warn("Skipping submission #{conversion_id}: Matching LearnerInfo (ID: #{existing.id}) found via #{existing.hubspot_conversion_id == conversion_id ? 'conversionId' : (existing.personal_email == normalized_email ? 'email' : 'name + birthdate')}")
-      return
+    else
+      Rails.logger.warn("Warning: Submission for email #{email} has no conversionId. Proceeding with creation.")
     end
 
     learner_info = create_learner_info(fields, conversion_id)

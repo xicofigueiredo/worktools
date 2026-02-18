@@ -666,7 +666,7 @@ class AdmissionListController < ApplicationController
   def set_learning_coaches
     # Get all LCs who can teach remote
     @remote_lcs = User.joins(:collaborator_info)
-                            .where(role: 'lc', deactivate: false)
+                            .where(deactivate: false)
                             .where(collaborator_infos: { can_teach_remote: true })
                             .includes(:users_hubs)
 
