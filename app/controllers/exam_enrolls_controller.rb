@@ -35,7 +35,7 @@ class ExamEnrollsController < ApplicationController
       status_filter = "RM Approval Pending"
     elsif current_user.role == 'exams' && params[:status].blank?
       status_filter = "Registered"
-    elsif current_user.email == "marcela@bravegenerationacademy.com" && params[:status].blank?
+    elsif current_user.email == "marcela@bravegenerationacademy.com" || current_user.email == "mathew.bayliss@edubga.com" && params[:status].blank?
       status_filter = "Edu Approval Pending"
     elsif current_user.role == 'cm' && params[:status].blank?
       status_filter = "RM Approval Pending"

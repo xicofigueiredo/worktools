@@ -33,12 +33,20 @@ module ExamEnrollsHelper
         :lc_access
       end
     when 'edu'
-      ['pre_registration_exception_edu_approval',
-       'pre_registration_exception_edu_comment',
-       'failed_mock_exception_edu_approval',
-       'failed_mock_exception_edu_comment',
-       'extension_edu_approval',
-       'extension_edu_comment']
+      [
+      'pre_registration_exception_cm_approval',
+      'pre_registration_exception_cm_comment',
+      'failed_mock_exception_cm_approval',
+      'failed_mock_exception_cm_comment',
+      'extension_cm_approval',
+      'extension_cm_comment',
+      'pre_registration_exception_dc_approval',
+      'pre_registration_exception_dc_comment',
+      'failed_mock_exception_dc_approval',
+      'failed_mock_exception_dc_comment',
+      'extension_dc_approval',
+      'extension_dc_comment'
+      ]
     else
       []
     end
