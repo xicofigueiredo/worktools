@@ -241,7 +241,7 @@ class PagesController < ApplicationController
       @bw_consent = Consent.where(user_id: @learner.id, sprint_id: nil).order(created_at: :desc).first
 
       # Eager load KDAs with week and rating associations to avoid N+1 in get_kda_averages
-      kdas = @learner.kdas.includes(week: :sprint, sdl: :item, ini: :item, mot: :item, p2p: :item, hubp: :item)
+      kdas = @learner.kdas.includes(week: :sprint).includes(:sdl, :ini, :mot, :p2p, :hubp)
       get_kda_averages(kdas, @current_sprint)
       redirect_to some_fallback_path, alert: "Learner not found." unless @learner
     elsif current_user.role == "lc" || current_user.role == "rm"
@@ -433,11 +433,11 @@ class PagesController < ApplicationController
     end
 
     filtered_kdas.each do |kda|
-      sum_mot += kda.mot.rating
-      sum_p2p += kda.p2p.rating
-      sum_ini += kda.ini.rating
-      sum_hubp += kda.hubp.rating
-      sum_sdl += kda.sdl.rating
+      sum_mot += kda.mot&.rating.to_i
+      sum_p2p += kda.p2p&.rating.to_i
+      sum_ini += kda.ini&.rating.to_i
+      sum_hubp += kda.hubp&.rating.to_i
+      sum_sdl += kda.sdl&.rating.to_i
     end
 
     kdas_count = filtered_kdas.count
@@ -617,7 +617,7 @@ class PagesController < ApplicationController
                           .find_by("weeks.start_date <= ? AND weeks.end_date >= ?", @current_weekly_goal_date, @current_weekly_goal_date)
 
     # Eager load KDAs with week and rating associations to avoid N+1 in get_kda_averages
-    kdas = @learner.kdas.includes(week: :sprint, sdl: :item, ini: :item, mot: :item, p2p: :item, hubp: :item)
+    kdas = @learner.kdas.includes(week: :sprint).includes(:sdl, :ini, :mot, :p2p, :hubp)
     get_kda_averages(kdas, @current_sprint)
 
     @yearly_presence = calc_yearly_presence(@learner)
